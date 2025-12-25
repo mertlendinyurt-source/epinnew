@@ -155,7 +155,8 @@ export default function App() {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: 'url(https://images.pexels.com/photos/5380620/pexels-photo-5380620.jpeg)',
+            backgroundImage: 'url(https://images.pexels.com/photos/5380620/pexels-photo-5380620.jpeg?auto=compress&cs=tinysrgb&w=1920)',
+            backgroundColor: '#0a0a0a'
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black" />

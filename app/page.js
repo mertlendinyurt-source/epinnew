@@ -93,7 +93,8 @@ export default function App() {
 
   const handleCheckout = async () => {
     if (!playerValid || !playerName) {
-      toast.error('Lütfen geçerli bir Oyuncu ID girin')
+      setOrderProcessing(true)
+      setTimeout(() => setOrderProcessing(false), 2000)
       return
     }
 

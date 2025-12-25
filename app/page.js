@@ -1,13 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ShoppingCart, Search, User, Check, X, Loader2, Info } from 'lucide-react'
+import { ShoppingCart, User, Check, X, Loader2, Info, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
 
@@ -113,7 +111,6 @@ export default function App() {
       const data = await response.json()
       
       if (data.success) {
-        // Redirect to mock payment page
         window.location.href = data.data.paymentUrl
       } else {
         toast.error(data.error || 'Sipariş oluşturulamadı')
@@ -127,136 +124,118 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
+    <div className="min-h-screen bg-black">
       <Toaster position="top-center" richColors />
       
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-blue-900/20 bg-slate-950/80 backdrop-blur-lg">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center font-bold text-white">
-                UC
-              </div>
-              <span className="text-xl font-bold text-white">PUBG UC Store</span>
+      {/* Header - Minimal like Plyr */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm border-b border-white/5">
+        <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-blue-500 flex items-center justify-center font-black text-xs text-white">
+              UC
             </div>
+            <span className="text-white font-semibold text-lg">PUBG UC</span>
+          </div>
             
-            <div className="hidden md:flex items-center gap-4 flex-1 max-w-md mx-8">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                <Input 
-                  placeholder="Ürün ara..."
-                  className="pl-10 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-400"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="text-white hover:bg-slate-800">
-                <ShoppingCart className="w-5 h-5" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="text-white hover:bg-slate-800"
-                onClick={() => window.location.href = '/admin/login'}
-              >
-                <User className="w-5 h-5" />
-              </Button>
-            </div>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-white/60 hover:text-white hover:bg-white/5 w-9 h-9"
+              onClick={() => window.location.href = '/admin/login'}
+            >
+              <User className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
-        <div className="mb-12 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-            En Ucuz <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">PUBG Mobile UC</span>
+      {/* Hero - PUBG Gaming Background */}
+      <div className="relative h-[60vh] flex items-center justify-center overflow-hidden pt-16">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: 'url(https://images.pexels.com/photos/5380620/pexels-photo-5380620.jpeg)',
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black" />
+        
+        <div className="relative z-10 text-center px-4 max-w-4xl">
+          <h1 className="text-5xl md:text-7xl font-black text-white mb-4 tracking-tight">
+            PUBG MOBILE UC
           </h1>
-          <p className="text-slate-400 text-lg">Anında teslimat, güvenli ödeme</p>
+          <p className="text-lg md:text-xl text-white/70 font-medium">Anında teslimat • Güvenli ödeme</p>
         </div>
+      </div>
 
-        {/* Filters */}
-        <div className="mb-8 flex flex-wrap gap-4 items-center justify-between">
-          <div className="flex gap-2">
-            <Badge variant="outline" className="bg-blue-600/20 text-blue-400 border-blue-600/40 px-4 py-2">
-              🇹🇷 Türkiye
-            </Badge>
-            <Badge variant="outline" className="bg-slate-800/50 text-slate-300 border-slate-700 px-4 py-2">
-              Tüm Paketler
-            </Badge>
-          </div>
-          <div className="text-sm text-slate-400">
-            {products.length} ürün bulundu
-          </div>
-        </div>
-
-        {/* Products Grid */}
+      {/* Products Section - Plyr Style Grid */}
+      <main className="max-w-[1400px] mx-auto px-6 py-16">
         {loading ? (
-          <div className="flex items-center justify-center py-20">
+          <div className="flex items-center justify-center py-32">
             <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {products.map((product) => (
-              <Card 
-                key={product.id} 
-                className="bg-slate-900/50 border-slate-800 hover:border-blue-600/50 transition-all cursor-pointer group overflow-hidden"
+              <div
+                key={product.id}
                 onClick={() => handleProductSelect(product)}
+                className="group relative bg-zinc-950 rounded-lg border border-white/5 hover:border-blue-500/50 transition-all cursor-pointer overflow-hidden"
               >
-                <div className="relative overflow-hidden">
-                  <img 
-                    src={product.image} 
-                    alt={product.title}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  {product.discountPercent > 0 && (
-                    <Badge className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white">
-                      {product.discountPercent}% İndirim
-                    </Badge>
-                  )}
-                </div>
-                
-                <CardHeader>
-                  <CardTitle className="text-white text-2xl">{product.title}</CardTitle>
-                  <CardDescription className="text-slate-400">
-                    PUBG Mobile Unknown Cash
-                  </CardDescription>
-                </CardHeader>
-                
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      {product.discountPrice < product.price && (
-                        <span className="text-slate-500 line-through text-lg">
-                          {product.price.toFixed(2)} ₺
-                        </span>
-                      )}
-                      <span className="text-3xl font-bold text-blue-400">
-                        {product.discountPrice.toFixed(2)} ₺
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-green-400">
-                      <Check className="w-4 h-4" />
-                      <span>Bölgenizde kullanılabilir</span>
-                    </div>
+                {/* Discount Badge */}
+                {product.discountPercent > 0 && (
+                  <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded z-10">
+                    -{product.discountPercent}%
                   </div>
-                </CardContent>
-                
-                <CardFooter>
-                  <Button 
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                )}
+
+                {/* UC Coin Image */}
+                <div className="relative h-40 overflow-hidden bg-gradient-to-br from-zinc-900 to-zinc-950 flex items-center justify-center">
+                  <img 
+                    src="https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=300&h=300&fit=crop"
+                    alt="UC Coin"
+                    className="w-24 h-24 object-contain opacity-80 group-hover:scale-110 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
+                </div>
+
+                {/* Content */}
+                <div className="p-4 space-y-2">
+                  {/* UC Amount - Most Prominent */}
+                  <div className="text-3xl font-black text-white tracking-tight">
+                    {product.ucAmount}
+                    <span className="text-lg text-white/40 ml-1 font-normal">UC</span>
+                  </div>
+
+                  {/* Price */}
+                  <div className="flex items-baseline gap-2">
+                    {product.discountPrice < product.price && (
+                      <span className="text-sm text-white/30 line-through font-medium">
+                        ₺{product.price.toFixed(0)}
+                      </span>
+                    )}
+                    <span className="text-xl font-bold text-white">
+                      ₺{product.discountPrice.toFixed(2)}
+                    </span>
+                  </div>
+
+                  {/* Buy Button */}
+                  <button 
+                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded text-sm transition-colors"
                     onClick={(e) => {
                       e.stopPropagation()
                       handleProductSelect(product)
                     }}
                   >
                     Satın Al
-                  </Button>
-                </CardFooter>
-              </Card>
+                  </button>
+                </div>
+
+                {/* Hover Glow Effect */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <div className="absolute inset-0 bg-blue-500/5" />
+                </div>
+              </div>
             ))}
           </div>
         )}

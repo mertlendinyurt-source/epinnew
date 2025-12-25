@@ -360,180 +360,208 @@ export default function App() {
         </div>
       </div>
 
-      {/* Checkout Dialog - Exact reference style */}
+      {/* Checkout Dialog - With PUBG background */}
       <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
-        <DialogContent className="max-w-[95vw] md:max-w-4xl p-0 gap-0 overflow-hidden bg-[#1e2229] border-0">
-          {/* Title */}
-          <div className="px-5 md:px-8 py-5 md:py-6 border-b border-white/5">
-            <h2 className="text-lg md:text-xl font-bold text-white uppercase tracking-wide">ÖDEME TÜRÜNÜ SEÇİN</h2>
-          </div>
+        <DialogContent className="max-w-[95vw] md:max-w-4xl p-0 gap-0 overflow-hidden border-0" style={{ backgroundColor: 'transparent' }}>
+          {/* PUBG Background - Blurred */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center blur-sm -z-10"
+            style={{
+              backgroundImage: 'url(https://images.pexels.com/photos/5380620/pexels-photo-5380620.jpeg?auto=compress&cs=tinysrgb&w=1920)'
+            }}
+          />
+          <div className="absolute inset-0 bg-black/60 -z-10" />
           
-          <div className="grid grid-cols-1 md:grid-cols-2">
-            {/* Left Column: Player ID & Payment Methods */}
-            <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
-              {/* Oyuncu ID */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <Label className="text-sm md:text-base text-white/80 uppercase">Oyuncu ID</Label>
-                  <button className="text-xs md:text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1">
-                    Oyuncu ID Girin
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/>
-                      <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"/>
-                    </svg>
-                  </button>
-                </div>
-                
-                {/* Player ID Input */}
-                <div className="relative">
-                  <Input
-                    placeholder="Oyuncu ID'nizi girin"
-                    value={playerId}
-                    onChange={(e) => setPlayerId(e.target.value)}
-                    className="h-11 md:h-12 px-4 text-sm bg-[#12161D] text-white placeholder:text-white/40 border border-white/10 focus:border-blue-500 rounded"
-                  />
-                  {playerLoading && (
-                    <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 animate-spin text-blue-500" />
-                  )}
-                  {!playerLoading && playerValid === true && (
-                    <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-green-500" />
-                  )}
-                  {!playerLoading && playerValid === false && (
-                    <X className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-red-500" />
-                  )}
-                </div>
-
-                {playerName && (
-                  <div className="mt-3 px-4 py-3 rounded bg-green-500/15 border border-green-500/30">
-                    <div className="flex items-center gap-2 text-green-400 mb-1 text-xs font-semibold">
-                      <Check className="w-4 h-4" />
-                      <span>Oyuncu Bulundu</span>
+          <div className="relative bg-[#1e2229]/95 backdrop-blur-md">
+            {/* Title */}
+            <div className="px-5 md:px-8 py-5 md:py-6 border-b border-white/5">
+              <h2 className="text-lg md:text-xl font-bold text-white uppercase tracking-wide">ÖDEME TÜRÜNÜ SEÇİN</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              {/* Left Column: Player ID & Payment Methods */}
+              <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
+                {/* Error Alert - Only show if trying to pay without player ID */}
+                {!playerValid && orderProcessing && (
+                  <div className="px-4 py-3 rounded bg-red-600/90 border border-red-500 flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+                      <span className="text-red-600 font-bold text-sm">!</span>
                     </div>
-                    <p className="text-white text-sm font-bold">{playerName}</p>
+                    <div>
+                      <div className="text-sm font-bold text-white mb-0.5">Hata</div>
+                      <div className="text-sm text-white">Lütfen 'Oyuncu ID' giriniz</div>
+                    </div>
                   </div>
                 )}
-              </div>
 
-              {/* Payment Methods */}
-              <div>
-                <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Ödeme yöntemleri</Label>
-                
-                <div className="space-y-4">
-                  {/* Credit Card */}
-                  <div className="relative p-4 md:p-5 rounded-lg bg-[#12161D] border border-white/10">
-                    <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-white flex items-center justify-center">
-                      <Check className="w-4 h-4 text-black" />
-                    </div>
-                    
-                    <div className="mb-3">
-                      <div className="text-base md:text-lg font-bold text-white mb-1">Kredi / Banka Kartı</div>
-                      <div className="inline-block px-2 py-0.5 rounded bg-white/10 text-[11px] text-white/70">
-                        Anında teslimat
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <div className="w-10 h-7 bg-white rounded flex items-center justify-center">
-                        <span className="text-blue-600 font-bold text-xs">VISA</span>
-                      </div>
-                      <div className="w-10 h-7 bg-white rounded flex items-center justify-center">
-                        <span className="text-red-600 font-bold text-xs">MC</span>
-                      </div>
-                      <div className="w-10 h-7 bg-white rounded flex items-center justify-center">
-                        <span className="text-blue-500 font-bold text-xs">TROY</span>
-                      </div>
-                    </div>
+                {/* Oyuncu ID */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <Label className="text-sm md:text-base text-white/80 uppercase">Oyuncu ID</Label>
+                    <button 
+                      onClick={() => document.getElementById('playerId')?.focus()}
+                      className="text-xs md:text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                    >
+                      Oyuncu ID Girin
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/>
+                        <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"/>
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  {/* Player ID Input */}
+                  <div className="relative">
+                    <Input
+                      id="playerId"
+                      placeholder="Oyuncu ID'nizi girin"
+                      value={playerId}
+                      onChange={(e) => setPlayerId(e.target.value)}
+                      className="h-11 md:h-12 px-4 text-sm bg-[#12161D] text-white placeholder:text-white/40 border border-white/10 focus:border-blue-500 rounded"
+                    />
+                    {playerLoading && (
+                      <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 animate-spin text-blue-500" />
+                    )}
+                    {!playerLoading && playerValid === true && (
+                      <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-green-500" />
+                    )}
+                    {!playerLoading && playerValid === false && playerId.length >= 6 && (
+                      <X className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-red-500" />
+                    )}
                   </div>
 
-                  {/* PAYTR */}
-                  <div className="relative p-4 md:p-5 rounded-lg bg-[#12161D]/50 border border-white/10 opacity-60">
-                    <div className="mb-3">
-                      <div className="text-base md:text-lg font-bold text-white mb-1">PAYTR</div>
-                      <div className="inline-block px-2 py-0.5 rounded bg-white/10 text-[11px] text-white/70">
-                        Anında teslimat
+                  {playerName && (
+                    <div className="mt-3 px-4 py-3 rounded bg-green-500/15 border border-green-500/30">
+                      <div className="flex items-center gap-2 text-green-400 mb-1 text-xs font-semibold">
+                        <Check className="w-4 h-4" />
+                        <span>Oyuncu Bulundu</span>
+                      </div>
+                      <p className="text-white text-sm font-bold">{playerName}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Payment Methods */}
+                <div>
+                  <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Ödeme yöntemleri</Label>
+                  
+                  <div className="space-y-4">
+                    {/* Credit Card */}
+                    <div className="relative p-4 md:p-5 rounded-lg bg-[#12161D] border border-white/10">
+                      <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-white flex items-center justify-center">
+                        <Check className="w-4 h-4 text-black" />
+                      </div>
+                      
+                      <div className="mb-3">
+                        <div className="text-base md:text-lg font-bold text-white mb-1">Kredi / Banka Kartı</div>
+                        <div className="inline-block px-2 py-0.5 rounded bg-white/10 text-[11px] text-white/70">
+                          Anında teslimat
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-7 bg-white rounded flex items-center justify-center">
+                          <span className="text-blue-600 font-bold text-xs">VISA</span>
+                        </div>
+                        <div className="w-10 h-7 bg-white rounded flex items-center justify-center">
+                          <span className="text-red-600 font-bold text-xs">MC</span>
+                        </div>
+                        <div className="w-10 h-7 bg-white rounded flex items-center justify-center">
+                          <span className="text-blue-500 font-bold text-xs">TROY</span>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <div className="w-10 h-7 bg-white rounded flex items-center justify-center">
-                        <span className="text-blue-600 font-bold text-xs">VISA</span>
+
+                    {/* Shopier - Replacing PAYTR */}
+                    <div className="relative p-4 md:p-5 rounded-lg bg-[#12161D]/50 border border-white/10 opacity-60">
+                      <div className="mb-3">
+                        <div className="text-base md:text-lg font-bold text-white mb-1">Shopier</div>
+                        <div className="inline-block px-2 py-0.5 rounded bg-white/10 text-[11px] text-white/70">
+                          Anında teslimat
+                        </div>
                       </div>
-                      <div className="w-10 h-7 bg-white rounded flex items-center justify-center">
-                        <span className="text-red-600 font-bold text-xs">MC</span>
+                      
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-7 bg-white rounded flex items-center justify-center">
+                          <span className="text-blue-600 font-bold text-xs">VISA</span>
+                        </div>
+                        <div className="w-10 h-7 bg-white rounded flex items-center justify-center">
+                          <span className="text-red-600 font-bold text-xs">MC</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Right Column: Product & Price Summary */}
-            {selectedProduct && (
-              <div className="p-5 md:p-8 space-y-6 md:space-y-8 bg-[#1a1e24]">
-                {/* Product */}
-                <div>
-                  <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Ürün</Label>
-                  <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded flex items-center justify-center bg-[#12161D]">
-                      <img 
-                        src="https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=100&h=100&fit=crop"
-                        alt="UC"
-                        className="w-10 h-10 md:w-12 md:h-12 object-contain opacity-70"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-xl md:text-2xl font-bold text-white mb-2">{selectedProduct.title}</div>
-                      <div className="flex items-center gap-1.5 text-xs md:text-sm font-bold text-white mb-1">
-                        <span>🇹🇷 TÜRKİYE</span>
+              {/* Right Column: Product & Price Summary */}
+              {selectedProduct && (
+                <div className="p-5 md:p-8 space-y-6 md:space-y-8 bg-[#1a1e24]/95">
+                  {/* Product */}
+                  <div>
+                    <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Ürün</Label>
+                    <div className="flex items-start gap-4">
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded flex items-center justify-center bg-[#12161D]">
+                        <img 
+                          src="https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=100&h=100&fit=crop"
+                          alt="UC"
+                          className="w-10 h-10 md:w-12 md:h-12 object-contain opacity-70"
+                        />
                       </div>
-                      <div className="text-[11px] md:text-xs text-green-400">Bölgenizde kullanılabilir</div>
+                      <div className="flex-1">
+                        <div className="text-xl md:text-2xl font-bold text-white mb-2">{selectedProduct.title}</div>
+                        <div className="flex items-center gap-1.5 text-xs md:text-sm font-bold text-white mb-1">
+                          <span>🇹🇷 TÜRKİYE</span>
+                        </div>
+                        <div className="text-[11px] md:text-xs text-green-400">Bölgenizde kullanılabilir</div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Price Details */}
-                <div>
-                  <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Fiyat detayları</Label>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center text-sm md:text-base">
-                      <span className="text-white/70">Orjinal Fiyat</span>
-                      <span className="text-white font-bold">₺ {selectedProduct.price.toFixed(2)}</span>
-                    </div>
-                    {selectedProduct.discountPrice < selectedProduct.price && (
+                  {/* Price Details */}
+                  <div>
+                    <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Fiyat detayları</Label>
+                    <div className="space-y-3">
                       <div className="flex justify-between items-center text-sm md:text-base">
-                        <span className="text-green-400 font-semibold">Size Özel Fiyat</span>
-                        <span className="text-green-400 font-bold">₺ {selectedProduct.discountPrice.toFixed(2)}</span>
+                        <span className="text-white/70">Orjinal Fiyat</span>
+                        <span className="text-white font-bold">₺ {selectedProduct.price.toFixed(2)}</span>
                       </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Total Amount */}
-                <div className="pt-5 border-t border-white/10">
-                  <div className="flex justify-between items-center mb-6">
-                    <span className="text-sm md:text-base text-white/70 uppercase">Ödenecek Tutar</span>
-                    <span className="text-2xl md:text-3xl font-black text-white">
-                      ₺ {selectedProduct.discountPrice.toFixed(2)}
-                    </span>
+                      {selectedProduct.discountPrice < selectedProduct.price && (
+                        <div className="flex justify-between items-center text-sm md:text-base">
+                          <span className="text-green-400 font-semibold">Size Özel Fiyat</span>
+                          <span className="text-green-400 font-bold">₺ {selectedProduct.discountPrice.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <Button
-                    onClick={handleCheckout}
-                    disabled={!playerValid || orderProcessing}
-                    className="w-full h-12 md:h-14 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg"
-                  >
-                    {orderProcessing ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        İşleniyor...
-                      </>
-                    ) : (
-                      'Ödemeye Git'
-                    )}
-                  </Button>
+                  {/* Total Amount */}
+                  <div className="pt-5 border-t border-white/10">
+                    <div className="flex justify-between items-center mb-6">
+                      <span className="text-sm md:text-base text-white/70 uppercase">Ödenecek Tutar</span>
+                      <span className="text-2xl md:text-3xl font-black text-white">
+                        ₺ {selectedProduct.discountPrice.toFixed(2)}
+                      </span>
+                    </div>
+
+                    <Button
+                      onClick={handleCheckout}
+                      disabled={orderProcessing}
+                      className="w-full h-12 md:h-14 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg"
+                    >
+                      {orderProcessing ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          İşleniyor...
+                        </>
+                      ) : (
+                        'Ödemeye Git'
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

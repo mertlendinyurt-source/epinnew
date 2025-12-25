@@ -124,151 +124,208 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#15181d' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#1a1d23' }}>
       <Toaster position="top-center" richColors />
       
-      {/* Header - Dark layered */}
-      <header className="sticky top-0 z-50" style={{ backgroundColor: '#0d1015', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="max-w-[1400px] mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded bg-blue-600 flex items-center justify-center font-black text-[10px] text-white">
+      {/* Header */}
+      <header className="sticky top-0 z-50" style={{ backgroundColor: '#12151a', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center font-black text-xs text-white">
               UC
             </div>
-            <span className="text-white/90 font-semibold text-base tracking-tight">PUBG UC</span>
+            <span className="text-white font-semibold text-lg">PUBG UC</span>
           </div>
             
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Button 
               variant="ghost" 
               size="icon" 
-              className="text-white/55 hover:text-white/90 hover:bg-white/8 w-8 h-8"
+              className="text-white/60 hover:text-white hover:bg-white/10 w-9 h-9"
               onClick={() => window.location.href = '/admin/login'}
             >
-              <User className="w-4 h-4" />
+              <User className="w-5 h-5" />
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Hero - Cinematic with layered backgrounds */}
-      <div className="relative h-[280px] flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#0a0d12' }}>
-        {/* Background Image Layer */}
+      {/* Hero - Larger like reference */}
+      <div className="relative h-[45vh] flex flex-col justify-center overflow-hidden" style={{ backgroundColor: '#0f1217' }}>
         <div 
-          className="absolute inset-0 bg-cover bg-center opacity-30"
+          className="absolute inset-0 bg-cover bg-center opacity-40"
           style={{
             backgroundImage: 'url(https://images.pexels.com/photos/5380620/pexels-photo-5380620.jpeg?auto=compress&cs=tinysrgb&w=1920)'
           }}
         />
-        
-        {/* Vignette + Diagonal Gradient Overlay */}
         <div 
           className="absolute inset-0" 
           style={{ 
-            background: `
-              radial-gradient(ellipse at center, transparent 0%, rgba(10,13,18,0.6) 70%),
-              linear-gradient(135deg, rgba(26,30,36,0.3) 0%, rgba(26,30,36,0.8) 100%)
-            `
+            background: 'linear-gradient(to bottom, rgba(15,18,23,0.6), rgba(15,18,23,0.9))'
           }} 
         />
         
-        <div className="relative z-10 text-center px-4 max-w-2xl">
-          <h1 className="text-4xl md:text-[56px] font-black text-white mb-2.5 leading-[1.1] tracking-[-0.02em]">
-            PUBG MOBILE UC
-          </h1>
-          <p className="text-[15px] text-white/65 font-medium">Anında teslimat • Güvenli ödeme</p>
+        <div className="relative z-10 px-6 max-w-[1600px] mx-auto w-full">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="w-16 h-16 rounded bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center font-black text-2xl text-white">
+              P
+            </div>
+            <div>
+              <div className="text-xs text-white/50 mb-1">Anasayfa &gt; Oyunlar</div>
+              <h1 className="text-3xl font-bold text-white">PUBG Mobile</h1>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-white/70">
+            <span className="text-yellow-400">★★★★★ 5 / 5</span>
+            <span>(2008) yorum</span>
+          </div>
         </div>
       </div>
 
-      {/* Products Section - Plyr exact layout */}
-      <main className="max-w-[1400px] mx-auto px-4 py-8">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-7 h-7 text-blue-500 animate-spin" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {products.map((product) => (
-              <div
-                key={product.id}
-                onClick={() => handleProductSelect(product)}
-                className="group relative rounded overflow-hidden cursor-pointer transition-all duration-200"
-                style={{ 
-                  backgroundColor: '#1e2228',
-                  border: '1px solid rgba(255,255,255,0.04)',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
-                }}
-              >
-                {/* Discount Badge - Small & Flat */}
-                {product.discountPercent > 0 && (
-                  <div className="absolute top-2 right-2 bg-red-600/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm z-10 uppercase tracking-wide">
-                    -{product.discountPercent}%
-                  </div>
-                )}
+      {/* Main Content with Sidebar */}
+      <main className="max-w-[1600px] mx-auto px-6 py-8">
+        <div className="flex gap-6">
+          {/* Left Sidebar - Filter */}
+          <div className="w-64 flex-shrink-0">
+            <div className="sticky top-24 rounded-lg p-4" style={{ backgroundColor: '#1e2229', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="flex items-center gap-2 mb-4 text-blue-400">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
+                </svg>
+                <span className="font-semibold text-sm uppercase tracking-wide">Filtrele</span>
+              </div>
 
-                {/* UC Coin Image - Smaller, darker */}
-                <div className="relative h-28 overflow-hidden flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #161a1f 0%, #1e2228 100%)' }}>
-                  <div className="absolute inset-0 bg-black/20" />
-                  <img 
-                    src="https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=180&h=180&fit=crop"
-                    alt="UC"
-                    className="relative w-16 h-16 object-contain opacity-70 group-hover:scale-105 transition-transform"
-                  />
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-white text-sm font-semibold mb-3">Bölge</h3>
+                  <div className="mb-2">
+                    <input 
+                      type="text" 
+                      placeholder="Ara"
+                      className="w-full px-3 py-1.5 text-sm bg-black/30 border border-white/10 rounded text-white placeholder:text-white/30"
+                    />
+                  </div>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    <label className="flex items-center gap-2 text-sm text-white/80 hover:text-white cursor-pointer">
+                      <input type="checkbox" className="rounded" defaultChecked />
+                      <span className="text-lg">🇹🇷</span>
+                      <span>Türkiye</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-white/80 hover:text-white cursor-pointer">
+                      <input type="checkbox" className="rounded" />
+                      <span className="text-lg">🌍</span>
+                      <span>Küresel</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-white/80 hover:text-white cursor-pointer">
+                      <input type="checkbox" className="rounded" />
+                      <span className="text-lg">🇩🇪</span>
+                      <span>Almanya</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-white/80 hover:text-white cursor-pointer">
+                      <input type="checkbox" className="rounded" />
+                      <span className="text-lg">🇫🇷</span>
+                      <span>Fransa</span>
+                    </label>
+                  </div>
                 </div>
 
-                {/* Content - Tighter Spacing */}
-                <div className="p-2.5 space-y-1">
-                  {/* Label - Small & Low Contrast */}
-                  <div className="text-[9px] text-white/40 font-semibold uppercase tracking-wider">MOBILE</div>
-                  
-                  {/* UC Amount - DOMINANT */}
-                  <div className="text-[26px] font-black text-white/95 leading-none tracking-tight">
-                    {product.ucAmount}<span className="text-[13px] text-white/45 font-medium ml-0.5">UC</span>
+                <div className="pt-4 border-t border-white/10">
+                  <h3 className="text-white text-sm font-semibold mb-3">Fiyat Aralığı</h3>
+                  <div className="flex gap-2">
+                    <input 
+                      type="number" 
+                      placeholder="En Az"
+                      className="w-full px-2 py-1.5 text-xs bg-black/30 border border-white/10 rounded text-white placeholder:text-white/30"
+                    />
+                    <input 
+                      type="number" 
+                      placeholder="En Çok"
+                      className="w-full px-2 py-1.5 text-xs bg-black/30 border border-white/10 rounded text-white placeholder:text-white/30"
+                    />
                   </div>
+                </div>
 
-                  {/* Region - Subtle */}
-                  <div className="flex items-center gap-1 text-[10px] text-white/50 font-medium">
-                    <span>🇹🇷 TÜRKİYE</span>
-                  </div>
-                  
-                  <div className="text-[10px] text-green-400/80 font-medium">Bölgenizde kullanılabilir</div>
+                <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold">
+                  Filtreleri Uygula
+                </Button>
+              </div>
+            </div>
+          </div>
 
-                  {/* Prices - Compact */}
-                  <div className="pt-0.5">
-                    {product.discountPrice < product.price && (
-                      <div className="text-[11px] text-white/25 line-through font-normal">
-                        ₺{product.price.toFixed(2)}
-                      </div>
-                    )}
-                    <div className="text-[22px] font-bold text-white/95 leading-none mt-0.5">
-                      ₺{product.discountPrice.toFixed(2)}
-                    </div>
-                    {product.discountPercent > 0 && (
-                      <div className="text-[10px] text-green-400/75 font-medium mt-0.5">
-                        %{product.discountPercent} indirim
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* CTA - Embedded, not loud */}
-                  <button 
-                    className="w-full mt-2 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white font-semibold py-2 rounded-sm text-[11px] uppercase tracking-wide transition-all border border-white/5 hover:border-white/15"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleProductSelect(product)
+          {/* Right Content - Products */}
+          <div className="flex-1">
+            {loading ? (
+              <div className="flex items-center justify-center py-32">
+                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {products.map((product) => (
+                  <div
+                    key={product.id}
+                    onClick={() => handleProductSelect(product)}
+                    className="group relative rounded-lg overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/50"
+                    style={{ 
+                      backgroundColor: '#25282e',
+                      border: '1px solid rgba(255,255,255,0.06)'
                     }}
                   >
-                    Satın Al
-                  </button>
-                </div>
+                    {/* Discount Badge */}
+                    {product.discountPercent > 0 && (
+                      <div className="absolute top-3 right-3 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded z-10">
+                        -{product.discountPercent}%
+                      </div>
+                    )}
 
-                {/* Subtle hover effect */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  <div className="absolute inset-0 ring-1 ring-inset ring-white/10" />
-                </div>
+                    {/* UC Coin Image */}
+                    <div className="relative h-40 overflow-hidden flex items-center justify-center bg-gradient-to-br from-zinc-900/50 to-zinc-950/50">
+                      <img 
+                        src="https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=200&h=200&fit=crop"
+                        alt="UC"
+                        className="w-24 h-24 object-contain opacity-80 group-hover:scale-110 transition-transform"
+                      />
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-4 space-y-2">
+                      {/* Label */}
+                      <div className="text-[11px] text-white/40 font-medium uppercase tracking-wide">MOBILE</div>
+                      
+                      {/* UC Amount */}
+                      <div className="text-xl font-bold text-white">
+                        {product.ucAmount} UC
+                      </div>
+
+                      {/* Region */}
+                      <div className="flex items-center gap-1.5 text-sm font-bold text-white">
+                        <span>🇹🇷 TÜRKİYE</span>
+                      </div>
+                      
+                      <div className="text-xs text-green-400">Bölgenizde kullanılabilir</div>
+
+                      {/* Prices */}
+                      <div className="pt-2">
+                        {product.discountPrice < product.price && (
+                          <div className="text-sm text-white/40 line-through">
+                            ₺ {product.price.toFixed(2)}
+                          </div>
+                        )}
+                        <div className="text-2xl font-bold text-white">
+                          ₺ {product.discountPrice.toFixed(2)}
+                        </div>
+                        {product.discountPercent > 0 && (
+                          <div className="text-xs text-green-400 mt-1">
+                            {product.discountPercent}% indirim
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
+        </div>
       </main>
 
       {/* Checkout Dialog - Plyr style */}

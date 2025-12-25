@@ -578,6 +578,68 @@ export default function App() {
         </DialogContent>
       </Dialog>
 
+      {/* Player ID Modal - Opens when payment clicked without ID */}
+      <Dialog open={playerIdModalOpen} onOpenChange={setPlayerIdModalOpen}>
+        <DialogContent className="max-w-[90vw] md:max-w-md p-0 gap-0 overflow-hidden bg-[#1e2229] border border-white/10">
+          {/* Error Banner - if error exists */}
+          {playerIdError && (
+            <div className="px-5 py-3 bg-red-600 flex items-start gap-3">
+              <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-3 h-3 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <div className="text-sm font-bold text-white mb-0.5">Hata</div>
+                <div className="text-sm text-white">{playerIdError}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Title */}
+          <div className="px-6 py-5 border-b border-white/5">
+            <h2 className="text-lg font-bold text-white">Oyuncu ID</h2>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 space-y-5">
+            <div>
+              <Label className="text-sm text-white/70 mb-2 block">Oyuncu ID'nizi girin</Label>
+              <Input
+                placeholder="Oyuncu ID"
+                value={playerId}
+                onChange={(e) => {
+                  setPlayerId(e.target.value)
+                  setPlayerIdError('')
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handlePlayerIdConfirm()
+                  }
+                }}
+                className="h-12 px-4 text-sm bg-[#12161D] text-white placeholder:text-white/40 border border-white/10 focus:border-blue-500 rounded"
+                autoFocus
+              />
+            </div>
+
+            <Button
+              onClick={handlePlayerIdConfirm}
+              disabled={playerLoading}
+              className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base uppercase tracking-wide rounded-lg"
+            >
+              {playerLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Doğrulanıyor...
+                </>
+              ) : (
+                'Onayla'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Footer */}
       <footer className="mt-12 md:mt-16 py-6 md:py-8 bg-[#12151a] border-t border-white/5">
         <div className="max-w-[1920px] mx-auto px-4 md:px-6">

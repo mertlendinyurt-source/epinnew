@@ -426,19 +426,6 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-2">
               {/* Left Column: Player ID & Payment Methods */}
               <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
-                {/* Error Alert - Only show if trying to pay without player ID */}
-                {!playerValid && orderProcessing && (
-                  <div className="px-4 py-3 rounded bg-red-600/90 border border-red-500 flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center flex-shrink-0">
-                      <span className="text-red-600 font-bold text-sm">!</span>
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold text-white mb-0.5">Hata</div>
-                      <div className="text-sm text-white">Lütfen 'Oyuncu ID' giriniz</div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Oyuncu ID */}
                 <div>
                   <div className="flex items-center justify-between mb-3">

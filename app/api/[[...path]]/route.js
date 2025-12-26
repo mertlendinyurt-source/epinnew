@@ -445,6 +445,151 @@ export async function POST(request) {
       });
     }
 
+    // User Register
+    if (pathname === '/api/auth/register') {
+      const { firstName, lastName, email, phone, password } = body;
+
+      // Validate required fields
+      if (!firstName || !lastName || !email || !phone || !password) {
+        return NextResponse.json(
+          { success: false, error: 'Tüm alanlar zorunludur' },
+          { status: 400 }
+        );
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return NextResponse.json(
+          { success: false, error: 'Geçersiz e-posta adresi' },
+          { status: 400 }
+        );
+      }
+
+      // Validate phone format (Turkish)
+      const phoneRegex = /^[0-9]{10,11}$/;
+      if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+        return NextResponse.json(
+          { success: false, error: 'Geçersiz telefon numarası (10-11 rakam)' },
+          { status: 400 }
+        );
+      }
+
+      // Validate password length
+      if (password.length < 6) {
+        return NextResponse.json(
+          { success: false, error: 'Şifre en az 6 karakter olmalıdır' },
+          { status: 400 }
+        );
+      }
+
+      // Check if email already exists
+      const existingUser = await db.collection('users').findOne({ email: email.toLowerCase() });
+      if (existingUser) {
+        return NextResponse.json(
+          { success: false, error: 'Bu e-posta ile kayıtlı hesap var', code: 'EMAIL_EXISTS' },
+          { status: 409 }
+        );
+      }
+
+      // Hash password
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      // Create user
+      const user = {
+        id: uuidv4(),
+        firstName,
+        lastName,
+        email: email.toLowerCase(),
+        phone: phone.replace(/\s/g, ''),
+        passwordHash,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      await db.collection('users').insertOne(user);
+
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          id: user.id, 
+          email: user.email,
+          type: 'user'
+        },
+        JWT_SECRET,
+        { expiresIn: '7d' } // 7 days for user tokens
+      );
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          token,
+          user: {
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            phone: user.phone
+          }
+        }
+      });
+    }
+
+    // User Login
+    if (pathname === '/api/auth/login') {
+      const { email, password } = body;
+
+      if (!email || !password) {
+        return NextResponse.json(
+          { success: false, error: 'E-posta ve şifre gereklidir' },
+          { status: 400 }
+        );
+      }
+
+      // Find user
+      const user = await db.collection('users').findOne({ email: email.toLowerCase() });
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'E-posta veya şifre hatalı' },
+          { status: 401 }
+        );
+      }
+
+      // Verify password
+      const validPassword = await bcrypt.compare(password, user.passwordHash);
+      if (!validPassword) {
+        return NextResponse.json(
+          { success: false, error: 'E-posta veya şifre hatalı' },
+          { status: 401 }
+        );
+      }
+
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          id: user.id, 
+          email: user.email,
+          type: 'user'
+        },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          token,
+          user: {
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            phone: user.phone
+          }
+        }
+      });
+    }
+
     // Create order
     if (pathname === '/api/orders') {
       const { productId, playerId, playerName } = body;

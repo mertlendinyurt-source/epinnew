@@ -606,6 +606,22 @@ export default function App() {
               </div>
             )}
 
+          <div className="relative bg-[#1e2229]/95 backdrop-blur-md">
+            {/* Error Banner - if error exists */}
+            {playerIdError && (
+              <div className="px-5 py-3 bg-red-600 flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-white mb-0.5">Hata</div>
+                  <div className="text-sm text-white">{playerIdError}</div>
+                </div>
+              </div>
+            )}
+
             {/* Title */}
             <div className="px-6 py-5 border-b border-white/5">
               <h2 className="text-lg font-bold text-white">Oyuncu ID</h2>

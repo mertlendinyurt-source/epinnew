@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
+import AuthModal from '@/components/AuthModal'
 
 export default function App() {
   const [products, setProducts] = useState([])
@@ -22,10 +23,18 @@ export default function App() {
   const [playerValid, setPlayerValid] = useState(null)
   const [orderProcessing, setOrderProcessing] = useState(false)
   const [playerIdError, setPlayerIdError] = useState('')
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     fetchProducts()
+    checkAuth()
   }, [])
+
+  const checkAuth = () => {
+    const token = localStorage.getItem('userToken')
+    setIsAuthenticated(!!token)
+  }
 
   const fetchProducts = async () => {
     try {

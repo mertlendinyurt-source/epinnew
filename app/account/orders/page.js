@@ -167,28 +167,30 @@ export default function AccountOrdersPage() {
             {orders.map((order) => (
               <div
                 key={order.id}
-                className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-colors"
+                onClick={() => router.push(`/account/orders/${order.id}`)}
+                className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-all cursor-pointer hover:shadow-lg hover:scale-[1.01]"
               >
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-3">
                       <h3 className="text-xl font-semibold text-white">
                         {order.productTitle}
                       </h3>
                       {getStatusBadge(order.status)}
+                      {getDeliveryBadge(order.delivery)}
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-400">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-400">
                       <div>
                         <span className="text-gray-500">Sipariş No:</span>{' '}
-                        <span className="font-mono text-gray-300">{order.id.substring(0, 8)}...</span>
+                        <span className="font-mono text-gray-300">{order.id.substring(0, 12)}...</span>
                       </div>
                       <div>
                         <span className="text-gray-500">Oyuncu ID:</span>{' '}
                         <span className="text-gray-300">{order.playerId}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">Oyuncu Adı:</span>{' '}
+                        <span className="text-gray-500">Oyuncu:</span>{' '}
                         <span className="text-gray-300">{order.playerName}</span>
                       </div>
                       <div>
@@ -197,47 +199,37 @@ export default function AccountOrdersPage() {
                           {new Date(order.createdAt).toLocaleString('tr-TR')}
                         </span>
                       </div>
+                      <div>
+                        <span className="text-gray-500">Tutar:</span>{' '}
+                        <span className="text-white font-semibold">₺{order.amount.toFixed(2)}</span>
+                      </div>
                     </div>
 
-                    {order.customer && (
-                      <div className="mt-3 pt-3 border-t border-gray-700">
-                        <div className="text-sm text-gray-400">
-                          <span className="text-gray-500">Müşteri:</span>{' '}
-                          {order.customer.firstName} {order.customer.lastName} - {order.customer.email}
-                        </div>
+                    {order.delivery && order.delivery.status === 'pending' && order.delivery.message && (
+                      <div className="mt-3 flex items-center gap-2 text-yellow-400 text-sm">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                        <span>{order.delivery.message}</span>
+                      </div>
+                    )}
+
+                    {order.delivery && order.delivery.status === 'delivered' && (
+                      <div className="mt-3 flex items-center gap-2 text-green-400 text-sm">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <span>Kodunuz hazır! Detayları görmek için tıklayın.</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="text-2xl font-bold text-white">
-                      ₺{order.amount.toFixed(2)}
-                    </div>
-                    <div className="text-sm text-gray-400">{order.currency}</div>
+                  <div className="flex items-center text-gray-400">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
                 </div>
-
-                {order.status === 'paid' && (
-                  <div className="mt-4 pt-4 border-t border-gray-700">
-                    <div className="flex items-center gap-2 text-green-500 text-sm">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span>UC yükleme işlemi başlatıldı. Kısa süre içinde hesabınıza yüklenecektir.</span>
-                    </div>
-                  </div>
-                )}
-
-                {order.status === 'failed' && (
-                  <div className="mt-4 pt-4 border-t border-gray-700">
-                    <div className="flex items-center gap-2 text-red-500 text-sm">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                      <span>Ödeme başarısız oldu. Lütfen tekrar deneyin.</span>
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </div>

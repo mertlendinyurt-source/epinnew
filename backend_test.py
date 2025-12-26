@@ -382,12 +382,15 @@ def test_order_creation_without_settings():
             return False
         
         # Reactivate settings for subsequent tests
-        db.shopier_settings.update_one(
-            {"merchantId": {"$exists": True}},
-            {"$set": {"isActive": True}},
-            sort=[("createdAt", -1)]
-        )
-        print("   Reactivated Shopier settings")
+        latest_settings = db.shopier_settings.find_one(sort=[("createdAt", -1)])
+        if latest_settings:
+            db.shopier_settings.update_one(
+                {"_id": latest_settings["_id"]},
+                {"$set": {"isActive": True}}
+            )
+            print("   Reactivated Shopier settings")
+        else:
+            print("   Warning: Could not find settings to reactivate")
         
         return True
     except Exception as e:

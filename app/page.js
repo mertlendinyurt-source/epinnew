@@ -494,19 +494,17 @@ export default function App() {
 
       <Dialog open={playerIdModalOpen} onOpenChange={setPlayerIdModalOpen}>
         <DialogContent 
-          className="max-w-[90vw] md:max-w-md p-0 gap-0 overflow-hidden border-0" 
-          style={{ backgroundColor: 'transparent' }}
+          className="max-w-[90vw] md:max-w-md p-0 gap-0 overflow-hidden border-0 rounded-lg" 
+          style={{ 
+            backgroundColor: '#1e2229e6',
+            backgroundImage: 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundBlendMode: 'overlay',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)'
+          }}
         >
-          <div 
-            className="absolute inset-0 bg-cover bg-center -z-10"
-            style={{
-              backgroundImage: 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)',
-              filter: 'blur(4px)'
-            }}
-          />
-          <div className="absolute inset-0 bg-black/30 -z-10" />
-          
-          <div className="relative bg-[#1e2229]/90 backdrop-blur-sm rounded-lg">
+          <div className="relative backdrop-blur-sm" style={{ backgroundColor: 'rgba(30, 34, 41, 0.75)' }}>
             {playerIdError && (
               <div className="px-5 py-3 bg-red-600 flex items-start gap-3 rounded-t-lg">
                 <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 mt-0.5">

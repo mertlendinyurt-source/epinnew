@@ -407,10 +407,10 @@ export default function App() {
           <div 
             className="absolute inset-0 bg-cover bg-center blur-sm -z-10"
             style={{
-              backgroundImage: 'url(https://images.pexels.com/photos/5380620/pexels-photo-5380620.jpeg?auto=compress&cs=tinysrgb&w=1920)'
+              backgroundImage: 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/ame3h6w6_wp5153882-pubg-fighting-wallpapers.jpg)'
             }}
           />
-          <div className="absolute inset-0 bg-black/60 -z-10" />
+          <div className="absolute inset-0 bg-black/70 -z-10" />
           
           <div className="relative bg-[#1e2229]/95 backdrop-blur-md flex flex-col max-h-[90vh]">
             {/* Title - Fixed */}

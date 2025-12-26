@@ -446,6 +446,40 @@ export async function GET(request) {
       });
     }
 
+    // Admin: Get product stock
+    if (pathname.match(/^\/api\/admin\/products\/[^\/]+\/stock$/)) {
+      const user = verifyToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const productId = pathname.split('/')[4];
+      
+      // Get stock items
+      const stocks = await db.collection('stock')
+        .find({ productId })
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      const availableCount = stocks.filter(s => s.status === 'available').length;
+      const assignedCount = stocks.filter(s => s.status === 'assigned').length;
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          stocks,
+          summary: {
+            total: stocks.length,
+            available: availableCount,
+            assigned: assignedCount
+          }
+        }
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

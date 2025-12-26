@@ -494,16 +494,22 @@ export default function App() {
 
       <Dialog open={playerIdModalOpen} onOpenChange={setPlayerIdModalOpen}>
         <DialogContent 
-          className="max-w-[90vw] md:max-w-md p-0 gap-0 overflow-hidden border-0 bg-transparent" 
+          className="max-w-[90vw] md:max-w-md p-0 gap-0 overflow-visible border-0" 
+          style={{ 
+            backgroundColor: 'transparent',
+            boxShadow: 'none'
+          }}
         >
-          <div 
-            className="absolute inset-0 bg-cover bg-center -z-10"
-            style={{
-              backgroundImage: 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)',
-              filter: 'blur(10px) brightness(0.7)'
-            }}
-          />
-          <div className="absolute inset-0 bg-black/40 -z-10" />
+          {/* PUBG Wallpaper Background */}
+          <div className="relative rounded-lg overflow-hidden">
+            <div 
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage: 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)',
+                filter: 'blur(8px)'
+              }}
+            />
+            <div className="absolute inset-0 bg-black/45" />
           
           <div className="relative bg-[#1e2229]/95 backdrop-blur-md">
             {playerIdError && (

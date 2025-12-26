@@ -982,10 +982,11 @@ export async function POST(request) {
 
             console.log('Stock assignment result:', JSON.stringify(result));
 
-            if (result) {
-              // MongoDB v4+ returns result directly, v3 returns result.value
-              const assignedStock = result.value || result;
-              const stockCode = assignedStock?.value || 'NO_CODE_FOUND';
+            if (result && result.value) {
+              // MongoDB v4+ Node.js driver returns { value: document }
+              // The document has a 'value' field containing the stock code
+              const assignedStock = result.value;
+              const stockCode = assignedStock.value; // This is the actual stock code string
               
               await db.collection('orders').updateOne(
                 { id: order.id },
@@ -994,7 +995,7 @@ export async function POST(request) {
                     delivery: {
                       status: 'delivered',
                       items: [stockCode],
-                      stockId: assignedStock?.id || assignedStock?._id,
+                      stockId: assignedStock.id || assignedStock._id,
                       assignedAt: new Date()
                     }
                   }

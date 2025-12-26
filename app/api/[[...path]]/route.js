@@ -386,7 +386,7 @@ export async function POST(request) {
         );
       }
 
-      // Get product
+      // Get product (price controlled by backend - NO FRONTEND PRICE TRUST)
       const product = await db.collection('products').findOne({ id: productId });
       if (!product) {
         return NextResponse.json(
@@ -395,7 +395,31 @@ export async function POST(request) {
         );
       }
 
-      // Create order
+      // Get Shopier settings from database
+      const shopierSettings = await db.collection('shopier_settings').findOne({ isActive: true });
+      
+      if (!shopierSettings) {
+        return NextResponse.json(
+          { success: false, error: 'Ödeme sistemi yapılandırılmamış. Lütfen yöneticiyle iletişime geçin.' },
+          { status: 503 }
+        );
+      }
+
+      // Decrypt Shopier credentials
+      let merchantId, apiKey, apiSecret;
+      try {
+        merchantId = decrypt(shopierSettings.merchantId);
+        apiKey = decrypt(shopierSettings.apiKey);
+        apiSecret = decrypt(shopierSettings.apiSecret);
+      } catch (error) {
+        console.error('Shopier settings decryption failed');
+        return NextResponse.json(
+          { success: false, error: 'Ödeme sistemi yapılandırma hatası' },
+          { status: 500 }
+        );
+      }
+
+      // Create order with PENDING status
       const order = {
         id: uuidv4(),
         productId,
@@ -403,7 +427,7 @@ export async function POST(request) {
         playerId,
         playerName,
         status: 'pending',
-        amount: product.discountPrice,
+        amount: product.discountPrice, // Backend-controlled price
         currency: 'TRY',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -411,8 +435,53 @@ export async function POST(request) {
 
       await db.collection('orders').insertOne(order);
 
-      // Generate mock Shopier payment URL
-      const paymentUrl = `/payment/shopier?orderId=${order.id}&amount=${order.amount}`;
+      // Generate random string for Shopier request
+      const randomNr = uuidv4().replace(/-/g, '').substring(0, 16);
+
+      // Prepare Shopier payment request
+      const shopierPayload = {
+        random_nr: randomNr,
+        platform_order_id: order.id,
+        product_name: `${product.title} - PUBG Mobile UC`,
+        product_type: '1', // Digital product
+        buyer_name: playerName.split('#')[0] || 'Player',
+        buyer_surname: playerName.split('#')[1] || playerId.substring(0, 4),
+        buyer_email: `player_${playerId}@pubg.temp`, // Mock email for PUBG IDs
+        buyer_phone: '5000000000', // Mock phone
+        buyer_account_age: '0',
+        buyer_id_nr: playerId,
+        buyer_address: 'Turkey',
+        buyer_city: 'Istanbul',
+        buyer_country: 'Turkey',
+        buyer_postcode: '34000',
+        shipping_address_list: '',
+        total_order_value: order.amount.toString(),
+        currency: 'TRY',
+        platform: '0',
+        is_in_frame: '0',
+        current_language: 'TR',
+        modul_version: 'API_v2.2',
+        apiKey: apiKey,
+        website_index: '1',
+        callback_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payment/shopier/callback`,
+        back_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?orderId=${order.id}`,
+      };
+
+      // Generate hash signature for request authentication
+      const hashData = `${merchantId}${randomNr}${order.amount}${order.id}`;
+      const signature = generateShopierHash(order.id, order.amount, apiSecret);
+
+      // For production Shopier, we use their payment page with form submission
+      // Create payment URL (Shopier iframe or redirect method)
+      const paymentUrl = `https://www.shopier.com/ShowProduct/api_pay4.php?${new URLSearchParams(shopierPayload).toString()}`;
+
+      // Store payment request in database for audit trail
+      await db.collection('payment_requests').insertOne({
+        orderId: order.id,
+        shopierPayload: { ...shopierPayload, apiKey: '***MASKED***' }, // Never log sensitive data
+        signature,
+        createdAt: new Date()
+      });
 
       return NextResponse.json({
         success: true,

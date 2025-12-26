@@ -47,6 +47,26 @@ def setup():
         print("❌ Admin login failed")
         return False
     
+    # Save correct Shopier settings (in case they were overwritten)
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    payload = {
+        "merchantId": "test_merchant_12345",
+        "apiKey": "test_api_key_67890",
+        "apiSecret": TEST_SHOPIER_API_SECRET,
+        "mode": "production"
+    }
+    response = requests.post(
+        f"{BASE_URL}/admin/settings/payments",
+        json=payload,
+        headers=headers,
+        timeout=10
+    )
+    if response.status_code == 200:
+        print("✅ Shopier settings configured")
+    else:
+        print("❌ Failed to configure Shopier settings")
+        return False
+    
     # Get products
     response = requests.get(f"{BASE_URL}/products", timeout=10)
     if response.status_code == 200:

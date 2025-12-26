@@ -962,7 +962,7 @@ export async function POST(request) {
         if (!currentOrder.delivery || !currentOrder.delivery.items || currentOrder.delivery.items.length === 0) {
           try {
             // Find available stock for this product (atomic operation)
-            const result = await db.collection('stock').findOneAndUpdate(
+            const assignedStock = await db.collection('stock').findOneAndUpdate(
               { 
                 productId: order.productId, 
                 status: 'available' 
@@ -980,13 +980,11 @@ export async function POST(request) {
               }
             );
 
-            console.log('Stock assignment result:', JSON.stringify(result));
+            console.log('Stock assignment result:', JSON.stringify(assignedStock));
 
-            if (result && result.value) {
-              // MongoDB v4+ Node.js driver returns { value: document }
-              // The document has a 'value' field containing the stock code
-              const assignedStock = result.value;
-              const stockCode = assignedStock.value; // This is the actual stock code string
+            if (assignedStock && assignedStock.value) {
+              // assignedStock IS the document, assignedStock.value IS the stock code string
+              const stockCode = assignedStock.value;
               
               await db.collection('orders').updateOne(
                 { id: order.id },

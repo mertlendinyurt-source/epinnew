@@ -500,10 +500,10 @@ export default function App() {
             className="absolute inset-0 bg-cover bg-center -z-10"
             style={{
               backgroundImage: 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)',
-              filter: 'blur(8px)'
+              filter: 'blur(10px) brightness(0.7)'
             }}
           />
-          <div className="absolute inset-0 bg-black/50 -z-10" />
+          <div className="absolute inset-0 bg-black/40 -z-10" />
           
           <div className="relative bg-[#1e2229]/95 backdrop-blur-md">
             {playerIdError && (

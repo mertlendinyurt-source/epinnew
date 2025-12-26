@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "PUBG Mobile UC Store Backend API - Complete backend implementation with public and admin endpoints for UC package sales"
+user_problem_statement: "PUBG Mobile UC Store - Move from mock Shopier to production-ready secure Shopier integration with admin panel settings management"
 
 backend:
   - task: "API Health Check Endpoint"

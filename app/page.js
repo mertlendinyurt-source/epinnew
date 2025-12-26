@@ -580,21 +580,31 @@ export default function App() {
 
       {/* Player ID Modal - Opens when payment clicked without ID */}
       <Dialog open={playerIdModalOpen} onOpenChange={setPlayerIdModalOpen}>
-        <DialogContent className="max-w-[90vw] md:max-w-md p-0 gap-0 overflow-hidden bg-[#1e2229] border border-white/10">
-          {/* Error Banner - if error exists */}
-          {playerIdError && (
-            <div className="px-5 py-3 bg-red-600 flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-3 h-3 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
+        <DialogContent className="max-w-[90vw] md:max-w-md p-0 gap-0 overflow-hidden border-0" style={{ backgroundColor: 'transparent' }}>
+          {/* PUBG Background - Blurred */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center blur-sm -z-10"
+            style={{
+              backgroundImage: 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)'
+            }}
+          />
+          <div className="absolute inset-0 bg-black/70 -z-10" />
+          
+          <div className="relative bg-[#1e2229]/95 backdrop-blur-md">
+            {/* Error Banner - if error exists */}
+            {playerIdError && (
+              <div className="px-5 py-3 bg-red-600 flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-white mb-0.5">Hata</div>
+                  <div className="text-sm text-white">{playerIdError}</div>
+                </div>
               </div>
-              <div>
-                <div className="text-sm font-bold text-white mb-0.5">Hata</div>
-                <div className="text-sm text-white">{playerIdError}</div>
-              </div>
-            </div>
-          )}
+            )}
 
           {/* Title */}
           <div className="px-6 py-5 border-b border-white/5">

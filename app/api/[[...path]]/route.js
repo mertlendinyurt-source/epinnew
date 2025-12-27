@@ -1912,6 +1912,14 @@ export async function POST(request) {
         );
       }
 
+      // Check if user has password (might be Google-only user)
+      if (!user.passwordHash) {
+        return NextResponse.json(
+          { success: false, error: 'Bu hesap Google ile oluşturulmuş. Google ile giriş yapın.', code: 'GOOGLE_ONLY' },
+          { status: 400 }
+        );
+      }
+
       // Verify password
       const validPassword = await bcrypt.compare(password, user.passwordHash);
       if (!validPassword) {
@@ -1941,9 +1949,37 @@ export async function POST(request) {
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
-            phone: user.phone
+            phone: user.phone,
+            authProvider: user.authProvider || 'local'
           }
         }
+      });
+    }
+
+    // ============================================
+    // GOOGLE OAUTH ENDPOINTS
+    // ============================================
+
+    // Public: Check if Google OAuth is enabled
+    if (pathname === '/api/auth/google/status') {
+      const oauthSettings = await db.collection('oauth_settings').findOne({ provider: 'google' });
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          enabled: oauthSettings?.enabled === true && !!oauthSettings?.clientId
+        }
+      });
+    }
+
+    // Public: Get Site Base URL for OAuth redirect info
+    if (pathname === '/api/site/base-url') {
+      const siteSettings = await db.collection('site_settings').findOne({ active: true });
+      const baseUrl = siteSettings?.baseUrl || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      
+      return NextResponse.json({
+        success: true,
+        data: { baseUrl }
       });
     }
 

@@ -606,6 +606,197 @@ export default function App() {
         </div>
       </div>
 
+      {/* Plyr Style Tab Section - Description & Reviews */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="bg-[#1e2229] rounded-xl overflow-hidden">
+          {/* Tab Bar */}
+          <div className="flex border-b border-white/10">
+            <button
+              onClick={() => setActiveInfoTab('description')}
+              className={`px-6 py-4 text-sm font-semibold transition-colors relative ${
+                activeInfoTab === 'description'
+                  ? 'text-white bg-[#282d36]'
+                  : 'text-white/60 hover:text-white/80'
+              }`}
+            >
+              Açıklama
+              {activeInfoTab === 'description' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveInfoTab('reviews')}
+              className={`px-6 py-4 text-sm font-semibold transition-colors relative flex items-center gap-2 ${
+                activeInfoTab === 'reviews'
+                  ? 'text-white bg-[#282d36]'
+                  : 'text-white/60 hover:text-white/80'
+              }`}
+            >
+              <span>Değerlendirmeler</span>
+              <div className="flex items-center gap-1 text-yellow-400">
+                <Star className="w-3.5 h-3.5 fill-current" />
+                <span className="text-xs">{reviewStats.avgRating.toFixed(1)} / 5</span>
+              </div>
+              {activeInfoTab === 'reviews' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+              )}
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          <div className="p-6">
+            {/* Description Tab */}
+            {activeInfoTab === 'description' && (
+              <div>
+                <div 
+                  className={`prose prose-invert max-w-none overflow-hidden transition-all duration-300 ${
+                    descriptionExpanded ? '' : 'max-h-[300px]'
+                  }`}
+                >
+                  {gameContent?.description ? (
+                    <div className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap">
+                      {gameContent.description.split('\n').map((line, i) => {
+                        if (line.startsWith('# ')) {
+                          return <h1 key={i} className="text-2xl font-bold text-white mt-4 mb-2">{line.slice(2)}</h1>
+                        }
+                        if (line.startsWith('## ')) {
+                          return <h2 key={i} className="text-xl font-semibold text-white mt-4 mb-2">{line.slice(3)}</h2>
+                        }
+                        if (line.startsWith('- ')) {
+                          return <li key={i} className="ml-4 text-white/70">{line.slice(2).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').split('<strong>').map((part, j) => 
+                            part.includes('</strong>') 
+                              ? <><strong key={j} className="text-white">{part.split('</strong>')[0]}</strong>{part.split('</strong>')[1]}</>
+                              : part
+                          )}</li>
+                        }
+                        if (line.startsWith('✓ ')) {
+                          return <div key={i} className="flex items-start gap-2 text-green-400"><Check className="w-4 h-4 mt-0.5 flex-shrink-0" /><span className="text-white/70">{line.slice(2).replace(/\*\*(.*?)\*\*/g, (_, text) => text)}</span></div>
+                        }
+                        if (line === '---') {
+                          return <hr key={i} className="border-white/10 my-4" />
+                        }
+                        if (line.startsWith('*') && line.endsWith('*')) {
+                          return <p key={i} className="text-white/50 italic text-xs mt-2">{line.slice(1, -1)}</p>
+                        }
+                        if (line.trim() === '') {
+                          return <br key={i} />
+                        }
+                        return <p key={i} className="text-white/70 mb-2">{line}</p>
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-white/60">İçerik yükleniyor...</p>
+                  )}
+                </div>
+                
+                {/* Expand/Collapse Button */}
+                {gameContent?.description && gameContent.description.length > 500 && (
+                  <button
+                    onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                    className="mt-4 flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+                  >
+                    {descriptionExpanded ? (
+                      <>
+                        <ChevronUp className="w-4 h-4" />
+                        Daha az göster
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4" />
+                        Devamını Gör
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Reviews Tab */}
+            {activeInfoTab === 'reviews' && (
+              <div>
+                {/* Stats Summary */}
+                <div className="bg-[#282d36] rounded-lg p-4 mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <div className="flex">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star 
+                            key={star} 
+                            className={`w-5 h-5 ${star <= Math.round(reviewStats.avgRating) ? 'fill-yellow-400 text-yellow-400' : 'text-white/20'}`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xl font-bold text-white">{reviewStats.avgRating.toFixed(2)}</span>
+                      <span className="text-white/60">/ 5</span>
+                    </div>
+                    <div className="h-6 w-px bg-white/20" />
+                    <p className="text-white/70 text-sm">
+                      Değerlendirme anketine toplamda <span className="text-white font-semibold">{reviewStats.reviewCount.toLocaleString()}</span> kişi katıldı
+                    </p>
+                  </div>
+                </div>
+
+                {/* Reviews List */}
+                <div className="space-y-4">
+                  {reviews.length > 0 ? (
+                    reviews.map((review) => (
+                      <div key={review.id} className="bg-[#282d36] rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          {/* Avatar */}
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                            {review.userName?.charAt(0)?.toUpperCase() || 'M'}
+                          </div>
+                          
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-semibold text-white">{review.userName || 'Misafir'}</span>
+                              <div className="flex">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star 
+                                    key={star} 
+                                    className={`w-3.5 h-3.5 ${star <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-white/20'}`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            {review.comment && (
+                              <p className="text-white/70 text-sm mb-2">{review.comment}</p>
+                            )}
+                            <p className="text-white/40 text-xs">
+                              {new Date(review.createdAt).toLocaleDateString('tr-TR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-white/60">
+                      Henüz değerlendirme bulunmuyor.
+                    </div>
+                  )}
+                </div>
+
+                {/* Load More Button */}
+                {reviewsHasMore && (
+                  <button
+                    onClick={loadMoreReviews}
+                    disabled={loadingReviews}
+                    className="mt-6 w-full py-3 bg-[#282d36] hover:bg-[#323842] rounded-lg text-blue-400 font-medium text-sm transition-colors disabled:opacity-50"
+                  >
+                    {loadingReviews ? 'Yükleniyor...' : 'Daha fazla görüntüle'}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
         <DialogContent className="max-w-[95vw] md:max-w-4xl max-h-[90vh] p-0 gap-0 overflow-hidden border-0" style={{ backgroundColor: 'transparent' }}>
           <div 

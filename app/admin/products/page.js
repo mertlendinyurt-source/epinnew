@@ -531,13 +531,49 @@ export default function AdminProducts() {
             </div>
 
             <div className="col-span-2">
-              <Label htmlFor="image" className="text-white">Görsel URL</Label>
-              <Input
-                id="image"
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                className="bg-slate-800 border-slate-700 text-white mt-2"
+              <Label className="text-white mb-2 block">Ürün Görseli</Label>
+              
+              {imagePreview && (
+                <div className="mb-3 p-3 bg-slate-800 rounded-lg border border-slate-700">
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="w-32 h-32 object-contain mx-auto"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setImagePreview(null)
+                      setImageFile(null)
+                      setFormData({ ...formData, imageUrl: '' })
+                    }}
+                    className="mt-2 w-full border-red-700 text-red-400 hover:bg-red-900/20"
+                  >
+                    Görseli Kaldır
+                  </Button>
+                </div>
+              )}
+
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+                onChange={handleImageSelect}
+                className="hidden"
+                id="product-image-upload"
               />
+              <label
+                htmlFor="product-image-upload"
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-blue-500 transition-colors"
+              >
+                <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <span className="text-slate-300 text-sm">
+                  {imageFile ? imageFile.name : 'Ürün Görseli Seç (PNG, JPG, WEBP)'}
+                </span>
+              </label>
             </div>
 
             <div className="col-span-2 flex items-center space-x-2">
@@ -560,9 +596,10 @@ export default function AdminProducts() {
             </Button>
             <Button
               onClick={handleSave}
+              disabled={uploadingImage}
               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
             >
-              Kaydet
+              {uploadingImage ? 'Yükleniyor...' : 'Kaydet'}
             </Button>
           </DialogFooter>
         </DialogContent>

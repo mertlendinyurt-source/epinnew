@@ -129,7 +129,7 @@ async function initializeDb() {
         discountPercent: 10,
         active: true,
         sortOrder: 5,
-        image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop',
+        imageUrl: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop',
         createdAt: new Date()
       }
     ];

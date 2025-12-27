@@ -819,6 +819,39 @@ export async function GET(request) {
       });
     }
 
+    // Admin: Get Google OAuth Settings (GET)
+    if (pathname === '/api/admin/settings/oauth/google') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const oauthSettings = await db.collection('oauth_settings').findOne({ provider: 'google' });
+      
+      // Get site base URL for display
+      const siteSettings = await db.collection('site_settings').findOne({ active: true });
+      const baseUrl = siteSettings?.baseUrl || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          enabled: oauthSettings?.enabled || false,
+          clientId: oauthSettings?.clientId ? maskSensitiveData(decrypt(oauthSettings.clientId)) : '',
+          clientSecret: oauthSettings?.clientSecret ? '••••••••' : '',
+          hasClientId: !!oauthSettings?.clientId,
+          hasClientSecret: !!oauthSettings?.clientSecret,
+          baseUrl: baseUrl,
+          redirectUri: `${baseUrl}/api/auth/google/callback`,
+          authorizedOrigin: baseUrl,
+          updatedBy: oauthSettings?.updatedBy || null,
+          updatedAt: oauthSettings?.updatedAt || null
+        }
+      });
+    }
+
     // User: Get my orders
     if (pathname === '/api/account/orders') {
       const authUser = verifyToken(request);

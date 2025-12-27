@@ -537,6 +537,102 @@ backend:
         agent: "testing"
         comment: "Out of stock scenario handling working correctly. When PAID callback received but no stock available for product, order delivery.status set to 'pending' with message 'Stok bekleniyor'. Order status still changes to 'paid'. No stock assigned (delivery.items empty array). System gracefully handles stock shortage without errors."
 
+  - task: "User Support Tickets - Create Ticket"
+    implemented: true
+    working: "NA"
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/support/tickets implemented. Creates ticket with subject, category, message. Sets status=waiting_admin, userCanReply=false. Rate limited (3 per 10 min). Creates initial message. Needs testing."
+
+  - task: "User Support Tickets - List Tickets"
+    implemented: true
+    working: "NA"
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/support/tickets returns user's tickets sorted by updatedAt. Requires JWT auth. Needs testing."
+
+  - task: "User Support Tickets - Get Single Ticket"
+    implemented: true
+    working: "NA"
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/support/tickets/:ticketId returns ticket + messages. Security: user can only see own tickets. Needs testing."
+
+  - task: "User Support Tickets - Send Message"
+    implemented: true
+    working: "NA"
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/support/tickets/:ticketId/messages. RULE: Returns 403 if userCanReply=false (admin yanıtı bekleniyor). On success sets userCanReply=false, status=waiting_admin. Needs testing."
+
+  - task: "Admin Support Tickets - List All Tickets"
+    implemented: true
+    working: "NA"
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/admin/support/tickets with optional status filter. Returns tickets with user info (email, name). Requires admin JWT. Needs testing."
+
+  - task: "Admin Support Tickets - Get Single Ticket"
+    implemented: true
+    working: "NA"
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/admin/support/tickets/:ticketId returns ticket + messages + user info. Needs testing."
+
+  - task: "Admin Support Tickets - Reply"
+    implemented: true
+    working: "NA"
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/admin/support/tickets/:ticketId/messages. Sets status=waiting_user, userCanReply=true (enables user to respond). Needs testing."
+
+  - task: "Admin Support Tickets - Close Ticket"
+    implemented: true
+    working: "NA"
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/admin/support/tickets/:ticketId/close. Sets status=closed, userCanReply=false. Needs testing."
+
 frontend:
   - task: "Auth Modal (Register + Login)"
     implemented: true

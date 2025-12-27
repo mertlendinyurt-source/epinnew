@@ -356,13 +356,9 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
           {/* Login Form */}
           {tab === 'login' && (
             <div className="space-y-4">
-              {/* Google Login Button */}
-              {googleEnabled && (
-                <>
-                  <GoogleLoginButton />
-                  <OrDivider />
-                </>
-              )}
+              {/* Google Login Button - Always visible */}
+              <GoogleLoginButton />
+              <OrDivider />
 
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>

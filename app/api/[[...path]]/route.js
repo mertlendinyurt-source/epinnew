@@ -1901,6 +1901,156 @@ export async function PUT(request) {
   const { pathname } = new URL(request.url);
   
   try {
+    await initializeDb();
+    const db = await getDb();
+    const body = await request.json();
+
+    // User account endpoints (use user token)
+    if (pathname === '/api/account/me') {
+      const userData = verifyToken(request);
+      if (!userData) {
+        return NextResponse.json(
+          { success: false, error: 'Oturum açmanız gerekiyor' },
+          { status: 401 }
+        );
+      }
+
+      const userId = userData.id || userData.userId;
+      const { firstName, lastName, phone } = body;
+
+      // Validation
+      if (firstName !== undefined && firstName.length < 2) {
+        return NextResponse.json(
+          { success: false, error: 'Ad en az 2 karakter olmalıdır' },
+          { status: 400 }
+        );
+      }
+
+      if (lastName !== undefined && lastName.length < 2) {
+        return NextResponse.json(
+          { success: false, error: 'Soyad en az 2 karakter olmalıdır' },
+          { status: 400 }
+        );
+      }
+
+      // Phone format validation (Turkish format)
+      if (phone !== undefined && phone.length > 0) {
+        const phoneRegex = /^(\+90|0)?[5][0-9]{9}$/;
+        const cleanPhone = phone.replace(/\s/g, '');
+        if (!phoneRegex.test(cleanPhone)) {
+          return NextResponse.json(
+            { success: false, error: 'Geçersiz telefon numarası formatı' },
+            { status: 400 }
+          );
+        }
+      }
+
+      const updateData = { updatedAt: new Date() };
+      if (firstName !== undefined) updateData.firstName = firstName.trim();
+      if (lastName !== undefined) updateData.lastName = lastName.trim();
+      if (phone !== undefined) updateData.phone = phone.replace(/\s/g, '');
+
+      await db.collection('users').updateOne(
+        { id: userId },
+        { $set: updateData }
+      );
+
+      const updatedUser = await db.collection('users').findOne({ id: userId });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Profil güncellendi',
+        data: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          firstName: updatedUser.firstName || '',
+          lastName: updatedUser.lastName || '',
+          phone: updatedUser.phone || ''
+        }
+      });
+    }
+
+    if (pathname === '/api/account/password') {
+      const userData = verifyToken(request);
+      if (!userData) {
+        return NextResponse.json(
+          { success: false, error: 'Oturum açmanız gerekiyor' },
+          { status: 401 }
+        );
+      }
+
+      const userId = userData.id || userData.userId;
+      const { currentPassword, newPassword, confirmPassword } = body;
+
+      // Validation
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        return NextResponse.json(
+          { success: false, error: 'Tüm alanlar zorunludur' },
+          { status: 400 }
+        );
+      }
+
+      if (newPassword !== confirmPassword) {
+        return NextResponse.json(
+          { success: false, error: 'Yeni şifreler eşleşmiyor' },
+          { status: 400 }
+        );
+      }
+
+      if (newPassword.length < 8) {
+        return NextResponse.json(
+          { success: false, error: 'Yeni şifre en az 8 karakter olmalıdır' },
+          { status: 400 }
+        );
+      }
+
+      // Check for at least one letter and one number
+      const hasLetter = /[a-zA-Z]/.test(newPassword);
+      const hasNumber = /[0-9]/.test(newPassword);
+      if (!hasLetter || !hasNumber) {
+        return NextResponse.json(
+          { success: false, error: 'Şifre en az bir harf ve bir rakam içermelidir' },
+          { status: 400 }
+        );
+      }
+
+      // Get user and verify current password
+      const user = await db.collection('users').findOne({ id: userId });
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Kullanıcı bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!isValidPassword) {
+        return NextResponse.json(
+          { success: false, error: 'Mevcut şifre yanlış' },
+          { status: 400 }
+        );
+      }
+
+      // Hash new password and update
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await db.collection('users').updateOne(
+        { id: userId },
+        { 
+          $set: { 
+            password: hashedPassword,
+            passwordChangedAt: new Date(),
+            updatedAt: new Date()
+          } 
+        }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: 'Şifreniz başarıyla güncellendi'
+      });
+    }
+
+    // Admin endpoints (require admin token)
     const user = verifyAdminToken(request);
     if (!user) {
       return NextResponse.json(
@@ -1908,9 +2058,6 @@ export async function PUT(request) {
         { status: 401 }
       );
     }
-
-    const db = await getDb();
-    const body = await request.json();
 
     // Update product
     if (pathname.match(/^\/api\/admin\/products\/[^\/]+$/)) {

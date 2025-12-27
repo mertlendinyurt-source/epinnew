@@ -1,15 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
-export default function AuthModal({ open, onClose, onSuccess }) {
-  const [tab, setTab] = useState('register'); // 'register' or 'login'
+export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'register' }) {
+  const [tab, setTab] = useState(defaultTab);
   const [loading, setLoading] = useState(false);
+  
+  // Reset tab when modal opens with a new defaultTab
+  useEffect(() => {
+    if (open) {
+      setTab(defaultTab);
+    }
+  }, [open, defaultTab]);
   
   // Register form
   const [registerForm, setRegisterForm] = useState({

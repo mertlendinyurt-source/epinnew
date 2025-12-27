@@ -1970,6 +1970,25 @@ export async function DELETE(request) {
       });
     }
 
+    // Delete legal page
+    if (pathname.match(/^\/api\/admin\/legal-pages\/[^\/]+$/)) {
+      const pageId = pathname.split('/').pop();
+      
+      const result = await db.collection('legal_pages').deleteOne({ id: pageId });
+      
+      if (result.deletedCount === 0) {
+        return NextResponse.json(
+          { success: false, error: 'Sayfa bulunamadı' },
+          { status: 404 }
+        );
+      }
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Sayfa silindi'
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

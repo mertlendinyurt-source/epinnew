@@ -258,7 +258,7 @@ export async function GET(request) {
 
     // Admin: Get all orders
     if (pathname === '/api/admin/orders') {
-      const user = verifyToken(request);
+      const user = verifyAdminToken(request);
       if (!user) {
         return NextResponse.json(
           { success: false, error: 'Yetkisiz erişim' },

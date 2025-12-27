@@ -711,7 +711,7 @@ def test_admin_close_ticket():
     
     # Test 1: Close ticket without admin auth
     try:
-        response = requests.post(f"{API_BASE}/admin/support/tickets/{test_ticket_id}/close")
+        response = requests.post(f"{API_BASE}/admin/support/tickets/{test_ticket_id}/close", json={})
         
         success = response.status_code == 401
         print_test_result(
@@ -725,7 +725,7 @@ def test_admin_close_ticket():
     # Test 2: Close ticket with admin token
     try:
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = requests.post(f"{API_BASE}/admin/support/tickets/{test_ticket_id}/close", headers=headers)
+        response = requests.post(f"{API_BASE}/admin/support/tickets/{test_ticket_id}/close", json={}, headers=headers)
         
         if response.status_code == 200:
             data = response.json()

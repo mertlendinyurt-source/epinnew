@@ -1795,6 +1795,270 @@ export async function POST(request) {
       });
     }
 
+    // User: Create support ticket
+    if (pathname === '/api/support/tickets') {
+      const userData = verifyToken(request);
+      if (!userData) {
+        return NextResponse.json(
+          { success: false, error: 'Oturum açmanız gerekiyor' },
+          { status: 401 }
+        );
+      }
+
+      const userId = userData.id || userData.userId;
+      const { subject, category, message } = body;
+
+      if (!subject || !category || !message) {
+        return NextResponse.json(
+          { success: false, error: 'Konu, kategori ve mesaj zorunludur' },
+          { status: 400 }
+        );
+      }
+
+      if (subject.length < 5) {
+        return NextResponse.json(
+          { success: false, error: 'Konu en az 5 karakter olmalıdır' },
+          { status: 400 }
+        );
+      }
+
+      if (message.length < 10) {
+        return NextResponse.json(
+          { success: false, error: 'Mesaj en az 10 karakter olmalıdır' },
+          { status: 400 }
+        );
+      }
+
+      const validCategories = ['odeme', 'teslimat', 'hesap', 'diger'];
+      if (!validCategories.includes(category)) {
+        return NextResponse.json(
+          { success: false, error: 'Geçersiz kategori' },
+          { status: 400 }
+        );
+      }
+
+      // Rate limit: max 3 tickets per 10 minutes
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+      const recentTickets = await db.collection('tickets').countDocuments({
+        userId,
+        createdAt: { $gte: tenMinutesAgo }
+      });
+
+      if (recentTickets >= 3) {
+        return NextResponse.json(
+          { success: false, error: 'Çok fazla talep oluşturdunuz. 10 dakika bekleyin.' },
+          { status: 429 }
+        );
+      }
+
+      // Create ticket
+      const ticket = {
+        id: uuidv4(),
+        userId,
+        subject,
+        category,
+        status: 'waiting_admin',
+        lastMessageBy: 'user',
+        userCanReply: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      await db.collection('tickets').insertOne(ticket);
+
+      // Create first message
+      const ticketMessage = {
+        id: uuidv4(),
+        ticketId: ticket.id,
+        sender: 'user',
+        message,
+        createdAt: new Date()
+      };
+
+      await db.collection('ticket_messages').insertOne(ticketMessage);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Destek talebiniz oluşturuldu',
+        data: ticket
+      });
+    }
+
+    // User: Send message to ticket
+    if (pathname.match(/^\/api\/support\/tickets\/[^\/]+\/messages$/)) {
+      const userData = verifyToken(request);
+      if (!userData) {
+        return NextResponse.json(
+          { success: false, error: 'Oturum açmanız gerekiyor' },
+          { status: 401 }
+        );
+      }
+
+      const ticketId = pathname.split('/')[4];
+      const userId = userData.id || userData.userId;
+      const { message } = body;
+
+      if (!message || message.length < 2) {
+        return NextResponse.json(
+          { success: false, error: 'Mesaj en az 2 karakter olmalıdır' },
+          { status: 400 }
+        );
+      }
+
+      // Get ticket and verify ownership
+      const ticket = await db.collection('tickets').findOne({ id: ticketId, userId });
+      if (!ticket) {
+        return NextResponse.json(
+          { success: false, error: 'Talep bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Check if user can reply
+      if (!ticket.userCanReply) {
+        return NextResponse.json(
+          { success: false, error: 'Admin yanıtı bekleniyor. Şu anda mesaj gönderemezsiniz.' },
+          { status: 403 }
+        );
+      }
+
+      if (ticket.status === 'closed') {
+        return NextResponse.json(
+          { success: false, error: 'Bu talep kapatılmış. Yeni mesaj gönderemezsiniz.' },
+          { status: 403 }
+        );
+      }
+
+      // Create message
+      const ticketMessage = {
+        id: uuidv4(),
+        ticketId,
+        sender: 'user',
+        message,
+        createdAt: new Date()
+      };
+
+      await db.collection('ticket_messages').insertOne(ticketMessage);
+
+      // Update ticket status
+      await db.collection('tickets').updateOne(
+        { id: ticketId },
+        {
+          $set: {
+            status: 'waiting_admin',
+            lastMessageBy: 'user',
+            userCanReply: false,
+            updatedAt: new Date()
+          }
+        }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: 'Mesajınız gönderildi',
+        data: ticketMessage
+      });
+    }
+
+    // Admin: Send message to ticket
+    if (pathname.match(/^\/api\/admin\/support\/tickets\/[^\/]+\/messages$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const ticketId = pathname.split('/')[5];
+      const { message } = body;
+
+      if (!message || message.length < 2) {
+        return NextResponse.json(
+          { success: false, error: 'Mesaj en az 2 karakter olmalıdır' },
+          { status: 400 }
+        );
+      }
+
+      const ticket = await db.collection('tickets').findOne({ id: ticketId });
+      if (!ticket) {
+        return NextResponse.json(
+          { success: false, error: 'Talep bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Create message
+      const ticketMessage = {
+        id: uuidv4(),
+        ticketId,
+        sender: 'admin',
+        adminUsername: user.username,
+        message,
+        createdAt: new Date()
+      };
+
+      await db.collection('ticket_messages').insertOne(ticketMessage);
+
+      // Update ticket status - user can now reply
+      await db.collection('tickets').updateOne(
+        { id: ticketId },
+        {
+          $set: {
+            status: 'waiting_user',
+            lastMessageBy: 'admin',
+            userCanReply: true,
+            updatedAt: new Date()
+          }
+        }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: 'Yanıt gönderildi',
+        data: ticketMessage
+      });
+    }
+
+    // Admin: Close ticket
+    if (pathname.match(/^\/api\/admin\/support\/tickets\/[^\/]+\/close$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const ticketId = pathname.split('/')[5];
+
+      const ticket = await db.collection('tickets').findOne({ id: ticketId });
+      if (!ticket) {
+        return NextResponse.json(
+          { success: false, error: 'Talep bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      await db.collection('tickets').updateOne(
+        { id: ticketId },
+        {
+          $set: {
+            status: 'closed',
+            userCanReply: false,
+            closedBy: user.username,
+            closedAt: new Date(),
+            updatedAt: new Date()
+          }
+        }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: 'Talep kapatıldı'
+      });
+    }
+
     // Admin: Save regions settings
     if (pathname === '/api/admin/settings/regions') {
       const user = verifyAdminToken(request);

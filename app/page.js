@@ -117,6 +117,22 @@ export default function App() {
       if (data.success) {
         setSiteSettings(data.data)
         
+        // Update document title dynamically
+        if (data.data.metaTitle) {
+          document.title = data.data.metaTitle
+        }
+        
+        // Update meta description dynamically
+        if (data.data.metaDescription) {
+          let metaDesc = document.querySelector('meta[name="description"]')
+          if (!metaDesc) {
+            metaDesc = document.createElement('meta')
+            metaDesc.name = 'description'
+            document.head.appendChild(metaDesc)
+          }
+          metaDesc.content = data.data.metaDescription
+        }
+        
         // Update favicon dynamically
         if (data.data.favicon) {
           const link = document.querySelector("link[rel*='icon']") || document.createElement('link')

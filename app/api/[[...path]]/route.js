@@ -585,6 +585,153 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: regions });
     }
 
+    // Public: Get game content (description, etc.)
+    if (pathname === '/api/content/pubg') {
+      let content = await db.collection('game_content').findOne({ game: 'pubg' });
+      
+      // Default content if not exists
+      if (!content) {
+        content = {
+          game: 'pubg',
+          title: 'PUBG Mobile',
+          description: `# PUBG Mobile UC Satın Al
+
+PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown Cash (UC), oyun içi para birimidir ve çeşitli kozmetik eşyalar, silah skinleri ve Royale Pass satın almak için kullanılır.
+
+## UC ile Neler Yapabilirsiniz?
+
+- **Royale Pass**: Her sezon yeni Royale Pass satın alarak özel ödüller kazanın
+- **Silah Skinleri**: Nadir ve efsanevi silah görünümleri
+- **Karakter Kıyafetleri**: Karakterinizi özelleştirin
+- **Araç Skinleri**: Benzersiz araç görünümleri
+- **Emote ve Danslar**: Eğlenceli hareketler
+
+## Neden Bizi Tercih Etmelisiniz?
+
+✓ **Anında Teslimat**: Ödeme onaylandıktan sonra kodunuz anında teslim edilir
+✓ **Güvenli Ödeme**: SSL şifrelemeli güvenli ödeme altyapısı
+✓ **7/24 Destek**: Her zaman yanınızdayız
+✓ **En Uygun Fiyat**: Piyasadaki en rekabetçi fiyatlar
+
+## Nasıl Kullanılır?
+
+1. Satın almak istediğiniz UC paketini seçin
+2. PUBG Mobile oyuncu ID'nizi girin
+3. Ödemenizi tamamlayın
+4. Kodunuz anında hesabınıza tanımlanır
+
+---
+
+*Not: Bu site PUBG Mobile veya Tencent Games ile resmi bir bağlantısı yoktur.*`,
+          defaultRating: 5.0,
+          defaultReviewCount: 2008,
+          updatedAt: new Date()
+        };
+      }
+      
+      return NextResponse.json({ success: true, data: content });
+    }
+
+    // Public: Get reviews with pagination
+    if (pathname === '/api/reviews') {
+      const game = searchParams.get('game') || 'pubg';
+      const page = parseInt(searchParams.get('page') || '1');
+      const limit = parseInt(searchParams.get('limit') || '5');
+      const skip = (page - 1) * limit;
+
+      const reviews = await db.collection('reviews')
+        .find({ game, approved: true })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+
+      const totalReviews = await db.collection('reviews').countDocuments({ game, approved: true });
+      
+      // Calculate average rating
+      const ratingAgg = await db.collection('reviews').aggregate([
+        { $match: { game, approved: true } },
+        { $group: { _id: null, avgRating: { $avg: '$rating' }, count: { $sum: 1 } } }
+      ]).toArray();
+
+      let avgRating = 5.0;
+      let reviewCount = 0;
+      
+      if (ratingAgg.length > 0 && ratingAgg[0].count > 0) {
+        avgRating = Math.round(ratingAgg[0].avgRating * 10) / 10;
+        reviewCount = ratingAgg[0].count;
+      } else {
+        // Use defaults from content if no reviews
+        const content = await db.collection('game_content').findOne({ game });
+        if (content) {
+          avgRating = content.defaultRating || 5.0;
+          reviewCount = content.defaultReviewCount || 0;
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          reviews,
+          pagination: {
+            page,
+            limit,
+            total: totalReviews,
+            totalPages: Math.ceil(totalReviews / limit),
+            hasMore: skip + reviews.length < totalReviews
+          },
+          stats: {
+            avgRating,
+            reviewCount: reviewCount || totalReviews
+          }
+        }
+      });
+    }
+
+    // Admin: Get all reviews (including unapproved)
+    if (pathname === '/api/admin/reviews') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const game = searchParams.get('game') || 'pubg';
+      const reviews = await db.collection('reviews')
+        .find({ game })
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      return NextResponse.json({ success: true, data: reviews });
+    }
+
+    // Admin: Get game content
+    if (pathname === '/api/admin/content/pubg') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      let content = await db.collection('game_content').findOne({ game: 'pubg' });
+      
+      if (!content) {
+        content = {
+          game: 'pubg',
+          title: 'PUBG Mobile',
+          description: '',
+          defaultRating: 5.0,
+          defaultReviewCount: 2008
+        };
+      }
+
+      return NextResponse.json({ success: true, data: content });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

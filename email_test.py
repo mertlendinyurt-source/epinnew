@@ -326,7 +326,8 @@ def test_password_change_email_trigger(user_token, user_id, admin_token):
                                headers=headers, 
                                json={
                                    "currentPassword": "testpass123",
-                                   "newPassword": "newpass123"
+                                   "newPassword": "newpass123",
+                                   "confirmPassword": "newpass123"
                                })
         
         if response.status_code == 200:

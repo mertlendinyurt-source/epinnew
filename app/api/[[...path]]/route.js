@@ -926,6 +926,11 @@ export async function GET(request) {
           favicon: null,
           heroImage: null,
           categoryIcon: null,
+          siteName: 'PUBG UC Store',
+          metaTitle: 'PUBG UC Store | Güvenilir UC Satış Platformu',
+          metaDescription: 'PUBG Mobile UC satın al. Güvenilir, hızlı ve uygun fiyatlı UC satış platformu.',
+          contactEmail: '',
+          contactPhone: '',
           active: true
         }
       });
@@ -941,7 +946,12 @@ export async function GET(request) {
           logo: settings?.logo || null,
           favicon: settings?.favicon || null,
           heroImage: settings?.heroImage || null,
-          categoryIcon: settings?.categoryIcon || null
+          categoryIcon: settings?.categoryIcon || null,
+          siteName: settings?.siteName || 'PUBG UC Store',
+          metaTitle: settings?.metaTitle || 'PUBG UC Store | Güvenilir UC Satış Platformu',
+          metaDescription: settings?.metaDescription || 'PUBG Mobile UC satın al. Güvenilir, hızlı ve uygun fiyatlı UC satış platformu.',
+          contactEmail: settings?.contactEmail || '',
+          contactPhone: settings?.contactPhone || ''
         }
       });
     }

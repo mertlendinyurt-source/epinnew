@@ -63,7 +63,8 @@ export default function SiteSettingsPage() {
         setPreviews({
           logo: result.data.logo,
           favicon: result.data.favicon,
-          heroImage: result.data.heroImage
+          heroImage: result.data.heroImage,
+          categoryIcon: result.data.categoryIcon
         });
       }
     } catch (error) {

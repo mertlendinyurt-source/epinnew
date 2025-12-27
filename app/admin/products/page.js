@@ -573,152 +573,338 @@ export default function AdminProducts() {
         </Card>
       </div>
 
-      {/* Edit Dialog */}
+      {/* Edit Dialog - Premium UI */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Ürün Düzenle</DialogTitle>
-            <DialogDescription className="text-slate-400">
-              Ürün bilgilerini güncelleyin
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid grid-cols-2 gap-4 py-4">
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-3xl max-h-[90vh] overflow-y-auto p-0">
+          {/* Header */}
+          <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between">
             <div>
-              <Label htmlFor="title" className="text-white">Ürün Adı</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="bg-slate-800 border-slate-700 text-white mt-2"
-              />
+              <DialogTitle className="text-xl font-bold text-white">Ürün Düzenle</DialogTitle>
+              <p className="text-sm text-slate-400 mt-1">Ürün bilgilerini güncelleyin</p>
             </div>
-
-            <div>
-              <Label htmlFor="ucAmount" className="text-white">UC Miktarı</Label>
-              <Input
-                id="ucAmount"
-                type="number"
-                value={formData.ucAmount}
-                onChange={(e) => setFormData({ ...formData, ucAmount: e.target.value })}
-                className="bg-slate-800 border-slate-700 text-white mt-2"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="price" className="text-white">Liste Fiyatı (₺)</Label>
-              <Input
-                id="price"
-                type="number"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                className="bg-slate-800 border-slate-700 text-white mt-2"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="discountPrice" className="text-white">İndirimli Fiyat (₺)</Label>
-              <Input
-                id="discountPrice"
-                type="number"
-                step="0.01"
-                value={formData.discountPrice}
-                onChange={(e) => setFormData({ ...formData, discountPrice: e.target.value })}
-                className="bg-slate-800 border-slate-700 text-white mt-2"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="discountPercent" className="text-white">İndirim Yüzdesi (%)</Label>
-              <Input
-                id="discountPercent"
-                type="number"
-                value={formData.discountPercent}
-                onChange={(e) => setFormData({ ...formData, discountPercent: e.target.value })}
-                className="bg-slate-800 border-slate-700 text-white mt-2"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="sortOrder" className="text-white">Sıralama</Label>
-              <Input
-                id="sortOrder"
-                type="number"
-                value={formData.sortOrder}
-                onChange={(e) => setFormData({ ...formData, sortOrder: e.target.value })}
-                className="bg-slate-800 border-slate-700 text-white mt-2"
-              />
-            </div>
-
-            <div className="col-span-2">
-              <Label className="text-white mb-2 block">Ürün Görseli</Label>
-              
-              {imagePreview && (
-                <div className="mb-3 p-3 bg-slate-800 rounded-lg border border-slate-700">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
-                    className="w-32 h-32 object-contain mx-auto"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
+            <div className="flex items-center gap-3">
+              {editingProduct && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 rounded-lg">
+                  <span className="text-xs text-slate-500">ID:</span>
+                  <code className="text-xs text-slate-400 font-mono">{editingProduct.id.slice(0, 8)}...</code>
+                  <button
                     onClick={() => {
-                      setImagePreview(null)
-                      setImageFile(null)
-                      setFormData({ ...formData, imageUrl: '' })
+                      navigator.clipboard.writeText(editingProduct.id)
+                      toast.success('ID kopyalandı')
                     }}
-                    className="mt-2 w-full border-red-700 text-red-400 hover:bg-red-900/20"
+                    className="text-slate-400 hover:text-white transition-colors"
                   >
-                    Görseli Kaldır
-                  </Button>
+                    <Copy className="w-3 h-3" />
+                  </button>
                 </div>
               )}
+            </div>
+          </div>
+          
+          <div className="p-6 space-y-6">
+            {/* Section 1: Product Info */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <Package className="w-4 h-4 text-blue-400" />
+                Ürün Bilgileri
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-slate-300 text-sm">Ürün Adı</Label>
+                  <Input
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="bg-slate-800 border-slate-700 text-white h-11"
+                    placeholder="Örn: 60 UC"
+                  />
+                </div>
 
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/jpg,image/webp"
-                onChange={handleImageSelect}
-                className="hidden"
-                id="product-image-upload"
-              />
-              <label
-                htmlFor="product-image-upload"
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-blue-500 transition-colors"
-              >
-                <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <span className="text-slate-300 text-sm">
-                  {imageFile ? imageFile.name : 'Ürün Görseli Seç (PNG, JPG, WEBP)'}
-                </span>
-              </label>
+                <div className="space-y-2">
+                  <Label className="text-slate-300 text-sm">UC Miktarı</Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={formData.ucAmount}
+                      onChange={(e) => setFormData({ ...formData, ucAmount: e.target.value })}
+                      className="bg-slate-800 border-slate-700 text-white h-11 pr-12"
+                      placeholder="60"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">UC</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="col-span-2 flex items-center space-x-2">
-              <Switch
-                id="active"
-                checked={formData.active}
-                onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
-              />
-              <Label htmlFor="active" className="text-white">Ürün Aktif</Label>
+            {/* Section 2: Pricing */}
+            <div className="space-y-4 pt-4 border-t border-slate-800">
+              <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Fiyatlandırma
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-slate-300 text-sm">Liste Fiyatı</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">₺</span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(e) => handlePriceChange('price', e.target.value)}
+                      className={`bg-slate-800 border-slate-700 text-white h-11 pl-8 ${priceErrors.price ? 'border-red-500' : ''}`}
+                      placeholder="100.00"
+                    />
+                  </div>
+                  {priceErrors.price && (
+                    <p className="text-xs text-red-400">{priceErrors.price}</p>
+                  )}
+                  <p className="text-xs text-slate-500">Ürünün normal satış fiyatı</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-slate-300 text-sm">İndirimli Fiyat</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">₺</span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.discountPrice}
+                      onChange={(e) => handlePriceChange('discountPrice', e.target.value)}
+                      className={`bg-slate-800 border-slate-700 text-white h-11 pl-8 ${priceErrors.discountPrice ? 'border-red-500' : ''}`}
+                      placeholder="80.00"
+                    />
+                  </div>
+                  {priceErrors.discountPrice && (
+                    <p className="text-xs text-red-400">{priceErrors.discountPrice}</p>
+                  )}
+                  <p className="text-xs text-slate-500">Müşterinin ödeyeceği fiyat</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-slate-300 text-sm">İndirim Oranı</Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={formData.discountPercent}
+                      onChange={(e) => handlePriceChange('discountPercent', e.target.value)}
+                      className={`bg-slate-800 border-slate-700 text-white h-11 pr-8 ${priceErrors.discountPercent ? 'border-red-500' : ''}`}
+                      placeholder="20"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">%</span>
+                  </div>
+                  {priceErrors.discountPercent && (
+                    <p className="text-xs text-red-400">{priceErrors.discountPercent}</p>
+                  )}
+                  <p className="text-xs text-slate-500">Otomatik hesaplanır</p>
+                </div>
+              </div>
+
+              {/* Price calculation info */}
+              {parseFloat(formData.price) > 0 && parseFloat(formData.discountPrice) > 0 && (
+                <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <div className="flex items-center gap-2 text-sm">
+                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-green-400">
+                      Müşteri {parseFloat(formData.price) - parseFloat(formData.discountPrice) > 0 ? (parseFloat(formData.price) - parseFloat(formData.discountPrice)).toFixed(2) : 0} ₺ tasarruf edecek
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Section 3: Image */}
+            <div className="space-y-4 pt-4 border-t border-slate-800">
+              <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Ürün Görseli
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Preview */}
+                <div className="bg-slate-800 rounded-xl p-4 flex flex-col items-center justify-center min-h-[160px] border border-slate-700">
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="w-32 h-32 object-contain"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImagePreview(null)
+                          setImageFile(null)
+                          setFormData({ ...formData, imageUrl: '' })
+                        }}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors"
+                      >
+                        <X className="w-3 h-3 text-white" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <svg className="w-12 h-12 text-slate-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm text-slate-500">Görsel önizleme</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload */}
+                <div>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                    id="product-image-upload"
+                  />
+                  <label
+                    htmlFor="product-image-upload"
+                    className="flex flex-col items-center justify-center gap-3 px-4 py-6 bg-slate-800 border-2 border-dashed border-slate-700 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-slate-800/70 transition-all min-h-[160px]"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <Upload className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-white">
+                        {imageFile ? imageFile.name : 'Görsel yükle'}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">PNG, JPG, WEBP • Max 2MB</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 4: Status & Order */}
+            <div className="space-y-4 pt-4 border-t border-slate-800">
+              <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Durum & Sıralama
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between p-4 bg-slate-800 rounded-xl border border-slate-700">
+                  <div>
+                    <Label className="text-white font-medium">Ürün Durumu</Label>
+                    <p className="text-xs text-slate-500 mt-1">Pasif ürünler sitede gösterilmez</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-sm ${formData.active ? 'text-green-400' : 'text-slate-400'}`}>
+                      {formData.active ? 'Aktif' : 'Pasif'}
+                    </span>
+                    <Switch
+                      checked={formData.active}
+                      onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-slate-300 text-sm">Sıralama</Label>
+                  <Input
+                    type="number"
+                    value={formData.sortOrder}
+                    onChange={(e) => setFormData({ ...formData, sortOrder: e.target.value })}
+                    className="bg-slate-800 border-slate-700 text-white h-11"
+                    placeholder="1"
+                  />
+                  <p className="text-xs text-slate-500">Küçük sayılar önce gösterilir</p>
+                </div>
+              </div>
             </div>
           </div>
 
-          <DialogFooter>
+          {/* Sticky Footer */}
+          <div className="sticky bottom-0 bg-slate-900 border-t border-slate-800 px-6 py-4 flex items-center justify-between">
+            <Button
+              variant="ghost"
+              onClick={() => setEditDialogOpen(false)}
+              className="text-slate-400 hover:text-white hover:bg-slate-800"
+            >
+              Kapat
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={saving || uploadingImage || Object.keys(priceErrors).length > 0}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8"
+            >
+              {saving || uploadingImage ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {uploadingImage ? 'Görsel yükleniyor...' : 'Kaydediliyor...'}
+                </>
+              ) : (
+                'Kaydet'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-md">
+          <div className="text-center py-4">
+            <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8 text-red-500" />
+            </div>
+            <DialogTitle className="text-xl font-bold text-white mb-2">Ürünü Sil</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              <span className="font-semibold text-white">{productToDelete?.title}</span> ürününü silmek istediğinizden emin misiniz?
+            </DialogDescription>
+            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <p className="text-sm text-red-400">
+                ⚠️ Bu işlem geri alınamaz. Ürün ve tüm stok kayıtları tamamen silinecektir.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter className="flex gap-3 mt-4">
             <Button
               variant="outline"
-              onClick={() => setEditDialogOpen(false)}
-              className="border-slate-700 text-white hover:bg-slate-800"
+              onClick={() => setDeleteDialogOpen(false)}
+              className="flex-1 border-slate-700 text-white hover:bg-slate-800"
+              disabled={deleteLoading}
             >
               İptal
             </Button>
             <Button
-              onClick={handleSave}
-              disabled={uploadingImage}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+              onClick={confirmDelete}
+              disabled={deleteLoading}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleteLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Siliniyor...
+                </>
+              ) : (
+                'Evet, Sil'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
             >
               {uploadingImage ? 'Yükleniyor...' : 'Kaydet'}
             </Button>

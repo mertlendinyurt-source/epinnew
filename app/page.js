@@ -435,9 +435,12 @@ export default function App() {
 
                     <div className="relative h-28 md:h-32 overflow-hidden flex items-center justify-center bg-gradient-to-br from-zinc-900/30 to-zinc-950/30">
                       <img 
-                        src="https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=150&h=150&fit=crop"
-                        alt="UC"
+                        src={product.imageUrl || "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=150&h=150&fit=crop"}
+                        alt={product.title}
                         className="w-16 h-16 md:w-20 md:h-20 object-contain opacity-85"
+                        onError={(e) => {
+                          e.target.src = "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=150&h=150&fit=crop";
+                        }}
                       />
                     </div>
 

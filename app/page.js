@@ -612,6 +612,71 @@ export default function App() {
         </div>
       </div>
 
+      {/* Daily Banner - "Bugüne Özel Fiyatlar" */}
+      {siteSettings?.dailyBannerEnabled !== false && (
+        <div 
+          className="relative overflow-hidden mx-4 md:mx-6 mt-4 rounded-2xl animate-fadeInUp"
+          role="banner"
+          aria-label="Günlük kampanya banner"
+          style={{ minHeight: '80px' }}
+        >
+          {/* Background with gradient */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1a1f35] via-[#252d4a] to-[#1a1f35]" />
+          
+          {/* Glow effects */}
+          <div className="absolute top-0 left-1/4 w-64 h-32 bg-blue-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-64 h-32 bg-purple-500/15 rounded-full blur-3xl" />
+          
+          {/* Subtle pattern overlay */}
+          <div 
+            className="absolute inset-0 opacity-5"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+            }}
+          />
+          
+          {/* Border glow */}
+          <div className="absolute inset-0 rounded-2xl border border-white/10" />
+          
+          {/* Content */}
+          <div className="relative z-10 px-5 md:px-8 py-5 md:py-6 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
+            {/* Left side - Text */}
+            <div className="flex items-center gap-4 text-center md:text-left">
+              {/* Fire icon with glow */}
+              <div className="hidden md:flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30 shadow-lg shadow-orange-500/10">
+                <span className="text-3xl">🔥</span>
+              </div>
+              
+              <div>
+                <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-white tracking-tight flex items-center justify-center md:justify-start gap-2">
+                  <span className="md:hidden text-xl">🔥</span>
+                  {siteSettings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar'}
+                </h2>
+                <p className="text-sm md:text-base text-white/60 mt-0.5">
+                  {siteSettings?.dailyBannerSubtitle || new Date().toLocaleDateString('tr-TR', { 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric' 
+                  })}
+                </p>
+              </div>
+            </div>
+            
+            {/* Right side - Badge */}
+            <div className="flex items-center gap-3">
+              <div className="px-4 py-2 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30">
+                <span className="text-xs md:text-sm font-semibold text-yellow-400 flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                  Günlük Kampanya
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-4 md:py-6">
         <div className="flex gap-4 md:gap-5">
           <div className="hidden lg:block w-[240px] xl:w-[265px] flex-shrink-0">

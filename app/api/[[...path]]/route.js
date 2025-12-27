@@ -1648,34 +1648,126 @@ export async function POST(request) {
     const body = await request.json();
 
     // Admin login
+    // DEPRECATED: Old admin login - redirect to unified login
     if (pathname === '/api/admin/login') {
-      const { username, password } = body;
+      // For backwards compatibility, try to authenticate and return response
+      // But new flow should use /api/auth/login
+      const { username, password, email } = body;
       
-      const user = await db.collection('admin_users').findOne({ username });
-      if (!user) {
-        return NextResponse.json(
-          { success: false, error: 'Kullanıcı adı veya şifre hatalı' },
-          { status: 401 }
-        );
-      }
+      // If email is provided, use the new flow
+      if (email) {
+        // Find user by email with admin role
+        const user = await db.collection('users').findOne({ 
+          email: email.toLowerCase(),
+          role: 'admin'
+        });
+        
+        if (!user) {
+          return NextResponse.json(
+            { success: false, error: 'E-posta veya şifre hatalı' },
+            { status: 401 }
+          );
+        }
 
-      const validPassword = await bcrypt.compare(password, user.passwordHash);
-      if (!validPassword) {
-        return NextResponse.json(
-          { success: false, error: 'Kullanıcı adı veya şifre hatalı' },
-          { status: 401 }
-        );
-      }
+        const validPassword = await bcrypt.compare(password, user.passwordHash);
+        if (!validPassword) {
+          return NextResponse.json(
+            { success: false, error: 'E-posta veya şifre hatalı' },
+            { status: 401 }
+          );
+        }
 
-      const token = jwt.sign(
-        { id: user.id, username: user.username },
-        JWT_SECRET,
-        { expiresIn: '24h' }
+        const token = jwt.sign(
+          { id: user.id, email: user.email, role: 'admin', type: 'user' },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+
+        return NextResponse.json({
+          success: true,
+          data: { 
+            token, 
+            username: user.email,
+            user: {
+              id: user.id,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              email: user.email,
+              role: 'admin'
+            }
+          }
+        });
+      }
+      
+      // Legacy username-based login (for backwards compatibility during transition)
+      const adminUser = await db.collection('admin_users').findOne({ username });
+      if (adminUser) {
+        const validPassword = await bcrypt.compare(password, adminUser.passwordHash);
+        if (validPassword) {
+          // Return token with admin role
+          const token = jwt.sign(
+            { id: adminUser.id, username: adminUser.username, role: 'admin' },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+          );
+
+          return NextResponse.json({
+            success: true,
+            data: { token, username: adminUser.username }
+          });
+        }
+      }
+      
+      return NextResponse.json(
+        { success: false, error: 'Kullanıcı adı veya şifre hatalı' },
+        { status: 401 }
       );
+    }
 
+    // Admin: Create admin user (internal use - call once to migrate)
+    if (pathname === '/api/admin/create-admin-user') {
+      const { email, password, firstName, lastName, secretKey } = body;
+      
+      // Secret key protection for admin creation
+      if (secretKey !== 'ADMIN_SETUP_2024') {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz' },
+          { status: 403 }
+        );
+      }
+      
+      // Check if admin already exists
+      const existingAdmin = await db.collection('users').findOne({ role: 'admin' });
+      if (existingAdmin) {
+        return NextResponse.json(
+          { success: false, error: 'Admin kullanıcı zaten mevcut' },
+          { status: 400 }
+        );
+      }
+      
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      const adminUser = {
+        id: uuidv4(),
+        email: email.toLowerCase(),
+        firstName: firstName || 'Admin',
+        lastName: lastName || 'User',
+        phone: '',
+        passwordHash: hashedPassword,
+        role: 'admin',
+        authProvider: 'local',
+        emailVerified: true,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      await db.collection('users').insertOne(adminUser);
+      
       return NextResponse.json({
         success: true,
-        data: { token, username: user.username }
+        message: 'Admin kullanıcı oluşturuldu',
+        data: { email: adminUser.email }
       });
     }
 

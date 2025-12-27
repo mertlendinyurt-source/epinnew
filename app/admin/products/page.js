@@ -225,6 +225,22 @@ export default function AdminProducts() {
   }
 
   const handleSave = async () => {
+    // Validate prices before saving
+    const listPrice = parseFloat(formData.price) || 0
+    const salePrice = parseFloat(formData.discountPrice) || 0
+    
+    if (listPrice < 0 || salePrice < 0) {
+      toast.error('Fiyatlar negatif olamaz')
+      return
+    }
+    
+    if (salePrice > listPrice) {
+      toast.error('İndirimli fiyat liste fiyatından yüksek olamaz')
+      return
+    }
+    
+    setSaving(true)
+    
     try {
       // Upload image first if selected
       let imageUrl = formData.imageUrl
@@ -256,31 +272,44 @@ export default function AdminProducts() {
 
       const data = await response.json()
       if (data.success) {
-        toast.success('Ürün güncellendi')
-        setEditDialogOpen(false)
+        toast.success('Ürün başarıyla güncellendi')
         fetchProducts()
+        // Don't close modal - user can close manually
       } else {
         toast.error(data.error || 'Güncelleme başarısız')
       }
     } catch (error) {
       console.error('Error updating product:', error)
       toast.error('Güncelleme sırasında hata oluştu')
+    } finally {
+      setSaving(false)
     }
   }
 
-  const handleDelete = async (productId) => {
-    if (!confirm('Bu ürünü silmek istediğinizden emin misiniz?')) return
+  // Open delete confirmation dialog
+  const openDeleteDialog = (product) => {
+    setProductToDelete(product)
+    setDeleteDialogOpen(true)
+  }
+
+  // Confirm and execute hard delete
+  const confirmDelete = async () => {
+    if (!productToDelete) return
+    
+    setDeleteLoading(true)
 
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`/api/admin/products/${productId}`, {
+      const response = await fetch(`/api/admin/products/${productToDelete.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
       const data = await response.json()
       if (data.success) {
-        toast.success('Ürün silindi')
+        toast.success('Ürün ve stokları tamamen silindi')
+        setDeleteDialogOpen(false)
+        setProductToDelete(null)
         fetchProducts()
       } else {
         toast.error(data.error || 'Silme başarısız')
@@ -288,6 +317,16 @@ export default function AdminProducts() {
     } catch (error) {
       console.error('Error deleting product:', error)
       toast.error('Silme sırasında hata oluştu')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  const handleDelete = async (productId) => {
+    // Find product and open delete dialog
+    const product = products.find(p => p.id === productId)
+    if (product) {
+      openDeleteDialog(product)
     }
   }
 

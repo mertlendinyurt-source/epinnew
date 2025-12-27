@@ -615,18 +615,18 @@ frontend:
 
 metadata:
   created_by: "testing_agent"
-  version: "4.0"
-  test_sequence: 4
+  version: "5.0"
+  test_sequence: 5
   run_ui: true
-  last_updated: "2025-12-27 01:05:00"
+  last_updated: "2025-12-27 16:25:00"
 
 test_plan:
   current_focus:
-    - "Frontend UI testing - Auth flow, customer panel, admin stock management, responsive design"
+    - "Frontend UI testing completed - All features verified"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
-  completed: false
+  completed: true
 
 agent_communication:
   - agent: "main"
@@ -635,3 +635,5 @@ agent_communication:
     message: "Production Shopier integration security testing completed. 16 out of 17 tests passed (94% success rate). CRITICAL SECURITY FEATURES VERIFIED: ✅ AES-256-GCM encryption/decryption working correctly, ✅ Credentials stored encrypted in database (verified no plaintext), ✅ Masked credentials returned to frontend (API secret never exposed), ✅ Hash validation working (correct hashes accepted, incorrect rejected with 403), ✅ Security logs created on hash mismatch, ✅ Idempotency protection (duplicate callbacks ignored for PAID orders), ✅ Transaction ID uniqueness enforced, ✅ Immutable status transitions (FAILED→PAID rejected with 400), ✅ Valid transitions working (PENDING→PAID, PENDING→FAILED), ✅ No secrets in logs (API keys masked), ✅ Rate limiting working (10 req/hour, returns 429), ✅ Order creation reads from DB and decrypts credentials, ✅ Graceful failure when settings not configured (503). One test failed due to rate limiting being triggered (which proves rate limiting works). All security requirements met. Backend is production-ready and secure."
   - agent: "testing"
     message: "Auth + Stock + Delivery system testing completed. All 17 tests passed (100% success rate). TESTED FEATURES: ✅ User registration with all field validations (email format, phone format, password length, required fields), ✅ Duplicate email detection (returns 409 with EMAIL_EXISTS code), ✅ Password hashing with bcrypt, ✅ User login with JWT token generation (7 days expiry), ✅ Invalid credentials rejection (401), ✅ Order creation requires JWT authentication (401 without token, AUTH_REQUIRED code), ✅ Order creation with userId and customer snapshot from user profile, ✅ User orders endpoint (GET /api/account/orders) - returns only user's orders, ✅ Single order endpoint with security (users can only see own orders), ✅ Admin stock management (add stock items, get stock summary), ✅ Stock items saved with status 'available', ✅ Auto-stock assignment on PAID callback (atomic operation, FIFO), ✅ Stock status changes to 'assigned' with orderId, ✅ Idempotency protection (duplicate callbacks don't assign multiple stocks), ✅ Out of stock handling (delivery.status='pending', message='Stok bekleniyor'). MINOR ISSUE NOTED: delivery.items array shows [null] instead of actual stock code (display issue only - stock assignment and tracking working correctly, codes retrievable via admin endpoint). All critical functionality working correctly."
+  - agent: "testing"
+    message: "Frontend MVP Acceptance Testing COMPLETED. All 5 frontend tasks tested and verified working. TESTED SCENARIOS: ✅ Auth Modal - Opens automatically when guest clicks checkout, register form validates all fields, auto-login after registration (token saved to localStorage), modal closes after auth, tab switching works. ✅ Header Auth UI - Guest users see 'Giriş Yap' and 'Kayıt Ol' buttons, logged-in users see 'Hesabım' dropdown with 'Siparişlerim' and 'Çıkış Yap', logout clears token and reloads page. ✅ Customer Orders Page - Loads at /account/orders with auth check, shows empty state for new users, displays order cards with payment/delivery status badges for users with orders, redirects to home if no token. ✅ Order Detail Page - Shows order details with payment/delivery status, displays delivery codes with copy button and visibility toggle for delivered orders, shows 'Stok bekleniyor' message for pending orders, 2-column layout, auth/authorization working. ✅ Admin Stock Management - Admin login works, products page loads, stock dialog opens with summary (total/available/assigned), textarea accepts bulk codes, 'Toplu Ekle' button works. MINOR ISSUES: Some accessibility warnings in console about DialogContent (cosmetic, doesn't affect functionality). RESPONSIVE DESIGN: Tested at 375px width, mobile view renders correctly. SECURITY: Logout clears token, protected routes redirect when not authenticated. ALL CORE FUNCTIONALITY WORKING AS EXPECTED. Frontend MVP is production-ready."

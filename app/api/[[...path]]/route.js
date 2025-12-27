@@ -46,7 +46,7 @@ function verifyToken(request) {
 
 // Verify Admin Token (requires username field, not type)
 function verifyAdminToken(request) {
-  const user = verifyAdminToken(request);
+  const user = verifyToken(request);
   if (!user) return null;
   
   // Admin tokens have 'username' field, user tokens have 'type' field

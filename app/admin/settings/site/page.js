@@ -459,10 +459,70 @@ export default function SiteSettingsPage() {
                         </p>
                       </div>
                     </div>
+                    {settings.dailyCountdownEnabled && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-white/50">{settings.dailyCountdownLabel || 'Kampanya bitimine'}:</span>
+                        <span className="font-mono text-cyan-400 text-sm">23:59:59</span>
+                      </div>
+                    )}
                     <span className="text-xs text-yellow-400 bg-yellow-500/20 px-3 py-1 rounded-full border border-yellow-500/30">Günlük Kampanya</span>
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Countdown Settings */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
+              <h3 className="text-white font-semibold flex items-center gap-2">
+                <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Geri Sayım
+              </h3>
+
+              <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
+                <div>
+                  <Label className="text-white font-medium">Geri Sayım Aktif</Label>
+                  <p className="text-slate-400 text-sm mt-1">Günün sonuna kadar sayaç gösterir</p>
+                </div>
+                <button
+                  onClick={() => setSettings({ ...settings, dailyCountdownEnabled: !settings.dailyCountdownEnabled })}
+                  disabled={!settings.dailyBannerEnabled}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${settings.dailyCountdownEnabled && settings.dailyBannerEnabled ? 'bg-cyan-600' : 'bg-slate-700'} ${!settings.dailyBannerEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${settings.dailyCountdownEnabled && settings.dailyBannerEnabled ? 'translate-x-6' : ''}`} />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-300">Sayaç Etiketi</Label>
+                <Input
+                  value={settings.dailyCountdownLabel || ''}
+                  onChange={(e) => setSettings({ ...settings, dailyCountdownLabel: e.target.value })}
+                  placeholder="Kampanya bitimine"
+                  className="bg-slate-800 border-slate-700 text-white"
+                  disabled={!settings.dailyBannerEnabled || !settings.dailyCountdownEnabled}
+                />
+                <p className="text-slate-500 text-xs">Sayaç üzerinde görünecek metin (ör: "Kampanya bitimine")</p>
+              </div>
+
+              {/* Countdown Info */}
+              <div className="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="text-sm">
+                    <p className="text-cyan-400 font-medium mb-1">Nasıl Çalışır?</p>
+                    <ul className="text-slate-400 space-y-1">
+                      <li>• Sayaç her gün 23:59:59'a kadar geri sayar</li>
+                      <li>• Gece yarısı (00:00) otomatik sıfırlanır</li>
+                      <li>• Kullanıcının yerel saatine göre çalışır</li>
+                      <li>• Son 10 dakikada renk değişir (sarı/kırmızı)</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Save Button */}

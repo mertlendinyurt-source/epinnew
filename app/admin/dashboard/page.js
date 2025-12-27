@@ -177,7 +177,7 @@ export default function AdminDashboard() {
             Audit Logları
           </Button>
           <Button
-            onClick={() => router.push('/admin/settings/payments')}}
+            onClick={() => router.push('/admin/settings/payments')}
             variant="ghost"
             className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
           >

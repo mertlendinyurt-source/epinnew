@@ -725,7 +725,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Daily Banner - "Bugüne Özel Fiyatlar" */}
+      {/* Daily Banner - "Bugüne Özel Fiyatlar" with Countdown */}
       {siteSettings?.dailyBannerEnabled !== false && (
         <div 
           className="relative overflow-hidden mx-4 md:mx-6 mt-4 rounded-2xl animate-fadeInUp"
@@ -740,11 +740,16 @@ export default function App() {
           <div className="absolute top-0 left-1/4 w-64 h-32 bg-blue-500/20 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-64 h-32 bg-purple-500/15 rounded-full blur-3xl" />
           
+          {/* Countdown glow effect - intensifies in last 10 minutes */}
+          {siteSettings?.dailyCountdownEnabled !== false && countdown.hours === 0 && countdown.minutes < 10 && (
+            <div className="absolute top-1/2 right-1/4 w-48 h-24 bg-orange-500/30 rounded-full blur-3xl animate-pulse" />
+          )}
+          
           {/* Border glow */}
           <div className="absolute inset-0 rounded-2xl border border-white/10" />
           
           {/* Content */}
-          <div className="relative z-10 px-5 md:px-8 py-5 md:py-6 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
+          <div className="relative z-10 px-5 md:px-8 py-5 md:py-6 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-4">
             {/* Left side - Text */}
             <div className="flex items-center gap-4 text-center md:text-left">
               {/* Dynamic Icon - Desktop */}
@@ -763,8 +768,110 @@ export default function App() {
               </div>
             </div>
             
-            {/* Right side - Badge */}
-            <div className="flex items-center gap-3">
+            {/* Right side - Countdown + Badge */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-4">
+              {/* Countdown Timer */}
+              {siteSettings?.dailyCountdownEnabled !== false && (
+                <div className="flex flex-col items-center">
+                  <span className="text-[10px] md:text-xs text-white/50 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {siteSettings?.dailyCountdownLabel || 'Kampanya bitimine'}
+                  </span>
+                  <div 
+                    className={`flex items-center gap-1 md:gap-1.5 font-mono text-lg md:text-xl lg:text-2xl font-bold tracking-wider transition-colors duration-500 ${
+                      countdown.hours === 0 && countdown.minutes < 10
+                        ? countdown.minutes < 5
+                          ? 'text-red-400'
+                          : 'text-orange-400'
+                        : 'text-cyan-400'
+                    }`}
+                    style={{
+                      textShadow: countdown.hours === 0 && countdown.minutes < 10
+                        ? countdown.minutes < 5
+                          ? '0 0 20px rgba(248, 113, 113, 0.6), 0 0 40px rgba(248, 113, 113, 0.3)'
+                          : '0 0 20px rgba(251, 146, 60, 0.6), 0 0 40px rgba(251, 146, 60, 0.3)'
+                        : '0 0 20px rgba(34, 211, 238, 0.5), 0 0 40px rgba(34, 211, 238, 0.2)'
+                    }}
+                  >
+                    {/* Hours */}
+                    <div className="relative">
+                      <div className={`px-2 py-1 md:px-2.5 md:py-1.5 rounded-md bg-black/40 border ${
+                        countdown.hours === 0 && countdown.minutes < 10
+                          ? countdown.minutes < 5
+                            ? 'border-red-500/40'
+                            : 'border-orange-500/40'
+                          : 'border-cyan-500/30'
+                      }`}>
+                        <span className={`transition-all duration-200 ${countdown.seconds % 2 === 0 ? 'opacity-100' : 'opacity-95'}`}>
+                          {String(countdown.hours).padStart(2, '0')}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Separator */}
+                    <span className={`animate-pulse ${
+                      countdown.hours === 0 && countdown.minutes < 10
+                        ? countdown.minutes < 5
+                          ? 'text-red-400'
+                          : 'text-orange-400'
+                        : 'text-cyan-400/80'
+                    }`}>:</span>
+                    
+                    {/* Minutes */}
+                    <div className="relative">
+                      <div className={`px-2 py-1 md:px-2.5 md:py-1.5 rounded-md bg-black/40 border ${
+                        countdown.hours === 0 && countdown.minutes < 10
+                          ? countdown.minutes < 5
+                            ? 'border-red-500/40'
+                            : 'border-orange-500/40'
+                          : 'border-cyan-500/30'
+                      }`}>
+                        <span className={`transition-all duration-200 ${countdown.seconds % 2 === 0 ? 'opacity-100' : 'opacity-95'}`}>
+                          {String(countdown.minutes).padStart(2, '0')}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Separator */}
+                    <span className={`animate-pulse ${
+                      countdown.hours === 0 && countdown.minutes < 10
+                        ? countdown.minutes < 5
+                          ? 'text-red-400'
+                          : 'text-orange-400'
+                        : 'text-cyan-400/80'
+                    }`}>:</span>
+                    
+                    {/* Seconds */}
+                    <div className="relative">
+                      <div className={`px-2 py-1 md:px-2.5 md:py-1.5 rounded-md bg-black/40 border ${
+                        countdown.hours === 0 && countdown.minutes < 10
+                          ? countdown.minutes < 5
+                            ? 'border-red-500/40'
+                            : 'border-orange-500/40'
+                          : 'border-cyan-500/30'
+                      }`}>
+                        <span 
+                          className="inline-block transition-transform duration-100"
+                          style={{
+                            transform: `scale(${countdown.seconds % 2 === 0 ? 1 : 0.98})`
+                          }}
+                        >
+                          {String(countdown.seconds).padStart(2, '0')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Divider - only on desktop when countdown is visible */}
+              {siteSettings?.dailyCountdownEnabled !== false && (
+                <div className="hidden md:block w-px h-10 bg-white/10" />
+              )}
+              
+              {/* Badge */}
               <div className="px-4 py-2 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30">
                 <span className="text-xs md:text-sm font-semibold text-yellow-400 flex items-center gap-1.5">
                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">

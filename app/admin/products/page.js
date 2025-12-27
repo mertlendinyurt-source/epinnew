@@ -168,7 +168,7 @@ export default function AdminProducts() {
           discountPercent: parseInt(formData.discountPercent),
           active: formData.active,
           sortOrder: parseInt(formData.sortOrder),
-          image: formData.image
+          imageUrl: imageUrl
         })
       })
 

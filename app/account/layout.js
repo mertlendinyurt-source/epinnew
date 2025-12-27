@@ -11,6 +11,7 @@ import { Toaster } from '@/components/ui/sonner';
 const menuItems = [
   { href: '/account/profile', label: 'Profil', icon: User },
   { href: '/account/orders', label: 'Siparişlerim', icon: Package },
+  { href: '/account/support', label: 'Destek Taleplerim', icon: MessageCircle },
   { href: '/account/security', label: 'Güvenlik', icon: Shield },
 ];
 

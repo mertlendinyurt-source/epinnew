@@ -1622,7 +1622,7 @@ export async function POST(request) {
         );
       }
 
-      const { game, userName, rating, comment, approved } = body;
+      const { game, userName, rating, comment, approved, customDate } = body;
 
       if (!rating || rating < 1 || rating > 5) {
         return NextResponse.json(
@@ -1630,6 +1630,9 @@ export async function POST(request) {
           { status: 400 }
         );
       }
+
+      // Use custom date if provided, otherwise use current date
+      const reviewDate = customDate ? new Date(customDate) : new Date();
 
       const review = {
         id: uuidv4(),
@@ -1639,7 +1642,7 @@ export async function POST(request) {
         comment: comment || '',
         approved: approved !== false,
         createdBy: user.username,
-        createdAt: new Date()
+        createdAt: reviewDate
       };
 
       await db.collection('reviews').insertOne(review);

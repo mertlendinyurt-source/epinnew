@@ -1866,6 +1866,49 @@ export async function PUT(request) {
       });
     }
 
+    // Update legal page
+    if (pathname.match(/^\/api\/admin\/legal-pages\/[^\/]+$/)) {
+      const pageId = pathname.split('/').pop();
+      
+      const { title, slug, content, effectiveDate, isActive, order } = body;
+
+      // Check if slug already exists (excluding current page)
+      if (slug) {
+        const existing = await db.collection('legal_pages').findOne({ slug, id: { $ne: pageId } });
+        if (existing) {
+          return NextResponse.json(
+            { success: false, error: 'Bu slug zaten kullanılıyor' },
+            { status: 400 }
+          );
+        }
+      }
+
+      const updateData = {
+        updatedAt: new Date(),
+        updatedBy: user.username
+      };
+      
+      if (title !== undefined) updateData.title = title;
+      if (slug !== undefined) updateData.slug = slug;
+      if (content !== undefined) updateData.content = content;
+      if (effectiveDate !== undefined) updateData.effectiveDate = new Date(effectiveDate);
+      if (isActive !== undefined) updateData.isActive = isActive;
+      if (order !== undefined) updateData.order = order;
+
+      await db.collection('legal_pages').updateOne(
+        { id: pageId },
+        { $set: updateData }
+      );
+
+      const updated = await db.collection('legal_pages').findOne({ id: pageId });
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Sayfa güncellendi',
+        data: updated
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

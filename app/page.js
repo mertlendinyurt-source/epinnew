@@ -201,7 +201,7 @@ export default function App() {
   }
 
   // Flag badge component for regions without uploaded flag
-  const FlagBadge = ({ code }) => {
+  const FlagBadge = ({ code, size = 'sm' }) => {
     const colors = {
       'TR': 'bg-red-600',
       'GLOBAL': 'bg-blue-600',
@@ -209,9 +209,34 @@ export default function App() {
       'FR': 'bg-blue-500',
       'JP': 'bg-red-500',
     }
+    const sizeClasses = size === 'lg' ? 'w-[18px] h-[14px] text-[9px]' : 'w-5 h-4 text-[8px]'
     return (
-      <div className={`w-5 h-4 rounded-sm flex items-center justify-center text-[8px] font-bold text-white ${colors[code] || 'bg-gray-600'}`}>
+      <div className={`${sizeClasses} rounded-sm flex items-center justify-center font-bold text-white ${colors[code] || 'bg-gray-600'}`}>
         {code === 'GLOBAL' ? '🌐' : code?.substring(0, 2) || '?'}
+      </div>
+    )
+  }
+
+  // Region display component - shows flag + name from regions data
+  const RegionDisplay = ({ regionCode = 'TR', size = 'sm' }) => {
+    const region = regions.find(r => r.code === regionCode) || { code: regionCode, name: regionCode === 'TR' ? 'Türkiye' : regionCode, flagImageUrl: null }
+    const flagSize = size === 'lg' ? 'w-[18px] h-[14px]' : 'w-4 h-3'
+    
+    return (
+      <div className="flex items-center gap-1.5">
+        {region.flagImageUrl ? (
+          <img 
+            src={`${region.flagImageUrl}?v=${Date.now()}`}
+            alt={region.name}
+            className={`${flagSize} object-cover rounded-sm`}
+            onError={(e) => {
+              e.target.style.display = 'none'
+              e.target.nextSibling && (e.target.nextSibling.style.display = 'flex')
+            }}
+          />
+        ) : null}
+        {!region.flagImageUrl && <FlagBadge code={region.code} size={size} />}
+        <span>{region.name?.toUpperCase()}</span>
       </div>
     )
   }

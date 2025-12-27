@@ -37,6 +37,7 @@ export default function App() {
   const [loadingReviews, setLoadingReviews] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [footerSettings, setFooterSettings] = useState(null)
+  const [todayDate, setTodayDate] = useState('')
 
   useEffect(() => {
     fetchProducts()

@@ -1297,7 +1297,7 @@ export async function POST(request) {
         );
       }
 
-      const { logo, favicon, heroImage } = body;
+      const { logo, favicon, heroImage, categoryIcon } = body;
 
       // Deactivate previous settings
       await db.collection('site_settings').updateMany(
@@ -1310,6 +1310,7 @@ export async function POST(request) {
         logo,
         favicon,
         heroImage,
+        categoryIcon,
         active: true,
         updatedBy: user.username,
         updatedAt: new Date(),

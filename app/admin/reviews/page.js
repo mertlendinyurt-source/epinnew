@@ -178,7 +178,7 @@ export default function ReviewsPage() {
           <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 mb-6">
             <h2 className="text-lg font-semibold text-white mb-4">Yeni Yorum Ekle</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <Label className="text-slate-300 mb-2 block">Kullanıcı Adı</Label>
                 <Input
@@ -194,6 +194,16 @@ export default function ReviewsPage() {
                   rating={newReview.rating} 
                   onChange={(rating) => setNewReview({ ...newReview, rating })}
                 />
+              </div>
+              <div>
+                <Label className="text-slate-300 mb-2 block">Tarih (Opsiyonel)</Label>
+                <Input
+                  type="datetime-local"
+                  value={newReview.customDate}
+                  onChange={(e) => setNewReview({ ...newReview, customDate: e.target.value })}
+                  className="bg-slate-800 border-slate-700 text-white"
+                />
+                <p className="text-xs text-slate-500 mt-1">Boş bırakılırsa şu anki tarih kullanılır</p>
               </div>
             </div>
 

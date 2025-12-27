@@ -540,63 +540,78 @@ backend:
 frontend:
   - task: "Auth Modal (Register + Login)"
     implemented: true
-    working: "NA"
+    working: true
     file: "components/AuthModal.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "AuthModal component created with register and login tabs. Validates all fields, handles email uniqueness, saves JWT token to localStorage, triggers onSuccess callback. Integrated into main page."
+      - working: true
+        agent: "testing"
+        comment: "Auth modal tested successfully. Modal opens when guest user clicks checkout without login. Register form accepts all fields (firstName, lastName, email, phone, password, confirmPassword). Login form works with email/password. Token saved to localStorage after registration (auto-login working). Modal closes after successful auth. Tab switching between Register and Login works. Minor: Some accessibility warnings in console about DialogContent missing DialogTitle (cosmetic issue, doesn't affect functionality)."
 
   - task: "Header Auth Buttons + User Dropdown"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/page.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Header updated with conditional rendering: not logged in shows 'Giriş Yap' and 'Kayıt Ol' buttons, logged in shows user dropdown with 'Siparişlerim' and 'Çıkış Yap'. Logout clears token and reloads page."
+      - working: true
+        agent: "testing"
+        comment: "Header auth UI tested successfully. Guest users see 'Giriş Yap' and 'Kayıt Ol' buttons. Logged-in users see 'Hesabım' dropdown with '📦 Siparişlerim' and '🚪 Çıkış Yap' options. Dropdown appears on hover. Logout clears token from localStorage and reloads page. All functionality working as expected."
 
   - task: "Customer Orders List Page"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/account/orders/page.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Customer orders list page created at /account/orders. Shows payment status and delivery status badges. Clickable rows navigate to order detail. Auth required, redirects to home if no token. Shows empty state if no orders."
+      - working: true
+        agent: "testing"
+        comment: "Orders list page tested successfully. Page loads at /account/orders with proper authentication check. Shows 'Siparişlerim' title and user info in header. Empty state displays correctly for new users ('Henüz sipariş yok'). For users with orders, displays order cards with payment status badges (Ödendi/Bekliyor/Başarısız) and delivery status badges (Teslim Edildi/Stok Bekleniyor). Order cards are clickable and navigate to detail page. Redirects to home if no token present. All functionality working correctly."
 
   - task: "Order Detail Page with Delivery Codes"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/account/orders/[orderId]/page.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Order detail page created with premium UI. Shows delivery codes if status='delivered' with copy button and show/hide toggle. Shows 'Stok bekleniyor' message if status='pending'. 2-column layout (desktop), responsive for mobile. Auth required, user can only view own orders."
+      - working: true
+        agent: "testing"
+        comment: "Order detail page tested successfully with test user (acetest@example.com). Page loads with order details including payment status, delivery status, player info, and customer info. For delivered orders: 'Teslimat Kodları' section displays with delivery codes. Copy button works (copies code to clipboard, shows 'Kod kopyalandı' toast). Eye icon toggles code visibility (masked/visible). For pending orders: 'Teslimat Bekliyor' section shows with 'Stok bekleniyor' message. 2-column layout renders correctly. Authentication and authorization working (users can only see own orders). All core functionality working as expected."
 
   - task: "Admin Stock Management UI"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/admin/products/page.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Stock management dialog added to admin products page. Shows stock summary (total/available/assigned). Textarea for bulk stock addition (one code per line). Integrates with POST /api/admin/products/:productId/stock endpoint. Shows helpful info about auto-assignment."
+      - working: true
+        agent: "testing"
+        comment: "Admin stock management tested successfully. Admin login works (admin/admin123). Products page loads with product list table. 'Stok' button opens stock management dialog. Dialog shows stock summary with three cards: Toplam (total), Mevcut (available), Atanmış (assigned). Textarea accepts multiple stock codes (one per line). 'Toplu Ekle' button submits codes to backend. Info section explains auto-assignment on PAID status. All functionality working correctly."
 
 metadata:
   created_by: "testing_agent"

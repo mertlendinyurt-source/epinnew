@@ -732,6 +732,88 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
       return NextResponse.json({ success: true, data: content });
     }
 
+    // Public: Get legal page by slug
+    if (pathname.match(/^\/api\/legal\/[^\/]+$/)) {
+      const slug = pathname.split('/').pop();
+      const page = await db.collection('legal_pages').findOne({ slug, isActive: true });
+      
+      if (!page) {
+        return NextResponse.json(
+          { success: false, error: 'Sayfa bulunamadı' },
+          { status: 404 }
+        );
+      }
+      
+      return NextResponse.json({ success: true, data: page });
+    }
+
+    // Public: Get footer settings
+    if (pathname === '/api/footer-settings') {
+      let settings = await db.collection('footer_settings').findOne({ active: true });
+      
+      // Return defaults if no settings exist
+      if (!settings) {
+        settings = {
+          quickLinks: [
+            { label: 'Giriş Yap', action: 'login' },
+            { label: 'Kayıt Ol', action: 'register' }
+          ],
+          categories: [
+            { label: 'PUBG Mobile', url: '/' }
+          ],
+          corporateLinks: []
+        };
+        
+        // Get active legal pages for corporate links
+        const legalPages = await db.collection('legal_pages').find({ isActive: true }).sort({ order: 1 }).toArray();
+        settings.corporateLinks = legalPages.map(p => ({ label: p.title, slug: p.slug }));
+      }
+      
+      return NextResponse.json({ success: true, data: settings });
+    }
+
+    // Admin: Get all legal pages
+    if (pathname === '/api/admin/legal-pages') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const pages = await db.collection('legal_pages').find({}).sort({ order: 1, createdAt: -1 }).toArray();
+      return NextResponse.json({ success: true, data: pages });
+    }
+
+    // Admin: Get footer settings
+    if (pathname === '/api/admin/footer-settings') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      let settings = await db.collection('footer_settings').findOne({ active: true });
+      
+      if (!settings) {
+        settings = {
+          quickLinks: [
+            { label: 'Giriş Yap', action: 'login' },
+            { label: 'Kayıt Ol', action: 'register' }
+          ],
+          categories: [
+            { label: 'PUBG Mobile', url: '/' }
+          ],
+          corporateLinks: []
+        };
+      }
+      
+      return NextResponse.json({ success: true, data: settings });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

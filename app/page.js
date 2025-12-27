@@ -433,15 +433,19 @@ export default function App() {
             {siteSettings?.logo ? (
               <img 
                 src={`${siteSettings.logo}?v=${Date.now()}`} 
-                alt="Logo" 
+                alt={siteSettings?.siteName || 'Logo'} 
                 className="h-8 md:h-9 object-contain"
               />
             ) : (
-              <div className="w-8 h-8 md:w-9 md:h-9 rounded bg-blue-600 flex items-center justify-center font-black text-xs md:text-sm text-white">
-                UC
-              </div>
+              <>
+                <div className="w-8 h-8 md:w-9 md:h-9 rounded bg-blue-600 flex items-center justify-center font-black text-xs md:text-sm text-white">
+                  UC
+                </div>
+                <span className="text-white font-semibold text-base md:text-lg">
+                  {siteSettings?.siteName || 'PUBG UC'}
+                </span>
+              </>
             )}
-            <span className="text-white font-semibold text-base md:text-lg">PUBG UC</span>
           </div>
             
           <div className="flex items-center gap-2 md:gap-4">

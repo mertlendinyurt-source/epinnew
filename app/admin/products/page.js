@@ -45,23 +45,47 @@ export default function AdminProducts() {
   })
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken')
+    checkAdminAuth()
+  }, [])
+
+  const checkAdminAuth = () => {
+    let token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+    
     if (!token) {
       router.push('/admin/login')
       return
     }
+
+    const userData = localStorage.getItem('userData')
+    if (userData) {
+      try {
+        const user = JSON.parse(userData)
+        if (user.role !== 'admin') {
+          toast.error('Bu sayfaya erişim yetkiniz yok')
+          router.push('/')
+          return
+        }
+      } catch (e) {}
+    }
+
+    if (!localStorage.getItem('adminToken') && token) {
+      localStorage.setItem('adminToken', token)
+    }
+
     fetchProducts()
-  }, [])
+  }
 
   const fetchProducts = async () => {
     try {
-      const token = localStorage.getItem('adminToken')
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
       const response = await fetch('/api/admin/products', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
-      if (response.status === 401) {
+      if (response.status === 401 || response.status === 403) {
         localStorage.removeItem('adminToken')
+        localStorage.removeItem('userToken')
+        localStorage.removeItem('userData')
         router.push('/admin/login')
         return
       }

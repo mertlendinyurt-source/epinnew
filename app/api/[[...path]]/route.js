@@ -2023,7 +2023,7 @@ export async function PUT(request) {
         );
       }
 
-      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      const isValidPassword = await bcrypt.compare(currentPassword, user.passwordHash);
       if (!isValidPassword) {
         return NextResponse.json(
           { success: false, error: 'Mevcut şifre yanlış' },
@@ -2238,7 +2238,7 @@ export async function PUT(request) {
         );
       }
 
-      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      const isValidPassword = await bcrypt.compare(currentPassword, user.passwordHash);
       if (!isValidPassword) {
         return NextResponse.json(
           { success: false, error: 'Mevcut şifre yanlış' },

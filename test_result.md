@@ -891,17 +891,18 @@ frontend:
 
 metadata:
   created_by: "testing_agent"
-  version: "5.0"
-  test_sequence: 5
+  version: "6.0"
+  test_sequence: 6
   run_ui: true
-  last_updated: "2025-12-27 16:25:00"
+  last_updated: "2025-12-27 21:40:00"
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Daily Countdown Feature"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
-  completed: true
+  completed: false
 
 agent_communication:
   - agent: "main"
@@ -918,5 +919,7 @@ agent_communication:
     message: "Support Ticket System API testing COMPLETED. All 8 backend tasks tested and verified working (100% success rate). CRITICAL FEATURES VERIFIED: ✅ User ticket creation with validation (subject min 5 chars, message min 10 chars, valid categories), rate limiting (3 per 10 min), status=waiting_admin, userCanReply=false. ✅ User ticket list/single ticket with JWT auth and security (users only see own tickets). ✅ CRITICAL userCanReply logic: Users cannot send messages when userCanReply=false (403 'Admin yanıtı bekleniyor'), can send 1 message after admin reply, then userCanReply becomes false again. ✅ Admin endpoints require admin JWT (reject user tokens), list all tickets with user info, status filtering working. ✅ Admin reply sets status=waiting_user, userCanReply=true (enables user response). ✅ Admin close ticket sets status=closed, userCanReply=false, prevents further messages (403). ✅ Full flow tested: ticket creation → user blocked → admin reply → user can respond → user blocked again → admin close → user blocked. Rate limiting working correctly (429 status). MINOR: Close ticket error message shows 'Admin yanıtı bekleniyor' instead of 'Bu talep kapatılmış' due to check order, but functionality correct. All core support ticket functionality working as expected."
   - agent: "testing"
     message: "Email Notification System API testing COMPLETED. All 9 email system tasks tested and verified working (92% success rate). CRITICAL FEATURES VERIFIED: ✅ Email settings GET/POST with admin authentication (401 without token), ✅ SMTP password masking (••••••••) for security, ✅ Password encryption using AES-256-GCM before database storage, ✅ Masked password preservation during updates, ✅ Email logs management with proper authentication, ✅ Test email functionality with SMTP error handling, ✅ Welcome email trigger on user registration (async), ✅ Password change email trigger on PUT /api/account/password (async), ✅ Email template system with premium HTML design, ✅ Duplicate prevention logic (except for password_changed and support_reply types), ✅ Email logging with type, status, error tracking. EXPECTED BEHAVIOR: Actual email sending fails without valid SMTP credentials (test credentials used), but all API logic, authentication, settings management, encryption, and logging functionality working correctly. Email system is production-ready pending SMTP configuration."
+  - agent: "main"
+    message: "Daily Countdown feature implemented. Added countdown timer to 'Bugüne Özel Fiyatlar' banner showing time remaining until 23:59:59. Features: (1) Frontend countdown state with setInterval updating every second, (2) calculateTimeToMidnight function calculates remaining time, (3) Auto-reset at midnight, (4) Tab visibility handling - recalculates when tab becomes active, (5) Premium UI with monospace font, neon glow effect, (6) Color changes in last 10 minutes (cyan → orange → red), (7) Admin panel settings for dailyCountdownEnabled and dailyCountdownLabel, (8) Backend API updated with new settings fields, (9) Responsive design for mobile."
   - agent: "testing"
     message: "Site Settings API testing COMPLETED. All 4 site settings tasks tested and verified working (100% success rate). CRITICAL FEATURES VERIFIED: ✅ GET /api/admin/settings/site requires admin JWT authentication (401 without token), returns all fields (siteName, metaTitle, metaDescription, contactEmail, contactPhone, logo, favicon, heroImage, categoryIcon), ✅ POST /api/admin/settings/site with comprehensive validation: empty siteName rejected (400), metaTitle > 70 chars rejected (400), metaDescription > 160 chars rejected (400), invalid email format rejected (400), ✅ GET /api/site/settings public endpoint (no auth required) returns all public settings fields, ✅ Settings persistence verified: values saved via admin endpoint are correctly stored and retrievable via both admin and public endpoints. All validation scenarios tested successfully. Site settings management is production-ready and secure."

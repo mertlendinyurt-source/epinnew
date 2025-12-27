@@ -1067,6 +1067,45 @@ export async function POST(request) {
         );
       }
     }
+
+    // Admin: Close ticket (MUST BE BEFORE body = await request.json() - no body needed)
+    if (pathname.match(/^\/api\/admin\/support\/tickets\/[^\/]+\/close$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const ticketId = pathname.split('/')[5];
+
+      const ticket = await db.collection('tickets').findOne({ id: ticketId });
+      if (!ticket) {
+        return NextResponse.json(
+          { success: false, error: 'Talep bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      await db.collection('tickets').updateOne(
+        { id: ticketId },
+        {
+          $set: {
+            status: 'closed',
+            userCanReply: false,
+            closedBy: user.username,
+            closedAt: new Date(),
+            updatedAt: new Date()
+          }
+        }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: 'Talep kapatıldı'
+      });
+    }
     
     // For all other endpoints, parse JSON body
     const body = await request.json();

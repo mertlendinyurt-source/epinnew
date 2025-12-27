@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://last-chance-deals-1.preview.emergentagent.com"
+BASE_URL = "https://shopier-test.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test data for new user to avoid rate limiting

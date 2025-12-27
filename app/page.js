@@ -36,6 +36,7 @@ export default function App() {
   const [reviewsHasMore, setReviewsHasMore] = useState(false)
   const [loadingReviews, setLoadingReviews] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
+  const [footerSettings, setFooterSettings] = useState(null)
 
   useEffect(() => {
     fetchProducts()
@@ -44,7 +45,20 @@ export default function App() {
     fetchRegions()
     fetchGameContent()
     fetchReviews(1)
+    fetchFooterSettings()
   }, [])
+
+  const fetchFooterSettings = async () => {
+    try {
+      const response = await fetch('/api/footer-settings')
+      const data = await response.json()
+      if (data.success) {
+        setFooterSettings(data.data)
+      }
+    } catch (error) {
+      console.error('Error fetching footer settings:', error)
+    }
+  }
 
   const fetchGameContent = async () => {
     try {

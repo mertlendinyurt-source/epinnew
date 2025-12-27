@@ -785,6 +785,7 @@ export default function App() {
         open={authModalOpen} 
         onClose={() => setAuthModalOpen(false)}
         onSuccess={handleAuthSuccess}
+        defaultTab={authModalTab}
       />
     </div>
   )

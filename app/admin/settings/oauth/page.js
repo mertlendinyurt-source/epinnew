@@ -59,7 +59,7 @@ export default function OAuthSettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken');
       
       const response = await fetch('/api/admin/settings/oauth/google', {
         method: 'POST',

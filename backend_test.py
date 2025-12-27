@@ -874,7 +874,7 @@ def test_full_flow():
     # Step 6: Admin closes ticket
     try:
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = requests.post(f"{API_BASE}/admin/support/tickets/{flow_ticket_id}/close", headers=headers)
+        response = requests.post(f"{API_BASE}/admin/support/tickets/{flow_ticket_id}/close", json={}, headers=headers)
         
         if response.status_code == 200:
             print("✅ Step 6: Admin closed ticket")

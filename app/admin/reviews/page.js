@@ -19,7 +19,8 @@ export default function ReviewsPage() {
     userName: '',
     rating: 5,
     comment: '',
-    approved: true
+    approved: true,
+    customDate: ''
   });
 
   useEffect(() => {

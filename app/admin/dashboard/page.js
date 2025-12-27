@@ -17,23 +17,55 @@ export default function AdminDashboard() {
   const [recentOrders, setRecentOrders] = useState([])
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken')
+    checkAdminAuth()
+  }, [])
+
+  const checkAdminAuth = () => {
+    // Check for userToken first (new unified auth), then adminToken (legacy)
+    let token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+    
     if (!token) {
       router.push('/admin/login')
       return
     }
+
+    // Check if user has admin role
+    const userData = localStorage.getItem('userData')
+    if (userData) {
+      try {
+        const user = JSON.parse(userData)
+        if (user.role !== 'admin') {
+          toast.error('Bu sayfaya erişim yetkiniz yok')
+          router.push('/')
+          return
+        }
+      } catch (e) {
+        // If can't parse, continue with API check
+      }
+    }
+
+    // Sync adminToken with userToken for backwards compatibility
+    if (!localStorage.getItem('adminToken') && token) {
+      localStorage.setItem('adminToken', token)
+    }
+
     fetchDashboard()
-  }, [])
+  }
 
   const fetchDashboard = async () => {
     try {
-      const token = localStorage.getItem('adminToken')
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
       const response = await fetch('/api/admin/dashboard', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
-      if (response.status === 401) {
+      if (response.status === 401 || response.status === 403) {
+        // Clear all auth tokens
         localStorage.removeItem('adminToken')
+        localStorage.removeItem('adminUsername')
+        localStorage.removeItem('userToken')
+        localStorage.removeItem('userData')
+        toast.error('Oturum süreniz doldu veya yetkiniz yok')
         router.push('/admin/login')
         return
       }
@@ -52,9 +84,12 @@ export default function AdminDashboard() {
   }
 
   const handleLogout = () => {
+    // Clear all auth tokens
     localStorage.removeItem('adminToken')
     localStorage.removeItem('adminUsername')
-    router.push('/admin/login')
+    localStorage.removeItem('userToken')
+    localStorage.removeItem('userData')
+    router.push('/')
   }
 
   const getStatusBadge = (status) => {

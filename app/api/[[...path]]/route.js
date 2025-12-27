@@ -1738,6 +1738,25 @@ export async function DELETE(request) {
       });
     }
 
+    // Delete review
+    if (pathname.match(/^\/api\/admin\/reviews\/[^\/]+$/)) {
+      const reviewId = pathname.split('/').pop();
+      
+      const result = await db.collection('reviews').deleteOne({ id: reviewId });
+      
+      if (result.deletedCount === 0) {
+        return NextResponse.json(
+          { success: false, error: 'Yorum bulunamadı' },
+          { status: 404 }
+        );
+      }
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Yorum silindi'
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

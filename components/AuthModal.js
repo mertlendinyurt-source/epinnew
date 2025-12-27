@@ -165,7 +165,19 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
         // Clear form
         setLoginForm({ email: '', password: '' });
 
-        // Call success callback
+        // Check if user is admin and redirect accordingly
+        if (data.data.user.role === 'admin') {
+          toast.success('Admin paneline yönlendiriliyorsunuz...');
+          // Close modal first
+          onClose();
+          // Redirect to admin dashboard
+          setTimeout(() => {
+            window.location.href = '/admin/dashboard';
+          }, 500);
+          return;
+        }
+
+        // Call success callback for regular users
         if (onSuccess) onSuccess(data.data);
         
         // Close modal
@@ -173,6 +185,8 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
       } else {
         // Check if this is a Google-only account
         if (data.code === 'GOOGLE_ONLY') {
+          toast.error(data.error);
+        } else if (data.code === 'ACCOUNT_SUSPENDED') {
           toast.error(data.error);
         } else {
           toast.error(data.error || 'Giriş başarısız');

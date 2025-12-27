@@ -1106,28 +1106,22 @@ export default function App() {
                 Hızlı Erişim
               </h3>
               <ul className="space-y-3">
-                <li>
-                  <button 
-                    onClick={() => {
-                      setAuthModalTab('register');
-                      setAuthModalOpen(true);
-                    }}
-                    className="text-white/50 hover:text-white hover:underline text-sm transition-colors"
-                  >
-                    Kayıt Ol
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => {
-                      setAuthModalTab('login');
-                      setAuthModalOpen(true);
-                    }}
-                    className="text-white/50 hover:text-white hover:underline text-sm transition-colors"
-                  >
-                    Giriş Yap
-                  </button>
-                </li>
+                {(footerSettings?.quickLinks || [
+                  { label: 'Giriş Yap', action: 'login' },
+                  { label: 'Kayıt Ol', action: 'register' }
+                ]).map((link, index) => (
+                  <li key={index}>
+                    <button 
+                      onClick={() => {
+                        setAuthModalTab(link.action === 'login' ? 'login' : 'register');
+                        setAuthModalOpen(true);
+                      }}
+                      className="text-white/50 hover:text-white hover:underline text-sm transition-colors"
+                    >
+                      {link.label}
+                    </button>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -1137,14 +1131,16 @@ export default function App() {
                 Popüler Kategoriler
               </h3>
               <ul className="space-y-3">
-                <li>
-                  <a 
-                    href="/" 
-                    className="text-white/50 hover:text-white hover:underline text-sm transition-colors"
-                  >
-                    PUBG Mobile
-                  </a>
-                </li>
+                {(footerSettings?.categories || [{ label: 'PUBG Mobile', url: '/' }]).map((cat, index) => (
+                  <li key={index}>
+                    <a 
+                      href={cat.url} 
+                      className="text-white/50 hover:text-white hover:underline text-sm transition-colors"
+                    >
+                      {cat.label}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -1154,46 +1150,27 @@ export default function App() {
                 Kurumsal/Künye
               </h3>
               <ul className="space-y-3">
-                <li>
-                  <a href="/legal/terms" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">
-                    Hizmet Şartları
-                  </a>
-                </li>
-                <li>
-                  <a href="/legal/user-agreement" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">
-                    Kullanıcı Sözleşmesi
-                  </a>
-                </li>
-                <li>
-                  <a href="/legal/rules" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">
-                    Kurallar Politikası ve Davranış İlkeleri
-                  </a>
-                </li>
-                <li>
-                  <a href="/legal/privacy" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">
-                    Gizlilik Politikası
-                  </a>
-                </li>
-                <li>
-                  <a href="/legal/cookies" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">
-                    Çerez Politikası
-                  </a>
-                </li>
-                <li>
-                  <a href="/legal/kvkk" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">
-                    KVKK Aydınlatma Metni
-                  </a>
-                </li>
-                <li>
-                  <a href="/legal/refund" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">
-                    İade Politikası
-                  </a>
-                </li>
-                <li>
-                  <a href="/legal/aml" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">
-                    Kara Paranın Aklanmasının Önlenmesi Politikası
-                  </a>
-                </li>
+                {(footerSettings?.corporateLinks || []).length > 0 ? (
+                  footerSettings.corporateLinks.map((link, index) => (
+                    <li key={index}>
+                      <a 
+                        href={`/legal/${link.slug}`} 
+                        className="text-white/50 hover:text-white hover:underline text-sm transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ))
+                ) : (
+                  // Fallback if no footer settings
+                  <>
+                    <li><a href="/legal/hizmet-sartlari" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Hizmet Şartları</a></li>
+                    <li><a href="/legal/kullanici-sozlesmesi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Kullanıcı Sözleşmesi</a></li>
+                    <li><a href="/legal/gizlilik-politikasi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Gizlilik Politikası</a></li>
+                    <li><a href="/legal/kvkk" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">KVKK Aydınlatma Metni</a></li>
+                    <li><a href="/legal/iade-politikasi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">İade Politikası</a></li>
+                  </>
+                )}
               </ul>
             </div>
           </div>

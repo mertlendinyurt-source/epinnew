@@ -17,11 +17,16 @@ export default function SiteSettingsPage() {
   const [uploads, setUploads] = useState({
     logo: null,
     favicon: null,
-    heroImage: null
+    heroImage: null,
+    categoryIcon: null
   });
 
   const [previews, setPreviews] = useState({
     logo: null,
+    favicon: null,
+    heroImage: null,
+    categoryIcon: null
+  });
     favicon: null,
     heroImage: null
   });

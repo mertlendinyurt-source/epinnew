@@ -104,6 +104,11 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
         
         toast.success('Hesap oluşturuldu! Ödemeye devam edebilirsiniz.');
         
+        // GA4 sign_up event
+        if (typeof window !== 'undefined' && window.gtag) {
+          window.gtag('event', 'sign_up', { method: 'email' });
+        }
+        
         // Clear form
         setRegisterForm({
           firstName: '',

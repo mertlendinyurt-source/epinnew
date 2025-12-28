@@ -2600,10 +2600,9 @@ export async function POST(request) {
         );
       }
 
-      // Decrypt Shopier credentials
-      let merchantId, apiKey, apiSecret;
+      // Decrypt Shopier credentials (only apiKey and apiSecret needed)
+      let apiKey, apiSecret;
       try {
-        merchantId = decrypt(shopierSettings.merchantId);
         apiKey = decrypt(shopierSettings.apiKey);
         apiSecret = decrypt(shopierSettings.apiSecret);
       } catch (error) {

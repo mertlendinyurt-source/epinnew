@@ -2,8 +2,8 @@ import './globals.css'
 
 // Default metadata (will be overridden by page-level metadata)
 export const metadata = {
-  title: 'PUBG UC Store - En Ucuz UC Satış Sitesi',
-  description: 'PUBG Mobile UC satın al. Anında teslimat, güvenli ödeme. En uygun fiyatlarla UC paketleri.',
+  title: 'PINLY – Dijital Kod ve Oyun Satış Platformu',
+  description: 'PINLY üzerinden oyun içi kodlar ve dijital pinler anında teslim edilir.',
 }
 
 export default function RootLayout({ children }) {

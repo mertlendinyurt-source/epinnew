@@ -1014,16 +1014,16 @@ export default function App() {
                   <div
                     key={product.id}
                     onClick={() => handleProductSelect(product)}
-                    className="group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border border-white/10 hover:border-white/20 max-w-[280px] mx-auto w-full aspect-[2/2.8] md:aspect-[2/3]"
-                    style={{ backgroundColor: '#252a34' }}
+                    className="group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border border-white/10 hover:border-white/20 w-full aspect-[2/2.8] md:aspect-[2/3]"
+                    style={{ backgroundColor: '#252a34', maxWidth: '270px', margin: '0 auto' }}
                   >
-                    {/* Info Icon - Top Right */}
+                    {/* Info Icon */}
                     <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-white/90 flex items-center justify-center z-20">
                       <Info className="w-3 h-3 text-gray-700" />
                     </div>
 
-                    {/* Image Section - 55% of card height */}
-                    <div className="relative h-[55%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-4">
+                    {/* Image Section - 55% height */}
+                    <div className="relative h-[55%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center" style={{ padding: '14px' }}>
                       <img 
                         src={product.imageUrl || "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=300&h=300&fit=crop"}
                         alt={product.title}
@@ -1034,23 +1034,23 @@ export default function App() {
                       />
                     </div>
 
-                    {/* Content Section - 45% of card */}
-                    <div className="h-[45%] p-2.5 flex flex-col justify-between">
+                    {/* Content Section - 45% */}
+                    <div className="h-[45%] flex flex-col justify-between" style={{ padding: '14px' }}>
                       <div>
                         <div className="text-[10px] text-white/60 font-medium uppercase">MOBİLE</div>
-                        <div className="text-sm font-bold text-white">{product.ucAmount} UC</div>
-                        <div className="flex items-center gap-1 mt-1">
+                        <div className="text-[13px] font-bold text-white">{product.ucAmount} UC</div>
+                        <div className="flex items-center gap-1 mt-0.5">
                           <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>
-                        <div className="text-[10px] text-emerald-400">Bölgenizde kullanılabilir</div>
+                        <div className="text-[9px] text-emerald-400">Bölgenizde kullanılabilir</div>
                       </div>
                       <div>
                         {product.discountPrice < product.price && (
-                          <div className="text-[10px] text-red-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
+                          <div className="text-[9px] text-red-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
                         )}
-                        <div className="text-base font-bold text-white">₺ {product.discountPrice.toFixed(2).replace('.', ',')}</div>
+                        <div className="text-[15px] font-bold text-white">₺ {product.discountPrice.toFixed(2).replace('.', ',')}</div>
                         {product.discountPercent > 0 && (
-                          <div className="text-[12px] text-emerald-400 font-medium">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
+                          <div className="text-[11px] text-emerald-400 font-medium">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
                         )}
                       </div>
                     </div>

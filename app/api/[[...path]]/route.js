@@ -2239,7 +2239,7 @@ export async function POST(request) {
         const siteSettings = await db.collection('site_settings').findOne({ id: 'main' });
 
         const testContent = {
-          subject: '🧪 Test E-postası - PUBG UC Store',
+          subject: '🧪 Test E-postası - PINLY',
           title: 'Test E-postası Başarılı!',
           body: `
             <p>Merhaba,</p>

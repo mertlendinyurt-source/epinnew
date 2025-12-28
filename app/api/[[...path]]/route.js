@@ -1162,7 +1162,6 @@ export async function GET(request) {
           success: true,
           data: {
             isConfigured: false,
-            merchantId: null,
             apiKey: null,
             mode: 'production',
             message: 'Shopier ayarları henüz yapılmadı'
@@ -1175,7 +1174,6 @@ export async function GET(request) {
         success: true,
         data: {
           isConfigured: true,
-          merchantId: settings.merchantId ? maskSensitiveData(decrypt(settings.merchantId)) : null,
           apiKey: settings.apiKey ? maskSensitiveData(decrypt(settings.apiKey)) : null,
           mode: settings.mode || 'production',
           updatedBy: settings.updatedBy,

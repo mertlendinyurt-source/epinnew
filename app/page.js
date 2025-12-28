@@ -1013,23 +1013,23 @@ export default function App() {
                   <div
                     key={product.id}
                     onClick={() => handleProductSelect(product)}
-                    className="group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-black/40 flex flex-col"
+                    className="group relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/20 flex flex-col border border-white/5"
                     style={{ backgroundColor: '#1a1d24' }}
                   >
                     {/* Premium Badge */}
                     {product.discountPercent > 0 && (
-                      <div className="absolute top-2 left-2 z-20 bg-gradient-to-r from-emerald-500 to-green-600 text-white text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full shadow-lg">
+                      <div className="absolute top-2.5 left-2.5 z-20 bg-gradient-to-r from-emerald-500 to-green-600 text-white text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-full shadow-lg shadow-emerald-500/30">
                         %{product.discountPercent} İNDİRİM
                       </div>
                     )}
                     
                     {/* Info Icon */}
-                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Info className="w-3.5 h-3.5 text-white" />
+                    <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Info className="w-4 h-4 text-white" />
                     </div>
 
-                    {/* Image Section - Fixed aspect ratio for image area */}
-                    <div className="relative aspect-[4/3] overflow-hidden">
+                    {/* Image Section - Taller aspect ratio for vertical look */}
+                    <div className="relative aspect-[4/3.5] md:aspect-[4/3] overflow-hidden">
                       <img 
                         src={product.imageUrl || "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=400&h=500&fit=crop"}
                         alt={product.title}
@@ -1039,17 +1039,17 @@ export default function App() {
                         }}
                       />
                       {/* Subtle Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#1a1d24]/80 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#1a1d24] via-transparent to-transparent" />
                     </div>
 
-                    {/* Content Section - Separate from image */}
-                    <div className="p-3 md:p-4 flex flex-col flex-1 justify-between bg-[#1a1d24]">
+                    {/* Content Section */}
+                    <div className="p-3 md:p-4 flex flex-col flex-1 justify-between">
                       {/* Product Info */}
-                      <div className="mb-2">
-                        <div className="text-[10px] md:text-[11px] text-blue-400 font-semibold uppercase tracking-wider mb-0.5">
+                      <div className="mb-3">
+                        <div className="text-[10px] md:text-[11px] text-blue-400 font-semibold uppercase tracking-wider mb-1">
                           MOBILE
                         </div>
-                        <div className="text-sm md:text-lg font-bold text-white leading-tight mb-1">
+                        <div className="text-base md:text-xl font-bold text-white leading-tight mb-2">
                           {product.ucAmount} UC
                         </div>
                         <div className="flex items-center gap-1.5">
@@ -1061,21 +1061,21 @@ export default function App() {
                       </div>
 
                       {/* Price Section */}
-                      <div className="flex items-end justify-between pt-2 border-t border-white/5">
+                      <div className="flex items-end justify-between pt-3 border-t border-white/10">
                         <div>
                           {product.discountPrice < product.price && (
-                            <div className="text-[11px] md:text-xs text-white/40 line-through">
+                            <div className="text-[11px] md:text-xs text-white/40 line-through mb-0.5">
                               ₺ {product.price.toFixed(2)}
                             </div>
                           )}
-                          <div className="text-base md:text-xl font-bold text-white">
+                          <div className="text-lg md:text-2xl font-bold text-white">
                             ₺ {product.discountPrice.toFixed(2)}
                           </div>
                         </div>
-                        {/* Buy Button Indicator */}
-                        <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
-                          <svg className="w-4 h-4 md:w-5 md:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        {/* Buy Button */}
+                        <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/40 group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-purple-500/40 transition-all">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                           </svg>
                         </div>
                       </div>

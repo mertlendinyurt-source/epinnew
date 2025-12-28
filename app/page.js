@@ -1039,7 +1039,7 @@ export default function App() {
                         <div className="text-[10px] text-white/60 font-medium uppercase">MOBİLE</div>
                         <div className="text-sm font-bold text-white">{product.ucAmount} UC</div>
                         <div className="flex items-center gap-1 mt-1">
-                          <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" />
+                          <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>
                         <div className="text-[10px] text-emerald-400">Bölgenizde kullanılabilir</div>
                       </div>
@@ -1049,7 +1049,7 @@ export default function App() {
                         )}
                         <div className="text-base font-bold text-white">₺ {product.discountPrice.toFixed(2).replace('.', ',')}</div>
                         {product.discountPercent > 0 && (
-                          <div className="text-[10px] text-emerald-400">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
+                          <div className="text-[12px] text-emerald-400 font-medium">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
                         )}
                       </div>
                     </div>

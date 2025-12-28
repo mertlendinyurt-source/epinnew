@@ -8,7 +8,7 @@ import { saveUploadedFile, deleteUploadedFile } from '@/lib/fileUpload';
 import nodemailer from 'nodemailer';
 
 const MONGO_URL = process.env.MONGO_URL;
-const DB_NAME = process.env.DB_NAME || 'pubg_uc_store';
+const DB_NAME = process.env.DB_NAME || 'pinly_store';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 const APP_VERSION = '1.0.0';

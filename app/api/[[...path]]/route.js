@@ -1045,14 +1045,30 @@ export async function GET(request) {
       }
 
       const status = searchParams.get('status');
-      const query = status ? { status } : {};
+      const riskStatus = searchParams.get('riskStatus'); // FLAGGED | CLEAR
+      const deliveryStatus = searchParams.get('deliveryStatus'); // hold | pending | delivered
+      
+      let query = {};
+      if (status) query.status = status;
+      if (riskStatus) query['risk.status'] = riskStatus;
+      if (deliveryStatus) query['delivery.status'] = deliveryStatus;
       
       const orders = await db.collection('orders')
         .find(query)
         .sort({ createdAt: -1 })
         .toArray();
       
-      return NextResponse.json({ success: true, data: orders });
+      // Add flagged count for badge
+      const flaggedCount = await db.collection('orders').countDocuments({ 
+        'risk.status': 'FLAGGED',
+        'delivery.status': 'hold'
+      });
+      
+      return NextResponse.json({ 
+        success: true, 
+        data: orders,
+        meta: { flaggedCount }
+      });
     }
 
     // Admin: Get single order

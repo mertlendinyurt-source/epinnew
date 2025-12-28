@@ -1018,8 +1018,8 @@ export default function App() {
                     style={{ backgroundColor: '#252a34', maxWidth: '270px', margin: '0 auto' }}
                   >
                     {/* Info Icon */}
-                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-white/90 flex items-center justify-center z-20">
-                      <Info className="w-3 h-3 text-gray-700" />
+                    <div className="absolute top-3 right-3 w-7 h-7 md:w-5 md:h-5 rounded-full bg-white/90 flex items-center justify-center z-20">
+                      <span className="text-gray-700 font-bold text-sm md:text-xs">i</span>
                     </div>
 
                     {/* Image Section - 55% height */}
@@ -1037,20 +1037,20 @@ export default function App() {
                     {/* Content Section - 45% */}
                     <div className="h-[45%] flex flex-col justify-between" style={{ padding: '14px' }}>
                       <div>
-                        <div className="text-[10px] text-white/60 font-medium uppercase">MOBİLE</div>
-                        <div className="text-[13px] font-bold text-white">{product.ucAmount} UC</div>
-                        <div className="flex items-center gap-1 mt-0.5">
+                        <div className="text-[13px] md:text-[10px] text-white/60 font-bold uppercase">MOBİLE</div>
+                        <div className="text-[18px] md:text-[13px] font-bold text-white">{product.ucAmount} UC</div>
+                        <div className="flex items-center gap-1.5 mt-1">
                           <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>
-                        <div className="text-[9px] text-emerald-400">Bölgenizde kullanılabilir</div>
+                        <div className="text-[12px] md:text-[9px] text-emerald-400">Bölgenizde kullanılabilir</div>
                       </div>
                       <div>
                         {product.discountPrice < product.price && (
-                          <div className="text-[9px] text-red-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
+                          <div className="text-[13px] md:text-[9px] text-red-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
                         )}
-                        <div className="text-[15px] font-bold text-white">₺ {product.discountPrice.toFixed(2).replace('.', ',')}</div>
+                        <div className="text-[22px] md:text-[15px] font-bold text-white">₺ {product.discountPrice.toFixed(2).replace('.', ',')}</div>
                         {product.discountPercent > 0 && (
-                          <div className="text-[11px] text-emerald-400 font-medium">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
+                          <div className="text-[13px] md:text-[11px] text-emerald-400 font-medium">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
                         )}
                       </div>
                     </div>

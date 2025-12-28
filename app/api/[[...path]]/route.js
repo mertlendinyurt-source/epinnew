@@ -465,7 +465,7 @@ async function sendWelcomeEmail(db, user) {
     subject: `Hoş geldin, ${user.firstName}! 🎮`,
     title: `Merhaba ${user.firstName}!`,
     body: `
-      <p>PUBG UC Store ailesine hoş geldin!</p>
+      <p>PINLY ailesine hoş geldin!</p>
       <p>Hesabın başarıyla oluşturuldu. Artık en uygun fiyatlarla UC satın alabilir ve anında teslimat alabilirsin.</p>
       <p style="margin-top: 20px;">
         <strong>Hesap Bilgilerin:</strong><br>

@@ -1,0 +1,10 @@
+# PINLY Robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://pinly.com.tr/sitemap.xml
+
+# Disallow admin and API
+Disallow: /admin/
+Disallow: /api/

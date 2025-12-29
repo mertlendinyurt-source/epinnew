@@ -623,14 +623,14 @@ export default function App() {
           setAuthModalTab('login')
           setAuthModalOpen(true)
         } else if (data.code === 'INCOMPLETE_PROFILE' || data.error?.includes('telefon') || data.error?.includes('Profil bilgileriniz eksik')) {
-          // Check if user is Google user - only show phone modal for Google users
-          const userData = JSON.parse(localStorage.getItem('userData') || '{}')
-          if (userData.authMethod === 'google' || userData.googleId) {
-            // Google user - open phone modal
+          // Check if user is logged in - if yes, show phone modal
+          const token = localStorage.getItem('userToken')
+          if (token && isAuthenticated) {
+            // User is logged in but missing phone - open phone modal
             setPhoneModalOpen(true)
             return
           } else {
-            // Regular user - open register modal
+            // Not logged in - open register modal
             setAuthModalTab('register')
             setAuthModalOpen(true)
           }

@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -7,7 +8,7 @@ import { CheckCircle, Package, ArrowRight, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast, Toaster } from 'sonner';
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
   const [order, setOrder] = useState(null);
@@ -62,18 +63,12 @@ export default function PaymentSuccessPage() {
       
       <div className="max-w-md w-full">
         <div className="bg-[#1e2229] rounded-2xl border border-white/10 p-8 text-center">
-          {/* Success Icon */}
           <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10 text-green-500" />
           </div>
           
-          <h1 className="text-2xl font-bold text-white mb-2">
-            Ödeme Başarılı!
-          </h1>
-          
-          <p className="text-white/60 mb-6">
-            Siparişiniz başarıyla tamamlandı. Teşekkür ederiz!
-          </p>
+          <h1 className="text-2xl font-bold text-white mb-2">Ödeme Başarılı!</h1>
+          <p className="text-white/60 mb-6">Siparişiniz başarıyla tamamlandı.</p>
           
           {loading ? (
             <div className="animate-pulse bg-white/10 h-24 rounded-lg mb-6"></div>
@@ -83,15 +78,8 @@ export default function PaymentSuccessPage() {
               {order.delivery.items.map((code, index) => (
                 <div key={index} className="flex items-center justify-between bg-white/5 rounded-lg p-3 mb-2">
                   <code className="text-green-400 font-mono text-lg">{code}</code>
-                  <button
-                    onClick={() => copyCode(code)}
-                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                  >
-                    {copied ? (
-                      <Check className="w-5 h-5 text-green-500" />
-                    ) : (
-                      <Copy className="w-5 h-5 text-white/60" />
-                    )}
+                  <button onClick={() => copyCode(code)} className="p-2 hover:bg-white/10 rounded-lg">
+                    {copied ? <Check className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5 text-white/60" />}
                   </button>
                 </div>
               ))}
@@ -99,9 +87,7 @@ export default function PaymentSuccessPage() {
           ) : order?.delivery?.status === 'pending' ? (
             <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 mb-6">
               <Package className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-              <p className="text-yellow-500 text-sm">
-                Kodunuz hazırlanıyor. E-posta ile bilgilendirileceksiniz.
-              </p>
+              <p className="text-yellow-500 text-sm">Kodunuz hazırlanıyor.</p>
             </div>
           ) : null}
           
@@ -124,12 +110,10 @@ export default function PaymentSuccessPage() {
           
           <div className="space-y-3">
             <Link href="/account/orders">
-              <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
-                Siparişlerime Git
-                <ArrowRight className="w-4 h-4 ml-2" />
+              <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600">
+                Siparişlerime Git <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
-            
             <Link href="/">
               <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10">
                 Ana Sayfaya Dön
@@ -137,16 +121,15 @@ export default function PaymentSuccessPage() {
             </Link>
           </div>
         </div>
-        
-        {/* Site branding */}
-        <div className="text-center mt-6">
-          {siteSettings?.logo ? (
-            <img src={siteSettings.logo} alt="" className="h-8 mx-auto opacity-50" />
-          ) : (
-            <span className="text-white/30 text-sm">{siteSettings?.siteName || 'PINLY'}</span>
-          )}
-        </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#12151a] flex items-center justify-center"><div className="text-white">Yükleniyor...</div></div>}>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }

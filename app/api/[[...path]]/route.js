@@ -2973,13 +2973,12 @@ export async function POST(request) {
       }
 
       // 7. Map Shopier status to application status
+      // Shopier returns "success" for successful payments
       let newStatus;
-      if (status === 'success' || status === '1' || status === 'approved') {
+      if (status === 'success') {
         newStatus = 'paid';
-      } else if (status === 'failed' || status === 'cancelled' || status === 'declined') {
-        newStatus = 'failed';
       } else {
-        newStatus = 'pending';
+        newStatus = 'failed';
       }
 
       // 8. Enforce immutable status transitions (PENDING → PAID/FAILED only)
@@ -3007,12 +3006,13 @@ export async function POST(request) {
         id: uuidv4(),
         orderId: order.id,
         provider: 'shopier',
-        providerTxnId: txnId || uuidv4(),
+        providerTxnId: payment_id ? payment_id.toString() : uuidv4(),
         status: newStatus,
         amount: order.amount,
         currency: order.currency,
-        hashValidated: true,
-        rawPayload: body,
+        installment: installment || 0,
+        signatureValidated: true,
+        rawPayload: { ...body, signature: '***MASKED***' },
         verifiedAt: new Date(),
         createdAt: new Date()
       });

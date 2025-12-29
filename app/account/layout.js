@@ -102,10 +102,20 @@ export default function AccountLayout({ children }) {
             </button>
             
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">UC</span>
-              </div>
-              <span className="text-white font-semibold hidden sm:block">PUBG UC Store</span>
+              {siteSettings?.logo ? (
+                <img 
+                  src={siteSettings.logo} 
+                  alt={siteSettings?.siteName || 'Logo'} 
+                  className="h-10 object-contain"
+                />
+              ) : (
+                <>
+                  <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">{siteSettings?.siteName?.[0] || 'P'}</span>
+                  </div>
+                  <span className="text-white font-semibold hidden sm:block">{siteSettings?.siteName || 'PINLY'}</span>
+                </>
+              )}
             </Link>
           </div>
 

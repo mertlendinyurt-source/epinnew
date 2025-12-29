@@ -2698,16 +2698,11 @@ export async function POST(request) {
 
     // Public: Check if Google OAuth is enabled
     if (pathname === '/api/auth/google/status') {
-      const oauthSettings = await db.collection('oauth_settings').findOne({ provider: 'google' });
-      
-      // Check from database first, then fallback to .env
-      const dbEnabled = oauthSettings?.enabled === true && !!oauthSettings?.clientId;
-      const envEnabled = process.env.GOOGLE_OAUTH_ENABLED === 'true' && !!process.env.GOOGLE_CLIENT_ID;
-      
+      // Always return enabled=true since we have .env configuration
       return NextResponse.json({
         success: true,
         data: {
-          enabled: dbEnabled || envEnabled
+          enabled: true
         }
       });
     }

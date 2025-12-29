@@ -779,15 +779,12 @@ export default function App() {
                 alt={siteSettings?.siteName || 'Logo'} 
                 className="h-8 md:h-9 object-contain"
               />
+            ) : siteSettings?.siteName ? (
+              <span className="text-white font-semibold text-base md:text-lg">
+                {siteSettings.siteName}
+              </span>
             ) : (
-              <>
-                <div className="w-8 h-8 md:w-9 md:h-9 rounded bg-blue-600 flex items-center justify-center font-black text-xs md:text-sm text-white">
-                  UC
-                </div>
-                <span className="text-white font-semibold text-base md:text-lg">
-                  {siteSettings?.siteName || 'PINLY'}
-                </span>
-              </>
+              <div className="h-8 md:h-9 w-24 bg-white/5 rounded animate-pulse"></div>
             )}
           </div>
             

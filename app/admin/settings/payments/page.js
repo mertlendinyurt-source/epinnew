@@ -129,7 +129,7 @@ export default function PaymentSettingsPage() {
     toast('Panoya kopyalandı!', 'success');
   };
 
-  const callbackUrl = `${baseUrl}/api/payment/shopier/callback`;
+  const callbackUrl = `${baseUrl}/api/payments/shopier/callback`;
 
   if (loading) {
     return (

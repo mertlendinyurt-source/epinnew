@@ -318,7 +318,7 @@ export default function OrderDetailPage() {
               
               <div className="bg-gray-900/50 rounded-xl p-4 mb-4 border border-gray-700">
                 <div className="text-2xl font-bold text-white mb-1">
-                  {order.productTitle}
+                  {order.productSnapshot?.title || order.productTitle || 'Ürün'}
                 </div>
                 <div className="text-sm text-gray-400">
                   PUBG Mobile UC Paketi
@@ -328,18 +328,18 @@ export default function OrderDetailPage() {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between items-center py-2">
                   <span className="text-gray-400">Ürün Fiyatı</span>
-                  <span className="text-white font-mono">₺{order.amount.toFixed(2)}</span>
+                  <span className="text-white font-mono">₺{order.amount ? Number(order.amount).toFixed(2) : '0.00'}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-t border-gray-700">
                   <span className="text-gray-400">Para Birimi</span>
-                  <span className="text-white">{order.currency}</span>
+                  <span className="text-white">{order.currency || 'TRY'}</span>
                 </div>
               </div>
 
               <div className="pt-4 border-t-2 border-gray-700">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-300 text-lg">Toplam</span>
-                  <span className="text-3xl font-bold text-white">₺{order.amount.toFixed(2)}</span>
+                  <span className="text-3xl font-bold text-white">₺{order.amount ? Number(order.amount).toFixed(2) : '0.00'}</span>
                 </div>
               </div>
 

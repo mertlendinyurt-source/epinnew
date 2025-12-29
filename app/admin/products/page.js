@@ -721,9 +721,18 @@ export default function AdminProducts() {
 
       {/* Main Content */}
       <div className="ml-64 p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Ürünler</h1>
-          <p className="text-slate-400">UC paketlerini görüntüle ve düzenle</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Ürünler</h1>
+            <p className="text-slate-400">UC paketlerini görüntüle ve düzenle</p>
+          </div>
+          <Button
+            onClick={handleOpenAddDialog}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Yeni Ürün Ekle
+          </Button>
         </div>
 
         {/* Products Table */}

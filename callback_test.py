@@ -9,7 +9,7 @@ import time
 import hashlib
 from datetime import datetime
 
-BASE_URL = "https://payment-gateway-244.preview.emergentagent.com/api"
+BASE_URL = "https://cpanel-admin-panel.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 TEST_SHOPIER_API_SECRET = "test_secret_abcdef"

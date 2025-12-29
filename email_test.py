@@ -7,7 +7,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://payment-gateway-244.preview.emergentagent.com"
+BASE_URL = "https://cpanel-admin-panel.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 

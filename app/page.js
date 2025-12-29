@@ -73,6 +73,7 @@ export default function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalTab, setAuthModalTab] = useState('register')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState(null)
   const [siteSettings, setSiteSettings] = useState(() => {
     if (typeof window !== 'undefined') {
       try {

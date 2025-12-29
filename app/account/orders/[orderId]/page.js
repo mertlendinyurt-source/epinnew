@@ -262,7 +262,7 @@ export default function OrderDetailPage() {
                 </div>
 
                 <div className="mt-4 text-xs text-gray-400">
-                  Teslim tarihi: {new Date(order.delivery.assignedAt).toLocaleString('tr-TR')}
+                  Teslim tarihi: {order.delivery?.assignedAt ? new Date(order.delivery.assignedAt).toLocaleString('tr-TR') : 'N/A'}
                 </div>
               </div>
             )}

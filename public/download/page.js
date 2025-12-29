@@ -74,6 +74,9 @@ export default function App() {
   const [authModalTab, setAuthModalTab] = useState('register')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false)
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [phoneLoading, setPhoneLoading] = useState(false)
   const [siteSettings, setSiteSettings] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -244,6 +247,11 @@ export default function App() {
           // Show success message
           toast.success('Google ile giriş başarılı!')
           
+          // Check if phone is missing - open phone modal
+          if (!userData.phone) {
+            setPhoneModalOpen(true)
+          }
+          
           // Clear cookies
           document.cookie = 'googleAuthToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
           document.cookie = 'googleAuthUser=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
@@ -257,6 +265,49 @@ export default function App() {
       
       // Clean URL
       window.history.replaceState({}, '', window.location.pathname)
+    }
+  }
+
+  // Save phone number for Google users
+  const handleSavePhone = async () => {
+    if (!phoneNumber || phoneNumber.length < 10) {
+      toast.error('Geçerli bir telefon numarası girin')
+      return
+    }
+    
+    setPhoneLoading(true)
+    try {
+      const token = localStorage.getItem('userToken')
+      const response = await fetch('/api/user/update-phone', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ phone: phoneNumber })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        // Update local storage
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}')
+        userData.phone = phoneNumber
+        localStorage.setItem('userData', JSON.stringify(userData))
+        
+        // Update state
+        setUser(userData)
+        setPhoneModalOpen(false)
+        setPhoneNumber('')
+        toast.success('Telefon numarası kaydedildi!')
+      } else {
+        toast.error(data.error || 'Kayıt başarısız')
+      }
+    } catch (error) {
+      console.error('Error saving phone:', error)
+      toast.error('Bağlantı hatası')
+    } finally {
+      setPhoneLoading(false)
     }
   }
 
@@ -1785,6 +1836,39 @@ export default function App() {
         onSuccess={handleAuthSuccess}
         defaultTab={authModalTab}
       />
+
+      {/* Phone Number Modal for Google Users */}
+      <Dialog open={phoneModalOpen} onOpenChange={setPhoneModalOpen}>
+        <DialogContent className="sm:max-w-md bg-gray-900 border-gray-700 text-white">
+          <div className="space-y-4">
+            <div className="text-center">
+              <h2 className="text-xl font-bold mb-2">Telefon Numarası Gerekli</h2>
+              <p className="text-sm text-gray-400">
+                Siparişleriniz için telefon numaranıza ihtiyacımız var
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-gray-300">Telefon Numarası *</Label>
+              <Input
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="5551234567"
+                className="bg-gray-800 border-gray-700 text-white"
+              />
+            </div>
+            
+            <Button
+              onClick={handleSavePhone}
+              disabled={phoneLoading}
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+            >
+              {phoneLoading ? 'Kaydediliyor...' : 'Onayla ve Devam Et'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

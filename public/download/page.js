@@ -623,9 +623,17 @@ export default function App() {
           setAuthModalTab('login')
           setAuthModalOpen(true)
         } else if (data.code === 'INCOMPLETE_PROFILE' || data.error?.includes('telefon') || data.error?.includes('Profil bilgileriniz eksik')) {
-          // Phone number missing - open phone modal
-          setPhoneModalOpen(true)
-          return
+          // Check if user is Google user - only show phone modal for Google users
+          const userData = JSON.parse(localStorage.getItem('userData') || '{}')
+          if (userData.authMethod === 'google' || userData.googleId) {
+            // Google user - open phone modal
+            setPhoneModalOpen(true)
+            return
+          } else {
+            // Regular user - open register modal
+            setAuthModalTab('register')
+            setAuthModalOpen(true)
+          }
         }
         toast.error(data.error || 'Sipariş oluşturulamadı')
       }

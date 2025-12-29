@@ -211,7 +211,7 @@ export default function OrderDetailPage() {
             </div>
 
             {/* Delivery Items - CODES */}
-            {order.delivery && order.delivery.status === 'delivered' && order.delivery.items && order.delivery.items.length > 0 && (
+            {order.delivery && order.delivery.status === 'delivered' && order.delivery.items && Array.isArray(order.delivery.items) && order.delivery.items.length > 0 && (
               <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-green-700/50">
                 <div className="flex items-center gap-3 mb-4">
                   <CheckCircle className="w-6 h-6 text-green-400" />

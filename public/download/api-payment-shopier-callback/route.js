@@ -2,52 +2,63 @@ import { NextResponse } from 'next/server';
 import { MongoClient } from 'mongodb';
 import { v4 as uuidv4 } from 'uuid';
 
+// HTML redirect function - client-side redirect to avoid SSR issues
+function htmlRedirect(url) {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="0;url=${url}">
+  <script>window.location.href="${url}";</script>
+</head>
+<body style="background:#12151a;color:white;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif;">
+  <div style="text-align:center;">
+    <div style="font-size:40px;margin-bottom:20px;">⏳</div>
+    <p>Yönlendiriliyor...</p>
+  </div>
+</body>
+</html>`;
+  
+  return new NextResponse(html, {
+    status: 200,
+    headers: { 'Content-Type': 'text/html; charset=utf-8' }
+  });
+}
+
 async function handleCallback(request) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://pinly.com.tr';
   let client;
   
   try {
-    // Parse body - try multiple formats
+    // Parse body
     let body = {};
     const contentType = request.headers.get('content-type') || '';
     
-    if (contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data')) {
-      try {
+    try {
+      if (contentType.includes('form')) {
         const formData = await request.formData();
-        for (const [key, value] of formData.entries()) {
-          body[key] = value;
-        }
-      } catch (e) {
-        const text = await request.text();
-        const params = new URLSearchParams(text);
-        for (const [key, value] of params.entries()) {
-          body[key] = value;
-        }
-      }
-    } else {
-      try {
+        for (const [key, value] of formData.entries()) body[key] = value;
+      } else {
         const text = await request.text();
         if (text.includes('=')) {
           const params = new URLSearchParams(text);
-          for (const [key, value] of params.entries()) {
-            body[key] = value;
-          }
-        } else {
+          for (const [key, value] of params.entries()) body[key] = value;
+        } else if (text) {
           body = JSON.parse(text);
         }
-      } catch (e) {
-        console.error('Body parse error:', e);
       }
+    } catch (e) {
+      console.error('Body parse error:', e);
     }
     
     console.log('Shopier callback:', JSON.stringify({ ...body, signature: '***' }));
     
-    const { status, payment_id, random_nr, platform_order_id, signature, installment } = body;
+    const { status, payment_id, platform_order_id, installment } = body;
     const orderId = platform_order_id;
     
     if (!orderId) {
-      console.error('No order ID');
-      return NextResponse.redirect(new URL('/payment/failed?reason=no_order_id', baseUrl));
+      return htmlRedirect(baseUrl + '/payment/failed?reason=no_order_id');
     }
     
     // Connect to MongoDB
@@ -58,17 +69,14 @@ async function handleCallback(request) {
     // Find order
     const order = await db.collection('orders').findOne({ id: orderId });
     if (!order) {
-      console.error(`Order ${orderId} not found`);
       await client.close();
-      return NextResponse.redirect(new URL('/payment/failed?reason=order_not_found', baseUrl));
+      return htmlRedirect(baseUrl + '/payment/failed?reason=order_not_found');
     }
-    
-    console.log('Order found:', { id: order.id, productId: order.productId, status: order.status });
     
     // Already paid?
     if (order.status === 'paid') {
       await client.close();
-      return NextResponse.redirect(new URL(`/payment/success?orderId=${orderId}`, baseUrl));
+      return htmlRedirect(baseUrl + '/payment/success?orderId=' + orderId);
     }
     
     // Determine status
@@ -93,32 +101,15 @@ async function handleCallback(request) {
       createdAt: new Date()
     });
     
-    // If paid, try to assign stock
+    // If paid, assign stock
     if (newStatus === 'paid') {
       try {
-        console.log('Looking for stock with productId:', order.productId);
-        
-        // Try multiple ways to find stock
-        let stock = await db.collection('stock').findOne({
+        const stock = await db.collection('stock').findOne({
           productId: order.productId,
           status: 'available'
         });
         
-        // If not found, try with string conversion
-        if (!stock) {
-          stock = await db.collection('stock').findOne({
-            productId: String(order.productId),
-            status: 'available'
-          });
-        }
-        
-        // Log all available stocks for debugging
-        const allStocks = await db.collection('stock').find({ status: 'available' }).limit(5).toArray();
-        console.log('Available stocks:', allStocks.map(s => ({ id: s.id, productId: s.productId, code: s.code?.substring(0,5) + '***' })));
-        
-        if (stock) {
-          console.log('Stock found:', { id: stock.id, productId: stock.productId });
-          
+        if (stock && stock.value) {
           await db.collection('stock').updateOne(
             { id: stock.id },
             { $set: { status: 'sold', orderId: orderId, soldAt: new Date() } }
@@ -126,39 +117,32 @@ async function handleCallback(request) {
           
           await db.collection('orders').updateOne(
             { id: orderId },
-            { $set: { delivery: { status: 'delivered', items: [stock.value], stockId: stock.id, assignedAt: new Date() } } }
+            { $set: { delivery: { status: 'delivered', items: [stock.value], assignedAt: new Date() } } }
           );
-          
-          console.log('Stock assigned successfully');
         } else {
-          console.warn('No stock available for productId:', order.productId);
           await db.collection('orders').updateOne(
             { id: orderId },
             { $set: { delivery: { status: 'pending', message: 'Stok bekleniyor', items: [] } } }
           );
         }
-      } catch (stockError) {
-        console.error('Stock assignment error:', stockError);
-        await db.collection('orders').updateOne(
-          { id: orderId },
-          { $set: { delivery: { status: 'pending', message: 'Stok hatası', items: [] } } }
-        );
+      } catch (e) {
+        console.error('Stock error:', e);
       }
     }
     
     await client.close();
     
-    // Redirect
+    // HTML redirect instead of 302
     if (newStatus === 'paid') {
-      return NextResponse.redirect(new URL(`/payment/success?orderId=${orderId}`, baseUrl));
+      return htmlRedirect(baseUrl + '/payment/success?orderId=' + orderId);
     } else {
-      return NextResponse.redirect(new URL(`/payment/failed?orderId=${orderId}`, baseUrl));
+      return htmlRedirect(baseUrl + '/payment/failed?orderId=' + orderId);
     }
     
   } catch (error) {
     console.error('Callback error:', error);
     if (client) await client.close();
-    return NextResponse.redirect(new URL('/payment/failed?reason=error', baseUrl));
+    return htmlRedirect(baseUrl + '/payment/failed?reason=error');
   }
 }
 

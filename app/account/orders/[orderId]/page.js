@@ -353,7 +353,7 @@ export default function OrderDetailPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">İşlem No</span>
-                      <span className="text-white font-mono text-xs">{payment.providerTxnId?.substring(0, 12)}...</span>
+                      <span className="text-white font-mono text-xs">{payment.providerTxnId?.substring(0, 12) || 'N/A'}...</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Doğrulama</span>

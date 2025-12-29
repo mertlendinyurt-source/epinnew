@@ -228,7 +228,8 @@ export default function App() {
       
       if (token && userDataEncoded) {
         try {
-          const userData = JSON.parse(decodeURIComponent(userDataEncoded))
+          // Decode base64 encoded user data
+          const userData = JSON.parse(atob(userDataEncoded))
           
           // Save to localStorage
           localStorage.setItem('userToken', token)
@@ -236,6 +237,7 @@ export default function App() {
           
           // Update state
           setUser(userData)
+          setIsAuthenticated(true)
           
           // Show success message
           toast.success('Google ile giriş başarılı!')
@@ -245,7 +247,10 @@ export default function App() {
           document.cookie = 'googleAuthUser=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
         } catch (error) {
           console.error('Error parsing Google auth data:', error)
+          toast.error('Giriş işlemi tamamlanamadı')
         }
+      } else {
+        console.log('Google auth cookies not found:', { token: !!token, userDataEncoded: !!userDataEncoded })
       }
       
       // Clean URL

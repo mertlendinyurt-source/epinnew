@@ -73,7 +73,15 @@ export default function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalTab, setAuthModalTab] = useState('register')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [siteSettings, setSiteSettings] = useState(null)
+  const [siteSettings, setSiteSettings] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('siteSettingsCache')
+        return cached ? JSON.parse(cached) : null
+      } catch { return null }
+    }
+    return null
+  })
   const [regions, setRegions] = useState([])
   const [activeInfoTab, setActiveInfoTab] = useState('description')
   const [gameContent, setGameContent] = useState(null)

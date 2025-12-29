@@ -771,14 +771,14 @@ export default function App() {
               <img 
                 src={siteSettings.logo} 
                 alt={siteSettings?.siteName || 'Logo'} 
-                className="h-10 md:h-12 object-contain"
+                className="h-14 md:h-16 object-contain"
               />
             ) : siteSettings?.siteName ? (
-              <span className="text-white font-semibold text-lg md:text-xl">
+              <span className="text-white font-semibold text-xl md:text-2xl">
                 {siteSettings.siteName}
               </span>
             ) : (
-              <div className="h-10 md:h-12 w-28 bg-white/5 rounded animate-pulse"></div>
+              <div className="h-14 md:h-16 w-32 bg-white/5 rounded animate-pulse"></div>
             )}
           </div>
             

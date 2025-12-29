@@ -189,7 +189,7 @@ export default function OrderDetailPage() {
 
               <div className="mt-4 pt-4 border-t border-gray-700">
                 <div className="text-sm text-gray-400">
-                  Sipariş Tarihi: <span className="text-white">{new Date(order.createdAt).toLocaleString('tr-TR')}</span>
+                  Sipariş Tarihi: <span className="text-white">{order.createdAt ? new Date(order.createdAt).toLocaleString('tr-TR') : 'N/A'}</span>
                 </div>
               </div>
             </div>

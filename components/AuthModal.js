@@ -215,8 +215,8 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
     <button
       type="button"
       onClick={handleGoogleLogin}
-      disabled={googleLoading || !googleEnabled}
-      className={`w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-gray-100 text-gray-800 font-medium rounded-lg transition-all duration-200 border border-gray-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${!googleEnabled ? 'opacity-60' : ''}`}
+      disabled={googleLoading}
+      className={`w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-gray-100 text-gray-800 font-medium rounded-lg transition-all duration-200 border border-gray-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed`}
     >
       {googleLoading ? (
         <svg className="animate-spin h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24">

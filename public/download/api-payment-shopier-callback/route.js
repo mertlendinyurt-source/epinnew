@@ -126,7 +126,7 @@ async function handleCallback(request) {
           
           await db.collection('orders').updateOne(
             { id: orderId },
-            { $set: { delivery: { status: 'delivered', items: [stock.code], stockId: stock.id, assignedAt: new Date() } } }
+            { $set: { delivery: { status: 'delivered', items: [stock.value], stockId: stock.id, assignedAt: new Date() } } }
           );
           
           console.log('Stock assigned successfully');

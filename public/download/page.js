@@ -1448,9 +1448,12 @@ export default function App() {
                       </div>
                       
                       <div className="flex items-center gap-2">
-                        <div className="px-2 py-1 bg-white rounded text-blue-600 font-bold text-xs">VISA</div>
-                        <div className="px-2 py-1 bg-white rounded text-red-600 font-bold text-xs">MC</div>
-                        <div className="px-2 py-1 bg-white rounded text-blue-500 font-bold text-xs">TROY</div>
+                        <img src="/uploads/cards/visa.svg" alt="VISA" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                        <span className="px-2 py-1 bg-white rounded text-blue-600 font-bold text-xs hidden">VISA</span>
+                        <img src="/uploads/cards/mastercard.svg" alt="Mastercard" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                        <span className="px-2 py-1 bg-white rounded text-red-600 font-bold text-xs hidden">MC</span>
+                        <img src="/uploads/cards/troy.svg" alt="Troy" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                        <span className="px-2 py-1 bg-white rounded text-blue-500 font-bold text-xs hidden">TROY</span>
                       </div>
                     </div>
                   </div>

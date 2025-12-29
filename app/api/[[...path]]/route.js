@@ -2893,12 +2893,15 @@ export async function POST(request) {
 
     // Shopier callback (Production-ready with security)
     if (pathname === '/api/payments/shopier/callback') {
-      const { orderId, status, transactionId, payment_id, random_nr, total_order_value, platform_order_id, hash } = body;
+      const { status, payment_id, random_nr, platform_order_id, signature, installment } = body;
+      
+      // Get order ID from callback
+      const orderId = platform_order_id;
       
       // 1. Validate order exists
-      const order = await db.collection('orders').findOne({ id: orderId || platform_order_id });
+      const order = await db.collection('orders').findOne({ id: orderId });
       if (!order) {
-        console.error(`Callback error: Order ${orderId || platform_order_id} not found`);
+        console.error(`Callback error: Order ${orderId} not found`);
         return NextResponse.json(
           { success: false, error: 'Sipariş bulunamadı' },
           { status: 404 }
@@ -2914,7 +2917,7 @@ export async function POST(request) {
         });
       }
 
-      // 3. Get Shopier settings for hash validation
+      // 3. Get Shopier settings for signature validation
       const shopierSettings = await db.collection('shopier_settings').findOne({ isActive: true });
       if (!shopierSettings) {
         console.error('Callback error: Shopier settings not found');
@@ -2924,7 +2927,7 @@ export async function POST(request) {
         );
       }
 
-      // 4. Decrypt API secret for hash validation
+      // 4. Decrypt API secret for signature validation
       let apiSecret;
       try {
         apiSecret = decrypt(shopierSettings.apiSecret);
@@ -2936,17 +2939,18 @@ export async function POST(request) {
         );
       }
 
-      // 5. Validate hash signature (CRITICAL SECURITY)
-      const expectedHash = generateShopierHash(order.id, order.amount, apiSecret);
-      if (hash && hash !== expectedHash) {
-        console.error(`Callback error: Hash mismatch. Expected: ${expectedHash}, Received: ${hash}`);
+      // 5. Validate signature (CRITICAL SECURITY)
+      // Shopier signature: HMAC-SHA256(random_nr + platform_order_id, apiSecret).digest('base64')
+      const expectedSignature = generateShopierHash(random_nr, orderId, apiSecret);
+      if (signature !== expectedSignature) {
+        console.error(`Callback error: Signature mismatch. Expected: ${expectedSignature}, Received: ${signature}`);
         // Log the failed attempt for security monitoring
         await db.collection('payment_security_logs').insertOne({
           orderId: order.id,
-          event: 'hash_mismatch',
-          receivedHash: hash,
-          expectedHash,
-          payload: body,
+          event: 'signature_mismatch',
+          receivedSignature: signature,
+          expectedSignature: '***MASKED***',
+          payload: { ...body, signature: '***MASKED***' },
           timestamp: new Date()
         });
         
@@ -2956,12 +2960,11 @@ export async function POST(request) {
         );
       }
 
-      // 6. Check transaction_id uniqueness (double payment protection)
-      const txnId = transactionId || payment_id;
-      if (txnId) {
-        const existingPayment = await db.collection('payments').findOne({ providerTxnId: txnId });
+      // 6. Check payment_id uniqueness (double payment protection)
+      if (payment_id) {
+        const existingPayment = await db.collection('payments').findOne({ providerTxnId: payment_id.toString() });
         if (existingPayment) {
-          console.error(`Callback error: Transaction ${txnId} already exists`);
+          console.error(`Callback error: Payment ${payment_id} already exists`);
           return NextResponse.json({
             success: true,
             message: 'İşlem zaten kaydedilmiş'

@@ -935,10 +935,12 @@ export default function App() {
                   className="w-full h-full object-cover"
                 />
               </div>
-            ) : (
+            ) : siteSettings ? (
               <div className="w-14 h-14 md:w-20 md:h-20 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center shadow-lg">
                 <span className="font-black text-xl md:text-3xl text-white">P</span>
               </div>
+            ) : (
+              <div className="w-14 h-14 md:w-20 md:h-20 rounded-lg bg-white/5 animate-pulse shadow-lg"></div>
             )}
             <div>
               <div className="text-xs md:text-sm text-white/60 mb-0.5 md:mb-1">Anasayfa &gt; Oyunlar</div>

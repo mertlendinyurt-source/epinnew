@@ -19,6 +19,7 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true)
   const [products, setProducts] = useState([])
   const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [stockDialogOpen, setStockDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [productToDelete, setProductToDelete] = useState(null)
@@ -31,6 +32,7 @@ export default function AdminProducts() {
   const [imagePreview, setImagePreview] = useState(null)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [adding, setAdding] = useState(false)
   const [priceErrors, setPriceErrors] = useState({})
   const [lastEditedField, setLastEditedField] = useState(null)
   const [formData, setFormData] = useState({
@@ -43,6 +45,19 @@ export default function AdminProducts() {
     sortOrder: '',
     imageUrl: ''
   })
+  const [addFormData, setAddFormData] = useState({
+    title: '',
+    ucAmount: '',
+    price: '',
+    discountPrice: '',
+    discountPercent: '',
+    active: true,
+    sortOrder: '',
+    imageUrl: ''
+  })
+  const [addImageFile, setAddImageFile] = useState(null)
+  const [addImagePreview, setAddImagePreview] = useState(null)
+  const [addPriceErrors, setAddPriceErrors] = useState({})
 
   useEffect(() => {
     checkAdminAuth()

@@ -228,8 +228,9 @@ export default function App() {
       
       if (token && userDataEncoded) {
         try {
-          // Decode base64 encoded user data
-          const userData = JSON.parse(atob(userDataEncoded))
+          // First decode URI component, then decode base64
+          const decodedBase64 = decodeURIComponent(userDataEncoded)
+          const userData = JSON.parse(atob(decodedBase64))
           
           // Save to localStorage
           localStorage.setItem('userToken', token)

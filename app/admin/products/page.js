@@ -435,6 +435,201 @@ export default function AdminProducts() {
     }
   }
 
+  // Handle add form price changes
+  const handleAddPriceChange = (field, value) => {
+    const newFormData = { ...addFormData, [field]: value }
+    
+    // Clear previous errors
+    const newErrors = { ...addPriceErrors }
+    delete newErrors[field]
+    
+    if (field === 'price') {
+      const listPrice = parseFloat(value) || 0
+      const salePrice = parseFloat(newFormData.discountPrice) || 0
+      
+      if (listPrice > 0 && salePrice > 0) {
+        newFormData.discountPercent = calculateDiscountPercent(listPrice, salePrice).toString()
+      }
+      
+      if (listPrice < 0) {
+        newErrors.price = 'Fiyat negatif olamaz'
+      }
+    } else if (field === 'discountPrice') {
+      const listPrice = parseFloat(newFormData.price) || 0
+      const salePrice = parseFloat(value) || 0
+      
+      if (listPrice > 0) {
+        newFormData.discountPercent = calculateDiscountPercent(listPrice, salePrice).toString()
+      }
+      
+      if (salePrice < 0) {
+        newErrors.discountPrice = 'Fiyat negatif olamaz'
+      } else if (salePrice > listPrice && listPrice > 0) {
+        newErrors.discountPrice = 'İndirimli fiyat liste fiyatından yüksek olamaz'
+      }
+    } else if (field === 'discountPercent') {
+      const listPrice = parseFloat(newFormData.price) || 0
+      const percent = parseFloat(value) || 0
+      
+      if (listPrice > 0) {
+        newFormData.discountPrice = calculateSalePrice(listPrice, percent).toString()
+      }
+      
+      if (percent < 0 || percent > 100) {
+        newErrors.discountPercent = 'Yüzde 0-100 arasında olmalı'
+      }
+    }
+    
+    setAddPriceErrors(newErrors)
+    setAddFormData(newFormData)
+  }
+
+  // Handle add image select
+  const handleAddImageSelect = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Dosya boyutu 2MB\'dan büyük olamaz')
+      return
+    }
+
+    setAddImageFile(file)
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setAddImagePreview(reader.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // Upload image for add
+  const handleAddImageUpload = async () => {
+    if (!addImageFile) return null
+
+    try {
+      const token = localStorage.getItem('adminToken')
+      const formData = new FormData()
+      formData.append('file', addImageFile)
+      formData.append('category', 'product')
+
+      const response = await fetch('/api/admin/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        return result.data.url
+      } else {
+        toast.error(result.error || 'Görsel yüklenemedi')
+        return null
+      }
+    } catch (error) {
+      console.error('Image upload error:', error)
+      toast.error('Görsel yükleme hatası')
+      return null
+    }
+  }
+
+  // Open add dialog
+  const handleOpenAddDialog = () => {
+    setAddFormData({
+      title: '',
+      ucAmount: '',
+      price: '',
+      discountPrice: '',
+      discountPercent: '0',
+      active: true,
+      sortOrder: (products.length + 1).toString(),
+      imageUrl: ''
+    })
+    setAddImageFile(null)
+    setAddImagePreview(null)
+    setAddPriceErrors({})
+    setAddDialogOpen(true)
+  }
+
+  // Handle add product
+  const handleAddProduct = async () => {
+    // Validate required fields
+    if (!addFormData.title.trim()) {
+      toast.error('Ürün adı gereklidir')
+      return
+    }
+    if (!addFormData.ucAmount || parseInt(addFormData.ucAmount) <= 0) {
+      toast.error('Geçerli bir UC miktarı girin')
+      return
+    }
+    if (!addFormData.price || parseFloat(addFormData.price) <= 0) {
+      toast.error('Geçerli bir fiyat girin')
+      return
+    }
+
+    // Validate prices
+    const listPrice = parseFloat(addFormData.price) || 0
+    const salePrice = parseFloat(addFormData.discountPrice) || listPrice
+    
+    if (listPrice < 0 || salePrice < 0) {
+      toast.error('Fiyatlar negatif olamaz')
+      return
+    }
+    
+    if (salePrice > listPrice) {
+      toast.error('İndirimli fiyat liste fiyatından yüksek olamaz')
+      return
+    }
+    
+    setAdding(true)
+    
+    try {
+      // Upload image first if selected
+      let imageUrl = addFormData.imageUrl
+      if (addImageFile) {
+        const uploadedUrl = await handleAddImageUpload()
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl
+        }
+      }
+
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch('/api/admin/products', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: addFormData.title.trim(),
+          ucAmount: parseInt(addFormData.ucAmount),
+          price: parseFloat(addFormData.price),
+          discountPrice: salePrice,
+          discountPercent: parseInt(addFormData.discountPercent) || 0,
+          active: addFormData.active,
+          sortOrder: parseInt(addFormData.sortOrder) || 1,
+          imageUrl: imageUrl
+        })
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        toast.success('Ürün başarıyla eklendi')
+        setAddDialogOpen(false)
+        fetchProducts()
+      } else {
+        toast.error(data.error || 'Ürün eklenemedi')
+      }
+    } catch (error) {
+      console.error('Error adding product:', error)
+      toast.error('Ürün eklenirken hata oluştu')
+    } finally {
+      setAdding(false)
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('adminToken')
     localStorage.removeItem('adminUsername')

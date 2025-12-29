@@ -268,6 +268,49 @@ export default function App() {
     }
   }
 
+  // Save phone number for Google users
+  const handleSavePhone = async () => {
+    if (!phoneNumber || phoneNumber.length < 10) {
+      toast.error('Geçerli bir telefon numarası girin')
+      return
+    }
+    
+    setPhoneLoading(true)
+    try {
+      const token = localStorage.getItem('userToken')
+      const response = await fetch('/api/user/update-phone', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ phone: phoneNumber })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        // Update local storage
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}')
+        userData.phone = phoneNumber
+        localStorage.setItem('userData', JSON.stringify(userData))
+        
+        // Update state
+        setUser(userData)
+        setPhoneModalOpen(false)
+        setPhoneNumber('')
+        toast.success('Telefon numarası kaydedildi!')
+      } else {
+        toast.error(data.error || 'Kayıt başarısız')
+      }
+    } catch (error) {
+      console.error('Error saving phone:', error)
+      toast.error('Bağlantı hatası')
+    } finally {
+      setPhoneLoading(false)
+    }
+  }
+
   const fetchFooterSettings = async () => {
     try {
       const response = await fetch('/api/footer-settings')

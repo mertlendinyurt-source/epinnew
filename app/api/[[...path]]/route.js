@@ -2700,10 +2700,14 @@ export async function POST(request) {
     if (pathname === '/api/auth/google/status') {
       const oauthSettings = await db.collection('oauth_settings').findOne({ provider: 'google' });
       
+      // Check from database first, then fallback to .env
+      const dbEnabled = oauthSettings?.enabled === true && !!oauthSettings?.clientId;
+      const envEnabled = process.env.GOOGLE_OAUTH_ENABLED === 'true' && !!process.env.GOOGLE_CLIENT_ID;
+      
       return NextResponse.json({
         success: true,
         data: {
-          enabled: oauthSettings?.enabled === true && !!oauthSettings?.clientId
+          enabled: dbEnabled || envEnabled
         }
       });
     }

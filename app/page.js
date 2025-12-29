@@ -247,6 +247,11 @@ export default function App() {
           // Show success message
           toast.success('Google ile giriş başarılı!')
           
+          // Check if phone is missing - open phone modal
+          if (!userData.phone) {
+            setPhoneModalOpen(true)
+          }
+          
           // Clear cookies
           document.cookie = 'googleAuthToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
           document.cookie = 'googleAuthUser=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'

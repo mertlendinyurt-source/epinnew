@@ -76,11 +76,14 @@ export async function GET(request) {
           { 
             $set: { 
               googleId: googleUser.id,
+              authMethod: 'google',
               profilePicture: user.profilePicture || googleUser.picture,
               updatedAt: new Date()
             }
           }
         );
+        user.googleId = googleUser.id;
+        user.authMethod = 'google';
       }
     } else {
       // Create new user
@@ -119,7 +122,7 @@ export async function GET(request) {
     // Create response with redirect
     const response = NextResponse.redirect(new URL('/?google_auth=success', baseUrl));
     
-    // Set cookies for client-side handling
+    // Set cookies for client-side handling - INCLUDE authMethod and googleId
     response.cookies.set('googleAuthToken', token, {
       httpOnly: false,
       secure: true,
@@ -133,7 +136,10 @@ export async function GET(request) {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      profilePicture: user.profilePicture
+      phone: user.phone || '',
+      profilePicture: user.profilePicture,
+      authMethod: 'google',
+      googleId: user.googleId
     })).toString('base64'), {
       httpOnly: false,
       secure: true,

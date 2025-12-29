@@ -253,7 +253,7 @@ export default function RegionsSettingsPage() {
                     {region.flagImageUrl ? (
                       <div className="relative group">
                         <img 
-                          src={`${region.flagImageUrl}?v=${Date.now()}`}
+                          src={region.flagImageUrl}
                           alt={region.name}
                           className="w-10 h-7 object-cover rounded border border-slate-700"
                         />

@@ -1836,6 +1836,39 @@ export default function App() {
         onSuccess={handleAuthSuccess}
         defaultTab={authModalTab}
       />
+
+      {/* Phone Number Modal for Google Users */}
+      <Dialog open={phoneModalOpen} onOpenChange={setPhoneModalOpen}>
+        <DialogContent className="sm:max-w-md bg-gray-900 border-gray-700 text-white">
+          <div className="space-y-4">
+            <div className="text-center">
+              <h2 className="text-xl font-bold mb-2">Telefon Numarası Gerekli</h2>
+              <p className="text-sm text-gray-400">
+                Siparişleriniz için telefon numaranıza ihtiyacımız var
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-gray-300">Telefon Numarası *</Label>
+              <Input
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="5551234567"
+                className="bg-gray-800 border-gray-700 text-white"
+              />
+            </div>
+            
+            <Button
+              onClick={handleSavePhone}
+              disabled={phoneLoading}
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+            >
+              {phoneLoading ? 'Kaydediliyor...' : 'Onayla ve Devam Et'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

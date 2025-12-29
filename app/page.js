@@ -375,38 +375,59 @@ export default function App() {
 
   const fetchSiteSettings = async () => {
     try {
+      // İlk olarak localStorage'dan önbellek oku (flash sorununu önlemek için)
+      const cachedSettings = localStorage.getItem('siteSettingsCache')
+      if (cachedSettings) {
+        try {
+          const cached = JSON.parse(cachedSettings)
+          setSiteSettings(cached)
+          applySettings(cached)
+        } catch (e) {
+          // Önbellek bozuksa sil
+          localStorage.removeItem('siteSettingsCache')
+        }
+      }
+      
+      // API'den güncel ayarları al
       const response = await fetch('/api/site/settings')
       const data = await response.json()
       if (data.success) {
         setSiteSettings(data.data)
+        applySettings(data.data)
         
-        // Update document title dynamically
-        if (data.data.metaTitle) {
-          document.title = data.data.metaTitle
-        }
-        
-        // Update meta description dynamically
-        if (data.data.metaDescription) {
-          let metaDesc = document.querySelector('meta[name="description"]')
-          if (!metaDesc) {
-            metaDesc = document.createElement('meta')
-            metaDesc.name = 'description'
-            document.head.appendChild(metaDesc)
-          }
-          metaDesc.content = data.data.metaDescription
-        }
-        
-        // Update favicon dynamically
-        if (data.data.favicon) {
-          const link = document.querySelector("link[rel*='icon']") || document.createElement('link')
-          link.type = 'image/x-icon'
-          link.rel = 'icon'
-          link.href = `${data.data.favicon}?v=${Date.now()}` // Cache busting
-          document.getElementsByTagName('head')[0].appendChild(link)
-        }
+        // Önbelleğe kaydet
+        localStorage.setItem('siteSettingsCache', JSON.stringify(data.data))
       }
     } catch (error) {
       console.error('Error fetching site settings:', error)
+    }
+  }
+  
+  // Site ayarlarını DOM'a uygula (title, meta, favicon)
+  const applySettings = (settings) => {
+    // Update document title dynamically
+    if (settings.metaTitle) {
+      document.title = settings.metaTitle
+    }
+    
+    // Update meta description dynamically
+    if (settings.metaDescription) {
+      let metaDesc = document.querySelector('meta[name="description"]')
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta')
+        metaDesc.name = 'description'
+        document.head.appendChild(metaDesc)
+      }
+      metaDesc.content = settings.metaDescription
+    }
+    
+    // Update favicon dynamically
+    if (settings.favicon) {
+      const link = document.querySelector("link[rel*='icon']") || document.createElement('link')
+      link.type = 'image/x-icon'
+      link.rel = 'icon'
+      link.href = `${settings.favicon}?v=${Date.now()}` // Cache busting
+      document.getElementsByTagName('head')[0].appendChild(link)
     }
   }
 

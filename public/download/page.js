@@ -641,7 +641,7 @@ export default function App() {
       <div className="flex items-center gap-1.5">
         {region.flagImageUrl ? (
           <img 
-            src={`${region.flagImageUrl}?v=${Date.now()}`}
+            src={region.flagImageUrl}
             alt={region.name}
             className={`${flagSize} object-cover rounded-sm`}
             onError={(e) => {
@@ -682,7 +682,7 @@ export default function App() {
                   <input type="checkbox" className="w-3.5 h-3.5 rounded" defaultChecked={index === 0} />
                   {region.flagImageUrl ? (
                     <img 
-                      src={`${region.flagImageUrl}?v=${Date.now()}`}
+                      src={region.flagImageUrl}
                       alt={region.name}
                       className="w-5 h-4 object-cover rounded-sm"
                       onError={(e) => {

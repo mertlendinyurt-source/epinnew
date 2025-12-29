@@ -74,6 +74,9 @@ export default function App() {
   const [authModalTab, setAuthModalTab] = useState('register')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false)
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [phoneLoading, setPhoneLoading] = useState(false)
   const [siteSettings, setSiteSettings] = useState(() => {
     if (typeof window !== 'undefined') {
       try {

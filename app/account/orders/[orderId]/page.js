@@ -201,11 +201,11 @@ export default function OrderDetailPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2">
                   <span className="text-gray-400">Oyuncu ID</span>
-                  <span className="text-white font-mono">{order.playerId}</span>
+                  <span className="text-white font-mono">{order.playerId || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-t border-gray-700">
                   <span className="text-gray-400">Oyuncu Adı</span>
-                  <span className="text-white font-semibold">{order.playerName}</span>
+                  <span className="text-white font-semibold">{order.playerName || 'N/A'}</span>
                 </div>
               </div>
             </div>

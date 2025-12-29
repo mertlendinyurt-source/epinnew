@@ -769,16 +769,16 @@ export default function App() {
           <div className="flex items-center gap-2 md:gap-3">
             {siteSettings?.logo ? (
               <img 
-                src={`${siteSettings.logo}?v=${Date.now()}`} 
+                src={siteSettings.logo} 
                 alt={siteSettings?.siteName || 'Logo'} 
-                className="h-8 md:h-9 object-contain"
+                className="h-10 md:h-12 object-contain"
               />
             ) : siteSettings?.siteName ? (
-              <span className="text-white font-semibold text-base md:text-lg">
+              <span className="text-white font-semibold text-lg md:text-xl">
                 {siteSettings.siteName}
               </span>
             ) : (
-              <div className="h-8 md:h-9 w-24 bg-white/5 rounded animate-pulse"></div>
+              <div className="h-10 md:h-12 w-28 bg-white/5 rounded animate-pulse"></div>
             )}
           </div>
             

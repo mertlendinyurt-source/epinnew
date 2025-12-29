@@ -2820,63 +2820,73 @@ export async function POST(request) {
         console.error('Order created email failed:', err)
       );
 
-      // Generate random string for Shopier request
-      const randomNr = uuidv4().replace(/-/g, '').substring(0, 16);
+      // Generate random number for Shopier request (6 digits as per API spec)
+      const randomNr = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+      const crypto = require('crypto');
+
+      // Currency codes: 0 = TRY, 1 = USD, 2 = EUR
+      const currencyCode = 0; // TRY
 
       // Prepare Shopier payment request with REAL customer data
+      // Field names MUST match exactly what Shopier expects
       const shopierPayload = {
-        random_nr: randomNr,
+        API_key: apiKey, // Note: API_key not api_key
+        website_index: 1,
         platform_order_id: order.id,
-        product_name: `PINLY - Dijital Kod Teslimatı (${product.title})`,
-        product_type: '1', // Digital product
+        product_name: `PINLY - ${product.title}`,
+        product_type: 1, // 0 = Physical, 1 = Digital
         buyer_name: customerSnapshot.firstName,
         buyer_surname: customerSnapshot.lastName,
         buyer_email: customerSnapshot.email,
-        buyer_phone: customerSnapshot.phone,
-        buyer_account_age: '0',
+        buyer_account_age: 0,
         buyer_id_nr: playerId,
-        buyer_address: 'Turkey', // Can be added to user profile later if needed
-        buyer_city: 'Istanbul',
-        buyer_country: 'Turkey',
-        buyer_postcode: '34000',
-        shipping_address_list: '',
-        total_order_value: order.amount.toString(),
-        currency: '0', // 0 = TRY for Shopier
-        platform: '0',
-        is_in_frame: '0',
-        current_language: '0', // 0 = TR for Shopier
+        buyer_phone: customerSnapshot.phone,
+        billing_address: 'Turkey',
+        billing_city: 'Istanbul',
+        billing_country: 'Turkey',
+        billing_postcode: '34000',
+        shipping_address: 'Turkey',
+        shipping_city: 'Istanbul',
+        shipping_country: 'Turkey',
+        shipping_postcode: '34000',
+        total_order_value: order.amount,
+        currency: currencyCode,
+        platform: 0, // 0 = in frame
+        is_in_frame: 0,
+        current_language: 0, // 0 = TR, 1 = EN
         modul_version: '1.0.4',
-        api_key: apiKey,
-        website_index: '1',
+        random_nr: randomNr,
       };
 
-      // Generate Shopier signature using correct method: JSON -> base64 -> HMAC-SHA256 -> base64
-      const crypto = require('crypto');
-      const jsonData = JSON.stringify(shopierPayload);
-      const base64Data = Buffer.from(jsonData).toString('base64');
+      // Generate Shopier signature using CORRECT method:
+      // data = random_nr + platform_order_id + total_order_value + currency
+      // signature = HMAC-SHA256(data, apiSecret).digest('base64')
+      const signatureData = `${randomNr}${order.id}${order.amount}${currencyCode}`;
       const signature = crypto.createHmac('sha256', apiSecret)
-        .update(base64Data)
+        .update(signatureData)
         .digest('base64');
 
-      // For production Shopier, we use their payment page with form POST
-      // Create payment URL and form data
+      // Add signature to payload
+      shopierPayload.signature = signature;
+
+      // Shopier payment endpoint
       const paymentUrl = 'https://www.shopier.com/ShowProduct/api_pay4.php';
 
       // Store payment request in database for audit trail
       await db.collection('payment_requests').insertOne({
         orderId: order.id,
-        shopierPayload: { ...shopierPayload, api_key: '***MASKED***' }, // Never log sensitive data
-        signature: '***MASKED***',
+        shopierPayload: { ...shopierPayload, API_key: '***MASKED***', signature: '***MASKED***' },
+        signatureData: `${randomNr}${order.id}***MASKED***`,
         createdAt: new Date()
       });
 
+      // Return all form fields for frontend to build the form
       return NextResponse.json({
         success: true,
         data: {
           order,
           paymentUrl,
-          paymentData: base64Data,
-          signature
+          formData: shopierPayload
         }
       });
     }

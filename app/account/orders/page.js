@@ -174,7 +174,7 @@ export default function AccountOrdersPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
                       <h3 className="text-xl font-semibold text-white">
-                        {order.productTitle}
+                        {order.productSnapshot?.title || order.productTitle || 'Ürün'}
                       </h3>
                       {getStatusBadge(order.status)}
                       {getDeliveryBadge(order.delivery)}
@@ -183,25 +183,25 @@ export default function AccountOrdersPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-400">
                       <div>
                         <span className="text-gray-500">Sipariş No:</span>{' '}
-                        <span className="font-mono text-gray-300">{order.id.substring(0, 12)}...</span>
+                        <span className="font-mono text-gray-300">{order.id?.substring(0, 12) || 'N/A'}...</span>
                       </div>
                       <div>
                         <span className="text-gray-500">Oyuncu ID:</span>{' '}
-                        <span className="text-gray-300">{order.playerId}</span>
+                        <span className="text-gray-300">{order.playerId || 'N/A'}</span>
                       </div>
                       <div>
                         <span className="text-gray-500">Oyuncu:</span>{' '}
-                        <span className="text-gray-300">{order.playerName}</span>
+                        <span className="text-gray-300">{order.playerName || 'N/A'}</span>
                       </div>
                       <div>
                         <span className="text-gray-500">Tarih:</span>{' '}
                         <span className="text-gray-300">
-                          {new Date(order.createdAt).toLocaleString('tr-TR')}
+                          {order.createdAt ? new Date(order.createdAt).toLocaleString('tr-TR') : 'N/A'}
                         </span>
                       </div>
                       <div>
                         <span className="text-gray-500">Tutar:</span>{' '}
-                        <span className="text-white font-semibold">₺{order.amount.toFixed(2)}</span>
+                        <span className="text-white font-semibold">₺{order.amount ? Number(order.amount).toFixed(2) : '0.00'}</span>
                       </div>
                     </div>
 

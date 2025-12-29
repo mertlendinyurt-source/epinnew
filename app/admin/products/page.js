@@ -1232,6 +1232,277 @@ export default function AdminProducts() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add Product Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-3xl max-h-[90vh] overflow-y-auto p-0">
+          {/* Header */}
+          <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between">
+            <div>
+              <DialogTitle className="text-xl font-bold text-white">Yeni Ürün Ekle</DialogTitle>
+              <p className="text-sm text-slate-400 mt-1">Yeni UC paketi ekleyin</p>
+            </div>
+          </div>
+          
+          <div className="p-6 space-y-6">
+            {/* Section 1: Product Info */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <Package className="w-4 h-4 text-blue-400" />
+                Ürün Bilgileri
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-slate-300 text-sm">Ürün Adı *</Label>
+                  <Input
+                    value={addFormData.title}
+                    onChange={(e) => setAddFormData({ ...addFormData, title: e.target.value })}
+                    className="bg-slate-800 border-slate-700 text-white h-11"
+                    placeholder="Örn: 60 UC"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-slate-300 text-sm">UC Miktarı *</Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={addFormData.ucAmount}
+                      onChange={(e) => setAddFormData({ ...addFormData, ucAmount: e.target.value })}
+                      className="bg-slate-800 border-slate-700 text-white h-11 pr-12"
+                      placeholder="60"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">UC</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Pricing */}
+            <div className="space-y-4 pt-4 border-t border-slate-800">
+              <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Fiyatlandırma
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-slate-300 text-sm">Liste Fiyatı *</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">₺</span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={addFormData.price}
+                      onChange={(e) => handleAddPriceChange('price', e.target.value)}
+                      className={`bg-slate-800 border-slate-700 text-white h-11 pl-8 ${addPriceErrors.price ? 'border-red-500' : ''}`}
+                      placeholder="100.00"
+                    />
+                  </div>
+                  {addPriceErrors.price && (
+                    <p className="text-xs text-red-400">{addPriceErrors.price}</p>
+                  )}
+                  <p className="text-xs text-slate-500">Ürünün normal satış fiyatı</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-slate-300 text-sm">İndirimli Fiyat</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">₺</span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={addFormData.discountPrice}
+                      onChange={(e) => handleAddPriceChange('discountPrice', e.target.value)}
+                      className={`bg-slate-800 border-slate-700 text-white h-11 pl-8 ${addPriceErrors.discountPrice ? 'border-red-500' : ''}`}
+                      placeholder="80.00"
+                    />
+                  </div>
+                  {addPriceErrors.discountPrice && (
+                    <p className="text-xs text-red-400">{addPriceErrors.discountPrice}</p>
+                  )}
+                  <p className="text-xs text-slate-500">Müşterinin ödeyeceği fiyat</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-slate-300 text-sm">İndirim Oranı</Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={addFormData.discountPercent}
+                      onChange={(e) => handleAddPriceChange('discountPercent', e.target.value)}
+                      className={`bg-slate-800 border-slate-700 text-white h-11 pr-8 ${addPriceErrors.discountPercent ? 'border-red-500' : ''}`}
+                      placeholder="20"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">%</span>
+                  </div>
+                  {addPriceErrors.discountPercent && (
+                    <p className="text-xs text-red-400">{addPriceErrors.discountPercent}</p>
+                  )}
+                  <p className="text-xs text-slate-500">Otomatik hesaplanır</p>
+                </div>
+              </div>
+
+              {/* Price calculation info */}
+              {parseFloat(addFormData.price) > 0 && parseFloat(addFormData.discountPrice) > 0 && (
+                <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <div className="flex items-center gap-2 text-sm">
+                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-green-400">
+                      Müşteri {parseFloat(addFormData.price) - parseFloat(addFormData.discountPrice) > 0 ? (parseFloat(addFormData.price) - parseFloat(addFormData.discountPrice)).toFixed(2) : 0} ₺ tasarruf edecek
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Section 3: Image */}
+            <div className="space-y-4 pt-4 border-t border-slate-800">
+              <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Ürün Görseli (Opsiyonel)
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Preview */}
+                <div className="bg-slate-800 rounded-xl p-4 flex flex-col items-center justify-center min-h-[160px] border border-slate-700">
+                  {addImagePreview ? (
+                    <div className="relative">
+                      <img 
+                        src={addImagePreview} 
+                        alt="Preview" 
+                        className="w-32 h-32 object-contain"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAddImagePreview(null)
+                          setAddImageFile(null)
+                          setAddFormData({ ...addFormData, imageUrl: '' })
+                        }}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors"
+                      >
+                        <X className="w-3 h-3 text-white" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <svg className="w-12 h-12 text-slate-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm text-slate-500">Görsel önizleme</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload */}
+                <div>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    onChange={handleAddImageSelect}
+                    className="hidden"
+                    id="add-product-image-upload"
+                  />
+                  <label
+                    htmlFor="add-product-image-upload"
+                    className="flex flex-col items-center justify-center gap-3 px-4 py-6 bg-slate-800 border-2 border-dashed border-slate-700 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-slate-800/70 transition-all min-h-[160px]"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <Upload className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-white">
+                        {addImageFile ? addImageFile.name : 'Görsel yükle'}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">PNG, JPG, WEBP • Max 2MB</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 4: Status & Order */}
+            <div className="space-y-4 pt-4 border-t border-slate-800">
+              <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Durum & Sıralama
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between p-4 bg-slate-800 rounded-xl border border-slate-700">
+                  <div>
+                    <Label className="text-white font-medium">Ürün Durumu</Label>
+                    <p className="text-xs text-slate-500 mt-1">Pasif ürünler sitede gösterilmez</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-sm ${addFormData.active ? 'text-green-400' : 'text-slate-400'}`}>
+                      {addFormData.active ? 'Aktif' : 'Pasif'}
+                    </span>
+                    <Switch
+                      checked={addFormData.active}
+                      onCheckedChange={(checked) => setAddFormData({ ...addFormData, active: checked })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-slate-300 text-sm">Sıralama</Label>
+                  <Input
+                    type="number"
+                    value={addFormData.sortOrder}
+                    onChange={(e) => setAddFormData({ ...addFormData, sortOrder: e.target.value })}
+                    className="bg-slate-800 border-slate-700 text-white h-11"
+                    placeholder="1"
+                  />
+                  <p className="text-xs text-slate-500">Küçük sayılar önce gösterilir</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sticky Footer */}
+          <div className="sticky bottom-0 bg-slate-900 border-t border-slate-800 px-6 py-4 flex items-center justify-between">
+            <Button
+              variant="ghost"
+              onClick={() => setAddDialogOpen(false)}
+              className="text-slate-400 hover:text-white hover:bg-slate-800"
+            >
+              İptal
+            </Button>
+            <Button
+              onClick={handleAddProduct}
+              disabled={adding || Object.keys(addPriceErrors).length > 0}
+              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8"
+            >
+              {adding ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Ekleniyor...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ürün Ekle
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

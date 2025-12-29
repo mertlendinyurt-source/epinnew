@@ -21,10 +21,24 @@ export default function AccountLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [siteSettings, setSiteSettings] = useState(null);
 
   useEffect(() => {
     checkAuth();
+    fetchSiteSettings();
   }, []);
+
+  const fetchSiteSettings = async () => {
+    try {
+      const response = await fetch('/api/site-settings');
+      const data = await response.json();
+      if (data.success) {
+        setSiteSettings(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching site settings:', error);
+    }
+  };
 
   const checkAuth = async () => {
     const token = localStorage.getItem('userToken');

@@ -622,6 +622,10 @@ export default function App() {
         if (data.code === 'AUTH_REQUIRED') {
           setAuthModalTab('login')
           setAuthModalOpen(true)
+        } else if (data.code === 'INCOMPLETE_PROFILE' || data.error?.includes('telefon') || data.error?.includes('Profil bilgileriniz eksik')) {
+          // Phone number missing - open phone modal
+          setPhoneModalOpen(true)
+          return
         }
         toast.error(data.error || 'Sipariş oluşturulamadı')
       }

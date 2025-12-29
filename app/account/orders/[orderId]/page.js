@@ -140,7 +140,7 @@ export default function OrderDetailPage() {
             </Button>
             <div>
               <h1 className="text-xl font-bold text-white">Sipariş Detayı</h1>
-              <p className="text-sm text-gray-400">#{order.id.substring(0, 12)}...</p>
+              <p className="text-sm text-gray-400">#{order.id?.substring(0, 12) || 'N/A'}...</p>
             </div>
           </div>
         </div>

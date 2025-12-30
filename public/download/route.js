@@ -691,10 +691,12 @@ async function logEmail(db, type, userId, to, status, orderId = null, ticketId =
   });
 }
 
-// Premium HTML Email Template Generator
+// Premium HTML Email Template Generator - Spam-Free Version
 function generateEmailTemplate(content, settings = {}) {
-  const logoUrl = settings.logoUrl || `${BASE_URL}/logo.png`;
   const siteName = settings.siteName || 'PINLY';
+  
+  // Logo kullanmıyoruz - spam filtrelerini tetikliyor
+  // Sade ve temiz tasarım - yüksek text/HTML oranı
   
   return `
 <!DOCTYPE html>
@@ -704,87 +706,100 @@ function generateEmailTemplate(content, settings = {}) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${content.subject}</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0a0b0d; color: #ffffff;">
-  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f4f4f4; color: #333333;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f4;">
     <tr>
-      <td style="padding: 40px 20px;">
-        <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #12151a; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.4);">
+      <td align="center" style="padding: 30px 15px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 8px;">
           
           <!-- Header -->
           <tr>
-            <td style="padding: 32px 40px; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); text-align: center;">
-              <img src="${logoUrl}" alt="${siteName}" style="height: 48px; margin-bottom: 12px;" onerror="this.style.display='none'">
-              <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">${siteName}</h1>
+            <td style="padding: 30px 40px; background-color: #1e40af; border-radius: 8px 8px 0 0; text-align: center;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: bold; color: #ffffff;">${siteName}</h1>
             </td>
           </tr>
           
           <!-- Body -->
           <tr>
             <td style="padding: 40px;">
-              <h2 style="margin: 0 0 24px 0; font-size: 22px; font-weight: 600; color: #ffffff; line-height: 1.3;">
+              <h2 style="margin: 0 0 20px 0; font-size: 20px; font-weight: bold; color: #1e40af;">
                 ${content.title}
               </h2>
               
-              <div style="font-size: 15px; line-height: 1.7; color: #a1a1aa;">
+              <div style="font-size: 15px; line-height: 1.6; color: #555555;">
                 ${content.body}
               </div>
               
               ${content.cta ? `
-              <div style="margin-top: 32px; text-align: center;">
-                <a href="${content.cta.url}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);">
-                  ${content.cta.text}
-                </a>
-              </div>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
+                <tr>
+                  <td style="background-color: #1e40af; border-radius: 6px; text-align: center;">
+                    <a href="${content.cta.url}" style="display: inline-block; padding: 14px 30px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 15px;">
+                      ${content.cta.text}
+                    </a>
+                  </td>
+                </tr>
+              </table>
               ` : ''}
               
               ${content.codes ? `
-              <div style="margin-top: 32px; padding: 24px; background-color: #1e2229; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                <h3 style="margin: 0 0 16px 0; font-size: 14px; font-weight: 600; color: #fbbf24; text-transform: uppercase; letter-spacing: 1px;">
-                  🎁 Teslim Edilen Kodlar
-                </h3>
-                ${content.codes.map(code => `
-                <div style="margin-bottom: 12px; padding: 16px; background-color: #12151a; border-radius: 8px; border: 1px dashed rgba(59, 130, 246, 0.5);">
-                  <code style="font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 16px; color: #60a5fa; word-break: break-all; letter-spacing: 1px;">
-                    ${code}
-                  </code>
-                </div>
-                `).join('')}
-                <p style="margin: 16px 0 0 0; font-size: 12px; color: #f87171;">
-                  ⚠️ Bu kodları kimseyle paylaşmayın. Güvenliğiniz için saklayın.
-                </p>
-              </div>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px; background-color: #f8f9fa; border-radius: 6px; border: 1px solid #e9ecef;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0 0 15px 0; font-size: 14px; font-weight: bold; color: #1e40af;">
+                      Teslim Edilen Kodlar:
+                    </p>
+                    ${content.codes.map(code => `
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 10px; background-color: #ffffff; border: 1px dashed #1e40af; border-radius: 4px;">
+                      <tr>
+                        <td style="padding: 12px; font-family: monospace; font-size: 14px; color: #1e40af; word-break: break-all;">
+                          ${code}
+                        </td>
+                      </tr>
+                    </table>
+                    `).join('')}
+                    <p style="margin: 15px 0 0 0; font-size: 12px; color: #dc3545;">
+                      Onemli: Bu kodlari kimseyle paylasmayiniz.
+                    </p>
+                  </td>
+                </tr>
+              </table>
               ` : ''}
               
               ${content.info ? `
-              <div style="margin-top: 24px; padding: 20px; background-color: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid #3b82f6;">
-                <p style="margin: 0; font-size: 14px; color: #93c5fd;">
-                  ${content.info}
-                </p>
-              </div>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 25px; background-color: #e7f3ff; border-radius: 6px; border-left: 4px solid #1e40af;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <p style="margin: 0; font-size: 14px; color: #0d47a1;">
+                      ${content.info}
+                    </p>
+                  </td>
+                </tr>
+              </table>
               ` : ''}
               
               ${content.warning ? `
-              <div style="margin-top: 24px; padding: 20px; background-color: rgba(239, 68, 68, 0.1); border-radius: 8px; border-left: 4px solid #ef4444;">
-                <p style="margin: 0; font-size: 14px; color: #fca5a5;">
-                  ⚠️ ${content.warning}
-                </p>
-              </div>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 25px; background-color: #fff3cd; border-radius: 6px; border-left: 4px solid #ffc107;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <p style="margin: 0; font-size: 14px; color: #856404;">
+                      ${content.warning}
+                    </p>
+                  </td>
+                </tr>
+              </table>
               ` : ''}
             </td>
           </tr>
           
           <!-- Footer -->
           <tr>
-            <td style="padding: 24px 40px; background-color: #0a0b0d; border-top: 1px solid rgba(255,255,255,0.05);">
-              <p style="margin: 0 0 8px 0; font-size: 13px; color: #71717a; text-align: center;">
-                ${siteName} - Güvenilir UC Satış Platformu
+            <td style="padding: 25px 40px; background-color: #f8f9fa; border-top: 1px solid #e9ecef; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0 0 10px 0; font-size: 13px; color: #6c757d; text-align: center;">
+                ${siteName}
               </p>
-              <p style="margin: 0; font-size: 12px; color: #52525b; text-align: center;">
-                <a href="${BASE_URL}/legal/terms" style="color: #52525b; text-decoration: none;">Kullanım Şartları</a>
-                &nbsp;•&nbsp;
-                <a href="${BASE_URL}/legal/privacy" style="color: #52525b; text-decoration: none;">Gizlilik Politikası</a>
-                &nbsp;•&nbsp;
-                <a href="${BASE_URL}/account/support" style="color: #52525b; text-decoration: none;">Destek</a>
+              <p style="margin: 0; font-size: 12px; color: #adb5bd; text-align: center;">
+                Bu e-posta ${siteName} tarafindan gonderilmistir.
               </p>
             </td>
           </tr>

@@ -5080,6 +5080,73 @@ export async function POST(request) {
       });
     }
 
+    // ============================================
+    // BLOG POST ENDPOINTS
+    // ============================================
+
+    // Admin: Create blog post
+    if (pathname === '/api/admin/blog') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { title, content, excerpt, category, coverImage, tags, status } = body;
+
+      if (!title || !content) {
+        return NextResponse.json(
+          { success: false, error: 'Başlık ve içerik zorunludur' },
+          { status: 400 }
+        );
+      }
+
+      // Generate slug from title
+      const slug = title
+        .toLowerCase()
+        .replace(/[ğ]/g, 'g')
+        .replace(/[ü]/g, 'u')
+        .replace(/[ş]/g, 's')
+        .replace(/[ı]/g, 'i')
+        .replace(/[ö]/g, 'o')
+        .replace(/[ç]/g, 'c')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .substring(0, 100);
+
+      // Check if slug exists
+      const existingSlug = await db.collection('blog_posts').findOne({ slug });
+      const finalSlug = existingSlug ? `${slug}-${Date.now()}` : slug;
+
+      const post = {
+        id: uuidv4(),
+        title,
+        slug: finalSlug,
+        content,
+        excerpt: excerpt || content.replace(/<[^>]*>/g, '').substring(0, 200) + '...',
+        category: category || 'genel',
+        coverImage: coverImage || null,
+        tags: tags || [],
+        status: status || 'draft',
+        views: 0,
+        authorId: user.id || user.username,
+        authorName: user.username || 'Admin',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        publishedAt: status === 'published' ? new Date() : null
+      };
+
+      await db.collection('blog_posts').insertOne(post);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Blog yazısı oluşturuldu',
+        data: post
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

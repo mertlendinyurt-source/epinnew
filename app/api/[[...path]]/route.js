@@ -275,90 +275,322 @@ const AUDIT_ACTIONS = {
 const RISK_THRESHOLD = 40; // Orders with score >= 40 are flagged
 
 async function calculateOrderRisk(db, order, user, request) {
+  // Get risk settings from database or use defaults
+  let riskSettings = await db.collection('risk_settings').findOne({ id: 'main' });
+  if (!riskSettings) {
+    riskSettings = { ...DEFAULT_RISK_SETTINGS, id: 'main' };
+  }
+
+  // If risk system is disabled, return clean status
+  if (!riskSettings.isEnabled) {
+    return {
+      score: 0,
+      status: 'CLEAR',
+      reasons: [],
+      calculatedAt: new Date(),
+      settingsSnapshot: { isEnabled: false }
+    };
+  }
+
   let score = 0;
   const reasons = [];
   const ip = getClientIP(request);
+  const userAgent = request.headers.get('user-agent') || '';
+  const weights = riskSettings.weights || DEFAULT_RISK_SETTINGS.weights;
+  const thresholds = riskSettings.thresholds || DEFAULT_RISK_SETTINGS.thresholds;
 
-  // 1. New account check (account age < 1 hour)
-  const accountAgeMs = new Date() - new Date(user.createdAt);
-  const accountAgeHours = accountAgeMs / (1000 * 60 * 60);
-  if (accountAgeHours < 1) {
-    score += 25;
-    reasons.push('Yeni hesap (1 saatten az)');
-  } else if (accountAgeHours < 24) {
-    score += 10;
-    reasons.push('Hesap 24 saatten yeni');
+  // ============================================
+  // BLACKLIST CHECKS (Priority)
+  // ============================================
+  const blacklistChecks = await checkBlacklist(db, {
+    email: user.email,
+    phone: user.phone,
+    ip: ip,
+    playerId: order.playerId,
+    emailDomain: user.email?.split('@')[1]
+  });
+
+  if (blacklistChecks.hit) {
+    if (riskSettings.hardBlocks?.blacklistHit) {
+      return {
+        score: 100,
+        status: 'BLOCKED',
+        reasons: blacklistChecks.reasons,
+        calculatedAt: new Date(),
+        hardBlock: true,
+        hardBlockReason: 'blacklist'
+      };
+    } else {
+      score += weights.blacklistHit || 100;
+      reasons.push(...blacklistChecks.reasons);
+    }
   }
 
-  // 2. First order for this user
+  // ============================================
+  // PHONE RULES
+  // ============================================
+  const phone = user.phone?.replace(/[\s\-\(\)\+]/g, '') || '';
+  
+  // Phone empty
+  if (!phone || phone.length === 0) {
+    score += weights.phoneEmpty || 40;
+    reasons.push({ code: 'PHONE_EMPTY', label: 'Telefon numarası boş', points: weights.phoneEmpty || 40 });
+  } else {
+    // TR order + phone doesn't start with 5
+    const isTROrder = order.region === 'TR' || order.currency === 'TRY';
+    if (isTROrder && !phone.startsWith('5') && !phone.startsWith('905')) {
+      score += weights.phoneTRNotStartsWith5 || 30;
+      reasons.push({ code: 'PHONE_TR_FORMAT', label: 'TR siparişi - telefon 5 ile başlamıyor', points: weights.phoneTRNotStartsWith5 || 30 });
+    }
+    
+    // Phone length check (should be 10 or 11 digits for TR)
+    const cleanPhone = phone.replace(/^90/, ''); // Remove country code
+    if (cleanPhone.length < 10 || cleanPhone.length > 11) {
+      score += weights.phoneInvalidLength || 20;
+      reasons.push({ code: 'PHONE_LENGTH', label: 'Telefon uzunluğu geçersiz', points: weights.phoneInvalidLength || 20 });
+    }
+  }
+
+  // Same phone with 2+ accounts
+  if (phone && phone.length >= 10) {
+    const accountsWithPhone = await db.collection('users').countDocuments({ 
+      phone: { $regex: phone.slice(-10) },
+      id: { $ne: user.id }
+    });
+    if (accountsWithPhone >= 1) {
+      score += weights.phoneMultipleAccounts || 50;
+      reasons.push({ code: 'PHONE_MULTI_ACCOUNT', label: `Aynı telefonla ${accountsWithPhone + 1} hesap`, points: weights.phoneMultipleAccounts || 50 });
+    }
+  }
+
+  // ============================================
+  // EMAIL RULES
+  // ============================================
+  const emailDomain = user.email?.split('@')[1]?.toLowerCase() || '';
+  
+  // Check disposable email
+  const allDisposableDomains = await getDisposableDomains(db);
+  if (allDisposableDomains.includes(emailDomain)) {
+    score += weights.disposableEmail || 40;
+    reasons.push({ code: 'DISPOSABLE_EMAIL', label: 'Geçici e-posta adresi', points: weights.disposableEmail || 40 });
+  }
+
+  // Email not verified (if system supports verification)
+  if (user.emailVerified === false && weights.emailNotVerified > 0) {
+    score += weights.emailNotVerified || 20;
+    reasons.push({ code: 'EMAIL_NOT_VERIFIED', label: 'E-posta doğrulanmamış', points: weights.emailNotVerified || 20 });
+  }
+
+  // ============================================
+  // ACCOUNT & BEHAVIOR RULES
+  // ============================================
+  const accountAgeMs = new Date() - new Date(user.createdAt);
+  const accountAgeMinutes = accountAgeMs / (1000 * 60);
+  const accountAgeHours = accountAgeMs / (1000 * 60 * 60);
+
+  // Account age < 10 minutes
+  if (accountAgeMinutes < 10) {
+    score += weights.accountAgeLess10Min || 30;
+    reasons.push({ code: 'ACCOUNT_VERY_NEW', label: 'Hesap yaşı 10 dakikadan az', points: weights.accountAgeLess10Min || 30 });
+  } else if (accountAgeHours < 1) {
+    // Account age < 1 hour
+    score += weights.accountAgeLess1Hour || 20;
+    reasons.push({ code: 'ACCOUNT_NEW', label: 'Hesap yaşı 1 saatten az', points: weights.accountAgeLess1Hour || 20 });
+  }
+
+  // First order check
   const previousOrders = await db.collection('orders').countDocuments({ 
     userId: user.id, 
     status: { $in: ['paid', 'completed'] } 
   });
-  if (previousOrders === 0) {
-    score += 10;
-    reasons.push('İlk sipariş');
+  const isFirstOrder = previousOrders === 0;
+  if (isFirstOrder) {
+    score += weights.firstOrder || 10;
+    reasons.push({ code: 'FIRST_ORDER', label: 'İlk sipariş', points: weights.firstOrder || 10 });
   }
 
-  // 3. High value order (over 500 TRY)
-  if (order.amount > 500) {
-    score += 15;
-    reasons.push(`Yüksek değerli sipariş (${order.amount} TRY)`);
-  } else if (order.amount > 250) {
-    score += 5;
-    reasons.push('Orta-yüksek değerli sipariş');
+  // Fast checkout (login to checkout < 30 seconds)
+  if (user.lastLoginAt) {
+    const timeSinceLogin = new Date() - new Date(user.lastLoginAt);
+    if (timeSinceLogin < 30000) { // 30 seconds
+      score += weights.fastCheckout || 20;
+      reasons.push({ code: 'FAST_CHECKOUT', label: 'Çok hızlı checkout (30 sn altı)', points: weights.fastCheckout || 20 });
+    }
   }
 
-  // 4. Multiple orders from same IP in last hour
-  const recentOrdersFromIP = await db.collection('orders').countDocuments({
-    'meta.ip': ip,
-    createdAt: { $gte: new Date(Date.now() - 60 * 60 * 1000) }
-  });
-  if (recentOrdersFromIP > 3) {
-    score += 20;
-    reasons.push(`Aynı IP'den ${recentOrdersFromIP} sipariş (son 1 saat)`);
+  // ============================================
+  // IP & DEVICE RULES
+  // ============================================
+  
+  // Empty or very short user agent
+  if (!userAgent || userAgent.length < 20) {
+    score += weights.emptyUserAgent || 20;
+    reasons.push({ code: 'SUSPICIOUS_UA', label: 'Şüpheli user-agent', points: weights.emptyUserAgent || 20 });
   }
 
-  // 5. Different player IDs from same user
-  const differentPlayerIds = await db.collection('orders').distinct('playerId', { userId: user.id });
-  if (differentPlayerIds.length > 3) {
-    score += 15;
-    reasons.push(`${differentPlayerIds.length} farklı oyuncu ID kullanılmış`);
+  // Multiple accounts from same IP
+  if (ip && ip !== 'unknown') {
+    const accountsFromIP = await db.collection('users').countDocuments({
+      'meta.lastIP': ip,
+      id: { $ne: user.id }
+    });
+    if (accountsFromIP >= 2) {
+      score += weights.multipleAccountsSameIP || 30;
+      reasons.push({ code: 'IP_MULTI_ACCOUNT', label: `Aynı IP'den ${accountsFromIP + 1} hesap`, points: weights.multipleAccountsSameIP || 30 });
+    }
+
+    // Multiple orders from same IP in last hour
+    const ordersFromIP = await db.collection('orders').countDocuments({
+      'meta.ip': ip,
+      createdAt: { $gte: new Date(Date.now() - 60 * 60 * 1000) },
+      id: { $ne: order.id }
+    });
+    if (ordersFromIP >= 3) {
+      score += weights.multipleOrdersSameIP1Hour || 40;
+      reasons.push({ code: 'IP_MULTI_ORDER', label: `Aynı IP'den ${ordersFromIP + 1} sipariş (1 saat)`, points: weights.multipleOrdersSameIP1Hour || 40 });
+    }
   }
 
-  // 6. Google OAuth without phone verification
-  if (user.authProvider === 'google' && !user.phoneVerified) {
-    score += 5;
-    reasons.push('Google ile giriş, telefon doğrulanmamış');
+  // ============================================
+  // AMOUNT BASED RULES
+  // ============================================
+  const amount = order.amount || 0;
+
+  if (amount >= 1500) {
+    score += weights.amountOver1500 || 35;
+    reasons.push({ code: 'HIGH_AMOUNT_1500', label: `Yüksek tutar: ₺${amount}`, points: weights.amountOver1500 || 35 });
+  } else if (amount >= 750) {
+    score += weights.amountOver750 || 20;
+    reasons.push({ code: 'HIGH_AMOUNT_750', label: `Yüksek tutar: ₺${amount}`, points: weights.amountOver750 || 20 });
+  } else if (amount >= 300) {
+    score += weights.amountOver300 || 10;
+    reasons.push({ code: 'MEDIUM_AMOUNT', label: `Orta tutar: ₺${amount}`, points: weights.amountOver300 || 10 });
   }
 
-  // 7. Suspicious email patterns
-  const emailDomain = user.email?.split('@')[1] || '';
-  const suspiciousProviders = ['tempmail', 'guerrilla', '10minute', 'throwaway', 'mailinator'];
-  if (suspiciousProviders.some(p => emailDomain.includes(p))) {
-    score += 30;
-    reasons.push('Geçici e-posta sağlayıcısı');
+  // First order + high amount (750+)
+  if (isFirstOrder && amount >= 750) {
+    score += weights.firstOrderHighAmount || 25;
+    reasons.push({ code: 'FIRST_ORDER_HIGH', label: 'İlk siparişte yüksek tutar', points: weights.firstOrderHighAmount || 25 });
   }
 
-  // 8. Multiple failed orders from this user
-  const failedOrders = await db.collection('orders').countDocuments({
+  // ============================================
+  // DETERMINE STATUS
+  // ============================================
+  const finalScore = Math.min(score, 100);
+  let status;
+  
+  if (finalScore <= thresholds.cleanMax) {
+    status = 'CLEAR';
+  } else if (finalScore <= thresholds.suspiciousMax) {
+    status = 'SUSPICIOUS';
+  } else {
+    status = 'FLAGGED';
+  }
+
+  // Log risk calculation
+  await db.collection('risk_logs').insertOne({
+    id: uuidv4(),
+    orderId: order.id,
     userId: user.id,
-    status: 'failed',
-    createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
-  });
-  if (failedOrders >= 2) {
-    score += 15;
-    reasons.push(`${failedOrders} başarısız sipariş (son 24 saat)`);
-  }
-
-  const status = score >= RISK_THRESHOLD ? 'FLAGGED' : 'CLEAR';
-
-  return {
-    score: Math.min(score, 100),
+    score: finalScore,
     status,
     reasons,
-    calculatedAt: new Date()
+    ip,
+    userAgent: userAgent.substring(0, 500), // Truncate for storage
+    isTestMode: riskSettings.isTestMode,
+    createdAt: new Date()
+  });
+
+  return {
+    score: finalScore,
+    status: riskSettings.isTestMode ? 'CLEAR' : status, // In test mode, always return CLEAR for delivery
+    actualStatus: status, // Real status for display
+    reasons,
+    calculatedAt: new Date(),
+    isTestMode: riskSettings.isTestMode
   };
+}
+
+// Check blacklist helper
+async function checkBlacklist(db, data) {
+  const hits = [];
+  
+  // Check email
+  if (data.email) {
+    const emailBlacklist = await db.collection('blacklist').findOne({
+      type: 'email',
+      value: data.email.toLowerCase(),
+      isActive: true
+    });
+    if (emailBlacklist) {
+      hits.push({ code: 'BLACKLIST_EMAIL', label: `Kara listede e-posta: ${data.email}`, points: 100 });
+    }
+  }
+
+  // Check email domain
+  if (data.emailDomain) {
+    const domainBlacklist = await db.collection('blacklist').findOne({
+      type: 'domain',
+      value: data.emailDomain.toLowerCase(),
+      isActive: true
+    });
+    if (domainBlacklist) {
+      hits.push({ code: 'BLACKLIST_DOMAIN', label: `Kara listede domain: ${data.emailDomain}`, points: 100 });
+    }
+  }
+
+  // Check phone
+  if (data.phone) {
+    const cleanPhone = data.phone.replace(/[\s\-\(\)\+]/g, '');
+    const phoneBlacklist = await db.collection('blacklist').findOne({
+      type: 'phone',
+      value: { $regex: cleanPhone.slice(-10) },
+      isActive: true
+    });
+    if (phoneBlacklist) {
+      hits.push({ code: 'BLACKLIST_PHONE', label: `Kara listede telefon`, points: 100 });
+    }
+  }
+
+  // Check IP
+  if (data.ip && data.ip !== 'unknown') {
+    const ipBlacklist = await db.collection('blacklist').findOne({
+      type: 'ip',
+      value: data.ip,
+      isActive: true
+    });
+    if (ipBlacklist) {
+      hits.push({ code: 'BLACKLIST_IP', label: `Kara listede IP: ${data.ip}`, points: 100 });
+    }
+  }
+
+  // Check Player ID
+  if (data.playerId) {
+    const playerBlacklist = await db.collection('blacklist').findOne({
+      type: 'playerId',
+      value: data.playerId,
+      isActive: true
+    });
+    if (playerBlacklist) {
+      hits.push({ code: 'BLACKLIST_PLAYER', label: `Kara listede oyuncu ID: ${data.playerId}`, points: 100 });
+    }
+  }
+
+  return {
+    hit: hits.length > 0,
+    reasons: hits
+  };
+}
+
+// Get disposable domains (built-in + custom from DB)
+async function getDisposableDomains(db) {
+  const customDomains = await db.collection('blacklist').find({
+    type: 'domain',
+    isActive: true
+  }).toArray();
+  
+  const customList = customDomains.map(d => d.value.toLowerCase());
+  return [...new Set([...DISPOSABLE_EMAIL_DOMAINS, ...customList])];
 }
 
 // ============================================

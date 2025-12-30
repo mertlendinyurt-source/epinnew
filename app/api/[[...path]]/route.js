@@ -1108,12 +1108,33 @@ export async function GET(request) {
         );
       }
 
+      // Get user details
+      let userInfo = null;
+      if (order.userId) {
+        const orderUser = await db.collection('users').findOne({ id: order.userId });
+        if (orderUser) {
+          userInfo = {
+            email: orderUser.email,
+            phone: orderUser.phone,
+            name: orderUser.name || orderUser.email?.split('@')[0]
+          };
+        }
+      }
+
       // Get payment details
       const payment = await db.collection('payments').findOne({ orderId });
       
       return NextResponse.json({
         success: true,
-        data: { order, payment }
+        data: { 
+          order: {
+            ...order,
+            userEmail: userInfo?.email || null,
+            userPhone: userInfo?.phone || null,
+            userName: userInfo?.name || null
+          }, 
+          payment 
+        }
       });
     }
 

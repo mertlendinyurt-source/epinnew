@@ -784,11 +784,22 @@ async function sendEmail(db, type, to, content, userId, orderId = null, ticketId
       siteName: siteSettings?.siteName || 'PINLY'
     });
     
+    // Plain text version for multipart (helps avoid spam)
+    const text = htmlToPlainText(html);
+    
     await transporter.sendMail({
       from: `"${settings.fromName}" <${settings.fromEmail}>`,
+      replyTo: settings.fromEmail,
       to,
       subject: content.subject,
-      html
+      text: text, // Plain text version
+      html: html, // HTML version
+      headers: {
+        'X-Priority': '3',
+        'X-Mailer': 'PINLY Mailer',
+        'Precedence': 'bulk',
+        'X-Auto-Response-Suppress': 'OOF, AutoReply'
+      }
     });
     
     await logEmail(db, type, userId, to, 'sent', orderId, ticketId);

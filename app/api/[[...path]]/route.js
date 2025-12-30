@@ -5327,6 +5327,42 @@ export async function PUT(request) {
       );
     }
 
+    // Update blog post
+    if (pathname.match(/^\/api\/admin\/blog\/[^\/]+$/)) {
+      const postId = pathname.split('/').pop();
+      
+      const existingPost = await db.collection('blog_posts').findOne({ id: postId });
+      if (!existingPost) {
+        return NextResponse.json(
+          { success: false, error: 'Yazı bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      const updateData = {
+        ...body,
+        updatedAt: new Date()
+      };
+
+      // If status changed to published and wasn't published before
+      if (body.status === 'published' && existingPost.status !== 'published') {
+        updateData.publishedAt = new Date();
+      }
+
+      await db.collection('blog_posts').updateOne(
+        { id: postId },
+        { $set: updateData }
+      );
+
+      const updated = await db.collection('blog_posts').findOne({ id: postId });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Blog yazısı güncellendi',
+        data: updated
+      });
+    }
+
     // Update product
     if (pathname.match(/^\/api\/admin\/products\/[^\/]+$/)) {
       const productId = pathname.split('/').pop();

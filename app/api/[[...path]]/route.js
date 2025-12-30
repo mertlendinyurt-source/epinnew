@@ -816,22 +816,22 @@ async function sendEmail(db, type, to, content, userId, orderId = null, ticketId
 // Specific Email Templates
 async function sendWelcomeEmail(db, user) {
   const content = {
-    subject: `Hoş geldin, ${user.firstName}! 🎮`,
-    title: `Merhaba ${user.firstName}!`,
+    subject: `Hos geldin ${user.firstName}`,
+    title: `Merhaba ${user.firstName}`,
     body: `
-      <p>PINLY ailesine hoş geldin!</p>
-      <p>Hesabın başarıyla oluşturuldu. Artık en uygun fiyatlarla UC satın alabilir ve anında teslimat alabilirsin.</p>
+      <p>PINLY ailesine hos geldin!</p>
+      <p>Hesabin basariyla olusturuldu. Artik en uygun fiyatlarla UC satin alabilir ve aninda teslimat alabilirsin.</p>
       <p style="margin-top: 20px;">
         <strong>Hesap Bilgilerin:</strong><br>
-        📧 E-posta: ${user.email}<br>
-        📱 Telefon: ${user.phone}
+        E-posta: ${user.email}<br>
+        Telefon: ${user.phone}
       </p>
     `,
     cta: {
-      text: 'Alışverişe Başla',
+      text: 'Alisverise Basla',
       url: BASE_URL
     },
-    info: 'Sorularınız için destek talebi oluşturabilirsiniz.'
+    info: 'Sorulariniz icin destek talebi olusturabilirsiniz.'
   };
   
   return sendEmail(db, 'welcome', user.email, content, user.id);
@@ -839,29 +839,27 @@ async function sendWelcomeEmail(db, user) {
 
 async function sendOrderCreatedEmail(db, order, user, product) {
   const content = {
-    subject: `Siparişiniz alındı — #${order.id.slice(-8)}`,
-    title: 'Siparişiniz Alındı! 🛒',
+    subject: `Siparisiniz alindi - ${order.id.slice(-8)}`,
+    title: 'Siparisiniz Alindi',
     body: `
       <p>Merhaba ${user.firstName},</p>
-      <p>Siparişiniz başarıyla oluşturuldu. Ödeme işlemini tamamladıktan sonra teslimat yapılacaktır.</p>
+      <p>Siparisiniz basariyla olusturuldu. Odeme islemini tamamladiktan sonra teslimat yapilacaktir.</p>
       
-      <div style="margin-top: 24px; padding: 20px; background-color: #1e2229; border-radius: 8px;">
-        <h4 style="margin: 0 0 16px 0; color: #fbbf24;">Sipariş Detayları</h4>
-        <table style="width: 100%; font-size: 14px; color: #a1a1aa;">
-          <tr><td style="padding: 8px 0;">Sipariş No:</td><td style="text-align: right; color: #fff;">#${order.id.slice(-8)}</td></tr>
-          <tr><td style="padding: 8px 0;">Ürün:</td><td style="text-align: right; color: #fff;">${product.name}</td></tr>
-          <tr><td style="padding: 8px 0;">UC Miktarı:</td><td style="text-align: right; color: #60a5fa;">${product.ucAmount} UC</td></tr>
-          <tr><td style="padding: 8px 0;">Oyuncu ID:</td><td style="text-align: right; color: #fff;">${order.playerId}</td></tr>
-          <tr><td style="padding: 8px 0;">Oyuncu Adı:</td><td style="text-align: right; color: #fff;">${order.playerName}</td></tr>
-          <tr style="border-top: 1px solid rgba(255,255,255,0.1);"><td style="padding: 16px 0 8px 0; font-weight: 600; color: #fff;">Toplam:</td><td style="text-align: right; font-size: 18px; font-weight: 700; color: #22c55e;">${product.price.toFixed(2)} TL</td></tr>
-        </table>
-      </div>
+      <p style="margin-top:20px;"><strong>Siparis Detaylari:</strong></p>
+      <ul>
+        <li>Siparis No: ${order.id.slice(-8)}</li>
+        <li>Urun: ${product.name}</li>
+        <li>UC Miktari: ${product.ucAmount} UC</li>
+        <li>Oyuncu ID: ${order.playerId}</li>
+        <li>Oyuncu Adi: ${order.playerName}</li>
+        <li>Toplam: ${product.price.toFixed(2)} TL</li>
+      </ul>
     `,
     cta: {
-      text: 'Siparişi Görüntüle',
+      text: 'Siparisi Goruntule',
       url: `${BASE_URL}/account/orders/${order.id}`
     },
-    info: 'Ödeme sayfasına yönlendirildiniz. Ödeme tamamlandıktan sonra teslimat otomatik yapılacaktır.'
+    info: 'Odeme sayfasina yonlendirildiniz. Odeme tamamlandiktan sonra teslimat otomatik yapilacaktir.'
   };
   
   return sendEmail(db, 'order_created', user.email, content, user.id, order.id);
@@ -869,25 +867,24 @@ async function sendOrderCreatedEmail(db, order, user, product) {
 
 async function sendPaymentSuccessEmail(db, order, user, product) {
   const content = {
-    subject: `Ödemeniz alındı — #${order.id.slice(-8)}`,
-    title: 'Ödeme Başarılı! ✅',
+    subject: `Odemeniz alindi - ${order.id.slice(-8)}`,
+    title: 'Odeme Basarili',
     body: `
       <p>Merhaba ${user.firstName},</p>
-      <p>Ödemeniz başarıyla alındı! Siparişiniz işleme alındı ve teslimat hazırlanıyor.</p>
+      <p>Odemeniz basariyla alindi. Siparisiniz isleme alindi ve teslimat hazirlaniyor.</p>
       
-      <div style="margin-top: 24px; padding: 20px; background-color: #1e2229; border-radius: 8px;">
-        <table style="width: 100%; font-size: 14px; color: #a1a1aa;">
-          <tr><td style="padding: 8px 0;">Sipariş No:</td><td style="text-align: right; color: #fff;">#${order.id.slice(-8)}</td></tr>
-          <tr><td style="padding: 8px 0;">Ürün:</td><td style="text-align: right; color: #fff;">${product.name}</td></tr>
-          <tr><td style="padding: 8px 0;">Ödenen Tutar:</td><td style="text-align: right; color: #22c55e;">${product.price.toFixed(2)} TL</td></tr>
-        </table>
-      </div>
+      <p style="margin-top:20px;"><strong>Siparis Bilgileri:</strong></p>
+      <ul>
+        <li>Siparis No: ${order.id.slice(-8)}</li>
+        <li>Urun: ${product.name}</li>
+        <li>Odenen Tutar: ${product.price.toFixed(2)} TL</li>
+      </ul>
     `,
     cta: {
-      text: 'Sipariş Durumunu Kontrol Et',
+      text: 'Siparis Durumunu Kontrol Et',
       url: `${BASE_URL}/account/orders/${order.id}`
     },
-    info: 'Teslimat tamamlandığında size tekrar bilgi vereceğiz.'
+    info: 'Teslimat tamamlandiginda size tekrar bilgi verecegiz.'
   };
   
   return sendEmail(db, 'paid', user.email, content, user.id, order.id);

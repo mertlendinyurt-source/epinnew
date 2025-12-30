@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
-import AdminSidebar from '@/components/admin/AdminSidebar'
+// AdminSidebar layout.js tarafından yönetiliyor
 
 export default function AdminDashboard() {
   const router = useRouter()

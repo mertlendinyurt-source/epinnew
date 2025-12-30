@@ -4853,6 +4853,148 @@ export async function POST(request) {
       });
     }
 
+    // ============================================
+    // RISK MANAGEMENT POST ENDPOINTS
+    // ============================================
+
+    // Admin: Save risk settings
+    if (pathname === '/api/admin/risk/settings') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { isEnabled, isTestMode, thresholds, weights, hardBlocks, suspiciousAutoApprove } = body;
+
+      const settings = {
+        id: 'main',
+        isEnabled: isEnabled !== undefined ? isEnabled : true,
+        isTestMode: isTestMode !== undefined ? isTestMode : false,
+        thresholds: thresholds || DEFAULT_RISK_SETTINGS.thresholds,
+        weights: weights || DEFAULT_RISK_SETTINGS.weights,
+        hardBlocks: hardBlocks || DEFAULT_RISK_SETTINGS.hardBlocks,
+        suspiciousAutoApprove: suspiciousAutoApprove !== undefined ? suspiciousAutoApprove : false,
+        updatedAt: new Date(),
+        updatedBy: user.username || user.id
+      };
+
+      await db.collection('risk_settings').updateOne(
+        { id: 'main' },
+        { $set: settings },
+        { upsert: true }
+      );
+
+      // Log the change
+      await logAuditAction(db, 'RISK_SETTINGS_UPDATE', user.id || user.username, 'risk_settings', 'main', request, {
+        changes: body
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Risk ayarları kaydedildi',
+        data: settings
+      });
+    }
+
+    // Admin: Add to blacklist
+    if (pathname === '/api/admin/risk/blacklist') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { type, value, reason } = body;
+
+      if (!type || !value) {
+        return NextResponse.json(
+          { success: false, error: 'Tip ve değer zorunludur' },
+          { status: 400 }
+        );
+      }
+
+      const validTypes = ['email', 'phone', 'ip', 'playerId', 'domain'];
+      if (!validTypes.includes(type)) {
+        return NextResponse.json(
+          { success: false, error: 'Geçersiz tip' },
+          { status: 400 }
+        );
+      }
+
+      // Check if already exists
+      const existing = await db.collection('blacklist').findOne({
+        type,
+        value: value.toLowerCase()
+      });
+
+      if (existing) {
+        return NextResponse.json(
+          { success: false, error: 'Bu kayıt zaten mevcut' },
+          { status: 400 }
+        );
+      }
+
+      const blacklistEntry = {
+        id: uuidv4(),
+        type,
+        value: value.toLowerCase(),
+        reason: reason || '',
+        isActive: true,
+        createdAt: new Date(),
+        createdBy: user.username || user.id
+      };
+
+      await db.collection('blacklist').insertOne(blacklistEntry);
+
+      // Log the action
+      await logAuditAction(db, 'BLACKLIST_ADD', user.id || user.username, 'blacklist', blacklistEntry.id, request, {
+        type,
+        value: value.toLowerCase()
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Kara listeye eklendi',
+        data: blacklistEntry
+      });
+    }
+
+    // Admin: Toggle blacklist item active status
+    if (pathname.match(/^\/api\/admin\/risk\/blacklist\/[^\/]+\/toggle$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const itemId = pathname.split('/')[5];
+      const item = await db.collection('blacklist').findOne({ id: itemId });
+
+      if (!item) {
+        return NextResponse.json(
+          { success: false, error: 'Kayıt bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      await db.collection('blacklist').updateOne(
+        { id: itemId },
+        { $set: { isActive: !item.isActive, updatedAt: new Date() } }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: item.isActive ? 'Kayıt pasif yapıldı' : 'Kayıt aktif yapıldı'
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

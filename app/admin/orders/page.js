@@ -217,92 +217,18 @@ export default function AdminOrders() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="flex items-center justify-center p-8">
         <div className="text-white">Yükleniyor...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="p-8">
       <Toaster position="top-center" richColors />
       
-      {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full w-64 bg-slate-900 border-r border-slate-800 p-4">
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center font-bold text-white">
-            P
-          </div>
-          <div>
-            <div className="text-white font-bold">PINLY</div>
-            <div className="text-slate-400 text-xs">Admin Panel</div>
-          </div>
-        </div>
-
-        <nav className="space-y-2">
-          <Button
-            onClick={() => router.push('/admin/dashboard')}
-            variant="ghost"
-            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
-          >
-            <LayoutDashboard className="w-4 h-4 mr-2" />
-            Dashboard
-          </Button>
-          <Button
-            onClick={() => router.push('/admin/orders')}
-            className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white relative"
-          >
-            <ShoppingBag className="w-4 h-4 mr-2" />
-            Siparişler
-            {flaggedCount > 0 && (
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                {flaggedCount}
-              </span>
-            )}
-          </Button>
-          <Button
-            onClick={() => router.push('/admin/products')}
-            variant="ghost"
-            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
-          >
-            <Package className="w-4 h-4 mr-2" />
-            Ürünler
-          </Button>
-          <Button
-            onClick={() => router.push('/admin/settings/payments')}
-            variant="ghost"
-            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            Ödeme Ayarları
-          </Button>
-          <Button
-            onClick={() => router.push('/admin/settings/site')}
-            variant="ghost"
-            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
-          >
-            <ImageIcon className="w-4 h-4 mr-2" />
-            Site Ayarları
-          </Button>
-        </nav>
-
-        <div className="absolute bottom-4 left-4 right-4">
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="w-full border-slate-700 text-slate-300 hover:text-white"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Çıkış Yap
-          </Button>
-        </div>
-      </div>
-
       {/* Main Content */}
-      <div className="ml-64 p-8">
+      <div>
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Siparişler</h1>
           <p className="text-slate-400">Tüm siparişleri görüntüleyin ve yönetin</p>

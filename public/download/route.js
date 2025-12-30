@@ -821,17 +821,11 @@ async function sendWelcomeEmail(db, user) {
     body: `
       <p>PINLY ailesine hos geldin!</p>
       <p>Hesabin basariyla olusturuldu. Artik en uygun fiyatlarla UC satin alabilir ve aninda teslimat alabilirsin.</p>
-      <p style="margin-top: 20px;">
-        <strong>Hesap Bilgilerin:</strong><br>
-        E-posta: ${user.email}<br>
-        Telefon: ${user.phone}
-      </p>
     `,
     cta: {
       text: 'Alisverise Basla',
       url: BASE_URL
-    },
-    info: 'Sorulariniz icin destek talebi olusturabilirsiniz.'
+    }
   };
   
   return sendEmail(db, 'welcome', user.email, content, user.id);
@@ -849,17 +843,13 @@ async function sendOrderCreatedEmail(db, order, user, product) {
       <ul>
         <li>Siparis No: ${order.id.slice(-8)}</li>
         <li>Urun: ${product.name}</li>
-        <li>UC Miktari: ${product.ucAmount} UC</li>
-        <li>Oyuncu ID: ${order.playerId}</li>
-        <li>Oyuncu Adi: ${order.playerName}</li>
         <li>Toplam: ${product.price.toFixed(2)} TL</li>
       </ul>
     `,
     cta: {
       text: 'Siparisi Goruntule',
       url: `${BASE_URL}/account/orders/${order.id}`
-    },
-    info: 'Odeme sayfasina yonlendirildiniz. Odeme tamamlandiktan sonra teslimat otomatik yapilacaktir.'
+    }
   };
   
   return sendEmail(db, 'order_created', user.email, content, user.id, order.id);
@@ -896,21 +886,18 @@ async function sendDeliveredEmail(db, order, user, product, codes) {
     title: 'Teslimat Tamamlandi',
     body: `
       <p>Merhaba ${user.firstName},</p>
-      <p>Harika haber! Siparisiniz basariyla teslim edildi. Asagida UC kodlarinizi bulabilirsiniz.</p>
+      <p>Siparisiniz basariyla teslim edildi.</p>
       
       <p style="margin-top:20px;"><strong>Siparis Bilgileri:</strong></p>
       <ul>
         <li>Urun: ${product.name}</li>
-        <li>UC Miktari: ${product.ucAmount} UC</li>
-        <li>Oyuncu: ${order.playerName} (${order.playerId})</li>
       </ul>
     `,
     codes: codes,
     cta: {
       text: 'Siparis Detaylarini Gor',
       url: `${BASE_URL}/account/orders/${order.id}`
-    },
-    warning: 'Bu kodlari kimseyle paylasmayiniz. Kodlar tek kullanimliktir.'
+    }
   };
   
   return sendEmail(db, 'delivered', user.email, content, user.id, order.id);
@@ -2854,16 +2841,7 @@ export async function POST(request) {
           body: `
             <p>Merhaba,</p>
             <p>Bu bir test e-postasdir. E-posta sisteminiz dogru yapilandirilmis ve calisiyor.</p>
-            <p><strong>SMTP Bilgileri:</strong></p>
-            <ul>
-              <li>Host: ${settings.smtpHost}</li>
-              <li>Port: ${settings.smtpPort}</li>
-              <li>Guvenli: ${settings.smtpSecure ? 'Evet' : 'Hayir'}</li>
-              <li>Gonderen: ${settings.fromEmail}</li>
-            </ul>
-            <p style="margin-top:20px;color:#22c55e;">E-posta sistemi calisiyor.</p>
-          `,
-          info: 'Bu e-posta admin panelinden gonderilen bir test mesajidir.'
+          `
         };
 
         const html = generateEmailTemplate(testContent, {

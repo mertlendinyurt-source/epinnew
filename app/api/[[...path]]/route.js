@@ -14,6 +14,67 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 const APP_VERSION = '1.0.0';
 
 // ============================================
+// DISPOSABLE EMAIL DOMAINS LIST
+// ============================================
+const DISPOSABLE_EMAIL_DOMAINS = [
+  '10minutemail.com', '10minmail.com', 'tempmail.com', 'temp-mail.org',
+  'guerrillamail.com', 'guerrillamail.org', 'throwaway.email', 'mailinator.com',
+  'yopmail.com', 'sharklasers.com', 'spam4.me', 'trashmail.com',
+  'fakeinbox.com', 'getnada.com', 'dispostable.com', 'maildrop.cc',
+  'mohmal.com', 'tempail.com', 'emailondeck.com', 'mintemail.com',
+  'tempr.email', 'discard.email', 'mailnesia.com', 'mt2009.com',
+  'mytemp.email', 'tmpmail.org', 'tmpmail.net', 'tempinbox.com',
+  'burnermail.io', 'throwawaymail.com', 'mailcatch.com', 'temp-mail.io',
+  'fakemailgenerator.com', 'emailfake.com', 'generator.email', 'inboxkitten.com'
+];
+
+// ============================================
+// DEFAULT RISK SETTINGS
+// ============================================
+const DEFAULT_RISK_SETTINGS = {
+  isEnabled: true,
+  isTestMode: false,
+  thresholds: {
+    cleanMax: 29,
+    suspiciousMax: 59,
+    riskyMin: 60
+  },
+  weights: {
+    // Phone rules
+    phoneEmpty: 40,
+    phoneTRNotStartsWith5: 30,
+    phoneInvalidLength: 20,
+    phoneMultipleAccounts: 50,
+    // Email rules
+    disposableEmail: 40,
+    emailNotVerified: 20,
+    // Account & Behavior
+    accountAgeLess10Min: 30,
+    accountAgeLess1Hour: 20,
+    firstOrder: 10,
+    fastCheckout: 20,
+    // IP & Device
+    emptyUserAgent: 20,
+    multipleAccountsSameIP: 30,
+    multipleOrdersSameIP1Hour: 40,
+    // Amount based
+    amountOver300: 10,
+    amountOver750: 20,
+    amountOver1500: 35,
+    firstOrderHighAmount: 25,
+    // Blacklist
+    blacklistHit: 100
+  },
+  hardBlocks: {
+    invalidPhone: true,
+    blacklistHit: true
+  },
+  suspiciousAutoApprove: false, // If false, suspicious orders need manual approval
+  updatedAt: new Date(),
+  updatedBy: 'system'
+};
+
+// ============================================
 // RATE LIMITING CONFIG
 // ============================================
 const RATE_LIMITS = {

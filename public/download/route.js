@@ -2420,6 +2420,130 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
       });
     }
 
+    // ============================================
+    // BLOG / NEWS API ENDPOINTS
+    // ============================================
+
+    // Public: Get all published blog posts
+    if (pathname === '/api/blog') {
+      const page = parseInt(searchParams.get('page')) || 1;
+      const limit = parseInt(searchParams.get('limit')) || 10;
+      const category = searchParams.get('category');
+
+      let query = { status: 'published' };
+      if (category) query.category = category;
+
+      const total = await db.collection('blog_posts').countDocuments(query);
+      const posts = await db.collection('blog_posts')
+        .find(query)
+        .sort({ publishedAt: -1, createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .toArray();
+
+      return NextResponse.json({
+        success: true,
+        data: posts,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
+    }
+
+    // Public: Get single blog post by slug
+    if (pathname.match(/^\/api\/blog\/[^\/]+$/)) {
+      const slug = pathname.split('/').pop();
+      
+      const post = await db.collection('blog_posts').findOne({ 
+        slug,
+        status: 'published'
+      });
+
+      if (!post) {
+        return NextResponse.json(
+          { success: false, error: 'Yazı bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Increment view count
+      await db.collection('blog_posts').updateOne(
+        { id: post.id },
+        { $inc: { views: 1 } }
+      );
+
+      return NextResponse.json({
+        success: true,
+        data: { ...post, views: (post.views || 0) + 1 }
+      });
+    }
+
+    // Admin: Get all blog posts (including drafts)
+    if (pathname === '/api/admin/blog') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const page = parseInt(searchParams.get('page')) || 1;
+      const limit = parseInt(searchParams.get('limit')) || 20;
+      const status = searchParams.get('status');
+
+      let query = {};
+      if (status) query.status = status;
+
+      const total = await db.collection('blog_posts').countDocuments(query);
+      const posts = await db.collection('blog_posts')
+        .find(query)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .toArray();
+
+      return NextResponse.json({
+        success: true,
+        data: posts,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
+    }
+
+    // Admin: Get single blog post for editing
+    if (pathname.match(/^\/api\/admin\/blog\/[^\/]+$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const postId = pathname.split('/').pop();
+      const post = await db.collection('blog_posts').findOne({ id: postId });
+
+      if (!post) {
+        return NextResponse.json(
+          { success: false, error: 'Yazı bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: post
+      });
+    }
+
     // Admin: Get risk logs
     if (pathname === '/api/admin/risk/logs') {
       const user = verifyAdminToken(request);
@@ -4956,6 +5080,73 @@ export async function POST(request) {
       });
     }
 
+    // ============================================
+    // BLOG POST ENDPOINTS
+    // ============================================
+
+    // Admin: Create blog post
+    if (pathname === '/api/admin/blog') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { title, content, excerpt, category, coverImage, tags, status } = body;
+
+      if (!title || !content) {
+        return NextResponse.json(
+          { success: false, error: 'Başlık ve içerik zorunludur' },
+          { status: 400 }
+        );
+      }
+
+      // Generate slug from title
+      const slug = title
+        .toLowerCase()
+        .replace(/[ğ]/g, 'g')
+        .replace(/[ü]/g, 'u')
+        .replace(/[ş]/g, 's')
+        .replace(/[ı]/g, 'i')
+        .replace(/[ö]/g, 'o')
+        .replace(/[ç]/g, 'c')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .substring(0, 100);
+
+      // Check if slug exists
+      const existingSlug = await db.collection('blog_posts').findOne({ slug });
+      const finalSlug = existingSlug ? `${slug}-${Date.now()}` : slug;
+
+      const post = {
+        id: uuidv4(),
+        title,
+        slug: finalSlug,
+        content,
+        excerpt: excerpt || content.replace(/<[^>]*>/g, '').substring(0, 200) + '...',
+        category: category || 'genel',
+        coverImage: coverImage || null,
+        tags: tags || [],
+        status: status || 'draft',
+        views: 0,
+        authorId: user.id || user.username,
+        authorName: user.username || 'Admin',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        publishedAt: status === 'published' ? new Date() : null
+      };
+
+      await db.collection('blog_posts').insertOne(post);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Blog yazısı oluşturuldu',
+        data: post
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }
@@ -5134,6 +5325,42 @@ export async function PUT(request) {
         { success: false, error: 'Yetkisiz erişim' },
         { status: 401 }
       );
+    }
+
+    // Update blog post
+    if (pathname.match(/^\/api\/admin\/blog\/[^\/]+$/)) {
+      const postId = pathname.split('/').pop();
+      
+      const existingPost = await db.collection('blog_posts').findOne({ id: postId });
+      if (!existingPost) {
+        return NextResponse.json(
+          { success: false, error: 'Yazı bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      const updateData = {
+        ...body,
+        updatedAt: new Date()
+      };
+
+      // If status changed to published and wasn't published before
+      if (body.status === 'published' && existingPost.status !== 'published') {
+        updateData.publishedAt = new Date();
+      }
+
+      await db.collection('blog_posts').updateOne(
+        { id: postId },
+        { $set: updateData }
+      );
+
+      const updated = await db.collection('blog_posts').findOne({ id: postId });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Blog yazısı güncellendi',
+        data: updated
+      });
     }
 
     // Update product
@@ -5373,6 +5600,26 @@ export async function DELETE(request) {
     }
 
     const db = await getDb();
+
+    // Delete blog post
+    if (pathname.match(/^\/api\/admin\/blog\/[^\/]+$/)) {
+      const postId = pathname.split('/').pop();
+      
+      const post = await db.collection('blog_posts').findOne({ id: postId });
+      if (!post) {
+        return NextResponse.json(
+          { success: false, error: 'Yazı bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      await db.collection('blog_posts').deleteOne({ id: postId });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Blog yazısı silindi'
+      });
+    }
 
     // Delete product (HARD DELETE - permanently remove from database)
     if (pathname.match(/^\/api\/admin\/products\/[^\/]+$/)) {

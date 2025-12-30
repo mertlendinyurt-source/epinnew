@@ -277,6 +277,41 @@ export default function AdminDashboard() {
             </svg>
             Footer Ayarları
           </Button>
+
+          {/* Güvenlik Bölümü */}
+          <div className="mt-4 pt-4 border-t border-slate-800">
+            <p className="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Güvenlik</p>
+          </div>
+          <Button
+            onClick={() => router.push('/admin/settings/risk')}
+            variant="ghost"
+            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
+          >
+            <svg className="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Risk Ayarları
+          </Button>
+          <Button
+            onClick={() => router.push('/admin/blacklist')}
+            variant="ghost"
+            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
+          >
+            <svg className="w-4 h-4 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+            </svg>
+            Kara Liste
+          </Button>
+          <Button
+            onClick={() => router.push('/admin/risk-logs')}
+            variant="ghost"
+            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
+          >
+            <svg className="w-4 h-4 mr-2 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Risk Logları
+          </Button>
         </nav>
 
         <div className="absolute bottom-4 left-4 right-4">

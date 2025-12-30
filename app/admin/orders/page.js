@@ -162,11 +162,36 @@ export default function AdminOrders() {
   const getRiskBadge = (order) => {
     if (!order.risk) return null
     
-    if (order.risk.status === 'FLAGGED') {
+    const status = order.risk.actualStatus || order.risk.status
+    
+    if (status === 'BLOCKED') {
+      return (
+        <Badge className="bg-red-700 hover:bg-red-800 text-white gap-1">
+          <Ban className="w-3 h-3" />
+          ENGELLİ
+        </Badge>
+      )
+    }
+    if (status === 'FLAGGED') {
       return (
         <Badge className="bg-red-600 hover:bg-red-700 text-white gap-1">
           <AlertTriangle className="w-3 h-3" />
           RİSKLİ ({order.risk.score})
+        </Badge>
+      )
+    }
+    if (status === 'SUSPICIOUS') {
+      return (
+        <Badge className="bg-yellow-600 hover:bg-yellow-700 text-white gap-1">
+          <AlertTriangle className="w-3 h-3" />
+          ŞÜPHELİ ({order.risk.score})
+        </Badge>
+      )
+    }
+    if (order.risk.score > 0) {
+      return (
+        <Badge className="bg-green-600 hover:bg-green-700 text-white gap-1">
+          TEMİZ ({order.risk.score})
         </Badge>
       )
     }

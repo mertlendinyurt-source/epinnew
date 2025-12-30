@@ -2412,6 +2412,154 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
       });
     }
 
+    // ============================================
+    // RISK MANAGEMENT API ENDPOINTS
+    // ============================================
+
+    // Admin: Get risk settings
+    if (pathname === '/api/admin/risk/settings') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      let settings = await db.collection('risk_settings').findOne({ id: 'main' });
+      if (!settings) {
+        // Return defaults if not configured
+        settings = { ...DEFAULT_RISK_SETTINGS, id: 'main' };
+      }
+
+      return NextResponse.json({ success: true, data: settings });
+    }
+
+    // Admin: Get blacklist
+    if (pathname === '/api/admin/risk/blacklist') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const type = searchParams.get('type');
+      const search = searchParams.get('search');
+      const page = parseInt(searchParams.get('page')) || 1;
+      const limit = parseInt(searchParams.get('limit')) || 50;
+
+      let query = {};
+      if (type) query.type = type;
+      if (search) {
+        query.value = { $regex: search, $options: 'i' };
+      }
+
+      const total = await db.collection('blacklist').countDocuments(query);
+      const items = await db.collection('blacklist')
+        .find(query)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .toArray();
+
+      return NextResponse.json({
+        success: true,
+        data: items,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
+    }
+
+    // Admin: Get risk logs
+    if (pathname === '/api/admin/risk/logs') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const from = searchParams.get('from');
+      const to = searchParams.get('to');
+      const status = searchParams.get('status');
+      const page = parseInt(searchParams.get('page')) || 1;
+      const limit = parseInt(searchParams.get('limit')) || 50;
+
+      let query = {};
+      if (from || to) {
+        query.createdAt = {};
+        if (from) query.createdAt.$gte = new Date(from);
+        if (to) query.createdAt.$lte = new Date(to);
+      }
+      if (status) query.status = status;
+
+      const total = await db.collection('risk_logs').countDocuments(query);
+      const logs = await db.collection('risk_logs')
+        .find(query)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .toArray();
+
+      // Get order info for each log
+      const orderIds = logs.map(l => l.orderId).filter(Boolean);
+      const orders = await db.collection('orders').find({ id: { $in: orderIds } }).toArray();
+      const orderMap = {};
+      orders.forEach(o => { orderMap[o.id] = o; });
+
+      const enrichedLogs = logs.map(log => ({
+        ...log,
+        order: orderMap[log.orderId] ? {
+          id: orderMap[log.orderId].id,
+          amount: orderMap[log.orderId].amount,
+          status: orderMap[log.orderId].status,
+          productTitle: orderMap[log.orderId].productTitle
+        } : null
+      }));
+
+      return NextResponse.json({
+        success: true,
+        data: enrichedLogs,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
+    }
+
+    // Admin: Get disposable domains list
+    if (pathname === '/api/admin/risk/disposable-domains') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      // Get custom domains from blacklist
+      const customDomains = await db.collection('blacklist')
+        .find({ type: 'domain', isActive: true })
+        .toArray();
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          builtIn: DISPOSABLE_EMAIL_DOMAINS,
+          custom: customDomains.map(d => d.value)
+        }
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

@@ -117,14 +117,11 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="p-8">
       <Toaster position="top-center" richColors />
       
-      {/* Sidebar */}
-      <AdminSidebar />
-
       {/* Main Content */}
-      <div className="ml-64 p-8">
+      <div>
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
           <p className="text-slate-400">Hoş geldiniz, {localStorage.getItem('adminUsername')}</p>

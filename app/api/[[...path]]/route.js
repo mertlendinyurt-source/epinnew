@@ -821,17 +821,11 @@ async function sendWelcomeEmail(db, user) {
     body: `
       <p>PINLY ailesine hos geldin!</p>
       <p>Hesabin basariyla olusturuldu. Artik en uygun fiyatlarla UC satin alabilir ve aninda teslimat alabilirsin.</p>
-      <p style="margin-top: 20px;">
-        <strong>Hesap Bilgilerin:</strong><br>
-        E-posta: ${user.email}<br>
-        Telefon: ${user.phone}
-      </p>
     `,
     cta: {
       text: 'Alisverise Basla',
       url: BASE_URL
-    },
-    info: 'Sorulariniz icin destek talebi olusturabilirsiniz.'
+    }
   };
   
   return sendEmail(db, 'welcome', user.email, content, user.id);

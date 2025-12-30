@@ -886,21 +886,18 @@ async function sendDeliveredEmail(db, order, user, product, codes) {
     title: 'Teslimat Tamamlandi',
     body: `
       <p>Merhaba ${user.firstName},</p>
-      <p>Harika haber! Siparisiniz basariyla teslim edildi. Asagida UC kodlarinizi bulabilirsiniz.</p>
+      <p>Siparisiniz basariyla teslim edildi.</p>
       
       <p style="margin-top:20px;"><strong>Siparis Bilgileri:</strong></p>
       <ul>
         <li>Urun: ${product.name}</li>
-        <li>UC Miktari: ${product.ucAmount} UC</li>
-        <li>Oyuncu: ${order.playerName} (${order.playerId})</li>
       </ul>
     `,
     codes: codes,
     cta: {
       text: 'Siparis Detaylarini Gor',
       url: `${BASE_URL}/account/orders/${order.id}`
-    },
-    warning: 'Bu kodlari kimseyle paylasmayiniz. Kodlar tek kullanimliktir.'
+    }
   };
   
   return sendEmail(db, 'delivered', user.email, content, user.id, order.id);

@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   ShoppingCart,
   Package,
-  Users,
   MessageCircle,
   FileText,
   Settings,

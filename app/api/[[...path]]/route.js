@@ -892,26 +892,25 @@ async function sendPaymentSuccessEmail(db, order, user, product) {
 
 async function sendDeliveredEmail(db, order, user, product, codes) {
   const content = {
-    subject: `Teslimat tamamlandı — #${order.id.slice(-8)}`,
-    title: 'Teslimat Tamamlandı! 🎉',
+    subject: `Teslimat tamamlandi - ${order.id.slice(-8)}`,
+    title: 'Teslimat Tamamlandi',
     body: `
       <p>Merhaba ${user.firstName},</p>
-      <p>Harika haber! Siparişiniz başarıyla teslim edildi. Aşağıda UC kodlarınızı bulabilirsiniz.</p>
+      <p>Harika haber! Siparisiniz basariyla teslim edildi. Asagida UC kodlarinizi bulabilirsiniz.</p>
       
-      <div style="margin-top: 20px; padding: 16px; background-color: #1e2229; border-radius: 8px;">
-        <table style="width: 100%; font-size: 14px; color: #a1a1aa;">
-          <tr><td style="padding: 6px 0;">Ürün:</td><td style="text-align: right; color: #fff;">${product.name}</td></tr>
-          <tr><td style="padding: 6px 0;">UC Miktarı:</td><td style="text-align: right; color: #60a5fa;">${product.ucAmount} UC</td></tr>
-          <tr><td style="padding: 6px 0;">Oyuncu:</td><td style="text-align: right; color: #fff;">${order.playerName} (${order.playerId})</td></tr>
-        </table>
-      </div>
+      <p style="margin-top:20px;"><strong>Siparis Bilgileri:</strong></p>
+      <ul>
+        <li>Urun: ${product.name}</li>
+        <li>UC Miktari: ${product.ucAmount} UC</li>
+        <li>Oyuncu: ${order.playerName} (${order.playerId})</li>
+      </ul>
     `,
     codes: codes,
     cta: {
-      text: 'Sipariş Detaylarını Gör',
+      text: 'Siparis Detaylarini Gor',
       url: `${BASE_URL}/account/orders/${order.id}`
     },
-    warning: 'Bu kodları kimseyle paylaşmayın! Kodlar tek kullanımlıktır.'
+    warning: 'Bu kodlari kimseyle paylasmayiniz. Kodlar tek kullanimliktir.'
   };
   
   return sendEmail(db, 'delivered', user.email, content, user.id, order.id);
@@ -919,25 +918,24 @@ async function sendDeliveredEmail(db, order, user, product, codes) {
 
 async function sendPendingStockEmail(db, order, user, product, message) {
   const content = {
-    subject: `Stok bekleniyor — #${order.id.slice(-8)}`,
-    title: 'Siparişiniz Beklemede 📦',
+    subject: `Stok bekleniyor - ${order.id.slice(-8)}`,
+    title: 'Siparisiniz Beklemede',
     body: `
       <p>Merhaba ${user.firstName},</p>
-      <p>Ödemeniz alındı ancak şu anda bu ürün için stok bulunmamaktadır.</p>
+      <p>Odemeniz alindi ancak su anda bu urun icin stok bulunmamaktadir.</p>
       <p><strong>Durum:</strong> ${message || 'Stok bekleniyor'}</p>
       
-      <div style="margin-top: 20px; padding: 16px; background-color: #1e2229; border-radius: 8px;">
-        <table style="width: 100%; font-size: 14px; color: #a1a1aa;">
-          <tr><td style="padding: 6px 0;">Sipariş No:</td><td style="text-align: right; color: #fff;">#${order.id.slice(-8)}</td></tr>
-          <tr><td style="padding: 6px 0;">Ürün:</td><td style="text-align: right; color: #fff;">${product.name}</td></tr>
-        </table>
-      </div>
+      <p style="margin-top:20px;"><strong>Siparis Bilgileri:</strong></p>
+      <ul>
+        <li>Siparis No: ${order.id.slice(-8)}</li>
+        <li>Urun: ${product.name}</li>
+      </ul>
     `,
     cta: {
-      text: 'Sipariş Durumunu Takip Et',
+      text: 'Siparis Durumunu Takip Et',
       url: `${BASE_URL}/account/orders/${order.id}`
     },
-    info: 'Stok geldiğinde siparişiniz otomatik olarak teslim edilecek ve size bilgi verilecektir.'
+    info: 'Stok geldiginde siparisiniz otomatik olarak teslim edilecek ve size bilgi verilecektir.'
   };
   
   return sendEmail(db, 'pending', user.email, content, user.id, order.id);
@@ -947,17 +945,15 @@ async function sendSupportReplyEmail(db, ticket, user, adminMessage) {
   const preview = adminMessage.length > 200 ? adminMessage.substring(0, 200) + '...' : adminMessage;
   
   const content = {
-    subject: `Destek talebinize yanıt var — #${ticket.id.slice(-8)}`,
-    title: 'Destek Ekibinden Yanıt 💬',
+    subject: `Destek talebinize yanit var - ${ticket.id.slice(-8)}`,
+    title: 'Destek Ekibinden Yanit',
     body: `
       <p>Merhaba ${user.firstName},</p>
-      <p>Destek talebinize yanıt verildi.</p>
+      <p>Destek talebinize yanit verildi.</p>
       
-      <div style="margin-top: 20px; padding: 20px; background-color: #1e2229; border-radius: 8px;">
-        <p style="margin: 0 0 12px 0; font-size: 12px; color: #71717a; text-transform: uppercase;">Talep: ${ticket.subject}</p>
-        <div style="padding: 16px; background-color: #12151a; border-radius: 8px; border-left: 3px solid #22c55e;">
-          <p style="margin: 0; font-size: 14px; color: #d4d4d8; line-height: 1.6;">
-            "${preview}"
+      <p style="margin-top:20px;"><strong>Talep:</strong> ${ticket.subject}</p>
+      <p style="padding:15px;background:#f5f5f5;border-left:3px solid #1e40af;">
+        "${preview}"
           </p>
         </div>
       </div>

@@ -663,8 +663,25 @@ async function createTransporter(settings) {
     auth: {
       user: settings.smtpUser,
       pass: settings.smtpPass
-    }
+    },
+    // Anti-spam headers
+    dkim: settings.dkim || undefined
   });
+}
+
+// Generate plain text version from HTML (for multipart emails)
+function htmlToPlainText(html) {
+  return html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .trim();
 }
 
 // Email log to prevent duplicates
@@ -695,122 +712,44 @@ async function logEmail(db, type, userId, to, status, orderId = null, ticketId =
 function generateEmailTemplate(content, settings = {}) {
   const siteName = settings.siteName || 'PINLY';
   
-  // Logo kullanmıyoruz - spam filtrelerini tetikliyor
-  // Sade ve temiz tasarım - yüksek text/HTML oranı
-  
-  return `
-<!DOCTYPE html>
-<html lang="tr">
+  // Çok basit ve temiz HTML - spam filtrelerinden kaçınmak için
+  return `<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${content.subject}</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>${siteName}</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f4f4f4; color: #333333;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f4;">
-    <tr>
-      <td align="center" style="padding: 30px 15px;">
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 8px;">
-          
-          <!-- Header -->
-          <tr>
-            <td style="padding: 30px 40px; background-color: #1e40af; border-radius: 8px 8px 0 0; text-align: center;">
-              <h1 style="margin: 0; font-size: 24px; font-weight: bold; color: #ffffff;">${siteName}</h1>
-            </td>
-          </tr>
-          
-          <!-- Body -->
-          <tr>
-            <td style="padding: 40px;">
-              <h2 style="margin: 0 0 20px 0; font-size: 20px; font-weight: bold; color: #1e40af;">
-                ${content.title}
-              </h2>
-              
-              <div style="font-size: 15px; line-height: 1.6; color: #555555;">
-                ${content.body}
-              </div>
-              
-              ${content.cta ? `
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
-                <tr>
-                  <td style="background-color: #1e40af; border-radius: 6px; text-align: center;">
-                    <a href="${content.cta.url}" style="display: inline-block; padding: 14px 30px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 15px;">
-                      ${content.cta.text}
-                    </a>
-                  </td>
-                </tr>
-              </table>
-              ` : ''}
-              
-              ${content.codes ? `
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px; background-color: #f8f9fa; border-radius: 6px; border: 1px solid #e9ecef;">
-                <tr>
-                  <td style="padding: 20px;">
-                    <p style="margin: 0 0 15px 0; font-size: 14px; font-weight: bold; color: #1e40af;">
-                      Teslim Edilen Kodlar:
-                    </p>
-                    ${content.codes.map(code => `
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 10px; background-color: #ffffff; border: 1px dashed #1e40af; border-radius: 4px;">
-                      <tr>
-                        <td style="padding: 12px; font-family: monospace; font-size: 14px; color: #1e40af; word-break: break-all;">
-                          ${code}
-                        </td>
-                      </tr>
-                    </table>
-                    `).join('')}
-                    <p style="margin: 15px 0 0 0; font-size: 12px; color: #dc3545;">
-                      Onemli: Bu kodlari kimseyle paylasmayiniz.
-                    </p>
-                  </td>
-                </tr>
-              </table>
-              ` : ''}
-              
-              ${content.info ? `
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 25px; background-color: #e7f3ff; border-radius: 6px; border-left: 4px solid #1e40af;">
-                <tr>
-                  <td style="padding: 15px;">
-                    <p style="margin: 0; font-size: 14px; color: #0d47a1;">
-                      ${content.info}
-                    </p>
-                  </td>
-                </tr>
-              </table>
-              ` : ''}
-              
-              ${content.warning ? `
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 25px; background-color: #fff3cd; border-radius: 6px; border-left: 4px solid #ffc107;">
-                <tr>
-                  <td style="padding: 15px;">
-                    <p style="margin: 0; font-size: 14px; color: #856404;">
-                      ${content.warning}
-                    </p>
-                  </td>
-                </tr>
-              </table>
-              ` : ''}
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="padding: 25px 40px; background-color: #f8f9fa; border-top: 1px solid #e9ecef; border-radius: 0 0 8px 8px;">
-              <p style="margin: 0 0 10px 0; font-size: 13px; color: #6c757d; text-align: center;">
-                ${siteName}
-              </p>
-              <p style="margin: 0; font-size: 12px; color: #adb5bd; text-align: center;">
-                Bu e-posta ${siteName} tarafindan gonderilmistir.
-              </p>
-            </td>
-          </tr>
-          
-        </table>
-      </td>
-    </tr>
-  </table>
+<body style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5;color:#333;margin:0;padding:20px;background:#fff;">
+
+<p style="font-size:18px;font-weight:bold;color:#1e40af;margin:0 0 20px 0;">${siteName}</p>
+
+<p style="font-size:16px;font-weight:bold;margin:0 0 15px 0;">${content.title}</p>
+
+${content.body.replace(/<p>/g, '<p style="margin:0 0 10px 0;">').replace(/<ul>/g, '<ul style="margin:10px 0;padding-left:20px;">').replace(/<li>/g, '<li style="margin:5px 0;">')}
+
+${content.cta ? `
+<p style="margin:20px 0;">
+<a href="${content.cta.url}" style="color:#1e40af;text-decoration:underline;">${content.cta.text}</a>
+</p>
+` : ''}
+
+${content.codes ? `
+<p style="margin:20px 0 10px 0;font-weight:bold;">Kodlariniz:</p>
+${content.codes.map(code => `<p style="margin:5px 0;padding:10px;background:#f5f5f5;font-family:monospace;border:1px solid #ddd;">${code}</p>`).join('')}
+<p style="margin:10px 0;color:#c00;font-size:12px;">Bu kodlari kimseyle paylasmayin.</p>
+` : ''}
+
+${content.info ? `<p style="margin:15px 0;padding:10px;background:#e7f3ff;border-left:3px solid #1e40af;">${content.info}</p>` : ''}
+
+${content.warning ? `<p style="margin:15px 0;padding:10px;background:#fff3cd;border-left:3px solid #ffc107;">${content.warning}</p>` : ''}
+
+<hr style="border:none;border-top:1px solid #eee;margin:30px 0 15px 0;">
+
+<p style="font-size:12px;color:#999;margin:0;">${siteName}</p>
+
 </body>
-</html>
-  `;
+</html>`;
 }
 
 // Email Sending Functions
@@ -845,11 +784,22 @@ async function sendEmail(db, type, to, content, userId, orderId = null, ticketId
       siteName: siteSettings?.siteName || 'PINLY'
     });
     
+    // Plain text version for multipart (helps avoid spam)
+    const text = htmlToPlainText(html);
+    
     await transporter.sendMail({
       from: `"${settings.fromName}" <${settings.fromEmail}>`,
+      replyTo: settings.fromEmail,
       to,
       subject: content.subject,
-      html
+      text: text, // Plain text version
+      html: html, // HTML version
+      headers: {
+        'X-Priority': '3',
+        'X-Mailer': 'PINLY Mailer',
+        'Precedence': 'bulk',
+        'X-Auto-Response-Suppress': 'OOF, AutoReply'
+      }
     });
     
     await logEmail(db, type, userId, to, 'sent', orderId, ticketId);
@@ -866,22 +816,22 @@ async function sendEmail(db, type, to, content, userId, orderId = null, ticketId
 // Specific Email Templates
 async function sendWelcomeEmail(db, user) {
   const content = {
-    subject: `Hoş geldin, ${user.firstName}! 🎮`,
-    title: `Merhaba ${user.firstName}!`,
+    subject: `Hos geldin ${user.firstName}`,
+    title: `Merhaba ${user.firstName}`,
     body: `
-      <p>PINLY ailesine hoş geldin!</p>
-      <p>Hesabın başarıyla oluşturuldu. Artık en uygun fiyatlarla UC satın alabilir ve anında teslimat alabilirsin.</p>
+      <p>PINLY ailesine hos geldin!</p>
+      <p>Hesabin basariyla olusturuldu. Artik en uygun fiyatlarla UC satin alabilir ve aninda teslimat alabilirsin.</p>
       <p style="margin-top: 20px;">
         <strong>Hesap Bilgilerin:</strong><br>
-        📧 E-posta: ${user.email}<br>
-        📱 Telefon: ${user.phone}
+        E-posta: ${user.email}<br>
+        Telefon: ${user.phone}
       </p>
     `,
     cta: {
-      text: 'Alışverişe Başla',
+      text: 'Alisverise Basla',
       url: BASE_URL
     },
-    info: 'Sorularınız için destek talebi oluşturabilirsiniz.'
+    info: 'Sorulariniz icin destek talebi olusturabilirsiniz.'
   };
   
   return sendEmail(db, 'welcome', user.email, content, user.id);
@@ -889,29 +839,27 @@ async function sendWelcomeEmail(db, user) {
 
 async function sendOrderCreatedEmail(db, order, user, product) {
   const content = {
-    subject: `Siparişiniz alındı — #${order.id.slice(-8)}`,
-    title: 'Siparişiniz Alındı! 🛒',
+    subject: `Siparisiniz alindi - ${order.id.slice(-8)}`,
+    title: 'Siparisiniz Alindi',
     body: `
       <p>Merhaba ${user.firstName},</p>
-      <p>Siparişiniz başarıyla oluşturuldu. Ödeme işlemini tamamladıktan sonra teslimat yapılacaktır.</p>
+      <p>Siparisiniz basariyla olusturuldu. Odeme islemini tamamladiktan sonra teslimat yapilacaktir.</p>
       
-      <div style="margin-top: 24px; padding: 20px; background-color: #1e2229; border-radius: 8px;">
-        <h4 style="margin: 0 0 16px 0; color: #fbbf24;">Sipariş Detayları</h4>
-        <table style="width: 100%; font-size: 14px; color: #a1a1aa;">
-          <tr><td style="padding: 8px 0;">Sipariş No:</td><td style="text-align: right; color: #fff;">#${order.id.slice(-8)}</td></tr>
-          <tr><td style="padding: 8px 0;">Ürün:</td><td style="text-align: right; color: #fff;">${product.name}</td></tr>
-          <tr><td style="padding: 8px 0;">UC Miktarı:</td><td style="text-align: right; color: #60a5fa;">${product.ucAmount} UC</td></tr>
-          <tr><td style="padding: 8px 0;">Oyuncu ID:</td><td style="text-align: right; color: #fff;">${order.playerId}</td></tr>
-          <tr><td style="padding: 8px 0;">Oyuncu Adı:</td><td style="text-align: right; color: #fff;">${order.playerName}</td></tr>
-          <tr style="border-top: 1px solid rgba(255,255,255,0.1);"><td style="padding: 16px 0 8px 0; font-weight: 600; color: #fff;">Toplam:</td><td style="text-align: right; font-size: 18px; font-weight: 700; color: #22c55e;">${product.price.toFixed(2)} TL</td></tr>
-        </table>
-      </div>
+      <p style="margin-top:20px;"><strong>Siparis Detaylari:</strong></p>
+      <ul>
+        <li>Siparis No: ${order.id.slice(-8)}</li>
+        <li>Urun: ${product.name}</li>
+        <li>UC Miktari: ${product.ucAmount} UC</li>
+        <li>Oyuncu ID: ${order.playerId}</li>
+        <li>Oyuncu Adi: ${order.playerName}</li>
+        <li>Toplam: ${product.price.toFixed(2)} TL</li>
+      </ul>
     `,
     cta: {
-      text: 'Siparişi Görüntüle',
+      text: 'Siparisi Goruntule',
       url: `${BASE_URL}/account/orders/${order.id}`
     },
-    info: 'Ödeme sayfasına yönlendirildiniz. Ödeme tamamlandıktan sonra teslimat otomatik yapılacaktır.'
+    info: 'Odeme sayfasina yonlendirildiniz. Odeme tamamlandiktan sonra teslimat otomatik yapilacaktir.'
   };
   
   return sendEmail(db, 'order_created', user.email, content, user.id, order.id);
@@ -919,25 +867,24 @@ async function sendOrderCreatedEmail(db, order, user, product) {
 
 async function sendPaymentSuccessEmail(db, order, user, product) {
   const content = {
-    subject: `Ödemeniz alındı — #${order.id.slice(-8)}`,
-    title: 'Ödeme Başarılı! ✅',
+    subject: `Odemeniz alindi - ${order.id.slice(-8)}`,
+    title: 'Odeme Basarili',
     body: `
       <p>Merhaba ${user.firstName},</p>
-      <p>Ödemeniz başarıyla alındı! Siparişiniz işleme alındı ve teslimat hazırlanıyor.</p>
+      <p>Odemeniz basariyla alindi. Siparisiniz isleme alindi ve teslimat hazirlaniyor.</p>
       
-      <div style="margin-top: 24px; padding: 20px; background-color: #1e2229; border-radius: 8px;">
-        <table style="width: 100%; font-size: 14px; color: #a1a1aa;">
-          <tr><td style="padding: 8px 0;">Sipariş No:</td><td style="text-align: right; color: #fff;">#${order.id.slice(-8)}</td></tr>
-          <tr><td style="padding: 8px 0;">Ürün:</td><td style="text-align: right; color: #fff;">${product.name}</td></tr>
-          <tr><td style="padding: 8px 0;">Ödenen Tutar:</td><td style="text-align: right; color: #22c55e;">${product.price.toFixed(2)} TL</td></tr>
-        </table>
-      </div>
+      <p style="margin-top:20px;"><strong>Siparis Bilgileri:</strong></p>
+      <ul>
+        <li>Siparis No: ${order.id.slice(-8)}</li>
+        <li>Urun: ${product.name}</li>
+        <li>Odenen Tutar: ${product.price.toFixed(2)} TL</li>
+      </ul>
     `,
     cta: {
-      text: 'Sipariş Durumunu Kontrol Et',
+      text: 'Siparis Durumunu Kontrol Et',
       url: `${BASE_URL}/account/orders/${order.id}`
     },
-    info: 'Teslimat tamamlandığında size tekrar bilgi vereceğiz.'
+    info: 'Teslimat tamamlandiginda size tekrar bilgi verecegiz.'
   };
   
   return sendEmail(db, 'paid', user.email, content, user.id, order.id);
@@ -945,26 +892,25 @@ async function sendPaymentSuccessEmail(db, order, user, product) {
 
 async function sendDeliveredEmail(db, order, user, product, codes) {
   const content = {
-    subject: `Teslimat tamamlandı — #${order.id.slice(-8)}`,
-    title: 'Teslimat Tamamlandı! 🎉',
+    subject: `Teslimat tamamlandi - ${order.id.slice(-8)}`,
+    title: 'Teslimat Tamamlandi',
     body: `
       <p>Merhaba ${user.firstName},</p>
-      <p>Harika haber! Siparişiniz başarıyla teslim edildi. Aşağıda UC kodlarınızı bulabilirsiniz.</p>
+      <p>Harika haber! Siparisiniz basariyla teslim edildi. Asagida UC kodlarinizi bulabilirsiniz.</p>
       
-      <div style="margin-top: 20px; padding: 16px; background-color: #1e2229; border-radius: 8px;">
-        <table style="width: 100%; font-size: 14px; color: #a1a1aa;">
-          <tr><td style="padding: 6px 0;">Ürün:</td><td style="text-align: right; color: #fff;">${product.name}</td></tr>
-          <tr><td style="padding: 6px 0;">UC Miktarı:</td><td style="text-align: right; color: #60a5fa;">${product.ucAmount} UC</td></tr>
-          <tr><td style="padding: 6px 0;">Oyuncu:</td><td style="text-align: right; color: #fff;">${order.playerName} (${order.playerId})</td></tr>
-        </table>
-      </div>
+      <p style="margin-top:20px;"><strong>Siparis Bilgileri:</strong></p>
+      <ul>
+        <li>Urun: ${product.name}</li>
+        <li>UC Miktari: ${product.ucAmount} UC</li>
+        <li>Oyuncu: ${order.playerName} (${order.playerId})</li>
+      </ul>
     `,
     codes: codes,
     cta: {
-      text: 'Sipariş Detaylarını Gör',
+      text: 'Siparis Detaylarini Gor',
       url: `${BASE_URL}/account/orders/${order.id}`
     },
-    warning: 'Bu kodları kimseyle paylaşmayın! Kodlar tek kullanımlıktır.'
+    warning: 'Bu kodlari kimseyle paylasmayiniz. Kodlar tek kullanimliktir.'
   };
   
   return sendEmail(db, 'delivered', user.email, content, user.id, order.id);
@@ -972,25 +918,24 @@ async function sendDeliveredEmail(db, order, user, product, codes) {
 
 async function sendPendingStockEmail(db, order, user, product, message) {
   const content = {
-    subject: `Stok bekleniyor — #${order.id.slice(-8)}`,
-    title: 'Siparişiniz Beklemede 📦',
+    subject: `Stok bekleniyor - ${order.id.slice(-8)}`,
+    title: 'Siparisiniz Beklemede',
     body: `
       <p>Merhaba ${user.firstName},</p>
-      <p>Ödemeniz alındı ancak şu anda bu ürün için stok bulunmamaktadır.</p>
+      <p>Odemeniz alindi ancak su anda bu urun icin stok bulunmamaktadir.</p>
       <p><strong>Durum:</strong> ${message || 'Stok bekleniyor'}</p>
       
-      <div style="margin-top: 20px; padding: 16px; background-color: #1e2229; border-radius: 8px;">
-        <table style="width: 100%; font-size: 14px; color: #a1a1aa;">
-          <tr><td style="padding: 6px 0;">Sipariş No:</td><td style="text-align: right; color: #fff;">#${order.id.slice(-8)}</td></tr>
-          <tr><td style="padding: 6px 0;">Ürün:</td><td style="text-align: right; color: #fff;">${product.name}</td></tr>
-        </table>
-      </div>
+      <p style="margin-top:20px;"><strong>Siparis Bilgileri:</strong></p>
+      <ul>
+        <li>Siparis No: ${order.id.slice(-8)}</li>
+        <li>Urun: ${product.name}</li>
+      </ul>
     `,
     cta: {
-      text: 'Sipariş Durumunu Takip Et',
+      text: 'Siparis Durumunu Takip Et',
       url: `${BASE_URL}/account/orders/${order.id}`
     },
-    info: 'Stok geldiğinde siparişiniz otomatik olarak teslim edilecek ve size bilgi verilecektir.'
+    info: 'Stok geldiginde siparisiniz otomatik olarak teslim edilecek ve size bilgi verilecektir.'
   };
   
   return sendEmail(db, 'pending', user.email, content, user.id, order.id);
@@ -1000,26 +945,23 @@ async function sendSupportReplyEmail(db, ticket, user, adminMessage) {
   const preview = adminMessage.length > 200 ? adminMessage.substring(0, 200) + '...' : adminMessage;
   
   const content = {
-    subject: `Destek talebinize yanıt var — #${ticket.id.slice(-8)}`,
-    title: 'Destek Ekibinden Yanıt 💬',
+    subject: `Destek talebinize yanit var - ${ticket.id.slice(-8)}`,
+    title: 'Destek Ekibinden Yanit',
     body: `
       <p>Merhaba ${user.firstName},</p>
-      <p>Destek talebinize yanıt verildi.</p>
+      <p>Destek talebinize yanit verildi.</p>
       
-      <div style="margin-top: 20px; padding: 20px; background-color: #1e2229; border-radius: 8px;">
-        <p style="margin: 0 0 12px 0; font-size: 12px; color: #71717a; text-transform: uppercase;">Talep: ${ticket.subject}</p>
-        <div style="padding: 16px; background-color: #12151a; border-radius: 8px; border-left: 3px solid #22c55e;">
-          <p style="margin: 0; font-size: 14px; color: #d4d4d8; line-height: 1.6;">
-            "${preview}"
+      <p style="margin-top:20px;"><strong>Talep:</strong> ${ticket.subject}</p>
+      <p style="padding:15px;background:#f5f5f5;border-left:3px solid #1e40af;">
+        "${preview}"
           </p>
-        </div>
-      </div>
+      </p>
     `,
     cta: {
-      text: 'Yanıtı Görüntüle',
+      text: 'Yaniti Goruntule',
       url: `${BASE_URL}/account/support/${ticket.id}`
     },
-    info: 'Artık siz de yanıt verebilirsiniz.'
+    info: 'Artik siz de yanit verebilirsiniz.'
   };
   
   // Support replies can be multiple, so skip duplicate check
@@ -1028,22 +970,20 @@ async function sendSupportReplyEmail(db, ticket, user, adminMessage) {
 
 async function sendPasswordChangedEmail(db, user) {
   const content = {
-    subject: 'Şifreniz değiştirildi ⚠️',
-    title: 'Şifre Değişikliği Bildirimi',
+    subject: 'Sifreniz degistirildi',
+    title: 'Sifre Degisikligi Bildirimi',
     body: `
       <p>Merhaba ${user.firstName},</p>
-      <p>Hesabınızın şifresi başarıyla değiştirildi.</p>
+      <p>Hesabinizin sifresi basariyla degistirildi.</p>
       
-      <div style="margin-top: 20px; padding: 16px; background-color: #1e2229; border-radius: 8px;">
-        <p style="margin: 0; font-size: 14px; color: #a1a1aa;">
-          📅 Tarih: ${new Date().toLocaleString('tr-TR')}<br>
-          📧 Hesap: ${user.email}
-        </p>
-      </div>
+      <p style="margin-top:20px;">
+        Tarih: ${new Date().toLocaleString('tr-TR')}<br>
+        Hesap: ${user.email}
+      </p>
     `,
-    warning: 'Bu işlemi siz yapmadıysanız, hemen destek ekibiyle iletişime geçin!',
+    warning: 'Bu islemi siz yapmadiysan, hemen destek ekibiyle iletisime gecin!',
     cta: {
-      text: 'Destek Talebi Oluştur',
+      text: 'Destek Talebi Olustur',
       url: `${BASE_URL}/account/support/new`
     }
   };
@@ -2909,33 +2849,41 @@ export async function POST(request) {
         const siteSettings = await db.collection('site_settings').findOne({ id: 'main' });
 
         const testContent = {
-          subject: '🧪 Test E-postası - PINLY',
-          title: 'Test E-postası Başarılı!',
+          subject: 'Test E-postasi - PINLY',
+          title: 'Test E-postasi Basarili',
           body: `
             <p>Merhaba,</p>
-            <p>Bu bir test e-postasıdır. E-posta sisteminiz doğru yapılandırılmış ve çalışıyor!</p>
+            <p>Bu bir test e-postasdir. E-posta sisteminiz dogru yapilandirilmis ve calisiyor.</p>
             <p><strong>SMTP Bilgileri:</strong></p>
-            <ul style="color: #a1a1aa;">
+            <ul>
               <li>Host: ${settings.smtpHost}</li>
               <li>Port: ${settings.smtpPort}</li>
-              <li>Güvenli: ${settings.smtpSecure ? 'Evet' : 'Hayır'}</li>
-              <li>Gönderen: ${settings.fromEmail}</li>
+              <li>Guvenli: ${settings.smtpSecure ? 'Evet' : 'Hayir'}</li>
+              <li>Gonderen: ${settings.fromEmail}</li>
             </ul>
-            <p style="margin-top: 20px; color: #22c55e;">✅ E-posta sistemi çalışıyor!</p>
+            <p style="margin-top:20px;color:#22c55e;">E-posta sistemi calisiyor.</p>
           `,
-          info: 'Bu e-posta admin panelinden gönderilen bir test mesajıdır.'
+          info: 'Bu e-posta admin panelinden gonderilen bir test mesajidir.'
         };
 
         const html = generateEmailTemplate(testContent, {
           logoUrl: siteSettings?.logoUrl,
           siteName: siteSettings?.siteName || 'PINLY'
         });
+        
+        const text = htmlToPlainText(html);
 
         await transporter.sendMail({
           from: `"${settings.fromName}" <${settings.fromEmail}>`,
+          replyTo: settings.fromEmail,
           to: settings.testRecipientEmail,
           subject: testContent.subject,
-          html
+          text: text,
+          html: html,
+          headers: {
+            'X-Priority': '3',
+            'X-Mailer': 'PINLY Mailer'
+          }
         });
 
         // Log test email

@@ -1058,6 +1058,23 @@ export async function GET(request) {
         .sort({ createdAt: -1 })
         .toArray();
       
+      // Get user details for each order
+      const userIds = [...new Set(orders.map(o => o.userId).filter(Boolean))];
+      const users = await db.collection('users').find({ id: { $in: userIds } }).toArray();
+      const userMap = {};
+      users.forEach(u => { userMap[u.id] = u; });
+      
+      // Enrich orders with user info
+      const enrichedOrders = orders.map(order => {
+        const user = userMap[order.userId];
+        return {
+          ...order,
+          userEmail: user?.email || null,
+          userPhone: user?.phone || null,
+          userName: user?.name || user?.email?.split('@')[0] || null
+        };
+      });
+      
       // Add flagged count for badge
       const flaggedCount = await db.collection('orders').countDocuments({ 
         'risk.status': 'FLAGGED',
@@ -1066,7 +1083,7 @@ export async function GET(request) {
       
       return NextResponse.json({ 
         success: true, 
-        data: orders,
+        data: enrichedOrders,
         meta: { flaggedCount }
       });
     }
@@ -1091,12 +1108,33 @@ export async function GET(request) {
         );
       }
 
+      // Get user details
+      let userInfo = null;
+      if (order.userId) {
+        const orderUser = await db.collection('users').findOne({ id: order.userId });
+        if (orderUser) {
+          userInfo = {
+            email: orderUser.email,
+            phone: orderUser.phone,
+            name: orderUser.name || orderUser.email?.split('@')[0]
+          };
+        }
+      }
+
       // Get payment details
       const payment = await db.collection('payments').findOne({ orderId });
       
       return NextResponse.json({
         success: true,
-        data: { order, payment }
+        data: { 
+          order: {
+            ...order,
+            userEmail: userInfo?.email || null,
+            userPhone: userInfo?.phone || null,
+            userName: userInfo?.name || null
+          }, 
+          payment 
+        }
       });
     }
 

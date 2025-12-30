@@ -335,18 +335,20 @@ async function calculateOrderRisk(db, order, user, request) {
     score += weights.phoneEmpty || 40;
     reasons.push({ code: 'PHONE_EMPTY', label: 'Telefon numarası boş', points: weights.phoneEmpty || 40 });
   } else {
-    // TR order + phone doesn't start with 5
-    const isTROrder = order.region === 'TR' || order.currency === 'TRY';
-    if (isTROrder && !phone.startsWith('5') && !phone.startsWith('905')) {
+    // TR phone check - Site varsayılan olarak TR için çalışıyor
+    // TR numaraları 5 ile başlamalı (05xx veya 5xx formatında)
+    const cleanPhone = phone.replace(/^(90|0)/, ''); // Remove country code and leading 0
+    
+    // Check if phone starts with 5 (Turkish mobile numbers)
+    if (!cleanPhone.startsWith('5')) {
       score += weights.phoneTRNotStartsWith5 || 30;
-      reasons.push({ code: 'PHONE_TR_FORMAT', label: 'TR siparişi - telefon 5 ile başlamıyor', points: weights.phoneTRNotStartsWith5 || 30 });
+      reasons.push({ code: 'PHONE_TR_FORMAT', label: 'TR telefon numarası 5 ile başlamalı', points: weights.phoneTRNotStartsWith5 || 30 });
     }
     
-    // Phone length check (should be 10 or 11 digits for TR)
-    const cleanPhone = phone.replace(/^90/, ''); // Remove country code
-    if (cleanPhone.length < 10 || cleanPhone.length > 11) {
+    // Phone length check (should be 10 digits for TR after removing country code)
+    if (cleanPhone.length !== 10) {
       score += weights.phoneInvalidLength || 20;
-      reasons.push({ code: 'PHONE_LENGTH', label: 'Telefon uzunluğu geçersiz', points: weights.phoneInvalidLength || 20 });
+      reasons.push({ code: 'PHONE_LENGTH', label: `Telefon uzunluğu geçersiz (${cleanPhone.length} hane)`, points: weights.phoneInvalidLength || 20 });
     }
   }
 

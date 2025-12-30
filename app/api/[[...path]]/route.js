@@ -663,8 +663,25 @@ async function createTransporter(settings) {
     auth: {
       user: settings.smtpUser,
       pass: settings.smtpPass
-    }
+    },
+    // Anti-spam headers
+    dkim: settings.dkim || undefined
   });
+}
+
+// Generate plain text version from HTML (for multipart emails)
+function htmlToPlainText(html) {
+  return html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .trim();
 }
 
 // Email log to prevent duplicates

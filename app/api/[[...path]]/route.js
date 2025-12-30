@@ -270,9 +270,8 @@ const AUDIT_ACTIONS = {
 };
 
 // ============================================
-// RISK SCORING SYSTEM
+// RISK SCORING SYSTEM (Dynamic from DB)
 // ============================================
-const RISK_THRESHOLD = 40; // Orders with score >= 40 are flagged
 
 async function calculateOrderRisk(db, order, user, request) {
   // Get risk settings from database or use defaults

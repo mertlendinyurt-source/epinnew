@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LayoutDashboard, Package, ShoppingBag, LogOut, Search, Filter, Image as ImageIcon, AlertTriangle, CheckCircle, XCircle, Shield } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingBag, LogOut, Search, Filter, Image as ImageIcon, AlertTriangle, CheckCircle, XCircle, Shield, Ban } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -162,11 +162,36 @@ export default function AdminOrders() {
   const getRiskBadge = (order) => {
     if (!order.risk) return null
     
-    if (order.risk.status === 'FLAGGED') {
+    const status = order.risk.actualStatus || order.risk.status
+    
+    if (status === 'BLOCKED') {
+      return (
+        <Badge className="bg-red-700 hover:bg-red-800 text-white gap-1">
+          <Ban className="w-3 h-3" />
+          ENGELLİ
+        </Badge>
+      )
+    }
+    if (status === 'FLAGGED') {
       return (
         <Badge className="bg-red-600 hover:bg-red-700 text-white gap-1">
           <AlertTriangle className="w-3 h-3" />
           RİSKLİ ({order.risk.score})
+        </Badge>
+      )
+    }
+    if (status === 'SUSPICIOUS') {
+      return (
+        <Badge className="bg-yellow-600 hover:bg-yellow-700 text-white gap-1">
+          <AlertTriangle className="w-3 h-3" />
+          ŞÜPHELİ ({order.risk.score})
+        </Badge>
+      )
+    }
+    if (order.risk.score > 0) {
+      return (
+        <Badge className="bg-green-600 hover:bg-green-700 text-white gap-1">
+          TEMİZ ({order.risk.score})
         </Badge>
       )
     }
@@ -479,40 +504,87 @@ export default function AdminOrders() {
                 </div>
               </div>
 
-              {/* Risk Section */}
+              {/* Risk Section - Enhanced */}
               {selectedOrder.risk && (
-                <div className="bg-slate-800 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Shield className={`w-5 h-5 ${selectedOrder.risk.status === 'FLAGGED' ? 'text-red-400' : 'text-green-400'}`} />
-                    <h3 className="text-white font-medium">Risk Analizi</h3>
-                  </div>
-                  <div className="flex items-center gap-4 mb-3">
-                    <div>
-                      <span className="text-slate-400 text-sm">Skor:</span>
-                      <span className={`ml-2 font-bold ${selectedOrder.risk.score >= 40 ? 'text-red-400' : 'text-green-400'}`}>
-                        {selectedOrder.risk.score}/100
-                      </span>
+                <div className={`rounded-lg p-4 border ${
+                  selectedOrder.risk.status === 'FLAGGED' || selectedOrder.risk.status === 'BLOCKED'
+                    ? 'bg-red-900/20 border-red-700/50'
+                    : selectedOrder.risk.status === 'SUSPICIOUS'
+                    ? 'bg-yellow-900/20 border-yellow-700/50'
+                    : 'bg-green-900/20 border-green-700/50'
+                }`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Shield className={`w-5 h-5 ${
+                        selectedOrder.risk.status === 'FLAGGED' || selectedOrder.risk.status === 'BLOCKED'
+                          ? 'text-red-400'
+                          : selectedOrder.risk.status === 'SUSPICIOUS'
+                          ? 'text-yellow-400'
+                          : 'text-green-400'
+                      }`} />
+                      <h3 className="text-white font-medium">Risk Analizi</h3>
                     </div>
-                    <div>
-                      <span className="text-slate-400 text-sm">Durum:</span>
-                      {selectedOrder.risk.status === 'FLAGGED' ? (
-                        <Badge className="ml-2 bg-red-600">RİSKLİ</Badge>
+                    {selectedOrder.risk.isTestMode && (
+                      <span className="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded">
+                        TEST MODU
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                      <p className="text-slate-400 text-xs mb-1">Risk Skoru</p>
+                      <p className={`text-2xl font-bold ${
+                        selectedOrder.risk.score >= 60 ? 'text-red-400' :
+                        selectedOrder.risk.score >= 30 ? 'text-yellow-400' :
+                        'text-green-400'
+                      }`}>
+                        {selectedOrder.risk.score}/100
+                      </p>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                      <p className="text-slate-400 text-xs mb-1">Risk Durumu</p>
+                      {selectedOrder.risk.status === 'BLOCKED' ? (
+                        <Badge className="bg-red-600">ENGELLENDİ</Badge>
+                      ) : selectedOrder.risk.status === 'FLAGGED' ? (
+                        <Badge className="bg-red-600">RİSKLİ</Badge>
+                      ) : selectedOrder.risk.status === 'SUSPICIOUS' ? (
+                        <Badge className="bg-yellow-600">ŞÜPHELİ</Badge>
                       ) : (
-                        <Badge className="ml-2 bg-green-600">TEMİZ</Badge>
+                        <Badge className="bg-green-600">TEMİZ</Badge>
                       )}
                     </div>
                   </div>
+                  
                   {selectedOrder.risk.reasons?.length > 0 && (
                     <div>
                       <p className="text-slate-400 text-sm mb-2">Risk Sebepleri:</p>
-                      <ul className="space-y-1">
+                      <div className="space-y-1 max-h-40 overflow-y-auto">
                         {selectedOrder.risk.reasons.map((reason, i) => (
-                          <li key={i} className="text-orange-300 text-sm flex items-center gap-2">
-                            <AlertTriangle className="w-3 h-3" />
-                            {reason}
-                          </li>
+                          <div key={i} className="flex items-center justify-between p-2 bg-slate-800/50 rounded text-sm">
+                            <div className="flex items-center gap-2">
+                              <AlertTriangle className="w-3 h-3 text-yellow-500" />
+                              <span className="text-slate-300">{reason.label || reason}</span>
+                            </div>
+                            {reason.points && (
+                              <span className="text-red-400 font-semibold">+{reason.points}</span>
+                            )}
+                          </div>
                         ))}
-                      </ul>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Warning for risky orders */}
+                  {(selectedOrder.risk.status === 'FLAGGED' || selectedOrder.risk.status === 'BLOCKED') && (
+                    <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm text-red-200">
+                          <p className="font-semibold">Dikkat!</p>
+                          <p>Bu sipariş riskli olarak işaretlendi. Teslimat yapılmadan önce manuel kontrol yapmanız önerilir. Gerekirse Shopier üzerinden iade yapabilirsiniz.</p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

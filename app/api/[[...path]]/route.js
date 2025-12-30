@@ -955,14 +955,13 @@ async function sendSupportReplyEmail(db, ticket, user, adminMessage) {
       <p style="padding:15px;background:#f5f5f5;border-left:3px solid #1e40af;">
         "${preview}"
           </p>
-        </div>
-      </div>
+      </p>
     `,
     cta: {
-      text: 'Yanıtı Görüntüle',
+      text: 'Yaniti Goruntule',
       url: `${BASE_URL}/account/support/${ticket.id}`
     },
-    info: 'Artık siz de yanıt verebilirsiniz.'
+    info: 'Artik siz de yanit verebilirsiniz.'
   };
   
   // Support replies can be multiple, so skip duplicate check
@@ -971,22 +970,20 @@ async function sendSupportReplyEmail(db, ticket, user, adminMessage) {
 
 async function sendPasswordChangedEmail(db, user) {
   const content = {
-    subject: 'Şifreniz değiştirildi ⚠️',
-    title: 'Şifre Değişikliği Bildirimi',
+    subject: 'Sifreniz degistirildi',
+    title: 'Sifre Degisikligi Bildirimi',
     body: `
       <p>Merhaba ${user.firstName},</p>
-      <p>Hesabınızın şifresi başarıyla değiştirildi.</p>
+      <p>Hesabinizin sifresi basariyla degistirildi.</p>
       
-      <div style="margin-top: 20px; padding: 16px; background-color: #1e2229; border-radius: 8px;">
-        <p style="margin: 0; font-size: 14px; color: #a1a1aa;">
-          📅 Tarih: ${new Date().toLocaleString('tr-TR')}<br>
-          📧 Hesap: ${user.email}
-        </p>
-      </div>
+      <p style="margin-top:20px;">
+        Tarih: ${new Date().toLocaleString('tr-TR')}<br>
+        Hesap: ${user.email}
+      </p>
     `,
-    warning: 'Bu işlemi siz yapmadıysanız, hemen destek ekibiyle iletişime geçin!',
+    warning: 'Bu islemi siz yapmadiysan, hemen destek ekibiyle iletisime gecin!',
     cta: {
-      text: 'Destek Talebi Oluştur',
+      text: 'Destek Talebi Olustur',
       url: `${BASE_URL}/account/support/new`
     }
   };

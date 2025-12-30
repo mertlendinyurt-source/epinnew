@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   ShoppingCart,
   Package,
-  Users,
   MessageCircle,
   FileText,
   Settings,
@@ -38,7 +37,6 @@ const menuGroups = [
       { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { href: '/admin/orders', icon: ShoppingCart, label: 'Siparişler' },
       { href: '/admin/products', icon: Package, label: 'Ürünler' },
-      { href: '/admin/users', icon: Users, label: 'Kullanıcılar' },
       { href: '/admin/support', icon: MessageCircle, label: 'Destek' },
     ]
   },
@@ -48,8 +46,9 @@ const menuGroups = [
     icon: FolderOpen,
     items: [
       { href: '/admin/blog', icon: Newspaper, label: 'Blog / Haberler' },
-      { href: '/admin/legal-pages', icon: Briefcase, label: 'Kurumsal Sayfalar' },
-      { href: '/admin/games', icon: Gamepad2, label: 'Oyun İçeriği' },
+      { href: '/admin/content/legal', icon: Briefcase, label: 'Kurumsal Sayfalar' },
+      { href: '/admin/content/pubg', icon: Gamepad2, label: 'Oyun İçeriği' },
+      { href: '/admin/reviews', icon: Star, label: 'Değerlendirmeler', color: 'text-yellow-400' },
     ]
   },
   {
@@ -62,8 +61,8 @@ const menuGroups = [
       { href: '/admin/settings/seo', icon: Search, label: 'SEO & Analytics' },
       { href: '/admin/settings/oauth', icon: Globe, label: 'OAuth Ayarları' },
       { href: '/admin/settings/regions', icon: Globe, label: 'Bölge Ayarları' },
-      { href: '/admin/footer-settings', icon: FileText, label: 'Footer Ayarları' },
-      { href: '/admin/settings/payment', icon: CreditCard, label: 'Ödeme Ayarları' },
+      { href: '/admin/settings/footer', icon: FileText, label: 'Footer Ayarları' },
+      { href: '/admin/settings/payments', icon: CreditCard, label: 'Ödeme Ayarları' },
     ]
   },
   {

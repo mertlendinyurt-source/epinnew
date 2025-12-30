@@ -1058,6 +1058,23 @@ export async function GET(request) {
         .sort({ createdAt: -1 })
         .toArray();
       
+      // Get user details for each order
+      const userIds = [...new Set(orders.map(o => o.userId).filter(Boolean))];
+      const users = await db.collection('users').find({ id: { $in: userIds } }).toArray();
+      const userMap = {};
+      users.forEach(u => { userMap[u.id] = u; });
+      
+      // Enrich orders with user info
+      const enrichedOrders = orders.map(order => {
+        const user = userMap[order.userId];
+        return {
+          ...order,
+          userEmail: user?.email || null,
+          userPhone: user?.phone || null,
+          userName: user?.name || user?.email?.split('@')[0] || null
+        };
+      });
+      
       // Add flagged count for badge
       const flaggedCount = await db.collection('orders').countDocuments({ 
         'risk.status': 'FLAGGED',
@@ -1066,7 +1083,7 @@ export async function GET(request) {
       
       return NextResponse.json({ 
         success: true, 
-        data: orders,
+        data: enrichedOrders,
         meta: { flaggedCount }
       });
     }

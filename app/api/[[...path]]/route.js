@@ -2859,33 +2859,41 @@ export async function POST(request) {
         const siteSettings = await db.collection('site_settings').findOne({ id: 'main' });
 
         const testContent = {
-          subject: '🧪 Test E-postası - PINLY',
-          title: 'Test E-postası Başarılı!',
+          subject: 'Test E-postasi - PINLY',
+          title: 'Test E-postasi Basarili',
           body: `
             <p>Merhaba,</p>
-            <p>Bu bir test e-postasıdır. E-posta sisteminiz doğru yapılandırılmış ve çalışıyor!</p>
+            <p>Bu bir test e-postasdir. E-posta sisteminiz dogru yapilandirilmis ve calisiyor.</p>
             <p><strong>SMTP Bilgileri:</strong></p>
-            <ul style="color: #a1a1aa;">
+            <ul>
               <li>Host: ${settings.smtpHost}</li>
               <li>Port: ${settings.smtpPort}</li>
-              <li>Güvenli: ${settings.smtpSecure ? 'Evet' : 'Hayır'}</li>
-              <li>Gönderen: ${settings.fromEmail}</li>
+              <li>Guvenli: ${settings.smtpSecure ? 'Evet' : 'Hayir'}</li>
+              <li>Gonderen: ${settings.fromEmail}</li>
             </ul>
-            <p style="margin-top: 20px; color: #22c55e;">✅ E-posta sistemi çalışıyor!</p>
+            <p style="margin-top:20px;color:#22c55e;">E-posta sistemi calisiyor.</p>
           `,
-          info: 'Bu e-posta admin panelinden gönderilen bir test mesajıdır.'
+          info: 'Bu e-posta admin panelinden gonderilen bir test mesajidir.'
         };
 
         const html = generateEmailTemplate(testContent, {
           logoUrl: siteSettings?.logoUrl,
           siteName: siteSettings?.siteName || 'PINLY'
         });
+        
+        const text = htmlToPlainText(html);
 
         await transporter.sendMail({
           from: `"${settings.fromName}" <${settings.fromEmail}>`,
+          replyTo: settings.fromEmail,
           to: settings.testRecipientEmail,
           subject: testContent.subject,
-          html
+          text: text,
+          html: html,
+          headers: {
+            'X-Priority': '3',
+            'X-Mailer': 'PINLY Mailer'
+          }
         });
 
         // Log test email

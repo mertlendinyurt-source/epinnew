@@ -5601,6 +5601,26 @@ export async function DELETE(request) {
 
     const db = await getDb();
 
+    // Delete blog post
+    if (pathname.match(/^\/api\/admin\/blog\/[^\/]+$/)) {
+      const postId = pathname.split('/').pop();
+      
+      const post = await db.collection('blog_posts').findOne({ id: postId });
+      if (!post) {
+        return NextResponse.json(
+          { success: false, error: 'Yazı bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      await db.collection('blog_posts').deleteOne({ id: postId });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Blog yazısı silindi'
+      });
+    }
+
     // Delete product (HARD DELETE - permanently remove from database)
     if (pathname.match(/^\/api\/admin\/products\/[^\/]+$/)) {
       const user = verifyAdminToken(request);

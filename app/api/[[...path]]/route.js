@@ -842,7 +842,7 @@ async function sendOrderCreatedEmail(db, order, user, product) {
       <p style="margin-top:20px;"><strong>Siparis Detaylari:</strong></p>
       <ul>
         <li>Siparis No: ${order.id.slice(-8)}</li>
-        <li>Urun: ${product.name}</li>
+        <li>Urun: ${product.title}</li>
         <li>Toplam: ${product.price.toFixed(2)} TL</li>
       </ul>
     `,
@@ -866,7 +866,7 @@ async function sendPaymentSuccessEmail(db, order, user, product) {
       <p style="margin-top:20px;"><strong>Siparis Bilgileri:</strong></p>
       <ul>
         <li>Siparis No: ${order.id.slice(-8)}</li>
-        <li>Urun: ${product.name}</li>
+        <li>Urun: ${product.title}</li>
         <li>Odenen Tutar: ${product.price.toFixed(2)} TL</li>
       </ul>
     `,
@@ -890,7 +890,7 @@ async function sendDeliveredEmail(db, order, user, product, codes) {
       
       <p style="margin-top:20px;"><strong>Siparis Bilgileri:</strong></p>
       <ul>
-        <li>Urun: ${product.name}</li>
+        <li>Urun: ${product.title}</li>
       </ul>
     `,
     codes: codes,
@@ -915,7 +915,7 @@ async function sendPendingStockEmail(db, order, user, product, message) {
       <p style="margin-top:20px;"><strong>Siparis Bilgileri:</strong></p>
       <ul>
         <li>Siparis No: ${order.id.slice(-8)}</li>
-        <li>Urun: ${product.name}</li>
+        <li>Urun: ${product.title}</li>
       </ul>
     `,
     cta: {

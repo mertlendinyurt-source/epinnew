@@ -3689,21 +3689,38 @@ export async function POST(request) {
           {
             $set: {
               risk: riskResult,
-              'meta.ip': getClientIP(request)
+              'meta.ip': getClientIP(request),
+              'meta.userAgent': request.headers.get('user-agent')?.substring(0, 500) || ''
             }
           }
         );
 
-        // If FLAGGED - HOLD delivery, don't assign stock
-        if (riskResult.status === 'FLAGGED') {
+        // Get risk settings for behavior control
+        let riskSettings = await db.collection('risk_settings').findOne({ id: 'main' });
+        if (!riskSettings) {
+          riskSettings = DEFAULT_RISK_SETTINGS;
+        }
+
+        // Determine delivery behavior based on risk status
+        const actualStatus = riskResult.actualStatus || riskResult.status;
+        const shouldHoldDelivery = 
+          actualStatus === 'FLAGGED' || 
+          actualStatus === 'BLOCKED' ||
+          (actualStatus === 'SUSPICIOUS' && !riskSettings.suspiciousAutoApprove);
+
+        // If FLAGGED/BLOCKED/SUSPICIOUS - HOLD delivery, don't assign stock
+        if (shouldHoldDelivery && !riskSettings.isTestMode) {
           await db.collection('orders').updateOne(
             { id: order.id },
             {
               $set: {
                 delivery: {
                   status: 'hold',
-                  message: 'Sipariş kontrol altında',
-                  holdReason: 'risk_flagged',
+                  message: actualStatus === 'BLOCKED' ? 'Sipariş engellendi' : 
+                           actualStatus === 'FLAGGED' ? 'Sipariş kontrol altında - Riskli' :
+                           'Sipariş kontrol altında - Şüpheli',
+                  holdReason: actualStatus === 'BLOCKED' ? 'risk_blocked' : 
+                              actualStatus === 'FLAGGED' ? 'risk_flagged' : 'risk_suspicious',
                   items: []
                 }
               }
@@ -3713,10 +3730,11 @@ export async function POST(request) {
           // Log the risk flag
           await logAuditAction(db, AUDIT_ACTIONS.ORDER_RISK_FLAG, 'system', 'order', order.id, request, {
             riskScore: riskResult.score,
+            riskStatus: actualStatus,
             reasons: riskResult.reasons
           });
           
-          console.log(`Order ${order.id} FLAGGED with risk score ${riskResult.score}. Delivery on HOLD.`);
+          console.log(`Order ${order.id} ${actualStatus} with risk score ${riskResult.score}. Delivery on HOLD.`);
           
           // Send payment success email (but note delivery is pending review)
           if (orderUser && product) {
@@ -3725,7 +3743,7 @@ export async function POST(request) {
             );
           }
         } else {
-          // CLEAR risk - proceed with stock assignment
+          // CLEAR risk (or test mode) - proceed with stock assignment
           // Send payment success email
           if (orderUser && product) {
             sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 

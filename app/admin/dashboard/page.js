@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LayoutDashboard, Package, ShoppingBag, LogOut, TrendingUp, Clock, CheckCircle, DollarSign } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { TrendingUp, Clock, CheckCircle, DollarSign } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
+import AdminSidebar from '@/components/admin/AdminSidebar'
 
 export default function AdminDashboard() {
   const router = useRouter()

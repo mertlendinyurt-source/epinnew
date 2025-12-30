@@ -2841,16 +2841,7 @@ export async function POST(request) {
           body: `
             <p>Merhaba,</p>
             <p>Bu bir test e-postasdir. E-posta sisteminiz dogru yapilandirilmis ve calisiyor.</p>
-            <p><strong>SMTP Bilgileri:</strong></p>
-            <ul>
-              <li>Host: ${settings.smtpHost}</li>
-              <li>Port: ${settings.smtpPort}</li>
-              <li>Guvenli: ${settings.smtpSecure ? 'Evet' : 'Hayir'}</li>
-              <li>Gonderen: ${settings.fromEmail}</li>
-            </ul>
-            <p style="margin-top:20px;color:#22c55e;">E-posta sistemi calisiyor.</p>
-          `,
-          info: 'Bu e-posta admin panelinden gonderilen bir test mesajidir.'
+          `
         };
 
         const html = generateEmailTemplate(testContent, {

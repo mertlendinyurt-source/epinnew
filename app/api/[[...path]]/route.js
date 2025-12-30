@@ -5515,6 +5515,32 @@ export async function DELETE(request) {
       });
     }
 
+    // Delete blacklist item
+    if (pathname.match(/^\/api\/admin\/risk\/blacklist\/[^\/]+$/)) {
+      const itemId = pathname.split('/').pop();
+      
+      const item = await db.collection('blacklist').findOne({ id: itemId });
+      if (!item) {
+        return NextResponse.json(
+          { success: false, error: 'Kayıt bulunamadı' },
+          { status: 404 }
+        );
+      }
+      
+      await db.collection('blacklist').deleteOne({ id: itemId });
+      
+      // Log the action
+      await logAuditAction(db, 'BLACKLIST_DELETE', user.id || user.username, 'blacklist', itemId, request, {
+        type: item.type,
+        value: item.value
+      });
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Kayıt kara listeden silindi'
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

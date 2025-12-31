@@ -239,14 +239,42 @@ function getNextMidnight() {
 // DIJIPIN API FUNCTIONS
 // ============================================
 
-// DijiPin ürün ID eşleştirme (Pinly ürün adı -> DijiPin customerStoreProductID)
+// DijiPin ürün ID eşleştirme (Pinly ürün title -> DijiPin customerStoreProductID)
 // Sadece 60 UC ve 325 UC için otomatik gönderim aktif
+// DijiPin'den alınan customerStoreProductID değerleri
 const DIJIPIN_PRODUCT_MAP = {
   '60 UC': 1,
-  '60 UC + 6 Bonus': 1,
+  '60 uc': 1,
+  '60UC': 1,
+  '60uc': 1,
   '325 UC': 2,
-  '325 UC + 33 Bonus': 2
+  '325 uc': 2,
+  '325UC': 2,
+  '325uc': 2
 };
+
+// DijiPin desteklenen ürünleri kontrol et (sadece 60 UC ve 325 UC)
+function isDijipinEligibleProduct(productTitle) {
+  if (!productTitle) return false;
+  const title = productTitle.toLowerCase().trim();
+  // Sadece 60 UC veya 325 UC içeren ürünler
+  return (title.includes('60') && title.includes('uc')) || 
+         (title.includes('325') && title.includes('uc'));
+}
+
+// DijiPin ürün ID'sini bul
+function getDijipinProductId(productTitle) {
+  if (!productTitle) return null;
+  const title = productTitle.toLowerCase().trim();
+  
+  if (title.includes('60') && title.includes('uc')) {
+    return 1; // 60 UC
+  }
+  if (title.includes('325') && title.includes('uc')) {
+    return 2; // 325 UC
+  }
+  return null;
+}
 
 // DijiPin bakiye sorgulama
 async function getDijipinBalance() {

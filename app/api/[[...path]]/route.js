@@ -7040,6 +7040,242 @@ export async function DELETE(request) {
       });
     }
 
+    // ============================================
+    // 💰 BALANCE SYSTEM ENDPOINTS
+    // ============================================
+    
+    // Admin: Get all users with balance
+    if (method === 'GET' && pathname === '/api/admin/users') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const { searchParams } = new URL(request.url);
+      const search = searchParams.get('search') || '';
+      const page = parseInt(searchParams.get('page') || '1');
+      const limit = parseInt(searchParams.get('limit') || '20');
+      const skip = (page - 1) * limit;
+
+      let query = { type: 'user' };
+      if (search) {
+        query.$or = [
+          { email: { $regex: search, $options: 'i' } },
+          { firstName: { $regex: search, $options: 'i' } },
+          { lastName: { $regex: search, $options: 'i' } },
+          { phone: { $regex: search, $options: 'i' } }
+        ];
+      }
+
+      const [users, total] = await Promise.all([
+        db.collection('users')
+          .find(query)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .toArray(),
+        db.collection('users').countDocuments(query)
+      ]);
+
+      // Remove password hashes
+      const safeUsers = users.map(user => {
+        const { password, ...safeUser } = user;
+        return {
+          ...safeUser,
+          balance: user.balance || 0
+        };
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          users: safeUsers,
+          pagination: {
+            total,
+            page,
+            limit,
+            pages: Math.ceil(total / limit)
+          }
+        }
+      });
+    }
+
+    // Admin: Get single user details
+    if (method === 'GET' && pathname.match(/^\/api\/admin\/users\/([^\/]+)$/)) {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const userId = pathname.match(/^\/api\/admin\/users\/([^\/]+)$/)[1];
+      
+      const user = await db.collection('users').findOne({ id: userId });
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 });
+      }
+
+      // Get balance transaction history
+      const transactions = await db.collection('balance_transactions')
+        .find({ userId })
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .toArray();
+
+      // Get order statistics
+      const orderStats = await db.collection('orders').aggregate([
+        { $match: { userId } },
+        { 
+          $group: { 
+            _id: null, 
+            totalOrders: { $sum: 1 },
+            totalSpent: { $sum: '$totalAmount' },
+            paidOrders: { 
+              $sum: { $cond: [{ $eq: ['$status', 'paid'] }, 1, 0] } 
+            }
+          } 
+        }
+      ]).toArray();
+
+      const { password, ...safeUser } = user;
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          user: {
+            ...safeUser,
+            balance: user.balance || 0
+          },
+          transactions,
+          stats: orderStats[0] || { totalOrders: 0, totalSpent: 0, paidOrders: 0 }
+        }
+      });
+    }
+
+    // Admin: Update user balance (add/subtract)
+    if (method === 'PUT' && pathname.match(/^\/api\/admin\/users\/([^\/]+)\/balance$/)) {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const userId = pathname.match(/^\/api\/admin\/users\/([^\/]+)\/balance$/)[1];
+      const { amount, type, note } = body; // type: 'add' or 'subtract'
+
+      if (!amount || amount <= 0) {
+        return NextResponse.json({ success: false, error: 'Geçerli bir tutar giriniz' }, { status: 400 });
+      }
+
+      if (!['add', 'subtract'].includes(type)) {
+        return NextResponse.json({ success: false, error: 'Geçersiz işlem tipi' }, { status: 400 });
+      }
+
+      const user = await db.collection('users').findOne({ id: userId });
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 });
+      }
+
+      const currentBalance = user.balance || 0;
+      const changeAmount = type === 'add' ? amount : -amount;
+      const newBalance = currentBalance + changeAmount;
+
+      if (newBalance < 0) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Bakiye negatif olamaz. Mevcut bakiye: ' + currentBalance.toFixed(2) + ' TL' 
+        }, { status: 400 });
+      }
+
+      // Update user balance
+      await db.collection('users').updateOne(
+        { id: userId },
+        { $set: { balance: newBalance, updatedAt: new Date() } }
+      );
+
+      // Create transaction record
+      const transaction = {
+        id: uuidv4(),
+        userId,
+        type: type === 'add' ? 'admin_credit' : 'admin_debit',
+        amount: Math.abs(changeAmount),
+        balanceBefore: currentBalance,
+        balanceAfter: newBalance,
+        description: note || (type === 'add' ? 'Admin tarafından bakiye eklendi' : 'Admin tarafından bakiye düşüldü'),
+        adminUsername: adminUser.username,
+        createdAt: new Date()
+      };
+
+      await db.collection('balance_transactions').insertOne(transaction);
+
+      // Audit log
+      await logAuditAction(db, type === 'add' ? 'user.balance_add' : 'user.balance_subtract', adminUser.username, 'user', userId, request, {
+        amount: changeAmount,
+        newBalance,
+        note
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: type === 'add' ? 'Bakiye eklendi' : 'Bakiye düşüldü',
+        data: {
+          newBalance,
+          transaction
+        }
+      });
+    }
+
+    // User: Get own balance
+    if (method === 'GET' && pathname === '/api/account/balance') {
+      const user = verifyToken(request);
+      if (!user || user.type !== 'user') {
+        return NextResponse.json({ success: false, error: 'Giriş gerekli' }, { status: 401 });
+      }
+
+      const userData = await db.collection('users').findOne({ id: user.id });
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          balance: userData?.balance || 0
+        }
+      });
+    }
+
+    // User: Get balance transaction history
+    if (method === 'GET' && pathname === '/api/account/balance/transactions') {
+      const user = verifyToken(request);
+      if (!user || user.type !== 'user') {
+        return NextResponse.json({ success: false, error: 'Giriş gerekli' }, { status: 401 });
+      }
+
+      const { searchParams } = new URL(request.url);
+      const page = parseInt(searchParams.get('page') || '1');
+      const limit = parseInt(searchParams.get('limit') || '20');
+      const skip = (page - 1) * limit;
+
+      const [transactions, total] = await Promise.all([
+        db.collection('balance_transactions')
+          .find({ userId: user.id })
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .toArray(),
+        db.collection('balance_transactions').countDocuments({ userId: user.id })
+      ]);
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          transactions,
+          pagination: {
+            total,
+            page,
+            limit,
+            pages: Math.ceil(total / limit)
+          }
+        }
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

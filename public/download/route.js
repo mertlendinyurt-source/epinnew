@@ -13,6 +13,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 const APP_VERSION = '1.0.0';
 
+// DijiPin API Configuration
+const DIJIPIN_API_URL = process.env.DIJIPIN_API_URL || 'https://dijipinapi.dijipin.com';
+const DIJIPIN_API_TOKEN = process.env.DIJIPIN_API_TOKEN;
+const DIJIPIN_API_KEY = process.env.DIJIPIN_API_KEY;
+
 // ============================================
 // DISPOSABLE EMAIL DOMAINS LIST
 // ============================================
@@ -217,6 +222,175 @@ function recordFailedLogin(email, ip, isAdmin = false) {
 function clearBruteForce(email, ip, isAdmin = false) {
   const key = getBruteForceKey(email, ip, isAdmin);
   bruteForceStore.delete(key);
+}
+
+// ============================================
+// HELPER - GET NEXT MIDNIGHT (for spin wheel)
+// ============================================
+function getNextMidnight() {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  return tomorrow.toISOString();
+}
+
+// ============================================
+// DIJIPIN API FUNCTIONS
+// ============================================
+
+// DijiPin ürün ID eşleştirme (Pinly ürün title -> DijiPin customerStoreProductID)
+// Sadece 60 UC ve 325 UC için otomatik gönderim aktif
+// DijiPin'den alınan customerStoreProductID değerleri
+const DIJIPIN_PRODUCT_MAP = {
+  '60 UC': 1,
+  '60 uc': 1,
+  '60UC': 1,
+  '60uc': 1,
+  '325 UC': 2,
+  '325 uc': 2,
+  '325UC': 2,
+  '325uc': 2
+};
+
+// DijiPin desteklenen ürünleri kontrol et (sadece 60 UC ve 325 UC)
+function isDijipinEligibleProduct(productTitle) {
+  if (!productTitle) return false;
+  const title = productTitle.toLowerCase().trim();
+  // Sadece 60 UC veya 325 UC içeren ürünler
+  return (title.includes('60') && title.includes('uc')) || 
+         (title.includes('325') && title.includes('uc'));
+}
+
+// DijiPin ürün ID'sini bul
+function getDijipinProductId(productTitle) {
+  if (!productTitle) return null;
+  const title = productTitle.toLowerCase().trim();
+  
+  if (title.includes('60') && title.includes('uc')) {
+    return 1; // 60 UC
+  }
+  if (title.includes('325') && title.includes('uc')) {
+    return 2; // 325 UC
+  }
+  return null;
+}
+
+// DijiPin bakiye sorgulama
+async function getDijipinBalance() {
+  if (!DIJIPIN_API_TOKEN) {
+    console.log('DijiPin API token not configured');
+    return null;
+  }
+  
+  try {
+    const response = await fetch(`${DIJIPIN_API_URL}/Customer/Get`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${DIJIPIN_API_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      return data.data.balance;
+    }
+    return null;
+  } catch (error) {
+    console.error('DijiPin balance check error:', error);
+    return null;
+  }
+}
+
+// DijiPin sipariş oluşturma
+async function createDijipinOrder(productTitle, quantity, pubgId) {
+  if (!DIJIPIN_API_TOKEN) {
+    console.log('DijiPin API token not configured');
+    return { success: false, error: 'DijiPin API yapılandırılmamış' };
+  }
+  
+  if (!pubgId) {
+    console.log('PUBG ID is required for DijiPin order');
+    return { success: false, error: 'PUBG ID gerekli' };
+  }
+  
+  // Ürün ID'sini bul (yeni fonksiyon kullanarak)
+  const dijipinProductId = getDijipinProductId(productTitle);
+  
+  if (!dijipinProductId) {
+    console.log('DijiPin product not found for:', productTitle);
+    return { success: false, error: 'Bu ürün DijiPin entegrasyonunda bulunamadı (sadece 60 UC ve 325 UC desteklenir)' };
+  }
+  
+  console.log(`DijiPin order: Product "${productTitle}" -> DijiPin ID: ${dijipinProductId}, PUBG ID: ${pubgId}`);
+  
+  try {
+    const response = await fetch(`${DIJIPIN_API_URL}/Order/Create`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${DIJIPIN_API_TOKEN}`,
+        'Apikey': DIJIPIN_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        basketData: [
+          {
+            customerStoreProductID: dijipinProductId,
+            quantity: quantity || 1,
+            fields: {
+              userID: pubgId,
+              serverID: '1'
+            }
+          }
+        ]
+      })
+    });
+    
+    const data = await response.json();
+    console.log('DijiPin order response:', JSON.stringify(data));
+    
+    if (data.success) {
+      return {
+        success: true,
+        orderId: data.data.orderID,
+        details: data.data.details,
+        message: data.message
+      };
+    } else {
+      return {
+        success: false,
+        error: data.message || 'DijiPin sipariş hatası',
+        errorCode: data.errorCode
+      };
+    }
+  } catch (error) {
+    console.error('DijiPin order create error:', error);
+    return { success: false, error: 'DijiPin bağlantı hatası: ' + error.message };
+  }
+}
+
+// DijiPin sipariş durumu sorgulama
+async function getDijipinOrderStatus(orderId) {
+  if (!DIJIPIN_API_TOKEN) {
+    return null;
+  }
+  
+  try {
+    const response = await fetch(`${DIJIPIN_API_URL}/Order/Get?orderID=${orderId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${DIJIPIN_API_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('DijiPin order status error:', error);
+    return null;
+  }
 }
 
 // ============================================
@@ -2628,6 +2802,128 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
       });
     }
 
+    // ============================================
+    // SPIN WHEEL - ÇARK ÇEVİR SİSTEMİ (GET)
+    // ============================================
+    
+    // Çark ayarlarını getir
+    if (pathname === '/api/spin-wheel/settings') {
+      const settings = await db.collection('settings').findOne({ type: 'spin_wheel' });
+      
+      const defaultSettings = {
+        type: 'spin_wheel',
+        isEnabled: true,
+        prizes: [
+          { id: 1, name: '150₺ İndirim', amount: 150, minOrder: 1500, chance: 2, color: '#FFD700' },
+          { id: 2, name: '100₺ İndirim', amount: 100, minOrder: 1000, chance: 5, color: '#FF6B00' },
+          { id: 3, name: '50₺ İndirim', amount: 50, minOrder: 500, chance: 15, color: '#3B82F6' },
+          { id: 4, name: '25₺ İndirim', amount: 25, minOrder: 250, chance: 25, color: '#10B981' },
+          { id: 5, name: '10₺ İndirim', amount: 10, minOrder: 100, chance: 30, color: '#8B5CF6' },
+          { id: 6, name: 'Boş - Tekrar Dene', amount: 0, minOrder: 0, chance: 23, color: '#6B7280' }
+        ],
+        expiryDays: 7,
+        dailySpins: 1
+      };
+      
+      return NextResponse.json({
+        success: true,
+        data: settings || defaultSettings
+      });
+    }
+    
+    // Kullanıcının indirim bakiyesini getir
+    if (pathname === '/api/user/discount-balance') {
+      const authHeader = request.headers.get('authorization');
+      if (!authHeader) {
+        return NextResponse.json({ success: false, error: 'Giriş yapmalısınız' }, { status: 401 });
+      }
+      
+      const token = authHeader.replace('Bearer ', '');
+      let decoded;
+      try {
+        decoded = jwt.verify(token, JWT_SECRET);
+      } catch (e) {
+        return NextResponse.json({ success: false, error: 'Geçersiz token' }, { status: 401 });
+      }
+      
+      const spinUser = await db.collection('users').findOne({ id: decoded.userId });
+      if (!spinUser) {
+        return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 });
+      }
+      
+      // İndirim süresi dolmuş mu kontrol et
+      let discountBalance = spinUser.discountBalance || 0;
+      let discountMinOrder = spinUser.discountMinOrder || 0;
+      let discountExpiry = spinUser.discountExpiry;
+      
+      if (discountExpiry && new Date(discountExpiry) < new Date()) {
+        await db.collection('users').updateOne(
+          { id: spinUser.id },
+          { $unset: { discountBalance: '', discountMinOrder: '', discountExpiry: '', discountSource: '' } }
+        );
+        discountBalance = 0;
+        discountMinOrder = 0;
+        discountExpiry = null;
+      }
+      
+      // Bugün çevirmiş mi?
+      const today = new Date().toISOString().split('T')[0];
+      const lastSpin = spinUser.lastSpinDate ? new Date(spinUser.lastSpinDate).toISOString().split('T')[0] : null;
+      const canSpin = lastSpin !== today;
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          discountBalance,
+          discountMinOrder,
+          discountExpiry,
+          canSpin,
+          nextSpinTime: canSpin ? null : getNextMidnight(),
+          lastSpinDate: spinUser.lastSpinDate
+        }
+      });
+    }
+    
+    // ============================================
+    // DIJIPIN ADMIN API
+    // ============================================
+    
+    // Get DijiPin settings
+    if (pathname === '/api/admin/dijipin/settings') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+      
+      const settings = await db.collection('settings').findOne({ type: 'dijipin' });
+      const balance = await getDijipinBalance();
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          isEnabled: settings?.isEnabled || false,
+          isConfigured: !!DIJIPIN_API_TOKEN,
+          balance: balance,
+          productMap: DIJIPIN_PRODUCT_MAP
+        }
+      });
+    }
+    
+    // Get DijiPin balance
+    if (pathname === '/api/admin/dijipin/balance') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+      
+      const balance = await getDijipinBalance();
+      
+      return NextResponse.json({
+        success: true,
+        data: { balance }
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }
@@ -2742,6 +3038,121 @@ export async function POST(request) {
       return NextResponse.json({
         success: true,
         message: 'Talep kapatıldı'
+      });
+    }
+    
+    // ============================================
+    // SPIN WHEEL - ÇARK ÇEVİRME (POST) - Body parse gerektirmez
+    // ============================================
+    if (pathname === '/api/spin-wheel/spin') {
+      const authHeader = request.headers.get('authorization');
+      if (!authHeader) {
+        return NextResponse.json({ success: false, error: 'Giriş yapmalısınız' }, { status: 401 });
+      }
+      
+      const spinToken = authHeader.replace('Bearer ', '');
+      let spinDecoded;
+      try {
+        spinDecoded = jwt.verify(spinToken, JWT_SECRET);
+      } catch (e) {
+        return NextResponse.json({ success: false, error: 'Geçersiz token' }, { status: 401 });
+      }
+      
+      const spinUser = await db.collection('users').findOne({ id: spinDecoded.userId });
+      if (!spinUser) {
+        return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 });
+      }
+      
+      // Çark ayarlarını al
+      const wheelSettings = await db.collection('settings').findOne({ type: 'spin_wheel' }) || {
+        isEnabled: true,
+        prizes: [
+          { id: 1, name: '150₺ İndirim', amount: 150, minOrder: 1500, chance: 2, color: '#FFD700' },
+          { id: 2, name: '100₺ İndirim', amount: 100, minOrder: 1000, chance: 5, color: '#FF6B00' },
+          { id: 3, name: '50₺ İndirim', amount: 50, minOrder: 500, chance: 15, color: '#3B82F6' },
+          { id: 4, name: '25₺ İndirim', amount: 25, minOrder: 250, chance: 25, color: '#10B981' },
+          { id: 5, name: '10₺ İndirim', amount: 10, minOrder: 100, chance: 30, color: '#8B5CF6' },
+          { id: 6, name: 'Boş - Tekrar Dene', amount: 0, minOrder: 0, chance: 23, color: '#6B7280' }
+        ],
+        expiryDays: 7
+      };
+      
+      if (!wheelSettings.isEnabled) {
+        return NextResponse.json({ success: false, error: 'Çark şu an aktif değil' }, { status: 400 });
+      }
+      
+      // Bugün çevirmiş mi kontrol et
+      const today = new Date().toISOString().split('T')[0];
+      const lastSpin = spinUser.lastSpinDate ? new Date(spinUser.lastSpinDate).toISOString().split('T')[0] : null;
+      
+      if (lastSpin === today) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Bugün zaten çevirdiniz! Yarın tekrar deneyin.',
+          nextSpinTime: getNextMidnight()
+        }, { status: 400 });
+      }
+      
+      // Ödül seç (ağırlıklı rastgele)
+      const prizes = wheelSettings.prizes;
+      const totalChance = prizes.reduce((sum, p) => sum + p.chance, 0);
+      let random = Math.random() * totalChance;
+      let selectedPrize = prizes[prizes.length - 1];
+      
+      for (const prize of prizes) {
+        random -= prize.chance;
+        if (random <= 0) {
+          selectedPrize = prize;
+          break;
+        }
+      }
+      
+      // Kullanıcıyı güncelle
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + (wheelSettings.expiryDays || 7));
+      
+      const updateData = {
+        lastSpinDate: new Date()
+      };
+      
+      // Eğer ödül varsa (boş değilse) indirim ekle
+      if (selectedPrize.amount > 0) {
+        updateData.discountBalance = selectedPrize.amount;
+        updateData.discountMinOrder = selectedPrize.minOrder;
+        updateData.discountExpiry = expiryDate;
+        updateData.discountSource = 'spin_wheel';
+      }
+      
+      await db.collection('users').updateOne(
+        { id: spinUser.id },
+        { $set: updateData }
+      );
+      
+      // Spin geçmişine kaydet
+      await db.collection('spin_history').insertOne({
+        id: uuidv4(),
+        oderId: spinUser.id,
+        userName: spinUser.name || spinUser.email,
+        prizeId: selectedPrize.id,
+        prizeName: selectedPrize.name,
+        prizeAmount: selectedPrize.amount,
+        minOrder: selectedPrize.minOrder,
+        createdAt: new Date()
+      });
+      
+      return NextResponse.json({
+        success: true,
+        prize: {
+          id: selectedPrize.id,
+          name: selectedPrize.name,
+          amount: selectedPrize.amount,
+          minOrder: selectedPrize.minOrder,
+          color: selectedPrize.color,
+          expiryDate: selectedPrize.amount > 0 ? expiryDate : null
+        },
+        message: selectedPrize.amount > 0 
+          ? `Tebrikler! ${selectedPrize.amount}₺ indirim kazandınız!` 
+          : 'Maalesef boş çıktı, yarın tekrar deneyin!'
       });
     }
     
@@ -3870,26 +4281,89 @@ export async function POST(request) {
                   );
                 }
               } else {
-                // No stock available - mark as pending
-                await db.collection('orders').updateOne(
-                  { id: order.id },
-                  {
-                    $set: {
-                      delivery: {
-                        status: 'pending',
-                        message: 'Stok bekleniyor',
-                        items: []
+                // No stock available - try DijiPin auto-delivery if enabled
+                const dijipinSettings = await db.collection('settings').findOne({ type: 'dijipin' });
+                const isDijipinEnabled = dijipinSettings?.isEnabled && DIJIPIN_API_TOKEN;
+                
+                // Check if product is eligible for DijiPin (only 60 UC and 325 UC)
+                const isPubgUcProduct = product && product.title && isDijipinEligibleProduct(product.title);
+                
+                if (isDijipinEnabled && isPubgUcProduct && order.playerId) {
+                  console.log(`Attempting DijiPin delivery for order ${order.id}, Product: ${product.title}, PUBG ID: ${order.playerId}`);
+                  
+                  const dijipinResult = await createDijipinOrder(product.title, 1, order.playerId);
+                  
+                  if (dijipinResult.success) {
+                    // DijiPin order successful
+                    await db.collection('orders').updateOne(
+                      { id: order.id },
+                      {
+                        $set: {
+                          delivery: {
+                            status: 'delivered',
+                            method: 'dijipin_auto',
+                            dijipinOrderId: dijipinResult.orderId,
+                            message: 'UC DijiPin üzerinden gönderildi',
+                            items: [`DijiPin Order: ${dijipinResult.orderId}`],
+                            deliveredAt: new Date()
+                          }
+                        }
                       }
+                    );
+                    console.log(`DijiPin delivery success: Order ${order.id}, DijiPin Order: ${dijipinResult.orderId}`);
+                    
+                    // Send delivered email
+                    if (orderUser && product) {
+                      sendDeliveredEmail(db, order, orderUser, product, [`UC başarıyla hesabınıza yüklendi (PUBG ID: ${order.playerId})`]).catch(err => 
+                        console.error('Delivered email failed:', err)
+                      );
+                    }
+                  } else {
+                    // DijiPin failed - mark as pending for manual review
+                    await db.collection('orders').updateOne(
+                      { id: order.id },
+                      {
+                        $set: {
+                          delivery: {
+                            status: 'pending',
+                            message: `DijiPin hatası: ${dijipinResult.error}`,
+                            dijipinError: dijipinResult.error,
+                            items: []
+                          }
+                        }
+                      }
+                    );
+                    console.error(`DijiPin delivery failed for order ${order.id}:`, dijipinResult.error);
+                    
+                    // Send pending stock email
+                    if (orderUser && product) {
+                      sendPendingStockEmail(db, order, orderUser, product, 'Sipariş işleniyor, kısa sürede tamamlanacak').catch(err => 
+                        console.error('Pending stock email failed:', err)
+                      );
                     }
                   }
-                );
-                console.warn(`No stock available for order ${order.id} (product ${order.productId})`);
-                
-                // Send pending stock email
-                if (orderUser && product) {
-                  sendPendingStockEmail(db, order, orderUser, product, 'Stok bekleniyor').catch(err => 
-                    console.error('Pending stock email failed:', err)
+                } else {
+                  // No stock available and DijiPin not enabled - mark as pending
+                  await db.collection('orders').updateOne(
+                    { id: order.id },
+                    {
+                      $set: {
+                        delivery: {
+                          status: 'pending',
+                          message: 'Stok bekleniyor',
+                          items: []
+                        }
+                      }
+                    }
                   );
+                  console.warn(`No stock available for order ${order.id} (product ${order.productId})`);
+                  
+                  // Send pending stock email
+                  if (orderUser && product) {
+                    sendPendingStockEmail(db, order, orderUser, product, 'Stok bekleniyor').catch(err => 
+                      console.error('Pending stock email failed:', err)
+                    );
+                  }
                 }
               }
             } catch (stockError) {
@@ -5574,6 +6048,36 @@ export async function PUT(request) {
       });
     }
 
+    // ============================================
+    // DIJIPIN SETTINGS UPDATE
+    // ============================================
+    if (pathname === '/api/admin/dijipin/settings') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+      
+      const { isEnabled } = body;
+      
+      await db.collection('settings').updateOne(
+        { type: 'dijipin' },
+        { 
+          $set: { 
+            type: 'dijipin',
+            isEnabled: isEnabled,
+            updatedAt: new Date(),
+            updatedBy: adminUser.username
+          } 
+        },
+        { upsert: true }
+      );
+      
+      return NextResponse.json({
+        success: true,
+        message: 'DijiPin ayarları güncellendi'
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }
@@ -5746,6 +6250,122 @@ export async function DELETE(request) {
       return NextResponse.json({
         success: true,
         message: 'Kayıt kara listeden silindi'
+      });
+    }
+
+    // ============================================
+    // SPIN WHEEL - ÇARK ÇEVİR SİSTEMİ
+    // ============================================
+    
+    // Çark ayarlarını getir
+    if (pathname === '/api/spin-wheel/settings') {
+      const settings = await db.collection('settings').findOne({ type: 'spin_wheel' });
+      
+      const defaultSettings = {
+        type: 'spin_wheel',
+        isEnabled: true,
+        prizes: [
+          { id: 1, name: '150₺ İndirim', amount: 150, minOrder: 1500, chance: 2, color: '#FFD700' },
+          { id: 2, name: '100₺ İndirim', amount: 100, minOrder: 1000, chance: 5, color: '#FF6B00' },
+          { id: 3, name: '50₺ İndirim', amount: 50, minOrder: 500, chance: 15, color: '#3B82F6' },
+          { id: 4, name: '25₺ İndirim', amount: 25, minOrder: 250, chance: 25, color: '#10B981' },
+          { id: 5, name: '10₺ İndirim', amount: 10, minOrder: 100, chance: 30, color: '#8B5CF6' },
+          { id: 6, name: 'Boş - Tekrar Dene', amount: 0, minOrder: 0, chance: 23, color: '#6B7280' }
+        ],
+        expiryDays: 7,
+        dailySpins: 1
+      };
+      
+      return NextResponse.json({
+        success: true,
+        data: settings || defaultSettings
+      });
+    }
+    
+    // Kullanıcının indirim bakiyesini getir
+    if (pathname === '/api/user/discount-balance') {
+      const authHeader = request.headers.get('authorization');
+      if (!authHeader) {
+        return NextResponse.json({ success: false, error: 'Giriş yapmalısınız' }, { status: 401 });
+      }
+      
+      const token = authHeader.replace('Bearer ', '');
+      let decoded;
+      try {
+        decoded = jwt.verify(token, JWT_SECRET);
+      } catch (e) {
+        return NextResponse.json({ success: false, error: 'Geçersiz token' }, { status: 401 });
+      }
+      
+      const spinUser = await db.collection('users').findOne({ id: decoded.userId });
+      if (!spinUser) {
+        return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 });
+      }
+      
+      // İndirim süresi dolmuş mu kontrol et
+      let discountBalance = spinUser.discountBalance || 0;
+      let discountMinOrder = spinUser.discountMinOrder || 0;
+      let discountExpiry = spinUser.discountExpiry;
+      
+      if (discountExpiry && new Date(discountExpiry) < new Date()) {
+        // Süresi dolmuş, sıfırla
+        await db.collection('users').updateOne(
+          { id: spinUser.id },
+          { $unset: { discountBalance: '', discountMinOrder: '', discountExpiry: '', discountSource: '' } }
+        );
+        discountBalance = 0;
+        discountMinOrder = 0;
+        discountExpiry = null;
+      }
+      
+      // Bugün çevirmiş mi?
+      const today = new Date().toISOString().split('T')[0];
+      const lastSpin = spinUser.lastSpinDate ? new Date(spinUser.lastSpinDate).toISOString().split('T')[0] : null;
+      const canSpin = lastSpin !== today;
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          discountBalance,
+          discountMinOrder,
+          discountExpiry,
+          canSpin,
+          nextSpinTime: canSpin ? null : getNextMidnight(),
+          lastSpinDate: spinUser.lastSpinDate
+        }
+      });
+    }
+    
+    // Admin - Çark istatistikleri
+    if (pathname === '/api/admin/spin-wheel/stats') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      
+      const [todaySpins, weekSpins, totalSpins, prizeStats] = await Promise.all([
+        db.collection('spin_history').countDocuments({ createdAt: { $gte: today } }),
+        db.collection('spin_history').countDocuments({ createdAt: { $gte: weekAgo } }),
+        db.collection('spin_history').countDocuments({}),
+        db.collection('spin_history').aggregate([
+          { $group: { _id: '$prizeName', count: { $sum: 1 }, totalAmount: { $sum: '$prizeAmount' } } }
+        ]).toArray()
+      ]);
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          todaySpins,
+          weekSpins,
+          totalSpins,
+          prizeStats
+        }
       });
     }
 

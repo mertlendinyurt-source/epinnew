@@ -332,7 +332,7 @@ export default function OrderDetailPage() {
                         ✓ Belgeleriniz alındı ve admin tarafından inceleniyor.
                       </p>
                       <p className="text-sm text-gray-400">
-                        Doğrulama genellikle 1-24 saat içinde tamamlanır. Onaylandığında e-posta ile bilgilendirileceksiniz.
+                        Doğrulama genellikle 1 saat içinde tamamlanır. Onaylandığında e-posta ile bilgilendirileceksiniz.
                       </p>
                       <div className="mt-3 text-xs text-gray-500">
                         Gönderilme: {new Date(order.verification.submittedAt).toLocaleString('tr-TR')}

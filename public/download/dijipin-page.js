@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { 
   Loader2, 
   Save, 
@@ -18,7 +21,9 @@ import {
   AlertTriangle,
   TrendingUp,
   Clock,
-  ExternalLink
+  ExternalLink,
+  TestTube,
+  Send
 } from 'lucide-react'
 
 export default function DijipinSettingsPage() {
@@ -39,6 +44,13 @@ export default function DijipinSettingsPage() {
     failedOrders: 0,
     pendingOrders: 0
   })
+  
+  // Test order states
+  const [products, setProducts] = useState([])
+  const [testProductId, setTestProductId] = useState('')
+  const [testPlayerId, setTestPlayerId] = useState('')
+  const [testLoading, setTestLoading] = useState(false)
+  const [testResult, setTestResult] = useState(null)
 
   useEffect(() => {
     const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
@@ -49,7 +61,57 @@ export default function DijipinSettingsPage() {
     fetchSettings()
     fetchBalance()
     fetchDijipinOrders()
+    fetchProducts()
   }, [])
+
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+      const res = await fetch('/api/products')
+      const data = await res.json()
+      if (data.success) {
+        setProducts(data.data || [])
+      }
+    } catch (error) {
+      console.error('Products fetch error:', error)
+    }
+  }
+
+  const handleTestOrder = async () => {
+    if (!testProductId || !testPlayerId) {
+      alert('Ürün ve PUBG ID seçin')
+      return
+    }
+
+    setTestLoading(true)
+    setTestResult(null)
+
+    try {
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+      const res = await fetch('/api/admin/test-order', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          productId: testProductId,
+          playerId: testPlayerId
+        })
+      })
+      const data = await res.json()
+      setTestResult(data)
+      
+      if (data.success) {
+        fetchBalance() // Refresh balance
+        fetchDijipinOrders() // Refresh orders
+      }
+    } catch (error) {
+      setTestResult({ success: false, error: error.message })
+    } finally {
+      setTestLoading(false)
+    }
+  }
 
   const fetchSettings = async () => {
     try {
@@ -255,6 +317,105 @@ export default function DijipinSettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Test Siparişi Kartı */}
+      <Card className="bg-slate-800 border-slate-700 border-2 border-dashed border-yellow-500/50">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <TestTube className="w-5 h-5 text-yellow-400" />
+            Test Siparişi (Ücretsiz)
+          </CardTitle>
+          <CardDescription>DijiPin entegrasyonunu test etmek için ücretsiz sipariş oluşturun</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Ürün Seçimi */}
+            <div className="space-y-2">
+              <Label className="text-slate-400">Ürün Seçin</Label>
+              <Select value={testProductId} onValueChange={setTestProductId}>
+                <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
+                  <SelectValue placeholder="Ürün seçin" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-700">
+                  {products.map((product) => (
+                    <SelectItem key={product.id} value={product.id} className="text-white">
+                      {product.title} {product.dijipinEnabled ? '✓' : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* PUBG ID */}
+            <div className="space-y-2">
+              <Label className="text-slate-400">PUBG ID</Label>
+              <Input
+                type="text"
+                placeholder="PUBG ID girin"
+                value={testPlayerId}
+                onChange={(e) => setTestPlayerId(e.target.value)}
+                className="bg-slate-900 border-slate-700 text-white"
+              />
+            </div>
+
+            {/* Test Butonu */}
+            <div className="space-y-2">
+              <Label className="text-slate-400">&nbsp;</Label>
+              <Button 
+                onClick={handleTestOrder}
+                disabled={testLoading || !testProductId || !testPlayerId}
+                className="w-full bg-yellow-600 hover:bg-yellow-700"
+              >
+                {testLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4 mr-2" />
+                )}
+                Test Siparişi Gönder
+              </Button>
+            </div>
+          </div>
+
+          {/* Test Sonucu */}
+          {testResult && (
+            <div className={`mt-4 p-4 rounded-lg ${testResult.success ? 'bg-green-500/20 border border-green-500/50' : 'bg-red-500/20 border border-red-500/50'}`}>
+              {testResult.success ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-green-400">
+                    <CheckCircle className="w-5 h-5" />
+                    <span className="font-medium">Test Siparişi Oluşturuldu!</span>
+                  </div>
+                  <div className="text-sm text-slate-300">
+                    <p>Sipariş ID: <span className="font-mono text-yellow-400">{testResult.data?.orderId?.slice(-8)}</span></p>
+                    <p>Ürün: {testResult.data?.product}</p>
+                    <p>PUBG ID: {testResult.data?.playerId}</p>
+                    <p>Teslimat: {testResult.data?.delivery?.status === 'delivered' ? (
+                      <span className="text-green-400">✓ DijiPin ile gönderildi (Order: {testResult.data?.delivery?.dijipinOrderId})</span>
+                    ) : testResult.data?.delivery?.status === 'failed' ? (
+                      <span className="text-red-400">✗ Hata: {testResult.data?.delivery?.error}</span>
+                    ) : (
+                      <span className="text-yellow-400">⏳ {testResult.data?.delivery?.message}</span>
+                    )}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-red-400">
+                  <XCircle className="w-5 h-5" />
+                  <span>{testResult.error || 'Bir hata oluştu'}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Uyarı */}
+          <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+            <p className="text-yellow-400 text-sm flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              Test siparişleri ücretsizdir fakat DijiPin bakiyenizden düşülür!
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Ana Ayarlar */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

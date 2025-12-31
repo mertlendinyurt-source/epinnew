@@ -3604,6 +3604,110 @@ export async function POST(request) {
       });
     }
     
+    // Customer: Upload verification documents (MUST BE BEFORE body = await request.json())
+    if (pathname.match(/^\/api\/account\/orders\/([^\/]+)\/verification$/)) {
+      const user = verifyToken(request);
+      if (!user || user.type !== 'user') {
+        return NextResponse.json({ success: false, error: 'Giriş gerekli' }, { status: 401 });
+      }
+
+      const orderId = pathname.match(/^\/api\/account\/orders\/([^\/]+)\/verification$/)[1];
+      
+      // Get order and verify ownership
+      const order = await db.collection('orders').findOne({ id: orderId, userId: user.id });
+      if (!order) {
+        return NextResponse.json({ success: false, error: 'Sipariş bulunamadı' }, { status: 404 });
+      }
+
+      // Check if verification is required (either marked or high-value order)
+      const orderAmount = order.totalAmount || order.amount || 0;
+      const requiresVerification = order.verification?.required || orderAmount >= 3000;
+
+      if (!requiresVerification) {
+        return NextResponse.json({ success: false, error: 'Bu sipariş için doğrulama gerekli değil' }, { status: 400 });
+      }
+
+      // Initialize verification object if not exists (for old orders)
+      if (!order.verification) {
+        await db.collection('orders').updateOne(
+          { id: orderId },
+          {
+            $set: {
+              verification: {
+                required: true,
+                status: 'pending',
+                identityPhoto: null,
+                paymentReceipt: null,
+                submittedAt: null,
+                reviewedAt: null,
+                reviewedBy: null,
+                rejectionReason: null
+              }
+            }
+          }
+        );
+        // Refresh order data
+        order.verification = {
+          required: true,
+          status: 'pending',
+          identityPhoto: null,
+          paymentReceipt: null,
+          submittedAt: null,
+          reviewedAt: null,
+          reviewedBy: null,
+          rejectionReason: null
+        };
+      }
+
+      // Check if already submitted
+      if (order.verification.status !== 'pending' || order.verification.submittedAt) {
+        return NextResponse.json({ success: false, error: 'Doğrulama belgeleri zaten gönderilmiş' }, { status: 400 });
+      }
+
+      // Parse multipart form data
+      const formData = await request.formData();
+      const identityFile = formData.get('identityPhoto');
+      const receiptFile = formData.get('paymentReceipt');
+
+      if (!identityFile || !receiptFile) {
+        return NextResponse.json({ success: false, error: 'Kimlik fotoğrafı ve ödeme dekontu zorunludur' }, { status: 400 });
+      }
+
+      // Save files to /public/uploads/verifications/
+      let identityUrl, receiptUrl;
+      try {
+        identityUrl = await saveUploadedFile(identityFile, 'verifications');
+        receiptUrl = await saveUploadedFile(receiptFile, 'verifications');
+      } catch (error) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+      }
+
+      // Update order with verification documents
+      await db.collection('orders').updateOne(
+        { id: orderId },
+        {
+          $set: {
+            'verification.identityPhoto': identityUrl,
+            'verification.paymentReceipt': receiptUrl,
+            'verification.submittedAt': new Date(),
+            'delivery.status': 'verification_pending',
+            'delivery.message': 'Doğrulama belgeleri inceleniyor'
+          }
+        }
+      );
+
+      // Log admin notification
+      await logAuditAction(db, AUDIT_ACTIONS.ORDER_VERIFICATION_SUBMIT, user.id, 'order', orderId, request, {
+        identityPhoto: identityUrl,
+        paymentReceipt: receiptUrl
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Doğrulama belgeleri başarıyla yüklendi. Admin incelemesi bekleniyor.'
+      });
+    }
+    
     // For all other endpoints, parse JSON body
     const body = await request.json();
 
@@ -6457,109 +6561,7 @@ export async function POST(request) {
       });
     }
 
-    // Customer: Upload verification documents (identity + payment receipt)
-    if (method === 'POST' && pathname.match(/^\/api\/account\/orders\/([^\/]+)\/verification$/)) {
-      const user = verifyToken(request);
-      if (!user || user.type !== 'user') {
-        return NextResponse.json({ success: false, error: 'Giriş gerekli' }, { status: 401 });
-      }
-
-      const orderId = pathname.match(/^\/api\/account\/orders\/([^\/]+)\/verification$/)[1];
-      
-      // Get order and verify ownership
-      const order = await db.collection('orders').findOne({ id: orderId, userId: user.id });
-      if (!order) {
-        return NextResponse.json({ success: false, error: 'Sipariş bulunamadı' }, { status: 404 });
-      }
-
-      // Check if verification is required (either marked or high-value order)
-      const orderAmount = order.totalAmount || order.amount || 0;
-      const requiresVerification = order.verification?.required || orderAmount >= 3000;
-
-      if (!requiresVerification) {
-        return NextResponse.json({ success: false, error: 'Bu sipariş için doğrulama gerekli değil' }, { status: 400 });
-      }
-
-      // Initialize verification object if not exists (for old orders)
-      if (!order.verification) {
-        await db.collection('orders').updateOne(
-          { id: orderId },
-          {
-            $set: {
-              verification: {
-                required: true,
-                status: 'pending',
-                identityPhoto: null,
-                paymentReceipt: null,
-                submittedAt: null,
-                reviewedAt: null,
-                reviewedBy: null,
-                rejectionReason: null
-              }
-            }
-          }
-        );
-        // Refresh order data
-        order.verification = {
-          required: true,
-          status: 'pending',
-          identityPhoto: null,
-          paymentReceipt: null,
-          submittedAt: null,
-          reviewedAt: null,
-          reviewedBy: null,
-          rejectionReason: null
-        };
-      }
-
-      // Check if already submitted
-      if (order.verification.status !== 'pending' || order.verification.submittedAt) {
-        return NextResponse.json({ success: false, error: 'Doğrulama belgeleri zaten gönderilmiş' }, { status: 400 });
-      }
-
-      // Parse multipart form data
-      const formData = await request.formData();
-      const identityFile = formData.get('identityPhoto');
-      const receiptFile = formData.get('paymentReceipt');
-
-      if (!identityFile || !receiptFile) {
-        return NextResponse.json({ success: false, error: 'Kimlik fotoğrafı ve ödeme dekontu zorunludur' }, { status: 400 });
-      }
-
-      // Save files to /public/uploads/verifications/
-      let identityUrl, receiptUrl;
-      try {
-        identityUrl = await saveUploadedFile(identityFile, 'verifications');
-        receiptUrl = await saveUploadedFile(receiptFile, 'verifications');
-      } catch (error) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 400 });
-      }
-
-      // Update order with verification documents
-      await db.collection('orders').updateOne(
-        { id: orderId },
-        {
-          $set: {
-            'verification.identityPhoto': identityUrl,
-            'verification.paymentReceipt': receiptUrl,
-            'verification.submittedAt': new Date(),
-            'delivery.status': 'verification_pending',
-            'delivery.message': 'Doğrulama belgeleri inceleniyor'
-          }
-        }
-      );
-
-      // Log admin notification
-      await logAuditAction(db, AUDIT_ACTIONS.ORDER_VERIFICATION_SUBMIT, user.id, 'order', orderId, request, {
-        identityPhoto: identityUrl,
-        paymentReceipt: receiptUrl
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: 'Doğrulama belgeleri başarıyla yüklendi. Admin incelemesi bekleniyor.'
-      });
-    }
+    // Customer: Get verification status
 
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },

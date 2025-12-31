@@ -41,7 +41,7 @@ export default function DijipinSettingsPage() {
   })
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken')
+    const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
     if (!token) {
       router.push('/admin/login')
       return
@@ -53,7 +53,7 @@ export default function DijipinSettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const token = localStorage.getItem('adminToken')
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
       const res = await fetch('/api/admin/dijipin/settings', {
         headers: { 'Authorization': `Bearer ${token}` }
       })

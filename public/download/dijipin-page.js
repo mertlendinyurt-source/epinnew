@@ -92,11 +92,6 @@ export default function DijipinSettingsPage() {
       setRefreshing(false)
     }
   }
-      setBalanceError('Bağlantı hatası')
-    } finally {
-      setRefreshing(false)
-    }
-  }
 
   const fetchDijipinOrders = async () => {
     try {

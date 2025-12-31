@@ -6024,6 +6024,75 @@ export async function POST(request) {
       });
     }
 
+    // Customer: Upload verification documents (identity + payment receipt)
+    if (pathname.match(/^\/api\/account\/orders\/([^\/]+)\/verification$/)) {
+      const user = verifyToken(request);
+      if (!user || user.type !== 'user') {
+        return NextResponse.json({ success: false, error: 'Giriş gerekli' }, { status: 401 });
+      }
+
+      const orderId = pathname.match(/^\/api\/account\/orders\/([^\/]+)\/verification$/)[1];
+      
+      // Get order and verify ownership
+      const order = await db.collection('orders').findOne({ id: orderId, userId: user.id });
+      if (!order) {
+        return NextResponse.json({ success: false, error: 'Sipariş bulunamadı' }, { status: 404 });
+      }
+
+      // Verify order requires verification
+      if (!order.verification || !order.verification.required) {
+        return NextResponse.json({ success: false, error: 'Bu sipariş için doğrulama gerekli değil' }, { status: 400 });
+      }
+
+      // Check if already submitted
+      if (order.verification.status !== 'pending' || order.verification.submittedAt) {
+        return NextResponse.json({ success: false, error: 'Doğrulama belgeleri zaten gönderilmiş' }, { status: 400 });
+      }
+
+      // Parse multipart form data
+      const formData = await request.formData();
+      const identityFile = formData.get('identityPhoto');
+      const receiptFile = formData.get('paymentReceipt');
+
+      if (!identityFile || !receiptFile) {
+        return NextResponse.json({ success: false, error: 'Kimlik fotoğrafı ve ödeme dekontu zorunludur' }, { status: 400 });
+      }
+
+      // Save files to /public/uploads/verifications/
+      let identityUrl, receiptUrl;
+      try {
+        identityUrl = await saveUploadedFile(identityFile, 'verifications');
+        receiptUrl = await saveUploadedFile(receiptFile, 'verifications');
+      } catch (error) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+      }
+
+      // Update order with verification documents
+      await db.collection('orders').updateOne(
+        { id: orderId },
+        {
+          $set: {
+            'verification.identityPhoto': identityUrl,
+            'verification.paymentReceipt': receiptUrl,
+            'verification.submittedAt': new Date(),
+            'delivery.status': 'verification_pending',
+            'delivery.message': 'Doğrulama belgeleri inceleniyor'
+          }
+        }
+      );
+
+      // Log admin notification
+      await logAuditAction(db, AUDIT_ACTIONS.ORDER_VERIFICATION_SUBMIT, user.id, 'order', orderId, request, {
+        identityPhoto: identityUrl,
+        paymentReceipt: receiptUrl
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Doğrulama belgeleri başarıyla yüklendi. Admin incelemesi bekleniyor.'
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

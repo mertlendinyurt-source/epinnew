@@ -579,6 +579,14 @@ export default function App() {
       return
     }
 
+    // 3. Check balance if payment method is balance
+    if (paymentMethod === 'balance') {
+      if (userBalance < selectedProduct.discountPrice) {
+        toast.error(`Yetersiz bakiye. Eksik: ${(selectedProduct.discountPrice - userBalance).toFixed(2)} ₺`)
+        return
+      }
+    }
+
     // GA4 begin_checkout event
     trackEvent('begin_checkout', {
       currency: 'TRY',
@@ -591,7 +599,7 @@ export default function App() {
       }]
     })
 
-    // 3. Proceed with order
+    // 4. Proceed with order
     setOrderProcessing(true)
     try {
       const response = await fetch('/api/orders', {
@@ -603,7 +611,8 @@ export default function App() {
         body: JSON.stringify({
           productId: selectedProduct.id,
           playerId,
-          playerName
+          playerName,
+          paymentMethod: paymentMethod // 'card' or 'balance'
         })
       })
 
@@ -621,7 +630,28 @@ export default function App() {
       }
       
       if (data.success) {
-        // Shopier requires form POST submission with all fields
+        // Balance payment - direct success
+        if (paymentMethod === 'balance') {
+          toast.success('Sipariş başarıyla oluşturuldu! Kodlarınız hesabınıza yükleniyor...')
+          setCheckoutOpen(false)
+          // Refresh balance
+          const balanceResponse = await fetch('/api/account/balance', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          if (balanceResponse.ok) {
+            const balanceData = await balanceResponse.json()
+            if (balanceData.success) {
+              setUserBalance(balanceData.data.balance || 0)
+            }
+          }
+          // Redirect to order page after 2 seconds
+          setTimeout(() => {
+            window.location.href = `/account/orders/${data.data.orderId}`
+          }, 2000)
+          return
+        }
+
+        // Card payment - Shopier redirect
         if (data.data.formData && data.data.paymentUrl) {
           // Create a hidden form and submit it with all Shopier fields
           const form = document.createElement('form')

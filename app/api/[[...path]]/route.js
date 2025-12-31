@@ -4564,6 +4564,99 @@ export async function POST(request) {
       });
     }
 
+    // Admin: Create TEST order (free - for testing DijiPin)
+    if (pathname === '/api/admin/test-order') {
+      const authHeader = request.headers.get('authorization');
+      if (!authHeader) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const { productId, playerId } = body;
+
+      if (!productId || !playerId) {
+        return NextResponse.json({ success: false, error: 'Ürün ID ve PUBG ID gerekli' }, { status: 400 });
+      }
+
+      // Get product
+      const product = await db.collection('products').findOne({ id: productId });
+      if (!product) {
+        return NextResponse.json({ success: false, error: 'Ürün bulunamadı' }, { status: 404 });
+      }
+
+      // Create test order
+      const testOrder = {
+        id: uuidv4(),
+        productId: product.id,
+        productTitle: product.title,
+        quantity: 1,
+        totalPrice: 0, // Free test order
+        playerId: playerId,
+        status: 'paid', // Mark as paid directly
+        paymentMethod: 'admin_test',
+        isTestOrder: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      await db.collection('orders').insertOne(testOrder);
+      console.log(`Admin test order created: ${testOrder.id}, Product: ${product.title}, PUBG ID: ${playerId}`);
+
+      // Check if DijiPin is enabled for this product
+      const dijipinSettings = await db.collection('settings').findOne({ type: 'dijipin' });
+      const isDijipinGlobalEnabled = dijipinSettings?.isEnabled && DIJIPIN_API_TOKEN;
+      const isProductDijipinEnabled = product.dijipinEnabled === true;
+
+      let deliveryResult = { method: 'none', status: 'pending', message: '' };
+
+      if (isDijipinGlobalEnabled && isProductDijipinEnabled) {
+        console.log(`Attempting DijiPin delivery for test order ${testOrder.id}`);
+        
+        const dijipinResult = await createDijipinOrder(product.title, 1, playerId);
+        
+        if (dijipinResult.success) {
+          deliveryResult = {
+            method: 'dijipin_auto',
+            status: 'delivered',
+            dijipinOrderId: dijipinResult.orderId,
+            message: 'UC DijiPin üzerinden gönderildi',
+            deliveredAt: new Date()
+          };
+          console.log(`DijiPin delivery success: Test Order ${testOrder.id}, DijiPin Order: ${dijipinResult.orderId}`);
+        } else {
+          deliveryResult = {
+            method: 'dijipin_auto',
+            status: 'failed',
+            error: dijipinResult.error,
+            message: `DijiPin hatası: ${dijipinResult.error}`
+          };
+          console.error(`DijiPin delivery failed for test order ${testOrder.id}:`, dijipinResult.error);
+        }
+      } else {
+        deliveryResult = {
+          method: 'none',
+          status: 'pending',
+          message: isDijipinGlobalEnabled ? 'Ürün için DijiPin kapalı' : 'DijiPin global ayar kapalı'
+        };
+      }
+
+      // Update order with delivery result
+      await db.collection('orders').updateOne(
+        { id: testOrder.id },
+        { $set: { delivery: deliveryResult } }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: 'Test siparişi oluşturuldu',
+        data: {
+          orderId: testOrder.id,
+          product: product.title,
+          playerId: playerId,
+          delivery: deliveryResult
+        }
+      });
+    }
+
     // Admin: Save Shopier payment settings (encrypted)
     if (pathname === '/api/admin/settings/payments') {
       const user = verifyAdminToken(request);

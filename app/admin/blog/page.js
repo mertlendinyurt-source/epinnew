@@ -334,7 +334,7 @@ export default function AdminBlogPage() {
                   <SelectValue placeholder="Tüm durumlar" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-700">
-                  <SelectItem value="">Tüm durumlar</SelectItem>
+                  <SelectItem value="all">Tüm durumlar</SelectItem>
                   <SelectItem value="published">Yayında</SelectItem>
                   <SelectItem value="draft">Taslak</SelectItem>
                 </SelectContent>

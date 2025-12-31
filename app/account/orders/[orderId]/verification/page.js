@@ -115,7 +115,17 @@ export default function VerificationPage() {
     setUploading(true)
 
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('userToken')
+      if (!token) {
+        toast({
+          title: "Hata",
+          description: "Oturum süresi dolmuş. Lütfen tekrar giriş yapın.",
+          variant: "destructive"
+        })
+        router.push('/')
+        return
+      }
+
       const formData = new FormData()
       formData.append('identityPhoto', identityFile)
       formData.append('paymentReceipt', receiptFile)

@@ -294,7 +294,13 @@ async function getDijipinBalance() {
     
     const data = await response.json();
     if (data.success) {
-      return data.data.balance;
+      // Tüm bakiye bilgilerini döndür
+      return {
+        balance: data.data.balance,
+        currencyCode: data.data.currencyCode || 'TL',
+        customerName: `${data.data.firstName} ${data.data.lastName}`,
+        email: data.data.email
+      };
     }
     return null;
   } catch (error) {

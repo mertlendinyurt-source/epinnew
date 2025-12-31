@@ -1302,6 +1302,20 @@ async function initializeDb() {
       createdAt: new Date()
     });
   }
+
+  // DijiPin ayarlarını otomatik aktif et (60 UC ve 325 UC için)
+  const dijipinSettings = await db.collection('settings').findOne({ type: 'dijipin' });
+  if (!dijipinSettings) {
+    await db.collection('settings').insertOne({
+      type: 'dijipin',
+      isEnabled: true,
+      supportedProducts: ['60 UC', '325 UC'],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      updatedBy: 'system'
+    });
+    console.log('DijiPin settings initialized and enabled');
+  }
 }
 
 // API Routes Handler

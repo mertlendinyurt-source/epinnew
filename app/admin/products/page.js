@@ -117,6 +117,35 @@ export default function AdminProducts() {
     }
   }
 
+  // DijiPin toggle handler
+  const handleDijipinToggle = async (productId, enabled) => {
+    try {
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+      const response = await fetch('/api/admin/products/dijipin', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId, dijipinEnabled: enabled })
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        // Update local state
+        setProducts(products.map(p => 
+          p.id === productId ? { ...p, dijipinEnabled: enabled } : p
+        ))
+        toast.success(enabled ? 'DijiPin otomatik gönderim açıldı' : 'DijiPin otomatik gönderim kapatıldı')
+      } else {
+        toast.error(data.error || 'Güncelleme başarısız')
+      }
+    } catch (error) {
+      console.error('DijiPin toggle error:', error)
+      toast.error('DijiPin ayarı güncellenirken hata oluştu')
+    }
+  }
+
   const handleEdit = (product) => {
     setEditingProduct(product)
     setFormData({

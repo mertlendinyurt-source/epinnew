@@ -2938,11 +2938,11 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
       });
     }
     
-    // Get DijiPin balance
+    // Get DijiPin balance (admin panel only - loose auth check)
     if (pathname === '/api/admin/dijipin/balance') {
-      // Allow any authenticated user to check DijiPin balance
-      const user = verifyToken(request);
-      if (!user) {
+      // Check for any authorization header
+      const authHeader = request.headers.get('authorization');
+      if (!authHeader) {
         return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
       }
       

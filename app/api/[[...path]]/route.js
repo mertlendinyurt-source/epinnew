@@ -13,6 +13,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 const APP_VERSION = '1.0.0';
 
+// DijiPin API Configuration
+const DIJIPIN_API_URL = process.env.DIJIPIN_API_URL || 'https://dijipinapi.dijipin.com';
+const DIJIPIN_API_TOKEN = process.env.DIJIPIN_API_TOKEN;
+const DIJIPIN_API_KEY = process.env.DIJIPIN_API_KEY;
+
 // ============================================
 // DISPOSABLE EMAIL DOMAINS LIST
 // ============================================

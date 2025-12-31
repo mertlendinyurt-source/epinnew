@@ -178,8 +178,14 @@ export default function VerificationPage() {
           title: "Başarılı!",
           description: "Doğrulama belgeleri yüklendi. Admin incelemesi bekleniyor.",
         })
+        
+        console.log('Redirecting to order:', orderId);
+        console.log('Full path:', `/account/orders/${orderId}`);
+        
         setTimeout(() => {
-          router.push(`/account/orders/${orderId}`)
+          const targetPath = `/account/orders/${orderId}`;
+          console.log('Executing redirect to:', targetPath);
+          router.push(targetPath);
         }, 1500)
       } else {
         toast({

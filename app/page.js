@@ -499,9 +499,31 @@ export default function App() {
     }
   }
 
-  const checkAuth = () => {
+  const checkAuth = async () => {
     const token = localStorage.getItem('userToken')
+    const userData = localStorage.getItem('userData')
+    
     setIsAuthenticated(!!token)
+    
+    if (token && userData) {
+      try {
+        setUser(JSON.parse(userData))
+        
+        // Fetch user balance
+        const balanceResponse = await fetch('/api/account/balance', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (balanceResponse.ok) {
+          const balanceData = await balanceResponse.json()
+          if (balanceData.success) {
+            setUserBalance(balanceData.data.balance || 0)
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error)
+      }
+    }
   }
 
   const fetchProducts = async () => {

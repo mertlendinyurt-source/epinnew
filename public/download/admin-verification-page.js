@@ -34,9 +34,15 @@ export default function AdminVerification() {
   const fetchPendingVerifications = async () => {
     try {
       const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+      
+      console.log('=== ADMIN VERIFICATION FETCH ===');
+      console.log('Token:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
+      
       const response = await fetch('/api/admin/orders/pending-verification', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
+
+      console.log('Response Status:', response.status);
 
       if (response.status === 401 || response.status === 403) {
         localStorage.removeItem('adminToken')
@@ -45,8 +51,13 @@ export default function AdminVerification() {
       }
 
       const data = await response.json()
+      console.log('API Response:', data);
+      console.log('Orders Count:', data.data ? data.data.length : 0);
+      
       if (data.success) {
         setOrders(data.data)
+      } else {
+        console.error('API Error:', data.error);
       }
     } catch (error) {
       console.error('Error fetching verifications:', error)

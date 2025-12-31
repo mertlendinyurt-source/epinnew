@@ -6033,6 +6033,36 @@ export async function PUT(request) {
       });
     }
 
+    // ============================================
+    // DIJIPIN SETTINGS UPDATE
+    // ============================================
+    if (pathname === '/api/admin/dijipin/settings') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+      
+      const { isEnabled } = body;
+      
+      await db.collection('settings').updateOne(
+        { type: 'dijipin' },
+        { 
+          $set: { 
+            type: 'dijipin',
+            isEnabled: isEnabled,
+            updatedAt: new Date(),
+            updatedBy: adminUser.username
+          } 
+        },
+        { upsert: true }
+      );
+      
+      return NextResponse.json({
+        success: true,
+        message: 'DijiPin ayarları güncellendi'
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

@@ -9,19 +9,32 @@ import { useEffect, useState, Suspense } from 'react'
 function PaymentSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  
+  // URL'den gelen parametreler
   const orderId = searchParams.get('orderId')
+  const urlAmount = searchParams.get('amount')
+  const urlName = searchParams.get('name')
+  const urlEmail = searchParams.get('email')
+  const urlProduct = searchParams.get('product')
+  
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    if (!orderId) return
+    if (!orderId) {
+      setLoading(false)
+      return
+    }
 
-    // Fetch order details to check if verification is required
+    // Fetch order details
     const fetchOrder = async () => {
       try {
-        const token = localStorage.getItem('token')
+        // userToken kullan (sitenin kullandığı key)
+        const token = localStorage.getItem('userToken') || localStorage.getItem('token')
+        
         if (!token) {
+          console.log('No token found')
           setLoading(false)
           return
         }
@@ -32,14 +45,18 @@ function PaymentSuccessContent() {
         
         if (response.ok) {
           const data = await response.json()
-          setOrder(data.data)
-          
-          // Redirect to verification page if required
-          if (data.data.verification?.required && data.data.verification?.status === 'pending' && !data.data.verification?.submittedAt) {
-            setTimeout(() => {
-              router.push(`/account/orders/${orderId}/verification`)
-            }, 3000)
+          if (data.success && data.data) {
+            setOrder(data.data)
+            
+            // Redirect to verification page if required
+            if (data.data.verification?.required && data.data.verification?.status === 'pending' && !data.data.verification?.submittedAt) {
+              setTimeout(() => {
+                router.push(`/account/orders/${orderId}/verification`)
+              }, 3000)
+            }
           }
+        } else {
+          console.log('Order fetch failed:', response.status)
         }
       } catch (error) {
         console.error('Failed to fetch order:', error)
@@ -63,12 +80,22 @@ function PaymentSuccessContent() {
 
   // Format currency
   const formatCurrency = (amount) => {
+    if (!amount && amount !== 0) return '₺0,00'
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
       currency: 'TRY',
       minimumFractionDigits: 2
-    }).format(amount || 0)
+    }).format(amount)
   }
+
+  // Bilgileri al - önce order'dan, yoksa URL'den
+  const customerName = order?.customer 
+    ? `${order.customer.firstName || ''} ${order.customer.lastName || ''}`.trim()
+    : urlName || null
+  
+  const customerEmail = order?.customer?.email || urlEmail || null
+  const productTitle = order?.productTitle || urlProduct || null
+  const amount = order?.amount || order?.totalAmount || (urlAmount ? parseFloat(urlAmount) : null)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
@@ -117,44 +144,41 @@ function PaymentSuccessContent() {
                   </button>
                 </div>
 
-                {/* Müşteri Bilgileri */}
-                {order?.customer && (
-                  <>
-                    {/* İsim Soyisim */}
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/50 border border-slate-600">
-                      <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
-                        <User className="w-5 h-5 text-purple-400" />
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-400 mb-0.5">Müşteri Adı</div>
-                        <div className="text-white font-semibold">
-                          {order.customer.firstName} {order.customer.lastName}
-                        </div>
-                      </div>
+                {/* Müşteri Adı - İsim Soyisim */}
+                {customerName && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/50 border border-slate-600">
+                    <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                      <User className="w-5 h-5 text-purple-400" />
                     </div>
+                    <div>
+                      <div className="text-xs text-slate-400 mb-0.5">Müşteri Adı</div>
+                      <div className="text-white font-semibold">{customerName}</div>
+                    </div>
+                  </div>
+                )}
 
-                    {/* E-posta */}
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/50 border border-slate-600">
-                      <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                        <Mail className="w-5 h-5 text-cyan-400" />
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-400 mb-0.5">E-posta Adresi</div>
-                        <div className="text-white font-medium break-all">{order.customer.email}</div>
-                      </div>
+                {/* E-posta */}
+                {customerEmail && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/50 border border-slate-600">
+                    <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                      <Mail className="w-5 h-5 text-cyan-400" />
                     </div>
-                  </>
+                    <div>
+                      <div className="text-xs text-slate-400 mb-0.5">E-posta Adresi</div>
+                      <div className="text-white font-medium break-all">{customerEmail}</div>
+                    </div>
+                  </div>
                 )}
 
                 {/* Ürün Bilgisi */}
-                {order?.productTitle && (
+                {productTitle && (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/50 border border-slate-600">
                     <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
                       <Package className="w-5 h-5 text-amber-400" />
                     </div>
                     <div>
                       <div className="text-xs text-slate-400 mb-0.5">Ürün</div>
-                      <div className="text-white font-semibold">{order.productTitle}</div>
+                      <div className="text-white font-semibold">{productTitle}</div>
                     </div>
                   </div>
                 )}
@@ -167,7 +191,7 @@ function PaymentSuccessContent() {
                   <div>
                     <div className="text-xs text-slate-400 mb-0.5">Sipariş Tutarı</div>
                     <div className="text-green-400 font-bold text-xl">
-                      {formatCurrency(order?.amount || order?.totalAmount)}
+                      {formatCurrency(amount)}
                     </div>
                   </div>
                 </div>

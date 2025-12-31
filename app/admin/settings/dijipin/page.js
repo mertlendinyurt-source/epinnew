@@ -72,7 +72,7 @@ export default function DijipinSettingsPage() {
     setRefreshing(true)
     setBalanceError(null)
     try {
-      const token = localStorage.getItem('adminToken')
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
       const res = await fetch('/api/admin/dijipin/balance', {
         headers: { 'Authorization': `Bearer ${token}` }
       })

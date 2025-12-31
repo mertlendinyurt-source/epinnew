@@ -2867,6 +2867,46 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
         }
       });
     }
+    
+    // ============================================
+    // DIJIPIN ADMIN API
+    // ============================================
+    
+    // Get DijiPin settings
+    if (pathname === '/api/admin/dijipin/settings') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+      
+      const settings = await db.collection('settings').findOne({ type: 'dijipin' });
+      const balance = await getDijipinBalance();
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          isEnabled: settings?.isEnabled || false,
+          isConfigured: !!DIJIPIN_API_TOKEN,
+          balance: balance,
+          productMap: DIJIPIN_PRODUCT_MAP
+        }
+      });
+    }
+    
+    // Get DijiPin balance
+    if (pathname === '/api/admin/dijipin/balance') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+      
+      const balance = await getDijipinBalance();
+      
+      return NextResponse.json({
+        success: true,
+        data: { balance }
+      });
+    }
 
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },

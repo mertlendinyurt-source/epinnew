@@ -62,12 +62,17 @@ export default function VerificationPage() {
         return
       }
 
-      console.log('Order loaded:', {
-        id: data.data.id,
-        amount: data.data.amount,
-        totalAmount: data.data.totalAmount,
-        verification: data.data.verification
-      })
+      // DEBUG LOG
+      console.log('=== VERIFICATION DEBUG ===');
+      console.log('Order ID:', data.data.id);
+      console.log('Total Amount:', data.data.totalAmount);
+      console.log('Amount:', data.data.amount);
+      console.log('Verification Object:', data.data.verification);
+      console.log('Requires Verification Check:', 
+        data.data.verification?.required || 
+        (data.data.totalAmount >= 3000 || data.data.amount >= 3000)
+      );
+      console.log('========================');
 
       setOrder(data.data)
     } catch (error) {
@@ -205,19 +210,6 @@ export default function VerificationPage() {
 
   // Check if verification is required (either marked or high-value order)
   const requiresVerification = order?.verification?.required || (order?.totalAmount >= 3000 || order?.amount >= 3000)
-
-  // DEBUG: Log to console to see what's happening
-  useEffect(() => {
-    if (order) {
-      console.log('=== VERIFICATION DEBUG ===');
-      console.log('Order ID:', order.id);
-      console.log('Total Amount:', order.totalAmount);
-      console.log('Amount:', order.amount);
-      console.log('Verification Object:', order.verification);
-      console.log('Requires Verification:', requiresVerification);
-      console.log('========================');
-    }
-  }, [order]);
 
   if (!order || !requiresVerification) {
     return (

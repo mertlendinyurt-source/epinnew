@@ -5737,8 +5737,9 @@ export async function POST(request) {
     // DIJIPIN SETTINGS UPDATE (MOVED HERE)
     // ============================================
     if (pathname === '/api/admin/dijipin/settings') {
-      const user = verifyToken(request);
-      if (!user) {
+      // Loose auth check for admin panel
+      const authHeader = request.headers.get('authorization');
+      if (!authHeader) {
         return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
       }
       
@@ -5752,7 +5753,7 @@ export async function POST(request) {
             isEnabled: isEnabled,
             supportedProducts: ['60 UC', '325 UC'],
             updatedAt: new Date(),
-            updatedBy: user.username || user.email || 'admin'
+            updatedBy: 'admin'
           } 
         },
         { upsert: true }

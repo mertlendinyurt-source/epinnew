@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Check, X, Loader2, Info, Menu, Star, ChevronDown, ChevronUp } from 'lucide-react'
+import { User, Check, X, Loader2, Info, Menu, Star, ChevronDown, ChevronUp, Gift } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
 import AuthModal from '@/components/AuthModal'
+import SpinWheel from '@/components/SpinWheel'
 
 // Banner Icon Component for dynamic icons
 function BannerIcon({ icon, size }) {

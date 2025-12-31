@@ -27,7 +27,7 @@ export default function VerificationPage() {
 
   const fetchOrder = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('userToken')
       if (!token) {
         router.push('/')
         return

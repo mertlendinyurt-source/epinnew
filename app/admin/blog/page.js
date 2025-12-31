@@ -245,59 +245,9 @@ export default function AdminBlogPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col">
-        <div className="mb-8">
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <ShieldCheck className="w-6 h-6 text-blue-500" />
-            PINLY Admin
-          </h1>
-        </div>
-        
-        <nav className="space-y-2 flex-1">
-          <Link href="/admin" className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
-            <Home className="w-4 h-4" />
-            Dashboard
-          </Link>
-          <Link href="/admin/orders" className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
-            <ShoppingCart className="w-4 h-4" />
-            Siparişler
-          </Link>
-          <Link href="/admin/products" className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
-            <Package className="w-4 h-4" />
-            Ürünler
-          </Link>
-          <Link href="/admin/users" className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
-            <Users className="w-4 h-4" />
-            Kullanıcılar
-          </Link>
-          
-          <div className="pt-4 pb-2">
-            <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">İçerik</p>
-          </div>
-          <Link href="/admin/blog" className="flex items-center gap-2 px-4 py-2 text-white bg-slate-800 rounded-lg transition-colors">
-            <FileText className="w-4 h-4 text-purple-500" />
-            Blog / Haberler
-          </Link>
-          
-          <div className="pt-4 pb-2">
-            <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Ayarlar</p>
-          </div>
-          <Link href="/admin/settings" className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
-            <Settings className="w-4 h-4" />
-            Site Ayarları
-          </Link>
-        </nav>
-        
-        <Button variant="ghost" className="justify-start text-slate-400 hover:text-white mt-auto" onClick={handleLogout}>
-          <LogOut className="w-4 h-4 mr-2" />
-          Çıkış Yap
-        </Button>
-      </div>
-
+    <div className="p-8">
       {/* Main Content */}
-      <div className="ml-64 p-8">
+      <div>
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>

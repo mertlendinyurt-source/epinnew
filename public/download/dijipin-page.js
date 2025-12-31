@@ -41,7 +41,7 @@ export default function DijipinSettingsPage() {
   })
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken')
+    const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
     if (!token) {
       router.push('/admin/login')
       return
@@ -53,7 +53,7 @@ export default function DijipinSettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const token = localStorage.getItem('adminToken')
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
       const res = await fetch('/api/admin/dijipin/settings', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -72,7 +72,7 @@ export default function DijipinSettingsPage() {
     setRefreshing(true)
     setBalanceError(null)
     try {
-      const token = localStorage.getItem('adminToken')
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
       const res = await fetch('/api/admin/dijipin/balance', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -95,7 +95,7 @@ export default function DijipinSettingsPage() {
 
   const fetchDijipinOrders = async () => {
     try {
-      const token = localStorage.getItem('adminToken')
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
       const res = await fetch('/api/admin/dijipin/orders', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -112,7 +112,7 @@ export default function DijipinSettingsPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      const token = localStorage.getItem('adminToken')
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
       const res = await fetch('/api/admin/dijipin/settings', {
         method: 'POST',
         headers: {

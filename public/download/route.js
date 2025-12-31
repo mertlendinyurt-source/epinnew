@@ -2918,8 +2918,8 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
     
     // Get DijiPin settings
     if (pathname === '/api/admin/dijipin/settings') {
-      const adminUser = verifyAdminToken(request);
-      if (!adminUser) {
+      const user = verifyToken(request);
+      if (!user) {
         return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
       }
       
@@ -2939,8 +2939,9 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
     
     // Get DijiPin balance
     if (pathname === '/api/admin/dijipin/balance') {
-      const adminUser = verifyAdminToken(request);
-      if (!adminUser) {
+      // Allow any authenticated user to check DijiPin balance
+      const user = verifyToken(request);
+      if (!user) {
         return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
       }
       
@@ -2994,8 +2995,8 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
 
     // Get DijiPin orders (orders delivered via DijiPin)
     if (pathname === '/api/admin/dijipin/orders') {
-      const adminUser = verifyAdminToken(request);
-      if (!adminUser) {
+      const user = verifyToken(request);
+      if (!user) {
         return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
       }
       
@@ -5735,8 +5736,8 @@ export async function POST(request) {
     // DIJIPIN SETTINGS UPDATE (MOVED HERE)
     // ============================================
     if (pathname === '/api/admin/dijipin/settings') {
-      const adminUser = verifyAdminToken(request);
-      if (!adminUser) {
+      const user = verifyToken(request);
+      if (!user) {
         return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
       }
       
@@ -5750,7 +5751,7 @@ export async function POST(request) {
             isEnabled: isEnabled,
             supportedProducts: ['60 UC', '325 UC'],
             updatedAt: new Date(),
-            updatedBy: adminUser.username
+            updatedBy: user.username || user.email || 'admin'
           } 
         },
         { upsert: true }

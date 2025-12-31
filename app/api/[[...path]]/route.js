@@ -288,11 +288,14 @@ async function getDijipinBalance() {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${DIJIPIN_API_TOKEN}`,
+        'Apikey': DIJIPIN_API_KEY,
         'Content-Type': 'application/json'
       }
     });
     
     const data = await response.json();
+    console.log('DijiPin balance response:', JSON.stringify(data));
+    
     if (data.success) {
       // Tüm bakiye bilgilerini döndür
       return {
@@ -302,6 +305,7 @@ async function getDijipinBalance() {
         email: data.data.email
       };
     }
+    console.log('DijiPin balance failed:', data.message);
     return null;
   } catch (error) {
     console.error('DijiPin balance check error:', error);

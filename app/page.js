@@ -130,6 +130,7 @@ export default function App() {
     fetchGameContent()
     fetchReviews(1)
     fetchFooterSettings()
+    fetchDiscountBalance()
     handleGoogleAuthCallback() // Handle Google OAuth callback
     handleLoginRedirect() // Handle login redirect from /admin/login
     loadSEOSettings() // Load SEO settings for GA4 and GSC

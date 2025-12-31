@@ -323,34 +323,6 @@ export default function App() {
     }
   }
 
-  // Fetch user's discount balance for spin wheel
-  const fetchDiscountBalance = async () => {
-    const token = localStorage.getItem('userToken')
-    if (!token) return
-
-    try {
-      const response = await fetch('/api/user/discount-balance', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      const data = await response.json()
-      if (data.success) {
-        setDiscountBalance(data.data.discountBalance || 0)
-        setCanSpin(data.data.canSpin)
-      }
-    } catch (error) {
-      console.error('Error fetching discount balance:', error)
-    }
-  }
-
-  // Handle spin wheel completion
-  const handleSpinComplete = (prize) => {
-    if (prize.amount > 0) {
-      setDiscountBalance(prize.amount)
-      toast.success(`${prize.amount}₺ indirim hesabınıza eklendi!`)
-    }
-    setCanSpin(false)
-  }
-
   // Load SEO settings and inject GA4 script
   const loadSEOSettings = async () => {
     try {

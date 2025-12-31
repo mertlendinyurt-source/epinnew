@@ -1903,9 +1903,8 @@ export async function GET(request) {
       });
     }
 
-    // User: Get my orders
-    // Get single order by ID
-    if (method === 'GET' && pathname.match(/^\/api\/account\/orders\/([^\/]+)$/)) {
+    // User: Get single order by ID
+    if (pathname.match(/^\/api\/account\/orders\/([^\/]+)$/)) {
       const authUser = verifyToken(request);
       if (!authUser || authUser.type !== 'user') {
         return NextResponse.json(
@@ -1939,7 +1938,7 @@ export async function GET(request) {
       });
     }
 
-    // Get all orders
+    // User: Get all orders
     if (pathname === '/api/account/orders') {
       const authUser = verifyToken(request);
       if (!authUser || authUser.type !== 'user') {

@@ -29,6 +29,7 @@ export default function VerificationPage() {
     try {
       const token = localStorage.getItem('userToken')
       if (!token) {
+        console.log('No token found, redirecting to home')
         router.push('/')
         return
       }
@@ -37,19 +38,46 @@ export default function VerificationPage() {
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        setOrder(data.data)
-      } else {
+      if (!response.ok) {
+        console.error('Order fetch failed:', response.status)
+        toast({
+          title: "Hata",
+          description: "Sipariş bulunamadı veya erişim yetkiniz yok",
+          variant: "destructive"
+        })
+        router.push('/account/orders')
+        return
+      }
+
+      const data = await response.json()
+      
+      if (!data.success || !data.data) {
+        console.error('Invalid order data:', data)
         toast({
           title: "Hata",
           description: "Sipariş bilgileri alınamadı",
           variant: "destructive"
         })
         router.push('/account/orders')
+        return
       }
+
+      console.log('Order loaded:', {
+        id: data.data.id,
+        amount: data.data.amount,
+        totalAmount: data.data.totalAmount,
+        verification: data.data.verification
+      })
+
+      setOrder(data.data)
     } catch (error) {
       console.error('Failed to fetch order:', error)
+      toast({
+        title: "Hata",
+        description: "Bağlantı hatası oluştu",
+        variant: "destructive"
+      })
+      router.push('/account/orders')
     } finally {
       setLoading(false)
     }

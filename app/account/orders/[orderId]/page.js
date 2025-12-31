@@ -267,6 +267,99 @@ export default function OrderDetailPage() {
               </div>
             )}
 
+            {/* Verification Required/Pending Warning */}
+            {order.verification && order.verification.required && (
+              <div className={`backdrop-blur-lg rounded-2xl p-6 border-2 ${
+                order.verification.status === 'pending' && !order.verification.submittedAt 
+                  ? 'bg-gradient-to-br from-amber-900/30 to-amber-800/20 border-amber-700/50'
+                  : order.verification.status === 'pending' && order.verification.submittedAt
+                  ? 'bg-gradient-to-br from-blue-900/30 to-blue-800/20 border-blue-700/50'
+                  : order.verification.status === 'approved'
+                  ? 'bg-gradient-to-br from-green-900/30 to-green-800/20 border-green-700/50'
+                  : 'bg-gradient-to-br from-red-900/30 to-red-800/20 border-red-700/50'
+              }`}>
+                <div className="flex items-center gap-3 mb-4">
+                  {order.verification.status === 'pending' && !order.verification.submittedAt ? (
+                    <AlertCircle className="w-6 h-6 text-amber-400" />
+                  ) : order.verification.status === 'pending' && order.verification.submittedAt ? (
+                    <Clock className="w-6 h-6 text-blue-400" />
+                  ) : order.verification.status === 'approved' ? (
+                    <CheckCircle className="w-6 h-6 text-green-400" />
+                  ) : (
+                    <AlertCircle className="w-6 h-6 text-red-400" />
+                  )}
+                  <h2 className="text-xl font-bold text-white">
+                    {order.verification.status === 'pending' && !order.verification.submittedAt
+                      ? 'Doğrulama Gerekli'
+                      : order.verification.status === 'pending' && order.verification.submittedAt
+                      ? 'Doğrulama İnceleniyor'
+                      : order.verification.status === 'approved'
+                      ? 'Doğrulama Onaylandı'
+                      : 'Doğrulama Reddedildi'}
+                  </h2>
+                </div>
+
+                <div className={`rounded-xl p-4 border ${
+                  order.verification.status === 'pending' && !order.verification.submittedAt
+                    ? 'bg-gray-900/50 border-amber-700/30'
+                    : order.verification.status === 'pending' && order.verification.submittedAt
+                    ? 'bg-gray-900/50 border-blue-700/30'
+                    : order.verification.status === 'approved'
+                    ? 'bg-gray-900/50 border-green-700/30'
+                    : 'bg-gray-900/50 border-red-700/30'
+                }`}>
+                  {order.verification.status === 'pending' && !order.verification.submittedAt ? (
+                    <>
+                      <p className="text-amber-200 mb-3">
+                        🔐 Yüksek tutarlı siparişiniz (3000 TL+) için güvenlik doğrulaması gerekmektedir.
+                      </p>
+                      <p className="text-sm text-gray-300 mb-4">
+                        Lütfen kimlik fotoğrafınızı ve ödeme dekontunuzu yükleyin. Doğrulama onaylandıktan sonra siparişiniz teslim edilecektir.
+                      </p>
+                      <Button
+                        onClick={() => router.push(`/account/orders/${orderId}/verification`)}
+                        className="w-full bg-amber-600 hover:bg-amber-700"
+                      >
+                        Doğrulama Belgelerini Yükle
+                      </Button>
+                    </>
+                  ) : order.verification.status === 'pending' && order.verification.submittedAt ? (
+                    <>
+                      <p className="text-blue-200 mb-2">
+                        ✓ Belgeleriniz alındı ve admin tarafından inceleniyor.
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        Doğrulama genellikle 1-24 saat içinde tamamlanır. Onaylandığında e-posta ile bilgilendirileceksiniz.
+                      </p>
+                      <div className="mt-3 text-xs text-gray-500">
+                        Gönderilme: {new Date(order.verification.submittedAt).toLocaleString('tr-TR')}
+                      </div>
+                    </>
+                  ) : order.verification.status === 'approved' ? (
+                    <p className="text-green-200">
+                      ✓ Doğrulamanız başarıyla onaylandı. Siparişiniz işleme alındı.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-red-200 mb-2">
+                        ✗ Doğrulama belgeleri uygun bulunmadı ve siparişiniz iptal edildi.
+                      </p>
+                      {order.verification.rejectionReason && (
+                        <div className="mt-3 p-3 bg-red-900/30 rounded-lg border border-red-800">
+                          <p className="text-sm text-red-300">
+                            <strong>Red Sebebi:</strong> {order.verification.rejectionReason}
+                          </p>
+                        </div>
+                      )}
+                      <p className="text-sm text-gray-400 mt-3">
+                        Para iadesi 3-5 iş günü içinde hesabınıza yapılacaktır. Sorularınız için destek ekibimize ulaşabilirsiniz.
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Pending Stock Warning */}
             {order.delivery && order.delivery.status === 'pending' && (
               <div className="bg-gradient-to-br from-yellow-900/30 to-yellow-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-yellow-700/50">

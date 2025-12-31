@@ -6911,6 +6911,82 @@ export async function PUT(request) {
       }
     }
 
+    // ============================================
+    // 💰 BALANCE SYSTEM ENDPOINTS (PUT)
+    // ============================================
+    
+    // Admin: Update user balance (add/subtract)
+    if (pathname.match(/^\/api\/admin\/users\/([^\/]+)\/balance$/)) {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const userId = pathname.match(/^\/api\/admin\/users\/([^\/]+)\/balance$/)[1];
+      const { amount, type, note } = body; // type: 'add' or 'subtract'
+
+      if (!amount || amount <= 0) {
+        return NextResponse.json({ success: false, error: 'Geçerli bir tutar giriniz' }, { status: 400 });
+      }
+
+      if (!['add', 'subtract'].includes(type)) {
+        return NextResponse.json({ success: false, error: 'Geçersiz işlem tipi' }, { status: 400 });
+      }
+
+      const user = await db.collection('users').findOne({ id: userId });
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 });
+      }
+
+      const currentBalance = user.balance || 0;
+      const changeAmount = type === 'add' ? amount : -amount;
+      const newBalance = currentBalance + changeAmount;
+
+      if (newBalance < 0) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Bakiye negatif olamaz. Mevcut bakiye: ' + currentBalance.toFixed(2) + ' TL' 
+        }, { status: 400 });
+      }
+
+      // Update user balance
+      await db.collection('users').updateOne(
+        { id: userId },
+        { $set: { balance: newBalance, updatedAt: new Date() } }
+      );
+
+      // Create transaction record
+      const transaction = {
+        id: uuidv4(),
+        userId,
+        type: type === 'add' ? 'admin_credit' : 'admin_debit',
+        amount: Math.abs(changeAmount),
+        balanceBefore: currentBalance,
+        balanceAfter: newBalance,
+        description: note || (type === 'add' ? 'Admin tarafından bakiye eklendi' : 'Admin tarafından bakiye düşüldü'),
+        adminUsername: adminUser.username,
+        createdAt: new Date()
+      };
+
+      await db.collection('balance_transactions').insertOne(transaction);
+
+      // Audit log
+      await logAuditAction(db, type === 'add' ? 'user.balance_add' : 'user.balance_subtract', adminUser.username, 'user', userId, request, {
+        amount: changeAmount,
+        newBalance,
+        note
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: type === 'add' ? 'Bakiye eklendi' : 'Bakiye düşüldü',
+        data: {
+          newBalance,
+          transaction
+        }
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

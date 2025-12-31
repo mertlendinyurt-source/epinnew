@@ -3144,7 +3144,11 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
 
     // Admin: Get orders pending verification
     if (pathname === '/api/admin/orders/pending-verification') {
+      console.log('=== PENDING VERIFICATION ENDPOINT HIT ===');
+      
       const adminUser = verifyAdminToken(request);
+      console.log('Admin User:', adminUser ? adminUser.username : 'NO ADMIN USER');
+      
       if (!adminUser) {
         return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
       }
@@ -3155,6 +3159,8 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
         'verification.submittedAt': { $ne: null }
       }).sort({ 'verification.submittedAt': -1 }).toArray();
 
+      console.log('Pending Orders Found:', pendingOrders.length);
+
       // Populate user info
       const ordersWithUsers = await Promise.all(pendingOrders.map(async (order) => {
         const user = await db.collection('users').findOne({ id: order.userId });
@@ -3164,6 +3170,8 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
           userName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim()
         };
       }));
+
+      console.log('=== RETURNING', ordersWithUsers.length, 'ORDERS ===');
 
       return NextResponse.json({
         success: true,

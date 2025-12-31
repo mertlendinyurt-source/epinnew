@@ -6414,7 +6414,7 @@ export async function POST(request) {
     }
 
     // Customer: Upload verification documents (identity + payment receipt)
-    if (pathname.match(/^\/api\/account\/orders\/([^\/]+)\/verification$/)) {
+    if (method === 'POST' && pathname.match(/^\/api\/account\/orders\/([^\/]+)\/verification$/)) {
       const user = verifyToken(request);
       if (!user || user.type !== 'user') {
         return NextResponse.json({ success: false, error: 'Giriş gerekli' }, { status: 401 });

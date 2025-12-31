@@ -211,19 +211,6 @@ export default function VerificationPage() {
   // Check if verification is required (either marked or high-value order)
   const requiresVerification = order?.verification?.required || (order?.totalAmount >= 3000 || order?.amount >= 3000)
 
-  // DEBUG: Log to console to see what's happening
-  useEffect(() => {
-    if (order) {
-      console.log('=== VERIFICATION DEBUG ===');
-      console.log('Order ID:', order.id);
-      console.log('Total Amount:', order.totalAmount);
-      console.log('Amount:', order.amount);
-      console.log('Verification Object:', order.verification);
-      console.log('Requires Verification:', requiresVerification);
-      console.log('========================');
-    }
-  }, [order]);
-
   if (!order || !requiresVerification) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">

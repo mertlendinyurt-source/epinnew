@@ -4345,6 +4345,52 @@ export async function POST(request) {
           const currentOrder = await db.collection('orders').findOne({ id: order.id });
           
           if (!currentOrder.delivery || !currentOrder.delivery.items || currentOrder.delivery.items.length === 0) {
+            // ============================================
+            // 🔐 HIGH-VALUE ORDER VERIFICATION (3000+ TL)
+            // ============================================
+            // For orders >= 3000 TL, require identity + payment receipt verification
+            if (order.totalAmount >= 3000) {
+              await db.collection('orders').updateOne(
+                { id: order.id },
+                {
+                  $set: {
+                    verification: {
+                      required: true,
+                      status: 'pending', // pending/approved/rejected
+                      identityPhoto: null,
+                      paymentReceipt: null,
+                      submittedAt: null,
+                      reviewedAt: null,
+                      reviewedBy: null,
+                      rejectionReason: null
+                    },
+                    delivery: {
+                      status: 'verification_required',
+                      message: 'Yüksek tutarlı sipariş - Kimlik ve ödeme dekontu doğrulaması gerekli',
+                      items: []
+                    }
+                  }
+                }
+              );
+              console.log(`Order ${order.id} requires verification (amount: ${order.totalAmount} TL >= 3000 TL)`);
+              
+              // Send email notifying verification is required
+              if (orderUser && product) {
+                sendVerificationRequiredEmail(db, order, orderUser, product).catch(err => 
+                  console.error('Verification required email failed:', err)
+                );
+              }
+              
+              // Exit early - no stock assignment until verification approved
+              return NextResponse.json({
+                success: true,
+                message: 'Ödeme başarılı - Doğrulama gerekli'
+              });
+            }
+            
+            // ============================================
+            // NORMAL FLOW: Auto-assign stock for orders < 3000 TL
+            // ============================================
             try {
               // Find available stock for this product (atomic operation)
               const assignedStock = await db.collection('stock').findOneAndUpdate(

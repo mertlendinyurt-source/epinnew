@@ -98,9 +98,6 @@ export default function App() {
   const [footerSettings, setFooterSettings] = useState(null)
   const [todayDate, setTodayDate] = useState('')
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 })
-  const [spinWheelOpen, setSpinWheelOpen] = useState(false)
-  const [discountBalance, setDiscountBalance] = useState(0)
-  const [canSpin, setCanSpin] = useState(true)
 
   // Calculate time remaining until midnight (end of day)
   const calculateTimeToMidnight = () => {

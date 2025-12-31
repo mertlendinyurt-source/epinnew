@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Check, X, Loader2, Info, Menu, Star, ChevronDown, ChevronUp } from 'lucide-react'
+import { User, Check, X, Loader2, Info, Menu, Star, ChevronDown, ChevronUp, Gift } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
 import AuthModal from '@/components/AuthModal'
+import SpinWheel from '@/components/SpinWheel'
 
 // Banner Icon Component for dynamic icons
 function BannerIcon({ icon, size }) {
@@ -98,6 +99,9 @@ export default function App() {
   const [footerSettings, setFooterSettings] = useState(null)
   const [todayDate, setTodayDate] = useState('')
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 })
+  const [spinWheelOpen, setSpinWheelOpen] = useState(false)
+  const [discountBalance, setDiscountBalance] = useState(0)
+  const [canSpin, setCanSpin] = useState(true)
 
   // Calculate time remaining until midnight (end of day)
   const calculateTimeToMidnight = () => {
@@ -126,6 +130,7 @@ export default function App() {
     fetchGameContent()
     fetchReviews(1)
     fetchFooterSettings()
+    fetchDiscountBalance()
     handleGoogleAuthCallback() // Handle Google OAuth callback
     handleLoginRedirect() // Handle login redirect from /admin/login
     loadSEOSettings() // Load SEO settings for GA4 and GSC
@@ -321,6 +326,34 @@ export default function App() {
     } catch (error) {
       console.error('Error fetching footer settings:', error)
     }
+  }
+
+  // Fetch user's discount balance for spin wheel
+  const fetchDiscountBalance = async () => {
+    const token = localStorage.getItem('userToken')
+    if (!token) return
+
+    try {
+      const response = await fetch('/api/user/discount-balance', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await response.json()
+      if (data.success) {
+        setDiscountBalance(data.data.discountBalance || 0)
+        setCanSpin(data.data.canSpin)
+      }
+    } catch (error) {
+      console.error('Error fetching discount balance:', error)
+    }
+  }
+
+  // Handle spin wheel completion
+  const handleSpinComplete = (prize) => {
+    if (prize.amount > 0) {
+      setDiscountBalance(prize.amount)
+      toast.success(`${prize.amount}₺ indirim hesabınıza eklendi!`)
+    }
+    setCanSpin(false)
   }
 
   // Load SEO settings and inject GA4 script
@@ -1896,6 +1929,51 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Spin Wheel Floating Button */}
+      <button
+        onClick={() => {
+          if (isAuthenticated) {
+            setSpinWheelOpen(true)
+          } else {
+            toast.error('Çark çevirmek için giriş yapmalısınız!')
+            setAuthModalTab('login')
+            setAuthModalOpen(true)
+          }
+        }}
+        className={`fixed bottom-6 right-6 z-40 group ${canSpin && isAuthenticated ? 'animate-bounce' : ''}`}
+      >
+        <div className="relative">
+          {/* Glow effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
+          
+          {/* Button */}
+          <div className="relative flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold px-4 py-3 rounded-full shadow-lg shadow-orange-500/30 transition-all">
+            <span className="text-2xl">🎡</span>
+            <span className="hidden sm:inline">Günlük Şans!</span>
+            {discountBalance > 0 && (
+              <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                {discountBalance}₺
+              </span>
+            )}
+          </div>
+          
+          {/* Pulse effect when can spin */}
+          {canSpin && isAuthenticated && (
+            <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-4 w-4">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500"></span>
+            </span>
+          )}
+        </div>
+      </button>
+
+      {/* Spin Wheel Modal */}
+      <SpinWheel 
+        isOpen={spinWheelOpen} 
+        onClose={() => setSpinWheelOpen(false)}
+        onSpinComplete={handleSpinComplete}
+      />
 
       {/* Auth Modal */}
       <AuthModal 

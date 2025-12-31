@@ -98,6 +98,8 @@ export default function App() {
   const [footerSettings, setFooterSettings] = useState(null)
   const [todayDate, setTodayDate] = useState('')
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 })
+  const [userBalance, setUserBalance] = useState(0)
+  const [paymentMethod, setPaymentMethod] = useState('card') // 'card' or 'balance'
 
   // Calculate time remaining until midnight (end of day)
   const calculateTimeToMidnight = () => {
@@ -497,9 +499,31 @@ export default function App() {
     }
   }
 
-  const checkAuth = () => {
+  const checkAuth = async () => {
     const token = localStorage.getItem('userToken')
+    const userData = localStorage.getItem('userData')
+    
     setIsAuthenticated(!!token)
+    
+    if (token && userData) {
+      try {
+        setUser(JSON.parse(userData))
+        
+        // Fetch user balance
+        const balanceResponse = await fetch('/api/account/balance', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (balanceResponse.ok) {
+          const balanceData = await balanceResponse.json()
+          if (balanceData.success) {
+            setUserBalance(balanceData.data.balance || 0)
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error)
+      }
+    }
   }
 
   const fetchProducts = async () => {
@@ -555,6 +579,14 @@ export default function App() {
       return
     }
 
+    // 3. Check balance if payment method is balance
+    if (paymentMethod === 'balance') {
+      if (userBalance < selectedProduct.discountPrice) {
+        toast.error(`Yetersiz bakiye. Eksik: ${(selectedProduct.discountPrice - userBalance).toFixed(2)} ₺`)
+        return
+      }
+    }
+
     // GA4 begin_checkout event
     trackEvent('begin_checkout', {
       currency: 'TRY',
@@ -567,7 +599,7 @@ export default function App() {
       }]
     })
 
-    // 3. Proceed with order
+    // 4. Proceed with order
     setOrderProcessing(true)
     try {
       const response = await fetch('/api/orders', {
@@ -579,7 +611,8 @@ export default function App() {
         body: JSON.stringify({
           productId: selectedProduct.id,
           playerId,
-          playerName
+          playerName,
+          paymentMethod: paymentMethod // 'card' or 'balance'
         })
       })
 
@@ -597,7 +630,28 @@ export default function App() {
       }
       
       if (data.success) {
-        // Shopier requires form POST submission with all fields
+        // Balance payment - direct success
+        if (paymentMethod === 'balance') {
+          toast.success('Sipariş başarıyla oluşturuldu! Kodlarınız hesabınıza yükleniyor...')
+          setCheckoutOpen(false)
+          // Refresh balance
+          const balanceResponse = await fetch('/api/account/balance', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          if (balanceResponse.ok) {
+            const balanceData = await balanceResponse.json()
+            if (balanceData.success) {
+              setUserBalance(balanceData.data.balance || 0)
+            }
+          }
+          // Redirect to order page after 2 seconds
+          setTimeout(() => {
+            window.location.href = `/account/orders/${data.data.orderId}`
+          }, 2000)
+          return
+        }
+
+        // Card payment - Shopier redirect
         if (data.data.formData && data.data.paymentUrl) {
           // Create a hidden form and submit it with all Shopier fields
           const form = document.createElement('form')
@@ -851,6 +905,16 @@ export default function App() {
               <div className="h-14 md:h-16 w-32 bg-white/5 rounded animate-pulse"></div>
             )}
           </div>
+          
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center gap-6">
+            <a href="/" className="text-white/70 hover:text-white transition-colors text-sm font-medium">
+              Anasayfa
+            </a>
+            <a href="/blog" className="text-white/70 hover:text-white transition-colors text-sm font-medium">
+              Blog
+            </a>
+          </nav>
             
           <div className="flex items-center gap-2 md:gap-4">
             {/* Mobile Menu */}
@@ -866,7 +930,18 @@ export default function App() {
               </SheetTrigger>
               <SheetContent side="left" className="w-[280px] bg-[#1e2229] border-white/10 p-0">
                 <div className="p-5">
-                  <FilterSidebar />
+                  {/* Mobile Navigation Links */}
+                  <div className="mb-4 space-y-2">
+                    <a href="/" className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                      Anasayfa
+                    </a>
+                    <a href="/blog" className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                      Blog / Haberler
+                    </a>
+                  </div>
+                  <div className="border-t border-white/10 pt-4">
+                    <FilterSidebar />
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
@@ -977,6 +1052,41 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      {/* Trust Badges - Güven Rozetleri */}
+      <div className="bg-[#0d0d0d] border-b border-white/5">
+        <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-2.5">
+          <div className="flex items-center justify-center gap-4 md:gap-8 flex-wrap text-xs md:text-sm">
+            <div className="flex items-center gap-1.5 text-white/80">
+              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>SSL Güvenli</span>
+            </div>
+            <div className="hidden md:block w-px h-4 bg-white/20"></div>
+            <div className="flex items-center gap-1.5 text-white/80">
+              <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+              </svg>
+              <span>Anında Teslimat</span>
+            </div>
+            <div className="hidden md:block w-px h-4 bg-white/20"></div>
+            <div className="flex items-center gap-1.5 text-white/80">
+              <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+              </svg>
+              <span>7/24 Destek</span>
+            </div>
+            <div className="hidden md:block w-px h-4 bg-white/20"></div>
+            <div className="flex items-center gap-1.5 text-white/80">
+              <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span>10.000+ Mutlu Müşteri</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="relative h-[200px] md:h-[300px] flex items-start overflow-hidden bg-[#1a1a1a]">
         <div 
@@ -1505,10 +1615,62 @@ export default function App() {
                   <div>
                     <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Ödeme yöntemleri</Label>
                     
-                    <div className="relative p-4 md:p-5 rounded-lg bg-[#12161D] border border-white/10">
-                      <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-white flex items-center justify-center">
-                        <Check className="w-4 h-4 text-black" />
+                    {/* Balance Payment Option */}
+                    {isAuthenticated && userBalance > 0 && (
+                      <div 
+                        onClick={() => setPaymentMethod('balance')}
+                        className={`relative p-4 md:p-5 rounded-lg border-2 mb-3 cursor-pointer transition-all ${
+                          paymentMethod === 'balance'
+                            ? 'bg-green-900/20 border-green-500'
+                            : 'bg-[#12161D] border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        {paymentMethod === 'balance' && (
+                          <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <Check className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                        
+                        <div className="mb-3">
+                          <div className="text-base md:text-lg font-bold text-white mb-1 flex items-center gap-2">
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd"/>
+                            </svg>
+                            Bakiye ile Öde
+                          </div>
+                          <div className="inline-block px-2 py-0.5 rounded bg-green-500/20 text-[11px] text-green-400 font-semibold">
+                            Anında teslimat
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <div className="text-sm text-white/70">
+                            Mevcut Bakiye: <span className="font-bold text-green-400">{userBalance.toFixed(2)} ₺</span>
+                          </div>
+                          {selectedProduct && userBalance < selectedProduct.discountPrice && (
+                            <div className="text-xs text-red-400 font-semibold">
+                              ⚠️ Yetersiz bakiye (Eksik: {(selectedProduct.discountPrice - userBalance).toFixed(2)} ₺)
+                            </div>
+                          )}
+                        </div>
                       </div>
+                    )}
+
+                    {/* Card Payment Option */}
+                    <div 
+                      onClick={() => setPaymentMethod('card')}
+                      className={`relative p-4 md:p-5 rounded-lg border-2 cursor-pointer transition-all ${
+                        paymentMethod === 'card'
+                          ? 'bg-blue-900/20 border-blue-500'
+                          : 'bg-[#12161D] border-white/10 hover:border-white/20'
+                      }`}
+                    >
+                      {paymentMethod === 'card' && (
+                        <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
                       
                       <div className="mb-3">
                         <div className="text-base md:text-lg font-bold text-white mb-1">Kredi / Banka Kartı</div>

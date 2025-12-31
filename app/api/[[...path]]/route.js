@@ -6293,7 +6293,7 @@ export async function DELETE(request) {
     
     // Admin - Çark istatistikleri
     if (pathname === '/api/admin/spin-wheel/stats') {
-      const adminUser = await verifyAdmin(request, db);
+      const adminUser = verifyAdminToken(request);
       if (!adminUser) {
         return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
       }

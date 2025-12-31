@@ -4533,6 +4533,34 @@ export async function POST(request) {
       });
     }
 
+    // Admin: Update product DijiPin setting
+    if (pathname === '/api/admin/products/dijipin') {
+      const authHeader = request.headers.get('authorization');
+      if (!authHeader) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const { productId, dijipinEnabled } = body;
+
+      if (!productId) {
+        return NextResponse.json({ success: false, error: 'Ürün ID gerekli' }, { status: 400 });
+      }
+
+      const result = await db.collection('products').updateOne(
+        { id: productId },
+        { $set: { dijipinEnabled: dijipinEnabled, updatedAt: new Date() } }
+      );
+
+      if (result.matchedCount === 0) {
+        return NextResponse.json({ success: false, error: 'Ürün bulunamadı' }, { status: 404 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: dijipinEnabled ? 'DijiPin otomatik gönderim açıldı' : 'DijiPin otomatik gönderim kapatıldı'
+      });
+    }
+
     // Admin: Save Shopier payment settings (encrypted)
     if (pathname === '/api/admin/settings/payments') {
       const user = verifyAdminToken(request);

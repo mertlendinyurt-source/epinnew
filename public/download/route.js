@@ -1903,7 +1903,50 @@ export async function GET(request) {
       });
     }
 
-    // User: Get my orders
+    // User: Get single order by ID
+    if (pathname.match(/^\/api\/account\/orders\/([^\/]+)$/)) {
+      try {
+        const authUser = verifyToken(request);
+        if (!authUser || authUser.type !== 'user') {
+          return NextResponse.json(
+            { success: false, error: 'Giriş yapmalısınız' },
+            { status: 401 }
+          );
+        }
+
+        const orderId = pathname.match(/^\/api\/account\/orders\/([^\/]+)$/)[1];
+        
+        const order = await db.collection('orders').findOne({ 
+          id: orderId, 
+          userId: authUser.id 
+        });
+
+        if (!order) {
+          return NextResponse.json(
+            { success: false, error: 'Sipariş bulunamadı' },
+            { status: 404 }
+          );
+        }
+
+        // Hide internal risk data
+        const userOrder = { ...order };
+        delete userOrder.risk;
+        delete userOrder.meta;
+
+        return NextResponse.json({
+          success: true,
+          data: userOrder
+        });
+      } catch (error) {
+        console.error('Single order fetch error:', error);
+        return NextResponse.json(
+          { success: false, error: 'Sipariş getirilemedi' },
+          { status: 500 }
+        );
+      }
+    }
+
+    // User: Get all orders
     if (pathname === '/api/account/orders') {
       const authUser = verifyToken(request);
       if (!authUser || authUser.type !== 'user') {

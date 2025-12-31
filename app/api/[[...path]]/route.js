@@ -236,6 +236,148 @@ function getNextMidnight() {
 }
 
 // ============================================
+// DIJIPIN API FUNCTIONS
+// ============================================
+
+// DijiPin ürün ID eşleştirme (Pinly ürün adı -> DijiPin customerStoreProductID)
+const DIJIPIN_PRODUCT_MAP = {
+  '60 UC': 1,
+  '60 UC + 6 Bonus': 1,
+  '325 UC': 2,
+  '325 UC + 33 Bonus': 2,
+  '660 UC': 3,
+  '660 UC + 66 Bonus': 3,
+  '1800 UC': 4,
+  '1800 UC + 180 Bonus': 4,
+  '3850 UC': 5,
+  '3850 UC + 385 Bonus': 5,
+  '8100 UC': 6,
+  '8100 UC + 810 Bonus': 6
+};
+
+// DijiPin bakiye sorgulama
+async function getDijipinBalance() {
+  if (!DIJIPIN_API_TOKEN) {
+    console.log('DijiPin API token not configured');
+    return null;
+  }
+  
+  try {
+    const response = await fetch(`${DIJIPIN_API_URL}/Customer/Get`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${DIJIPIN_API_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      return data.data.balance;
+    }
+    return null;
+  } catch (error) {
+    console.error('DijiPin balance check error:', error);
+    return null;
+  }
+}
+
+// DijiPin sipariş oluşturma
+async function createDijipinOrder(productName, quantity, pubgId) {
+  if (!DIJIPIN_API_TOKEN) {
+    console.log('DijiPin API token not configured');
+    return { success: false, error: 'DijiPin API yapılandırılmamış' };
+  }
+  
+  // Ürün ID'sini bul
+  let dijipinProductId = null;
+  for (const [key, value] of Object.entries(DIJIPIN_PRODUCT_MAP)) {
+    if (productName.toLowerCase().includes(key.toLowerCase().split(' ')[0]) && 
+        productName.toLowerCase().includes('uc')) {
+      dijipinProductId = value;
+      break;
+    }
+  }
+  
+  // Direkt eşleşme kontrolü
+  if (!dijipinProductId && DIJIPIN_PRODUCT_MAP[productName]) {
+    dijipinProductId = DIJIPIN_PRODUCT_MAP[productName];
+  }
+  
+  if (!dijipinProductId) {
+    console.log('DijiPin product not found for:', productName);
+    return { success: false, error: 'Bu ürün DijiPin entegrasyonunda bulunamadı' };
+  }
+  
+  try {
+    const response = await fetch(`${DIJIPIN_API_URL}/Order/Create`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${DIJIPIN_API_TOKEN}`,
+        'Apikey': DIJIPIN_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        basketData: [
+          {
+            customerStoreProductID: dijipinProductId,
+            quantity: quantity || 1,
+            fields: {
+              userID: pubgId,
+              serverID: '1'
+            }
+          }
+        ]
+      })
+    });
+    
+    const data = await response.json();
+    console.log('DijiPin order response:', JSON.stringify(data));
+    
+    if (data.success) {
+      return {
+        success: true,
+        orderId: data.data.orderID,
+        details: data.data.details,
+        message: data.message
+      };
+    } else {
+      return {
+        success: false,
+        error: data.message || 'DijiPin sipariş hatası',
+        errorCode: data.errorCode
+      };
+    }
+  } catch (error) {
+    console.error('DijiPin order create error:', error);
+    return { success: false, error: 'DijiPin bağlantı hatası: ' + error.message };
+  }
+}
+
+// DijiPin sipariş durumu sorgulama
+async function getDijipinOrderStatus(orderId) {
+  if (!DIJIPIN_API_TOKEN) {
+    return null;
+  }
+  
+  try {
+    const response = await fetch(`${DIJIPIN_API_URL}/Order/Get?orderID=${orderId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${DIJIPIN_API_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('DijiPin order status error:', error);
+    return null;
+  }
+}
+
+// ============================================
 // AUDIT LOG FUNCTIONS
 // ============================================
 async function logAuditAction(db, action, actorId, entityType, entityId, request, meta = {}) {

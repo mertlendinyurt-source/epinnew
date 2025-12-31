@@ -1199,6 +1199,37 @@ async function sendVerificationRejectedEmail(db, order, user, rejectionReason) {
   return sendEmail(db, 'verification_rejected', user.email, content, user.id, order.id);
 }
 
+async function sendVerificationRequiredEmail(db, order, user, product) {
+  const content = {
+    subject: `Doğrulama gerekli - ${order.id.slice(-8)}`,
+    title: 'Yüksek Tutarlı Sipariş - Doğrulama Gerekli',
+    body: `
+      <p>Merhaba ${user.firstName},</p>
+      <p>Yüksek tutarlı siparişiniz için güvenlik doğrulaması gereklidir.</p>
+      
+      <p style="margin-top:20px;"><strong>Sipariş Bilgileri:</strong></p>
+      <ul>
+        <li>Sipariş No: ${order.id.slice(-8)}</li>
+        <li>Ürün: ${product.title}</li>
+        <li>Tutar: ${order.amount.toFixed(2)} TL</li>
+      </ul>
+      
+      <p style="margin-top:20px;"><strong>Gerekli Belgeler:</strong></p>
+      <ul>
+        <li>Kimlik fotoğrafı (TC kimlik kartı ön yüz)</li>
+        <li>Ödeme dekontu/ekran görüntüsü</li>
+      </ul>
+    `,
+    info: 'Doğrulama belgeleri onaylandıktan sonra siparişiniz teslim edilecektir.',
+    cta: {
+      text: 'Doğrulama Belgelerini Yükle',
+      url: `${BASE_URL}/account/orders/${order.id}`
+    }
+  };
+  
+  return sendEmail(db, 'verification_required', user.email, content, user.id, order.id);
+}
+
 let cachedClient = null;
 
 async function getDb() {

@@ -177,10 +177,18 @@ export default function SpinWheel({ isOpen, onClose, onSpinComplete }) {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({})
       })
 
-      const data = await response.json()
+      const text = await response.text()
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch (e) {
+        console.error('JSON parse error:', text)
+        throw new Error('Sunucu hatası, lütfen tekrar deneyin')
+      }
 
       if (data.success) {
         // Find prize index

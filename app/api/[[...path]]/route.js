@@ -239,18 +239,18 @@ function getNextMidnight() {
 // DIJIPIN API FUNCTIONS
 // ============================================
 
-// DijiPin ürün ID eşleştirme (Pinly ürün title -> DijiPin customerStoreProductID)
+// DijiPin ürün ID eşleştirme (Pinly ürün title -> DijiPin productID)
 // Sadece 60 UC ve 325 UC için otomatik gönderim aktif
-// DijiPin'den alınan customerStoreProductID değerleri
+// DijiPin'den alınan productID değerleri (TOP-UP - Direkt UC Yükleme)
 const DIJIPIN_PRODUCT_MAP = {
-  '60 UC': 1,
-  '60 uc': 1,
-  '60UC': 1,
-  '60uc': 1,
-  '325 UC': 2,
-  '325 uc': 2,
-  '325UC': 2,
-  '325uc': 2
+  '60 UC': 265,    // Top-Up PubG Mobile 60 UC - TR
+  '60 uc': 265,
+  '60UC': 265,
+  '60uc': 265,
+  '325 UC': 266,   // Top-Up PubG Mobile 325 UC - TR
+  '325 uc': 266,
+  '325UC': 266,
+  '325uc': 266
 };
 
 // DijiPin desteklenen ürünleri kontrol et (sadece 60 UC ve 325 UC)
@@ -262,16 +262,16 @@ function isDijipinEligibleProduct(productTitle) {
          (title.includes('325') && title.includes('uc'));
 }
 
-// DijiPin ürün ID'sini bul
+// DijiPin ürün ID'sini bul (TOP-UP productID)
 function getDijipinProductId(productTitle) {
   if (!productTitle) return null;
   const title = productTitle.toLowerCase().trim();
   
   if (title.includes('60') && title.includes('uc')) {
-    return 1; // 60 UC
+    return 265; // Top-Up PubG Mobile 60 UC - TR
   }
   if (title.includes('325') && title.includes('uc')) {
-    return 2; // 325 UC
+    return 266; // Top-Up PubG Mobile 325 UC - TR
   }
   return null;
 }

@@ -220,6 +220,17 @@ function clearBruteForce(email, ip, isAdmin = false) {
 }
 
 // ============================================
+// HELPER - GET NEXT MIDNIGHT (for spin wheel)
+// ============================================
+function getNextMidnight() {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  return tomorrow.toISOString();
+}
+
+// ============================================
 // AUDIT LOG FUNCTIONS
 // ============================================
 async function logAuditAction(db, action, actorId, entityType, entityId, request, meta = {}) {

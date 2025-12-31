@@ -2938,6 +2938,48 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
       });
     }
 
+    // Get DijiPin orders (orders delivered via DijiPin)
+    if (pathname === '/api/admin/dijipin/orders') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+      
+      // Get orders with DijiPin delivery
+      const dijipinOrders = await db.collection('orders')
+        .find({ 'delivery.method': 'dijipin_auto' })
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .toArray();
+      
+      // Calculate stats
+      const allDijipinOrders = await db.collection('orders')
+        .find({ 'delivery.method': 'dijipin_auto' })
+        .toArray();
+      
+      const pendingDijipinOrders = await db.collection('orders')
+        .find({ 
+          'delivery.status': 'pending',
+          'delivery.dijipinError': { $exists: true }
+        })
+        .toArray();
+      
+      const stats = {
+        totalOrders: allDijipinOrders.length + pendingDijipinOrders.length,
+        successfulOrders: allDijipinOrders.filter(o => o.delivery?.status === 'delivered').length,
+        failedOrders: pendingDijipinOrders.length,
+        pendingOrders: allDijipinOrders.filter(o => o.delivery?.status === 'pending').length
+      };
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          orders: dijipinOrders,
+          stats
+        }
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

@@ -302,7 +302,7 @@ export default function VerificationPage() {
                     <li>• Yüksek tutarlı siparişiniz (3000 TL ve üzeri) dolandırıcılık önleme kapsamındadır</li>
                     <li>• Kimlik ve ödeme doğrulaması yaparak hem sizi hem de kendimizi koruyoruz</li>
                     <li>• <strong>Belgeleriniz sadece bu işlem için kullanılacak ve onay/red sonrası silinecektir</strong></li>
-                    <li>• Admin incelemesi genellikle 1-24 saat içinde tamamlanır</li>
+                    <li>• Admin incelemesi genellikle 1 saat içinde tamamlanır</li>
                   </ul>
                 </div>
               </div>

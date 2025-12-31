@@ -3172,14 +3172,25 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
       const limit = parseInt(searchParams.get('limit') || '20');
       const skip = (page - 1) * limit;
 
-      let query = { type: 'user' };
+      // Query: tüm kullanıcılar (admin hariç)
+      let query = { 
+        $or: [
+          { type: 'user' },
+          { type: { $exists: false } }  // type field'ı olmayanlar da dahil
+        ],
+        role: { $ne: 'admin' }  // Admin rolü olmayanlar
+      };
+      
       if (search) {
-        query.$or = [
-          { email: { $regex: search, $options: 'i' } },
-          { firstName: { $regex: search, $options: 'i' } },
-          { lastName: { $regex: search, $options: 'i' } },
-          { phone: { $regex: search, $options: 'i' } }
-        ];
+        query.$and = query.$and || [];
+        query.$and.push({
+          $or: [
+            { email: { $regex: search, $options: 'i' } },
+            { firstName: { $regex: search, $options: 'i' } },
+            { lastName: { $regex: search, $options: 'i' } },
+            { phone: { $regex: search, $options: 'i' } }
+          ]
+        });
       }
 
       const [users, total] = await Promise.all([

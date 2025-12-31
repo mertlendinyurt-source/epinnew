@@ -4270,7 +4270,7 @@ export async function POST(request) {
         );
       }
 
-      const { productId, playerId, playerName } = body;
+      const { productId, playerId, playerName, paymentMethod } = body; // paymentMethod: 'card' or 'balance'
       
       if (!productId || !playerId || !playerName) {
         return NextResponse.json(
@@ -4304,6 +4304,191 @@ export async function POST(request) {
           { status: 404 }
         );
       }
+
+      // ============================================
+      // 💰 BALANCE PAYMENT FLOW
+      // ============================================
+      if (paymentMethod === 'balance') {
+        const userBalance = user.balance || 0;
+        const orderAmount = product.discountPrice;
+
+        // Check sufficient balance
+        if (userBalance < orderAmount) {
+          return NextResponse.json(
+            { success: false, error: `Yetersiz bakiye. Mevcut: ${userBalance.toFixed(2)} ₺, Gerekli: ${orderAmount.toFixed(2)} ₺` },
+            { status: 400 }
+          );
+        }
+
+        // Create customer snapshot
+        const customerSnapshot = {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone
+        };
+
+        // Create order with PAID status (balance payment)
+        const order = {
+          id: uuidv4(),
+          userId: user.id,
+          productId,
+          productTitle: product.title,
+          productImageUrl: product.imageUrl || null,
+          playerId,
+          playerName,
+          customer: customerSnapshot,
+          status: 'paid', // Already paid with balance
+          paymentMethod: 'balance',
+          totalAmount: orderAmount,
+          currency: 'TRY',
+          delivery: {
+            status: 'pending',
+            message: 'Stok atanıyor...',
+            items: []
+          },
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        // Deduct balance
+        const newBalance = userBalance - orderAmount;
+        await db.collection('users').updateOne(
+          { id: user.id },
+          { $set: { balance: newBalance, updatedAt: new Date() } }
+        );
+
+        // Create balance transaction record
+        await db.collection('balance_transactions').insertOne({
+          id: uuidv4(),
+          userId: user.id,
+          type: 'order_payment',
+          amount: -orderAmount,
+          balanceBefore: userBalance,
+          balanceAfter: newBalance,
+          description: `Sipariş ödemesi: ${product.title}`,
+          orderId: order.id,
+          createdAt: new Date()
+        });
+
+        // Insert order
+        await db.collection('orders').insertOne(order);
+
+        // Check if high-value order (>= 3000 TL) - requires verification
+        if (orderAmount >= 3000) {
+          await db.collection('orders').updateOne(
+            { id: order.id },
+            {
+              $set: {
+                verification: {
+                  required: true,
+                  status: 'pending',
+                  identityPhoto: null,
+                  paymentReceipt: null,
+                  submittedAt: null,
+                  reviewedAt: null,
+                  reviewedBy: null,
+                  rejectionReason: null
+                },
+                delivery: {
+                  status: 'verification_required',
+                  message: 'Yüksek tutarlı sipariş - Kimlik ve ödeme dekontu doğrulaması gerekli',
+                  items: []
+                }
+              }
+            }
+          );
+
+          sendVerificationRequiredEmail(db, order, user, product).catch(err => 
+            console.error('Verification required email failed:', err)
+          );
+
+          return NextResponse.json({
+            success: true,
+            message: 'Sipariş oluşturuldu. Doğrulama gerekli.',
+            data: { orderId: order.id, requiresVerification: true }
+          });
+        }
+
+        // Auto-assign stock for orders < 3000 TL
+        const assignedStock = await db.collection('stock').findOneAndUpdate(
+          { productId, status: 'available' },
+          { 
+            $set: { 
+              status: 'assigned',
+              orderId: order.id,
+              assignedAt: new Date()
+            }
+          },
+          { 
+            returnDocument: 'after',
+            sort: { createdAt: 1 }
+          }
+        );
+
+        if (assignedStock && assignedStock.value) {
+          const stockCode = assignedStock.value;
+          
+          await db.collection('orders').updateOne(
+            { id: order.id },
+            {
+              $set: {
+                delivery: {
+                  status: 'delivered',
+                  items: [stockCode],
+                  stockId: assignedStock.id || assignedStock._id,
+                  assignedAt: new Date()
+                }
+              }
+            }
+          );
+
+          // Send delivered email
+          sendDeliveredEmail(db, order, user, product, [stockCode]).catch(err => 
+            console.error('Delivered email failed:', err)
+          );
+
+          await logAuditAction(db, AUDIT_ACTIONS.ORDER_COMPLETE, user.id, 'order', order.id, request, {
+            paymentMethod: 'balance',
+            stockAssigned: true
+          });
+
+          return NextResponse.json({
+            success: true,
+            message: 'Sipariş tamamlandı',
+            data: { orderId: order.id }
+          });
+        } else {
+          // No stock available
+          await db.collection('orders').updateOne(
+            { id: order.id },
+            {
+              $set: {
+                delivery: {
+                  status: 'pending',
+                  message: 'Stok bekleniyor',
+                  items: []
+                }
+              }
+            }
+          );
+
+          await logAuditAction(db, AUDIT_ACTIONS.ORDER_CREATE, user.id, 'order', order.id, request, {
+            paymentMethod: 'balance',
+            stockAssigned: false
+          });
+
+          return NextResponse.json({
+            success: true,
+            message: 'Sipariş oluşturuldu. Stok bekleniyor.',
+            data: { orderId: order.id }
+          });
+        }
+      }
+
+      // ============================================
+      // 💳 CARD PAYMENT FLOW (SHOPIER)
+      // ============================================
 
       // Get Shopier settings from database
       const shopierSettings = await db.collection('shopier_settings').findOne({ isActive: true });

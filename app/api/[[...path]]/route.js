@@ -4533,6 +4533,7 @@ export async function POST(request) {
         customer: customerSnapshot, // Store customer info snapshot
         status: 'pending',
         amount: product.discountPrice, // Backend-controlled price
+        totalAmount: product.discountPrice, // For verification checks
         currency: 'TRY',
         createdAt: new Date(),
         updatedAt: new Date()

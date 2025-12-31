@@ -455,6 +455,9 @@ const AUDIT_ACTIONS = {
   ORDER_RISK_FLAG: 'order.risk_flag',
   ORDER_MANUAL_APPROVE: 'order.manual_approve',
   ORDER_MANUAL_REFUND: 'order.manual_refund',
+  ORDER_VERIFICATION_SUBMIT: 'order.verification_submit',
+  ORDER_VERIFICATION_APPROVE: 'order.verification_approve',
+  ORDER_VERIFICATION_REJECT: 'order.verification_reject',
 };
 
 // ============================================
@@ -1165,6 +1168,66 @@ async function sendPasswordChangedEmail(db, user) {
   
   // Password change emails should always send (skip duplicate)
   return sendEmail(db, 'password_changed', user.email, content, user.id, null, null, true);
+}
+
+async function sendVerificationRejectedEmail(db, order, user, rejectionReason) {
+  const content = {
+    subject: `Doğrulama reddedildi - ${order.id.slice(-8)}`,
+    title: 'Doğrulama Reddedildi',
+    body: `
+      <p>Merhaba ${user.firstName},</p>
+      <p>Maalesef yüksek tutarlı siparişiniz için gönderdiğiniz doğrulama belgeleri uygun bulunmadı.</p>
+      
+      <p style="margin-top:20px;"><strong>Sipariş Bilgileri:</strong></p>
+      <ul>
+        <li>Sipariş No: ${order.id.slice(-8)}</li>
+        <li>Tutar: ${order.amount.toFixed(2)} TL</li>
+      </ul>
+      
+      <p style="margin-top:20px;"><strong>Red Sebebi:</strong></p>
+      <p style="padding:15px;background:#fff3cd;border-left:3px solid #ffc107;">
+        ${rejectionReason || 'Doğrulama belgeleri uygun değil'}
+      </p>
+    `,
+    warning: 'Siparişiniz iptal edildi ve para iadesi işlemi başlatıldı. İade süreci 3-5 iş günü sürebilir.',
+    cta: {
+      text: 'Destek Talebi Oluştur',
+      url: `${BASE_URL}/account/support/new`
+    }
+  };
+  
+  return sendEmail(db, 'verification_rejected', user.email, content, user.id, order.id);
+}
+
+async function sendVerificationRequiredEmail(db, order, user, product) {
+  const content = {
+    subject: `Doğrulama gerekli - ${order.id.slice(-8)}`,
+    title: 'Yüksek Tutarlı Sipariş - Doğrulama Gerekli',
+    body: `
+      <p>Merhaba ${user.firstName},</p>
+      <p>Yüksek tutarlı siparişiniz için güvenlik doğrulaması gereklidir.</p>
+      
+      <p style="margin-top:20px;"><strong>Sipariş Bilgileri:</strong></p>
+      <ul>
+        <li>Sipariş No: ${order.id.slice(-8)}</li>
+        <li>Ürün: ${product.title}</li>
+        <li>Tutar: ${order.amount.toFixed(2)} TL</li>
+      </ul>
+      
+      <p style="margin-top:20px;"><strong>Gerekli Belgeler:</strong></p>
+      <ul>
+        <li>Kimlik fotoğrafı (TC kimlik kartı ön yüz)</li>
+        <li>Ödeme dekontu/ekran görüntüsü</li>
+      </ul>
+    `,
+    info: 'Doğrulama belgeleri onaylandıktan sonra siparişiniz teslim edilecektir.',
+    cta: {
+      text: 'Doğrulama Belgelerini Yükle',
+      url: `${BASE_URL}/account/orders/${order.id}`
+    }
+  };
+  
+  return sendEmail(db, 'verification_required', user.email, content, user.id, order.id);
 }
 
 let cachedClient = null;
@@ -3036,6 +3099,63 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
       });
     }
 
+    // Admin: Get orders pending verification
+    if (pathname === '/api/admin/orders/pending-verification') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const pendingOrders = await db.collection('orders').find({
+        'verification.required': true,
+        'verification.status': 'pending',
+        'verification.submittedAt': { $ne: null }
+      }).sort({ 'verification.submittedAt': -1 }).toArray();
+
+      // Populate user info
+      const ordersWithUsers = await Promise.all(pendingOrders.map(async (order) => {
+        const user = await db.collection('users').findOne({ id: order.userId });
+        return {
+          ...order,
+          userEmail: user?.email || 'N/A',
+          userName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim()
+        };
+      }));
+
+      return NextResponse.json({
+        success: true,
+        data: ordersWithUsers
+      });
+    }
+
+    // Customer: Get verification status
+    if (pathname.match(/^\/api\/account\/orders\/([^\/]+)\/verification$/)) {
+      const user = verifyToken(request);
+      if (!user || user.type !== 'user') {
+        return NextResponse.json({ success: false, error: 'Giriş gerekli' }, { status: 401 });
+      }
+
+      const orderId = pathname.match(/^\/api\/account\/orders\/([^\/]+)\/verification$/)[1];
+      
+      const order = await db.collection('orders').findOne({ id: orderId, userId: user.id });
+      if (!order) {
+        return NextResponse.json({ success: false, error: 'Sipariş bulunamadı' }, { status: 404 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          required: order.verification?.required || false,
+          status: order.verification?.status || 'not_required',
+          identityPhoto: order.verification?.identityPhoto || null,
+          paymentReceipt: order.verification?.paymentReceipt || null,
+          submittedAt: order.verification?.submittedAt || null,
+          reviewedAt: order.verification?.reviewedAt || null,
+          rejectionReason: order.verification?.rejectionReason || null
+        }
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }
@@ -4345,6 +4465,52 @@ export async function POST(request) {
           const currentOrder = await db.collection('orders').findOne({ id: order.id });
           
           if (!currentOrder.delivery || !currentOrder.delivery.items || currentOrder.delivery.items.length === 0) {
+            // ============================================
+            // 🔐 HIGH-VALUE ORDER VERIFICATION (3000+ TL)
+            // ============================================
+            // For orders >= 3000 TL, require identity + payment receipt verification
+            if (order.totalAmount >= 3000) {
+              await db.collection('orders').updateOne(
+                { id: order.id },
+                {
+                  $set: {
+                    verification: {
+                      required: true,
+                      status: 'pending', // pending/approved/rejected
+                      identityPhoto: null,
+                      paymentReceipt: null,
+                      submittedAt: null,
+                      reviewedAt: null,
+                      reviewedBy: null,
+                      rejectionReason: null
+                    },
+                    delivery: {
+                      status: 'verification_required',
+                      message: 'Yüksek tutarlı sipariş - Kimlik ve ödeme dekontu doğrulaması gerekli',
+                      items: []
+                    }
+                  }
+                }
+              );
+              console.log(`Order ${order.id} requires verification (amount: ${order.totalAmount} TL >= 3000 TL)`);
+              
+              // Send email notifying verification is required
+              if (orderUser && product) {
+                sendVerificationRequiredEmail(db, order, orderUser, product).catch(err => 
+                  console.error('Verification required email failed:', err)
+                );
+              }
+              
+              // Exit early - no stock assignment until verification approved
+              return NextResponse.json({
+                success: true,
+                message: 'Ödeme başarılı - Doğrulama gerekli'
+              });
+            }
+            
+            // ============================================
+            // NORMAL FLOW: Auto-assign stock for orders < 3000 TL
+            // ============================================
             try {
               // Find available stock for this product (atomic operation)
               const assignedStock = await db.collection('stock').findOneAndUpdate(
@@ -5889,6 +6055,75 @@ export async function POST(request) {
       });
     }
 
+    // Customer: Upload verification documents (identity + payment receipt)
+    if (pathname.match(/^\/api\/account\/orders\/([^\/]+)\/verification$/)) {
+      const user = verifyToken(request);
+      if (!user || user.type !== 'user') {
+        return NextResponse.json({ success: false, error: 'Giriş gerekli' }, { status: 401 });
+      }
+
+      const orderId = pathname.match(/^\/api\/account\/orders\/([^\/]+)\/verification$/)[1];
+      
+      // Get order and verify ownership
+      const order = await db.collection('orders').findOne({ id: orderId, userId: user.id });
+      if (!order) {
+        return NextResponse.json({ success: false, error: 'Sipariş bulunamadı' }, { status: 404 });
+      }
+
+      // Verify order requires verification
+      if (!order.verification || !order.verification.required) {
+        return NextResponse.json({ success: false, error: 'Bu sipariş için doğrulama gerekli değil' }, { status: 400 });
+      }
+
+      // Check if already submitted
+      if (order.verification.status !== 'pending' || order.verification.submittedAt) {
+        return NextResponse.json({ success: false, error: 'Doğrulama belgeleri zaten gönderilmiş' }, { status: 400 });
+      }
+
+      // Parse multipart form data
+      const formData = await request.formData();
+      const identityFile = formData.get('identityPhoto');
+      const receiptFile = formData.get('paymentReceipt');
+
+      if (!identityFile || !receiptFile) {
+        return NextResponse.json({ success: false, error: 'Kimlik fotoğrafı ve ödeme dekontu zorunludur' }, { status: 400 });
+      }
+
+      // Save files to /public/uploads/verifications/
+      let identityUrl, receiptUrl;
+      try {
+        identityUrl = await saveUploadedFile(identityFile, 'verifications');
+        receiptUrl = await saveUploadedFile(receiptFile, 'verifications');
+      } catch (error) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+      }
+
+      // Update order with verification documents
+      await db.collection('orders').updateOne(
+        { id: orderId },
+        {
+          $set: {
+            'verification.identityPhoto': identityUrl,
+            'verification.paymentReceipt': receiptUrl,
+            'verification.submittedAt': new Date(),
+            'delivery.status': 'verification_pending',
+            'delivery.message': 'Doğrulama belgeleri inceleniyor'
+          }
+        }
+      );
+
+      // Log admin notification
+      await logAuditAction(db, AUDIT_ACTIONS.ORDER_VERIFICATION_SUBMIT, user.id, 'order', orderId, request, {
+        identityPhoto: identityUrl,
+        paymentReceipt: receiptUrl
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Doğrulama belgeleri başarıyla yüklendi. Admin incelemesi bekleniyor.'
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }
@@ -6344,6 +6579,174 @@ export async function PUT(request) {
         success: true,
         message: 'DijiPin ayarları güncellendi'
       });
+    }
+
+    // Admin: Approve/Reject verification & Assign stock
+    if (pathname.match(/^\/api\/admin\/orders\/([^\/]+)\/verify$/)) {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const orderId = pathname.match(/^\/api\/admin\/orders\/([^\/]+)\/verify$/)[1];
+      const { action, rejectionReason } = body; // action: 'approve' or 'reject'
+
+      const order = await db.collection('orders').findOne({ id: orderId });
+      if (!order) {
+        return NextResponse.json({ success: false, error: 'Sipariş bulunamadı' }, { status: 404 });
+      }
+
+      if (!order.verification || !order.verification.required) {
+        return NextResponse.json({ success: false, error: 'Bu sipariş doğrulama gerektirmiyor' }, { status: 400 });
+      }
+
+      if (action === 'approve') {
+        // Update verification status to approved
+        await db.collection('orders').updateOne(
+          { id: orderId },
+          {
+            $set: {
+              'verification.status': 'approved',
+              'verification.reviewedAt': new Date(),
+              'verification.reviewedBy': adminUser.username
+            }
+          }
+        );
+
+        // Delete verification files (as per requirement)
+        if (order.verification.identityPhoto) {
+          deleteUploadedFile(order.verification.identityPhoto);
+        }
+        if (order.verification.paymentReceipt) {
+          deleteUploadedFile(order.verification.paymentReceipt);
+        }
+
+        // NOW ASSIGN STOCK (same logic as auto-assignment)
+        const product = await db.collection('products').findOne({ id: order.productId });
+        const assignedStock = await db.collection('stock').findOneAndUpdate(
+          { 
+            productId: order.productId, 
+            status: 'available' 
+          },
+          { 
+            $set: { 
+              status: 'assigned', 
+              orderId: order.id,
+              assignedAt: new Date()
+            } 
+          },
+          { 
+            returnDocument: 'after',
+            sort: { createdAt: 1 }
+          }
+        );
+
+        if (assignedStock && assignedStock.value) {
+          const stockCode = assignedStock.value;
+          
+          await db.collection('orders').updateOne(
+            { id: order.id },
+            {
+              $set: {
+                delivery: {
+                  status: 'delivered',
+                  items: [stockCode],
+                  stockId: assignedStock.id || assignedStock._id,
+                  assignedAt: new Date()
+                }
+              }
+            }
+          );
+
+          // Send delivered email
+          const orderUser = await db.collection('users').findOne({ id: order.userId });
+          if (orderUser && product) {
+            sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
+              console.error('Delivered email failed:', err)
+            );
+          }
+
+          await logAuditAction(db, AUDIT_ACTIONS.ORDER_VERIFICATION_APPROVE, adminUser.username, 'order', orderId, request, {
+            stockAssigned: true,
+            stockCode: '***MASKED***'
+          });
+
+          return NextResponse.json({
+            success: true,
+            message: 'Doğrulama onaylandı ve stok atandı'
+          });
+        } else {
+          // No stock available
+          await db.collection('orders').updateOne(
+            { id: order.id },
+            {
+              $set: {
+                delivery: {
+                  status: 'pending',
+                  message: 'Stok bekleniyor',
+                  items: []
+                }
+              }
+            }
+          );
+
+          await logAuditAction(db, AUDIT_ACTIONS.ORDER_VERIFICATION_APPROVE, adminUser.username, 'order', orderId, request, {
+            stockAssigned: false,
+            reason: 'out_of_stock'
+          });
+
+          return NextResponse.json({
+            success: true,
+            message: 'Doğrulama onaylandı ancak stok yok. Manuel teslimat gerekli.'
+          });
+        }
+
+      } else if (action === 'reject') {
+        // Update verification status to rejected
+        await db.collection('orders').updateOne(
+          { id: orderId },
+          {
+            $set: {
+              'verification.status': 'rejected',
+              'verification.reviewedAt': new Date(),
+              'verification.reviewedBy': adminUser.username,
+              'verification.rejectionReason': rejectionReason || 'Doğrulama belgeleri uygun değil',
+              status: 'cancelled', // Cancel order
+              delivery: {
+                status: 'cancelled',
+                message: `Doğrulama reddedildi: ${rejectionReason || 'Belgeler uygun değil'}`
+              }
+            }
+          }
+        );
+
+        // Delete verification files
+        if (order.verification.identityPhoto) {
+          deleteUploadedFile(order.verification.identityPhoto);
+        }
+        if (order.verification.paymentReceipt) {
+          deleteUploadedFile(order.verification.paymentReceipt);
+        }
+
+        await logAuditAction(db, AUDIT_ACTIONS.ORDER_VERIFICATION_REJECT, adminUser.username, 'order', orderId, request, {
+          reason: rejectionReason
+        });
+
+        // Send rejection email
+        const orderUser = await db.collection('users').findOne({ id: order.userId });
+        if (orderUser) {
+          sendVerificationRejectedEmail(db, order, orderUser, rejectionReason).catch(err => 
+            console.error('Rejection email failed:', err)
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: 'Doğrulama reddedildi ve sipariş iptal edildi. Para iadesi için Shopier panelinden işlem yapın.'
+        });
+      } else {
+        return NextResponse.json({ success: false, error: 'Geçersiz işlem' }, { status: 400 });
+      }
     }
 
     return NextResponse.json(

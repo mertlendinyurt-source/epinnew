@@ -5749,6 +5749,264 @@ export async function DELETE(request) {
       });
     }
 
+    // ============================================
+    // SPIN WHEEL - ÇARK ÇEVİR SİSTEMİ
+    // ============================================
+    
+    // Çark ayarlarını getir
+    if (path === 'spin-wheel/settings' && method === 'GET') {
+      const settings = await db.collection('settings').findOne({ type: 'spin_wheel' });
+      
+      const defaultSettings = {
+        type: 'spin_wheel',
+        isEnabled: true,
+        prizes: [
+          { id: 1, name: '150₺ İndirim', amount: 150, minOrder: 1500, chance: 2, color: '#FFD700' },
+          { id: 2, name: '100₺ İndirim', amount: 100, minOrder: 1000, chance: 5, color: '#FF6B00' },
+          { id: 3, name: '50₺ İndirim', amount: 50, minOrder: 500, chance: 15, color: '#3B82F6' },
+          { id: 4, name: '25₺ İndirim', amount: 25, minOrder: 250, chance: 25, color: '#10B981' },
+          { id: 5, name: '10₺ İndirim', amount: 10, minOrder: 100, chance: 30, color: '#8B5CF6' },
+          { id: 6, name: 'Boş - Tekrar Dene', amount: 0, minOrder: 0, chance: 23, color: '#6B7280' }
+        ],
+        expiryDays: 7,
+        dailySpins: 1
+      };
+      
+      return NextResponse.json({
+        success: true,
+        data: settings || defaultSettings
+      });
+    }
+    
+    // Admin - Çark ayarlarını güncelle
+    if (path === 'admin/spin-wheel/settings' && method === 'PUT') {
+      const user = await verifyAdmin(request, db);
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+      
+      const body = await request.json();
+      
+      await db.collection('settings').updateOne(
+        { type: 'spin_wheel' },
+        { 
+          $set: { 
+            ...body, 
+            type: 'spin_wheel',
+            updatedAt: new Date(),
+            updatedBy: user.username 
+          } 
+        },
+        { upsert: true }
+      );
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Çark ayarları güncellendi'
+      });
+    }
+    
+    // Kullanıcı çark çevirme
+    if (path === 'spin-wheel/spin' && method === 'POST') {
+      const authHeader = request.headers.get('authorization');
+      if (!authHeader) {
+        return NextResponse.json({ success: false, error: 'Giriş yapmalısınız' }, { status: 401 });
+      }
+      
+      const token = authHeader.replace('Bearer ', '');
+      let decoded;
+      try {
+        decoded = jwt.verify(token, JWT_SECRET);
+      } catch (e) {
+        return NextResponse.json({ success: false, error: 'Geçersiz token' }, { status: 401 });
+      }
+      
+      const user = await db.collection('users').findOne({ id: decoded.userId });
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 });
+      }
+      
+      // Çark ayarlarını al
+      const settings = await db.collection('settings').findOne({ type: 'spin_wheel' });
+      const wheelSettings = settings || {
+        isEnabled: true,
+        prizes: [
+          { id: 1, name: '150₺ İndirim', amount: 150, minOrder: 1500, chance: 2, color: '#FFD700' },
+          { id: 2, name: '100₺ İndirim', amount: 100, minOrder: 1000, chance: 5, color: '#FF6B00' },
+          { id: 3, name: '50₺ İndirim', amount: 50, minOrder: 500, chance: 15, color: '#3B82F6' },
+          { id: 4, name: '25₺ İndirim', amount: 25, minOrder: 250, chance: 25, color: '#10B981' },
+          { id: 5, name: '10₺ İndirim', amount: 10, minOrder: 100, chance: 30, color: '#8B5CF6' },
+          { id: 6, name: 'Boş - Tekrar Dene', amount: 0, minOrder: 0, chance: 23, color: '#6B7280' }
+        ],
+        expiryDays: 7
+      };
+      
+      if (!wheelSettings.isEnabled) {
+        return NextResponse.json({ success: false, error: 'Çark şu an aktif değil' }, { status: 400 });
+      }
+      
+      // Bugün çevirmiş mi kontrol et
+      const today = new Date().toISOString().split('T')[0];
+      const lastSpin = user.lastSpinDate ? new Date(user.lastSpinDate).toISOString().split('T')[0] : null;
+      
+      if (lastSpin === today) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Bugün zaten çevirdiniz! Yarın tekrar deneyin.',
+          nextSpinTime: getNextMidnight()
+        }, { status: 400 });
+      }
+      
+      // Ödül seç (ağırlıklı rastgele)
+      const prizes = wheelSettings.prizes;
+      const totalChance = prizes.reduce((sum, p) => sum + p.chance, 0);
+      let random = Math.random() * totalChance;
+      let selectedPrize = prizes[prizes.length - 1];
+      
+      for (const prize of prizes) {
+        random -= prize.chance;
+        if (random <= 0) {
+          selectedPrize = prize;
+          break;
+        }
+      }
+      
+      // Kullanıcıyı güncelle
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + (wheelSettings.expiryDays || 7));
+      
+      const updateData = {
+        lastSpinDate: new Date()
+      };
+      
+      // Eğer ödül varsa (boş değilse) indirim ekle
+      if (selectedPrize.amount > 0) {
+        updateData.discountBalance = selectedPrize.amount;
+        updateData.discountMinOrder = selectedPrize.minOrder;
+        updateData.discountExpiry = expiryDate;
+        updateData.discountSource = 'spin_wheel';
+      }
+      
+      await db.collection('users').updateOne(
+        { id: user.id },
+        { $set: updateData }
+      );
+      
+      // Spin geçmişine kaydet
+      await db.collection('spin_history').insertOne({
+        id: uuidv4(),
+        oderId: user.id,
+        userName: user.name || user.email,
+        prizeId: selectedPrize.id,
+        prizeName: selectedPrize.name,
+        prizeAmount: selectedPrize.amount,
+        minOrder: selectedPrize.minOrder,
+        createdAt: new Date()
+      });
+      
+      return NextResponse.json({
+        success: true,
+        prize: {
+          id: selectedPrize.id,
+          name: selectedPrize.name,
+          amount: selectedPrize.amount,
+          minOrder: selectedPrize.minOrder,
+          color: selectedPrize.color,
+          expiryDate: selectedPrize.amount > 0 ? expiryDate : null
+        },
+        message: selectedPrize.amount > 0 
+          ? `Tebrikler! ${selectedPrize.amount}₺ indirim kazandınız!` 
+          : 'Maalesef boş çıktı, yarın tekrar deneyin!'
+      });
+    }
+    
+    // Kullanıcının indirim bakiyesini getir
+    if (path === 'user/discount-balance' && method === 'GET') {
+      const authHeader = request.headers.get('authorization');
+      if (!authHeader) {
+        return NextResponse.json({ success: false, error: 'Giriş yapmalısınız' }, { status: 401 });
+      }
+      
+      const token = authHeader.replace('Bearer ', '');
+      let decoded;
+      try {
+        decoded = jwt.verify(token, JWT_SECRET);
+      } catch (e) {
+        return NextResponse.json({ success: false, error: 'Geçersiz token' }, { status: 401 });
+      }
+      
+      const user = await db.collection('users').findOne({ id: decoded.userId });
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 });
+      }
+      
+      // İndirim süresi dolmuş mu kontrol et
+      let discountBalance = user.discountBalance || 0;
+      let discountMinOrder = user.discountMinOrder || 0;
+      let discountExpiry = user.discountExpiry;
+      
+      if (discountExpiry && new Date(discountExpiry) < new Date()) {
+        // Süresi dolmuş, sıfırla
+        await db.collection('users').updateOne(
+          { id: user.id },
+          { $unset: { discountBalance: '', discountMinOrder: '', discountExpiry: '', discountSource: '' } }
+        );
+        discountBalance = 0;
+        discountMinOrder = 0;
+        discountExpiry = null;
+      }
+      
+      // Bugün çevirmiş mi?
+      const today = new Date().toISOString().split('T')[0];
+      const lastSpin = user.lastSpinDate ? new Date(user.lastSpinDate).toISOString().split('T')[0] : null;
+      const canSpin = lastSpin !== today;
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          discountBalance,
+          discountMinOrder,
+          discountExpiry,
+          canSpin,
+          nextSpinTime: canSpin ? null : getNextMidnight(),
+          lastSpinDate: user.lastSpinDate
+        }
+      });
+    }
+    
+    // Admin - Çark istatistikleri
+    if (path === 'admin/spin-wheel/stats' && method === 'GET') {
+      const user = await verifyAdmin(request, db);
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      
+      const [todaySpins, weekSpins, totalSpins, prizeStats] = await Promise.all([
+        db.collection('spin_history').countDocuments({ createdAt: { $gte: today } }),
+        db.collection('spin_history').countDocuments({ createdAt: { $gte: weekAgo } }),
+        db.collection('spin_history').countDocuments({}),
+        db.collection('spin_history').aggregate([
+          { $group: { _id: '$prizeName', count: { $sum: 1 }, totalAmount: { $sum: '$prizeAmount' } } }
+        ]).toArray()
+      ]);
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          todaySpins,
+          weekSpins,
+          totalSpins,
+          prizeStats
+        }
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

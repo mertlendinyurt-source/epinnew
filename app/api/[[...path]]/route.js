@@ -1589,6 +1589,43 @@ export async function GET(request) {
       });
     }
 
+    // Admin: Get orders pending verification (MUST BE BEFORE single order endpoint)
+    if (pathname === '/api/admin/orders/pending-verification') {
+      console.log('=== PENDING VERIFICATION ENDPOINT HIT ===');
+      
+      const adminUser = verifyAdminToken(request);
+      console.log('Admin User:', adminUser ? adminUser.username : 'NO ADMIN USER');
+      
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const pendingOrders = await db.collection('orders').find({
+        'verification.required': true,
+        'verification.status': 'pending',
+        'verification.submittedAt': { $ne: null }
+      }).sort({ 'verification.submittedAt': -1 }).toArray();
+
+      console.log('Pending Orders Found:', pendingOrders.length);
+
+      // Populate user info
+      const ordersWithUsers = await Promise.all(pendingOrders.map(async (order) => {
+        const user = await db.collection('users').findOne({ id: order.userId });
+        return {
+          ...order,
+          userEmail: user?.email || 'N/A',
+          userName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim()
+        };
+      }));
+
+      console.log('=== RETURNING', ordersWithUsers.length, 'ORDERS ===');
+
+      return NextResponse.json({
+        success: true,
+        data: ordersWithUsers
+      });
+    }
+
     // Admin: Get single order
     if (pathname.match(/^\/api\/admin\/orders\/[^\/]+$/)) {
       const user = verifyAdminToken(request);

@@ -37,6 +37,7 @@ const menuGroups = [
       { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { href: '/admin/orders', icon: ShoppingCart, label: 'Siparişler' },
       { href: '/admin/verification', icon: ShieldAlert, label: 'Doğrulama Bekleyen', color: 'text-amber-400' },
+      { href: '/admin/users', icon: Users, label: 'Kullanıcılar', color: 'text-blue-400' },
       { href: '/admin/products', icon: Package, label: 'Ürünler' },
       { href: '/admin/support', icon: MessageCircle, label: 'Destek' },
     ]

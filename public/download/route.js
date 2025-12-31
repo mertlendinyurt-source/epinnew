@@ -4395,12 +4395,15 @@ export async function POST(request) {
               } else {
                 // No stock available - try DijiPin auto-delivery if enabled
                 const dijipinSettings = await db.collection('settings').findOne({ type: 'dijipin' });
-                const isDijipinEnabled = dijipinSettings?.isEnabled && DIJIPIN_API_TOKEN;
+                const isDijipinGlobalEnabled = dijipinSettings?.isEnabled && DIJIPIN_API_TOKEN;
                 
-                // Check if product is eligible for DijiPin (only 60 UC and 325 UC)
-                const isPubgUcProduct = product && product.title && isDijipinEligibleProduct(product.title);
+                // Check if product has DijiPin enabled (product-level setting)
+                const isProductDijipinEnabled = product && product.dijipinEnabled === true;
                 
-                if (isDijipinEnabled && isPubgUcProduct && order.playerId) {
+                // DijiPin works if: global setting is ON AND product-level setting is ON
+                const canUseDijipin = isDijipinGlobalEnabled && isProductDijipinEnabled && order.playerId;
+                
+                if (canUseDijipin) {
                   console.log(`Attempting DijiPin delivery for order ${order.id}, Product: ${product.title}, PUBG ID: ${order.playerId}`);
                   
                   const dijipinResult = await createDijipinOrder(product.title, 1, order.playerId);
@@ -4530,6 +4533,34 @@ export async function POST(request) {
       return NextResponse.json({
         success: true,
         data: product
+      });
+    }
+
+    // Admin: Update product DijiPin setting
+    if (pathname === '/api/admin/products/dijipin') {
+      const authHeader = request.headers.get('authorization');
+      if (!authHeader) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const { productId, dijipinEnabled } = body;
+
+      if (!productId) {
+        return NextResponse.json({ success: false, error: 'Ürün ID gerekli' }, { status: 400 });
+      }
+
+      const result = await db.collection('products').updateOne(
+        { id: productId },
+        { $set: { dijipinEnabled: dijipinEnabled, updatedAt: new Date() } }
+      );
+
+      if (result.matchedCount === 0) {
+        return NextResponse.json({ success: false, error: 'Ürün bulunamadı' }, { status: 404 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: dijipinEnabled ? 'DijiPin otomatik gönderim açıldı' : 'DijiPin otomatik gönderim kapatıldı'
       });
     }
 

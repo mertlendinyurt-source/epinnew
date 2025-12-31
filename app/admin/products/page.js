@@ -808,6 +808,13 @@ export default function AdminProducts() {
                       </TableCell>
                       <TableCell className="text-slate-400">{product.discountPercent}%</TableCell>
                       <TableCell>
+                        <Switch
+                          checked={product.dijipinEnabled || false}
+                          onCheckedChange={(checked) => handleDijipinToggle(product.id, checked)}
+                          className="data-[state=checked]:bg-yellow-500"
+                        />
+                      </TableCell>
+                      <TableCell>
                         <Badge variant={product.active ? 'default' : 'secondary'}>
                           {product.active ? 'Aktif' : 'Pasif'}
                         </Badge>

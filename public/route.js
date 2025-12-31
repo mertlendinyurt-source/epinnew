@@ -13,6 +13,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 const APP_VERSION = '1.0.0';
 
+// DijiPin API Configuration
+const DIJIPIN_API_URL = process.env.DIJIPIN_API_URL || 'https://dijipinapi.dijipin.com';
+const DIJIPIN_API_TOKEN = process.env.DIJIPIN_API_TOKEN;
+const DIJIPIN_API_KEY = process.env.DIJIPIN_API_KEY;
+
 // ============================================
 // DISPOSABLE EMAIL DOMAINS LIST
 // ============================================
@@ -228,6 +233,148 @@ function getNextMidnight() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(0, 0, 0, 0);
   return tomorrow.toISOString();
+}
+
+// ============================================
+// DIJIPIN API FUNCTIONS
+// ============================================
+
+// DijiPin ürün ID eşleştirme (Pinly ürün adı -> DijiPin customerStoreProductID)
+const DIJIPIN_PRODUCT_MAP = {
+  '60 UC': 1,
+  '60 UC + 6 Bonus': 1,
+  '325 UC': 2,
+  '325 UC + 33 Bonus': 2,
+  '660 UC': 3,
+  '660 UC + 66 Bonus': 3,
+  '1800 UC': 4,
+  '1800 UC + 180 Bonus': 4,
+  '3850 UC': 5,
+  '3850 UC + 385 Bonus': 5,
+  '8100 UC': 6,
+  '8100 UC + 810 Bonus': 6
+};
+
+// DijiPin bakiye sorgulama
+async function getDijipinBalance() {
+  if (!DIJIPIN_API_TOKEN) {
+    console.log('DijiPin API token not configured');
+    return null;
+  }
+  
+  try {
+    const response = await fetch(`${DIJIPIN_API_URL}/Customer/Get`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${DIJIPIN_API_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      return data.data.balance;
+    }
+    return null;
+  } catch (error) {
+    console.error('DijiPin balance check error:', error);
+    return null;
+  }
+}
+
+// DijiPin sipariş oluşturma
+async function createDijipinOrder(productName, quantity, pubgId) {
+  if (!DIJIPIN_API_TOKEN) {
+    console.log('DijiPin API token not configured');
+    return { success: false, error: 'DijiPin API yapılandırılmamış' };
+  }
+  
+  // Ürün ID'sini bul
+  let dijipinProductId = null;
+  for (const [key, value] of Object.entries(DIJIPIN_PRODUCT_MAP)) {
+    if (productName.toLowerCase().includes(key.toLowerCase().split(' ')[0]) && 
+        productName.toLowerCase().includes('uc')) {
+      dijipinProductId = value;
+      break;
+    }
+  }
+  
+  // Direkt eşleşme kontrolü
+  if (!dijipinProductId && DIJIPIN_PRODUCT_MAP[productName]) {
+    dijipinProductId = DIJIPIN_PRODUCT_MAP[productName];
+  }
+  
+  if (!dijipinProductId) {
+    console.log('DijiPin product not found for:', productName);
+    return { success: false, error: 'Bu ürün DijiPin entegrasyonunda bulunamadı' };
+  }
+  
+  try {
+    const response = await fetch(`${DIJIPIN_API_URL}/Order/Create`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${DIJIPIN_API_TOKEN}`,
+        'Apikey': DIJIPIN_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        basketData: [
+          {
+            customerStoreProductID: dijipinProductId,
+            quantity: quantity || 1,
+            fields: {
+              userID: pubgId,
+              serverID: '1'
+            }
+          }
+        ]
+      })
+    });
+    
+    const data = await response.json();
+    console.log('DijiPin order response:', JSON.stringify(data));
+    
+    if (data.success) {
+      return {
+        success: true,
+        orderId: data.data.orderID,
+        details: data.data.details,
+        message: data.message
+      };
+    } else {
+      return {
+        success: false,
+        error: data.message || 'DijiPin sipariş hatası',
+        errorCode: data.errorCode
+      };
+    }
+  } catch (error) {
+    console.error('DijiPin order create error:', error);
+    return { success: false, error: 'DijiPin bağlantı hatası: ' + error.message };
+  }
+}
+
+// DijiPin sipariş durumu sorgulama
+async function getDijipinOrderStatus(orderId) {
+  if (!DIJIPIN_API_TOKEN) {
+    return null;
+  }
+  
+  try {
+    const response = await fetch(`${DIJIPIN_API_URL}/Order/Get?orderID=${orderId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${DIJIPIN_API_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('DijiPin order status error:', error);
+    return null;
+  }
 }
 
 // ============================================
@@ -2720,6 +2867,46 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
         }
       });
     }
+    
+    // ============================================
+    // DIJIPIN ADMIN API
+    // ============================================
+    
+    // Get DijiPin settings
+    if (pathname === '/api/admin/dijipin/settings') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+      
+      const settings = await db.collection('settings').findOne({ type: 'dijipin' });
+      const balance = await getDijipinBalance();
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          isEnabled: settings?.isEnabled || false,
+          isConfigured: !!DIJIPIN_API_TOKEN,
+          balance: balance,
+          productMap: DIJIPIN_PRODUCT_MAP
+        }
+      });
+    }
+    
+    // Get DijiPin balance
+    if (pathname === '/api/admin/dijipin/balance') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+      
+      const balance = await getDijipinBalance();
+      
+      return NextResponse.json({
+        success: true,
+        data: { balance }
+      });
+    }
 
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
@@ -4078,26 +4265,90 @@ export async function POST(request) {
                   );
                 }
               } else {
-                // No stock available - mark as pending
-                await db.collection('orders').updateOne(
-                  { id: order.id },
-                  {
-                    $set: {
-                      delivery: {
-                        status: 'pending',
-                        message: 'Stok bekleniyor',
-                        items: []
+                // No stock available - try DijiPin auto-delivery if enabled
+                const dijipinSettings = await db.collection('settings').findOne({ type: 'dijipin' });
+                const isDijipinEnabled = dijipinSettings?.isEnabled && DIJIPIN_API_TOKEN;
+                
+                // Check if product is PUBG UC (eligible for DijiPin)
+                const isPubgUcProduct = product && product.name && 
+                  (product.name.toLowerCase().includes('uc') || product.name.toLowerCase().includes('pubg'));
+                
+                if (isDijipinEnabled && isPubgUcProduct && order.playerId) {
+                  console.log(`Attempting DijiPin delivery for order ${order.id}, PUBG ID: ${order.playerId}`);
+                  
+                  const dijipinResult = await createDijipinOrder(product.name, 1, order.playerId);
+                  
+                  if (dijipinResult.success) {
+                    // DijiPin order successful
+                    await db.collection('orders').updateOne(
+                      { id: order.id },
+                      {
+                        $set: {
+                          delivery: {
+                            status: 'delivered',
+                            method: 'dijipin_auto',
+                            dijipinOrderId: dijipinResult.orderId,
+                            message: 'UC DijiPin üzerinden gönderildi',
+                            items: [`DijiPin Order: ${dijipinResult.orderId}`],
+                            deliveredAt: new Date()
+                          }
+                        }
                       }
+                    );
+                    console.log(`DijiPin delivery success: Order ${order.id}, DijiPin Order: ${dijipinResult.orderId}`);
+                    
+                    // Send delivered email
+                    if (orderUser && product) {
+                      sendDeliveredEmail(db, order, orderUser, product, [`UC başarıyla hesabınıza yüklendi (PUBG ID: ${order.playerId})`]).catch(err => 
+                        console.error('Delivered email failed:', err)
+                      );
+                    }
+                  } else {
+                    // DijiPin failed - mark as pending for manual review
+                    await db.collection('orders').updateOne(
+                      { id: order.id },
+                      {
+                        $set: {
+                          delivery: {
+                            status: 'pending',
+                            message: `DijiPin hatası: ${dijipinResult.error}`,
+                            dijipinError: dijipinResult.error,
+                            items: []
+                          }
+                        }
+                      }
+                    );
+                    console.error(`DijiPin delivery failed for order ${order.id}:`, dijipinResult.error);
+                    
+                    // Send pending stock email
+                    if (orderUser && product) {
+                      sendPendingStockEmail(db, order, orderUser, product, 'Sipariş işleniyor, kısa sürede tamamlanacak').catch(err => 
+                        console.error('Pending stock email failed:', err)
+                      );
                     }
                   }
-                );
-                console.warn(`No stock available for order ${order.id} (product ${order.productId})`);
-                
-                // Send pending stock email
-                if (orderUser && product) {
-                  sendPendingStockEmail(db, order, orderUser, product, 'Stok bekleniyor').catch(err => 
-                    console.error('Pending stock email failed:', err)
+                } else {
+                  // No stock available and DijiPin not enabled - mark as pending
+                  await db.collection('orders').updateOne(
+                    { id: order.id },
+                    {
+                      $set: {
+                        delivery: {
+                          status: 'pending',
+                          message: 'Stok bekleniyor',
+                          items: []
+                        }
+                      }
+                    }
                   );
+                  console.warn(`No stock available for order ${order.id} (product ${order.productId})`);
+                  
+                  // Send pending stock email
+                  if (orderUser && product) {
+                    sendPendingStockEmail(db, order, orderUser, product, 'Stok bekleniyor').catch(err => 
+                      console.error('Pending stock email failed:', err)
+                    );
+                  }
                 }
               }
             } catch (stockError) {
@@ -5782,6 +6033,36 @@ export async function PUT(request) {
       });
     }
 
+    // ============================================
+    // DIJIPIN SETTINGS UPDATE
+    // ============================================
+    if (pathname === '/api/admin/dijipin/settings') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+      
+      const { isEnabled } = body;
+      
+      await db.collection('settings').updateOne(
+        { type: 'dijipin' },
+        { 
+          $set: { 
+            type: 'dijipin',
+            isEnabled: isEnabled,
+            updatedAt: new Date(),
+            updatedBy: adminUser.username
+          } 
+        },
+        { upsert: true }
+      );
+      
+      return NextResponse.json({
+        success: true,
+        message: 'DijiPin ayarları güncellendi'
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }
@@ -6042,7 +6323,7 @@ export async function DELETE(request) {
     
     // Admin - Çark istatistikleri
     if (pathname === '/api/admin/spin-wheel/stats') {
-      const adminUser = await verifyAdmin(request, db);
+      const adminUser = verifyAdminToken(request);
       if (!adminUser) {
         return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
       }

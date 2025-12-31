@@ -455,6 +455,9 @@ const AUDIT_ACTIONS = {
   ORDER_RISK_FLAG: 'order.risk_flag',
   ORDER_MANUAL_APPROVE: 'order.manual_approve',
   ORDER_MANUAL_REFUND: 'order.manual_refund',
+  ORDER_VERIFICATION_SUBMIT: 'order.verification_submit',
+  ORDER_VERIFICATION_APPROVE: 'order.verification_approve',
+  ORDER_VERIFICATION_REJECT: 'order.verification_reject',
 };
 
 // ============================================

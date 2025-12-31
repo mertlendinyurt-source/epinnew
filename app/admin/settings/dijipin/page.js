@@ -77,12 +77,21 @@ export default function DijipinSettingsPage() {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
-      if (data.success && data.data?.balance) {
-        setBalance(data.data.balance)
+      console.log('Balance API response:', data)
+      
+      if (data.success && data.data) {
+        // data.data contains: { balance, currencyCode, customerName, email }
+        setBalance(data.data)
       } else {
         setBalanceError(data.error || 'Bakiye alınamadı')
       }
     } catch (error) {
+      console.error('Balance fetch error:', error)
+      setBalanceError('Bağlantı hatası: ' + error.message)
+    } finally {
+      setRefreshing(false)
+    }
+  }
       setBalanceError('Bağlantı hatası')
     } finally {
       setRefreshing(false)

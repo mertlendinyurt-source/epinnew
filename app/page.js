@@ -548,6 +548,13 @@ export default function App() {
     setPlayerName('')
     setPlayerValid(null)
     
+    // Auto-select payment method based on balance
+    if (isAuthenticated && userBalance >= product.discountPrice) {
+      setPaymentMethod('balance') // Sufficient balance - default to balance
+    } else {
+      setPaymentMethod('card') // Insufficient or no balance - default to card
+    }
+    
     // GA4 view_item event
     trackEvent('view_item', {
       currency: 'TRY',

@@ -4285,14 +4285,13 @@ export async function POST(request) {
                 const dijipinSettings = await db.collection('settings').findOne({ type: 'dijipin' });
                 const isDijipinEnabled = dijipinSettings?.isEnabled && DIJIPIN_API_TOKEN;
                 
-                // Check if product is PUBG UC (eligible for DijiPin)
-                const isPubgUcProduct = product && product.name && 
-                  (product.name.toLowerCase().includes('uc') || product.name.toLowerCase().includes('pubg'));
+                // Check if product is eligible for DijiPin (only 60 UC and 325 UC)
+                const isPubgUcProduct = product && product.title && isDijipinEligibleProduct(product.title);
                 
                 if (isDijipinEnabled && isPubgUcProduct && order.playerId) {
-                  console.log(`Attempting DijiPin delivery for order ${order.id}, PUBG ID: ${order.playerId}`);
+                  console.log(`Attempting DijiPin delivery for order ${order.id}, Product: ${product.title}, PUBG ID: ${order.playerId}`);
                   
-                  const dijipinResult = await createDijipinOrder(product.name, 1, order.playerId);
+                  const dijipinResult = await createDijipinOrder(product.title, 1, order.playerId);
                   
                   if (dijipinResult.success) {
                     // DijiPin order successful

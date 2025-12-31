@@ -111,7 +111,7 @@ export default function AdminBlogPage() {
         page: page.toString(),
         limit: '20'
       })
-      if (statusFilter) params.append('status', statusFilter)
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter)
 
       const response = await fetch(`/api/admin/blog?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }

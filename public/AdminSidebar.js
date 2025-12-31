@@ -63,6 +63,7 @@ const menuGroups = [
       { href: '/admin/settings/regions', icon: Globe, label: 'Bölge Ayarları' },
       { href: '/admin/settings/footer', icon: FileText, label: 'Footer Ayarları' },
       { href: '/admin/settings/payments', icon: CreditCard, label: 'Ödeme Ayarları' },
+      { href: '/admin/settings/dijipin', icon: CreditCard, label: 'DijiPin Ayarları', color: 'text-yellow-400' },
     ]
   },
   {

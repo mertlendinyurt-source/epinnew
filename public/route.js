@@ -240,19 +240,12 @@ function getNextMidnight() {
 // ============================================
 
 // DijiPin ürün ID eşleştirme (Pinly ürün adı -> DijiPin customerStoreProductID)
+// Sadece 60 UC ve 325 UC için otomatik gönderim aktif
 const DIJIPIN_PRODUCT_MAP = {
   '60 UC': 1,
   '60 UC + 6 Bonus': 1,
   '325 UC': 2,
-  '325 UC + 33 Bonus': 2,
-  '660 UC': 3,
-  '660 UC + 66 Bonus': 3,
-  '1800 UC': 4,
-  '1800 UC + 180 Bonus': 4,
-  '3850 UC': 5,
-  '3850 UC + 385 Bonus': 5,
-  '8100 UC': 6,
-  '8100 UC + 810 Bonus': 6
+  '325 UC + 33 Bonus': 2
 };
 
 // DijiPin bakiye sorgulama

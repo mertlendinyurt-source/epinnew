@@ -2939,8 +2939,9 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
     
     // Get DijiPin balance
     if (pathname === '/api/admin/dijipin/balance') {
-      const adminUser = verifyAdminToken(request);
-      if (!adminUser) {
+      // Allow any authenticated user to check DijiPin balance
+      const user = verifyToken(request);
+      if (!user) {
         return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
       }
       

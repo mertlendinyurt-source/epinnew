@@ -5240,6 +5240,122 @@ export async function POST(request) {
       });
     }
 
+    // ============================================
+    // SPIN WHEEL - ÇARK ÇEVİRME (POST)
+    // ============================================
+    if (pathname === '/api/spin-wheel/spin') {
+      const authHeader = request.headers.get('authorization');
+      if (!authHeader) {
+        return NextResponse.json({ success: false, error: 'Giriş yapmalısınız' }, { status: 401 });
+      }
+      
+      const token = authHeader.replace('Bearer ', '');
+      let decoded;
+      try {
+        decoded = jwt.verify(token, JWT_SECRET);
+      } catch (e) {
+        return NextResponse.json({ success: false, error: 'Geçersiz token' }, { status: 401 });
+      }
+      
+      const spinUser = await db.collection('users').findOne({ id: decoded.userId });
+      if (!spinUser) {
+        return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 });
+      }
+      
+      // Çark ayarlarını al
+      const settings = await db.collection('settings').findOne({ type: 'spin_wheel' });
+      const wheelSettings = settings || {
+        isEnabled: true,
+        prizes: [
+          { id: 1, name: '150₺ İndirim', amount: 150, minOrder: 1500, chance: 2, color: '#FFD700' },
+          { id: 2, name: '100₺ İndirim', amount: 100, minOrder: 1000, chance: 5, color: '#FF6B00' },
+          { id: 3, name: '50₺ İndirim', amount: 50, minOrder: 500, chance: 15, color: '#3B82F6' },
+          { id: 4, name: '25₺ İndirim', amount: 25, minOrder: 250, chance: 25, color: '#10B981' },
+          { id: 5, name: '10₺ İndirim', amount: 10, minOrder: 100, chance: 30, color: '#8B5CF6' },
+          { id: 6, name: 'Boş - Tekrar Dene', amount: 0, minOrder: 0, chance: 23, color: '#6B7280' }
+        ],
+        expiryDays: 7
+      };
+      
+      if (!wheelSettings.isEnabled) {
+        return NextResponse.json({ success: false, error: 'Çark şu an aktif değil' }, { status: 400 });
+      }
+      
+      // Bugün çevirmiş mi kontrol et
+      const today = new Date().toISOString().split('T')[0];
+      const lastSpin = spinUser.lastSpinDate ? new Date(spinUser.lastSpinDate).toISOString().split('T')[0] : null;
+      
+      if (lastSpin === today) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Bugün zaten çevirdiniz! Yarın tekrar deneyin.',
+          nextSpinTime: getNextMidnight()
+        }, { status: 400 });
+      }
+      
+      // Ödül seç (ağırlıklı rastgele)
+      const prizes = wheelSettings.prizes;
+      const totalChance = prizes.reduce((sum, p) => sum + p.chance, 0);
+      let random = Math.random() * totalChance;
+      let selectedPrize = prizes[prizes.length - 1];
+      
+      for (const prize of prizes) {
+        random -= prize.chance;
+        if (random <= 0) {
+          selectedPrize = prize;
+          break;
+        }
+      }
+      
+      // Kullanıcıyı güncelle
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + (wheelSettings.expiryDays || 7));
+      
+      const updateData = {
+        lastSpinDate: new Date()
+      };
+      
+      // Eğer ödül varsa (boş değilse) indirim ekle
+      if (selectedPrize.amount > 0) {
+        updateData.discountBalance = selectedPrize.amount;
+        updateData.discountMinOrder = selectedPrize.minOrder;
+        updateData.discountExpiry = expiryDate;
+        updateData.discountSource = 'spin_wheel';
+      }
+      
+      await db.collection('users').updateOne(
+        { id: spinUser.id },
+        { $set: updateData }
+      );
+      
+      // Spin geçmişine kaydet
+      await db.collection('spin_history').insertOne({
+        id: uuidv4(),
+        oderId: spinUser.id,
+        userName: spinUser.name || spinUser.email,
+        prizeId: selectedPrize.id,
+        prizeName: selectedPrize.name,
+        prizeAmount: selectedPrize.amount,
+        minOrder: selectedPrize.minOrder,
+        createdAt: new Date()
+      });
+      
+      return NextResponse.json({
+        success: true,
+        prize: {
+          id: selectedPrize.id,
+          name: selectedPrize.name,
+          amount: selectedPrize.amount,
+          minOrder: selectedPrize.minOrder,
+          color: selectedPrize.color,
+          expiryDate: selectedPrize.amount > 0 ? expiryDate : null
+        },
+        message: selectedPrize.amount > 0 
+          ? `Tebrikler! ${selectedPrize.amount}₺ indirim kazandınız!` 
+          : 'Maalesef boş çıktı, yarın tekrar deneyin!'
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

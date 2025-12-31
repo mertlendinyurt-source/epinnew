@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { 
   Loader2, 
   Save, 
@@ -18,7 +21,9 @@ import {
   AlertTriangle,
   TrendingUp,
   Clock,
-  ExternalLink
+  ExternalLink,
+  TestTube,
+  Send
 } from 'lucide-react'
 
 export default function DijipinSettingsPage() {
@@ -39,6 +44,13 @@ export default function DijipinSettingsPage() {
     failedOrders: 0,
     pendingOrders: 0
   })
+  
+  // Test order states
+  const [products, setProducts] = useState([])
+  const [testProductId, setTestProductId] = useState('')
+  const [testPlayerId, setTestPlayerId] = useState('')
+  const [testLoading, setTestLoading] = useState(false)
+  const [testResult, setTestResult] = useState(null)
 
   useEffect(() => {
     const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')

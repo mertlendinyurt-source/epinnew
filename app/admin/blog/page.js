@@ -72,7 +72,7 @@ export default function AdminBlogPage() {
   const [posts, setPosts] = useState([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [search, setSearch] = useState('')
   
   // Dialog states

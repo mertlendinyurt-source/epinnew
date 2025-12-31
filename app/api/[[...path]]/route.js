@@ -2639,6 +2639,88 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
       });
     }
 
+    // ============================================
+    // SPIN WHEEL - ÇARK ÇEVİR SİSTEMİ (GET)
+    // ============================================
+    
+    // Çark ayarlarını getir
+    if (pathname === '/api/spin-wheel/settings') {
+      const settings = await db.collection('settings').findOne({ type: 'spin_wheel' });
+      
+      const defaultSettings = {
+        type: 'spin_wheel',
+        isEnabled: true,
+        prizes: [
+          { id: 1, name: '150₺ İndirim', amount: 150, minOrder: 1500, chance: 2, color: '#FFD700' },
+          { id: 2, name: '100₺ İndirim', amount: 100, minOrder: 1000, chance: 5, color: '#FF6B00' },
+          { id: 3, name: '50₺ İndirim', amount: 50, minOrder: 500, chance: 15, color: '#3B82F6' },
+          { id: 4, name: '25₺ İndirim', amount: 25, minOrder: 250, chance: 25, color: '#10B981' },
+          { id: 5, name: '10₺ İndirim', amount: 10, minOrder: 100, chance: 30, color: '#8B5CF6' },
+          { id: 6, name: 'Boş - Tekrar Dene', amount: 0, minOrder: 0, chance: 23, color: '#6B7280' }
+        ],
+        expiryDays: 7,
+        dailySpins: 1
+      };
+      
+      return NextResponse.json({
+        success: true,
+        data: settings || defaultSettings
+      });
+    }
+    
+    // Kullanıcının indirim bakiyesini getir
+    if (pathname === '/api/user/discount-balance') {
+      const authHeader = request.headers.get('authorization');
+      if (!authHeader) {
+        return NextResponse.json({ success: false, error: 'Giriş yapmalısınız' }, { status: 401 });
+      }
+      
+      const token = authHeader.replace('Bearer ', '');
+      let decoded;
+      try {
+        decoded = jwt.verify(token, JWT_SECRET);
+      } catch (e) {
+        return NextResponse.json({ success: false, error: 'Geçersiz token' }, { status: 401 });
+      }
+      
+      const spinUser = await db.collection('users').findOne({ id: decoded.userId });
+      if (!spinUser) {
+        return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 });
+      }
+      
+      // İndirim süresi dolmuş mu kontrol et
+      let discountBalance = spinUser.discountBalance || 0;
+      let discountMinOrder = spinUser.discountMinOrder || 0;
+      let discountExpiry = spinUser.discountExpiry;
+      
+      if (discountExpiry && new Date(discountExpiry) < new Date()) {
+        await db.collection('users').updateOne(
+          { id: spinUser.id },
+          { $unset: { discountBalance: '', discountMinOrder: '', discountExpiry: '', discountSource: '' } }
+        );
+        discountBalance = 0;
+        discountMinOrder = 0;
+        discountExpiry = null;
+      }
+      
+      // Bugün çevirmiş mi?
+      const today = new Date().toISOString().split('T')[0];
+      const lastSpin = spinUser.lastSpinDate ? new Date(spinUser.lastSpinDate).toISOString().split('T')[0] : null;
+      const canSpin = lastSpin !== today;
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          discountBalance,
+          discountMinOrder,
+          discountExpiry,
+          canSpin,
+          nextSpinTime: canSpin ? null : getNextMidnight(),
+          lastSpinDate: spinUser.lastSpinDate
+        }
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

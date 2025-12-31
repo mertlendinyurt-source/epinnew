@@ -61,7 +61,57 @@ export default function DijipinSettingsPage() {
     fetchSettings()
     fetchBalance()
     fetchDijipinOrders()
+    fetchProducts()
   }, [])
+
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+      const res = await fetch('/api/products')
+      const data = await res.json()
+      if (data.success) {
+        setProducts(data.data || [])
+      }
+    } catch (error) {
+      console.error('Products fetch error:', error)
+    }
+  }
+
+  const handleTestOrder = async () => {
+    if (!testProductId || !testPlayerId) {
+      alert('Ürün ve PUBG ID seçin')
+      return
+    }
+
+    setTestLoading(true)
+    setTestResult(null)
+
+    try {
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+      const res = await fetch('/api/admin/test-order', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          productId: testProductId,
+          playerId: testPlayerId
+        })
+      })
+      const data = await res.json()
+      setTestResult(data)
+      
+      if (data.success) {
+        fetchBalance() // Refresh balance
+        fetchDijipinOrders() // Refresh orders
+      }
+    } catch (error) {
+      setTestResult({ success: false, error: error.message })
+    } finally {
+      setTestLoading(false)
+    }
+  }
 
   const fetchSettings = async () => {
     try {

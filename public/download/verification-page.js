@@ -175,7 +175,10 @@ export default function VerificationPage() {
     )
   }
 
-  if (!order || !order.verification?.required) {
+  // Check if verification is required (either marked or high-value order)
+  const requiresVerification = order?.verification?.required || (order?.totalAmount >= 3000 || order?.amount >= 3000)
+
+  if (!order || !requiresVerification) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
         <Card className="bg-slate-900/50 border-slate-800 max-w-md w-full">
@@ -193,7 +196,7 @@ export default function VerificationPage() {
   }
 
   // If already submitted
-  if (order.verification.submittedAt) {
+  if (order.verification?.submittedAt) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
         <Card className="bg-slate-900/50 border-slate-800 max-w-md w-full">

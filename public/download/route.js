@@ -6429,9 +6429,44 @@ export async function POST(request) {
         return NextResponse.json({ success: false, error: 'Sipariş bulunamadı' }, { status: 404 });
       }
 
-      // Verify order requires verification
-      if (!order.verification || !order.verification.required) {
+      // Check if verification is required (either marked or high-value order)
+      const orderAmount = order.totalAmount || order.amount || 0;
+      const requiresVerification = order.verification?.required || orderAmount >= 3000;
+
+      if (!requiresVerification) {
         return NextResponse.json({ success: false, error: 'Bu sipariş için doğrulama gerekli değil' }, { status: 400 });
+      }
+
+      // Initialize verification object if not exists (for old orders)
+      if (!order.verification) {
+        await db.collection('orders').updateOne(
+          { id: orderId },
+          {
+            $set: {
+              verification: {
+                required: true,
+                status: 'pending',
+                identityPhoto: null,
+                paymentReceipt: null,
+                submittedAt: null,
+                reviewedAt: null,
+                reviewedBy: null,
+                rejectionReason: null
+              }
+            }
+          }
+        );
+        // Refresh order data
+        order.verification = {
+          required: true,
+          status: 'pending',
+          identityPhoto: null,
+          paymentReceipt: null,
+          submittedAt: null,
+          reviewedAt: null,
+          reviewedBy: null,
+          rejectionReason: null
+        };
       }
 
       // Check if already submitted

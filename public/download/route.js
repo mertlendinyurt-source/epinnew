@@ -2944,12 +2944,52 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
         return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
       }
       
-      const balance = await getDijipinBalance();
+      // Check if DijiPin is configured
+      if (!DIJIPIN_API_TOKEN || !DIJIPIN_API_KEY) {
+        console.log('DijiPin not configured - Token:', !!DIJIPIN_API_TOKEN, 'ApiKey:', !!DIJIPIN_API_KEY);
+        return NextResponse.json({
+          success: false,
+          error: 'DijiPin API yapılandırılmamış. .env dosyasında DIJIPIN_API_TOKEN ve DIJIPIN_API_KEY tanımlı olmalı.'
+        });
+      }
       
-      return NextResponse.json({
-        success: true,
-        data: { balance }
-      });
+      try {
+        // Direct API call for more reliable results
+        const response = await fetch('https://dijipinapi.dijipin.com/Customer/Get', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${DIJIPIN_API_TOKEN}`,
+            'Apikey': DIJIPIN_API_KEY,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        console.log('DijiPin balance direct response:', JSON.stringify(data));
+        
+        if (data.success && data.data) {
+          return NextResponse.json({
+            success: true,
+            data: {
+              balance: data.data.balance,
+              currencyCode: data.data.currencyCode || 'TL',
+              customerName: `${data.data.firstName || ''} ${data.data.lastName || ''}`.trim(),
+              email: data.data.email
+            }
+          });
+        } else {
+          return NextResponse.json({
+            success: false,
+            error: data.message || 'DijiPin API yanıt vermedi'
+          });
+        }
+      } catch (error) {
+        console.error('DijiPin balance error:', error);
+        return NextResponse.json({
+          success: false,
+          error: 'DijiPin bağlantı hatası: ' + error.message
+        });
+      }
     }
 
     // Get DijiPin orders (orders delivered via DijiPin)

@@ -4225,26 +4225,90 @@ export async function POST(request) {
                   );
                 }
               } else {
-                // No stock available - mark as pending
-                await db.collection('orders').updateOne(
-                  { id: order.id },
-                  {
-                    $set: {
-                      delivery: {
-                        status: 'pending',
-                        message: 'Stok bekleniyor',
-                        items: []
+                // No stock available - try DijiPin auto-delivery if enabled
+                const dijipinSettings = await db.collection('settings').findOne({ type: 'dijipin' });
+                const isDijipinEnabled = dijipinSettings?.isEnabled && DIJIPIN_API_TOKEN;
+                
+                // Check if product is PUBG UC (eligible for DijiPin)
+                const isPubgUcProduct = product && product.name && 
+                  (product.name.toLowerCase().includes('uc') || product.name.toLowerCase().includes('pubg'));
+                
+                if (isDijipinEnabled && isPubgUcProduct && order.playerId) {
+                  console.log(`Attempting DijiPin delivery for order ${order.id}, PUBG ID: ${order.playerId}`);
+                  
+                  const dijipinResult = await createDijipinOrder(product.name, 1, order.playerId);
+                  
+                  if (dijipinResult.success) {
+                    // DijiPin order successful
+                    await db.collection('orders').updateOne(
+                      { id: order.id },
+                      {
+                        $set: {
+                          delivery: {
+                            status: 'delivered',
+                            method: 'dijipin_auto',
+                            dijipinOrderId: dijipinResult.orderId,
+                            message: 'UC DijiPin üzerinden gönderildi',
+                            items: [`DijiPin Order: ${dijipinResult.orderId}`],
+                            deliveredAt: new Date()
+                          }
+                        }
                       }
+                    );
+                    console.log(`DijiPin delivery success: Order ${order.id}, DijiPin Order: ${dijipinResult.orderId}`);
+                    
+                    // Send delivered email
+                    if (orderUser && product) {
+                      sendDeliveredEmail(db, order, orderUser, product, [`UC başarıyla hesabınıza yüklendi (PUBG ID: ${order.playerId})`]).catch(err => 
+                        console.error('Delivered email failed:', err)
+                      );
+                    }
+                  } else {
+                    // DijiPin failed - mark as pending for manual review
+                    await db.collection('orders').updateOne(
+                      { id: order.id },
+                      {
+                        $set: {
+                          delivery: {
+                            status: 'pending',
+                            message: `DijiPin hatası: ${dijipinResult.error}`,
+                            dijipinError: dijipinResult.error,
+                            items: []
+                          }
+                        }
+                      }
+                    );
+                    console.error(`DijiPin delivery failed for order ${order.id}:`, dijipinResult.error);
+                    
+                    // Send pending stock email
+                    if (orderUser && product) {
+                      sendPendingStockEmail(db, order, orderUser, product, 'Sipariş işleniyor, kısa sürede tamamlanacak').catch(err => 
+                        console.error('Pending stock email failed:', err)
+                      );
                     }
                   }
-                );
-                console.warn(`No stock available for order ${order.id} (product ${order.productId})`);
-                
-                // Send pending stock email
-                if (orderUser && product) {
-                  sendPendingStockEmail(db, order, orderUser, product, 'Stok bekleniyor').catch(err => 
-                    console.error('Pending stock email failed:', err)
+                } else {
+                  // No stock available and DijiPin not enabled - mark as pending
+                  await db.collection('orders').updateOne(
+                    { id: order.id },
+                    {
+                      $set: {
+                        delivery: {
+                          status: 'pending',
+                          message: 'Stok bekleniyor',
+                          items: []
+                        }
+                      }
+                    }
                   );
+                  console.warn(`No stock available for order ${order.id} (product ${order.productId})`);
+                  
+                  // Send pending stock email
+                  if (orderUser && product) {
+                    sendPendingStockEmail(db, order, orderUser, product, 'Stok bekleniyor').catch(err => 
+                      console.error('Pending stock email failed:', err)
+                    );
+                  }
                 }
               }
             } catch (stockError) {

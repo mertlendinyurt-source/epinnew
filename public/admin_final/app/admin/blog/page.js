@@ -72,7 +72,7 @@ export default function AdminBlogPage() {
   const [posts, setPosts] = useState([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [search, setSearch] = useState('')
   
   // Dialog states
@@ -111,7 +111,7 @@ export default function AdminBlogPage() {
         page: page.toString(),
         limit: '20'
       })
-      if (statusFilter) params.append('status', statusFilter)
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter)
 
       const response = await fetch(`/api/admin/blog?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -334,7 +334,7 @@ export default function AdminBlogPage() {
                   <SelectValue placeholder="Tüm durumlar" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-700">
-                  <SelectItem value="">Tüm durumlar</SelectItem>
+                  <SelectItem value="all">Tüm durumlar</SelectItem>
                   <SelectItem value="published">Yayında</SelectItem>
                   <SelectItem value="draft">Taslak</SelectItem>
                 </SelectContent>

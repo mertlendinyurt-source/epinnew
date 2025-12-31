@@ -309,7 +309,7 @@ async function getDijipinBalance() {
   }
 }
 
-// DijiPin sipariş oluşturma
+// DijiPin sipariş oluşturma (TOP-UP - Direkt UC Yükleme)
 async function createDijipinOrder(productTitle, quantity, pubgId) {
   if (!DIJIPIN_API_TOKEN) {
     console.log('DijiPin API token not configured');
@@ -321,7 +321,7 @@ async function createDijipinOrder(productTitle, quantity, pubgId) {
     return { success: false, error: 'PUBG ID gerekli' };
   }
   
-  // Ürün ID'sini bul (yeni fonksiyon kullanarak)
+  // Ürün ID'sini bul (customerStoreProductID)
   const dijipinProductId = getDijipinProductId(productTitle);
   
   if (!dijipinProductId) {
@@ -329,7 +329,7 @@ async function createDijipinOrder(productTitle, quantity, pubgId) {
     return { success: false, error: 'Bu ürün DijiPin entegrasyonunda bulunamadı (sadece 60 UC ve 325 UC desteklenir)' };
   }
   
-  console.log(`DijiPin order: Product "${productTitle}" -> DijiPin ID: ${dijipinProductId}, PUBG ID: ${pubgId}`);
+  console.log(`DijiPin order: Product "${productTitle}" -> DijiPin customerStoreProductID: ${dijipinProductId}, PUBG ID: ${pubgId}`);
   
   try {
     const response = await fetch(`${DIJIPIN_API_URL}/Order/Create`, {
@@ -344,10 +344,14 @@ async function createDijipinOrder(productTitle, quantity, pubgId) {
           {
             customerStoreProductID: dijipinProductId,
             quantity: quantity || 1,
-            fields: {
-              userID: pubgId,
-              serverID: '1'
-            }
+            requireData: [
+              {
+                productRequireID: 1,
+                identifier: "user_id",
+                title: "Oyuncu ID",
+                value: pubgId.toString()
+              }
+            ]
           }
         ]
       })

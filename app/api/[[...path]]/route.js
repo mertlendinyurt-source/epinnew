@@ -6550,6 +6550,174 @@ export async function PUT(request) {
       });
     }
 
+    // Admin: Approve/Reject verification & Assign stock
+    if (pathname.match(/^\/api\/admin\/orders\/([^\/]+)\/verify$/)) {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const orderId = pathname.match(/^\/api\/admin\/orders\/([^\/]+)\/verify$/)[1];
+      const { action, rejectionReason } = body; // action: 'approve' or 'reject'
+
+      const order = await db.collection('orders').findOne({ id: orderId });
+      if (!order) {
+        return NextResponse.json({ success: false, error: 'Sipariş bulunamadı' }, { status: 404 });
+      }
+
+      if (!order.verification || !order.verification.required) {
+        return NextResponse.json({ success: false, error: 'Bu sipariş doğrulama gerektirmiyor' }, { status: 400 });
+      }
+
+      if (action === 'approve') {
+        // Update verification status to approved
+        await db.collection('orders').updateOne(
+          { id: orderId },
+          {
+            $set: {
+              'verification.status': 'approved',
+              'verification.reviewedAt': new Date(),
+              'verification.reviewedBy': adminUser.username
+            }
+          }
+        );
+
+        // Delete verification files (as per requirement)
+        if (order.verification.identityPhoto) {
+          deleteUploadedFile(order.verification.identityPhoto);
+        }
+        if (order.verification.paymentReceipt) {
+          deleteUploadedFile(order.verification.paymentReceipt);
+        }
+
+        // NOW ASSIGN STOCK (same logic as auto-assignment)
+        const product = await db.collection('products').findOne({ id: order.productId });
+        const assignedStock = await db.collection('stock').findOneAndUpdate(
+          { 
+            productId: order.productId, 
+            status: 'available' 
+          },
+          { 
+            $set: { 
+              status: 'assigned', 
+              orderId: order.id,
+              assignedAt: new Date()
+            } 
+          },
+          { 
+            returnDocument: 'after',
+            sort: { createdAt: 1 }
+          }
+        );
+
+        if (assignedStock && assignedStock.value) {
+          const stockCode = assignedStock.value;
+          
+          await db.collection('orders').updateOne(
+            { id: order.id },
+            {
+              $set: {
+                delivery: {
+                  status: 'delivered',
+                  items: [stockCode],
+                  stockId: assignedStock.id || assignedStock._id,
+                  assignedAt: new Date()
+                }
+              }
+            }
+          );
+
+          // Send delivered email
+          const orderUser = await db.collection('users').findOne({ id: order.userId });
+          if (orderUser && product) {
+            sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
+              console.error('Delivered email failed:', err)
+            );
+          }
+
+          await logAuditAction(db, AUDIT_ACTIONS.ORDER_VERIFICATION_APPROVE, adminUser.username, 'order', orderId, request, {
+            stockAssigned: true,
+            stockCode: '***MASKED***'
+          });
+
+          return NextResponse.json({
+            success: true,
+            message: 'Doğrulama onaylandı ve stok atandı'
+          });
+        } else {
+          // No stock available
+          await db.collection('orders').updateOne(
+            { id: order.id },
+            {
+              $set: {
+                delivery: {
+                  status: 'pending',
+                  message: 'Stok bekleniyor',
+                  items: []
+                }
+              }
+            }
+          );
+
+          await logAuditAction(db, AUDIT_ACTIONS.ORDER_VERIFICATION_APPROVE, adminUser.username, 'order', orderId, request, {
+            stockAssigned: false,
+            reason: 'out_of_stock'
+          });
+
+          return NextResponse.json({
+            success: true,
+            message: 'Doğrulama onaylandı ancak stok yok. Manuel teslimat gerekli.'
+          });
+        }
+
+      } else if (action === 'reject') {
+        // Update verification status to rejected
+        await db.collection('orders').updateOne(
+          { id: orderId },
+          {
+            $set: {
+              'verification.status': 'rejected',
+              'verification.reviewedAt': new Date(),
+              'verification.reviewedBy': adminUser.username,
+              'verification.rejectionReason': rejectionReason || 'Doğrulama belgeleri uygun değil',
+              status: 'cancelled', // Cancel order
+              delivery: {
+                status: 'cancelled',
+                message: `Doğrulama reddedildi: ${rejectionReason || 'Belgeler uygun değil'}`
+              }
+            }
+          }
+        );
+
+        // Delete verification files
+        if (order.verification.identityPhoto) {
+          deleteUploadedFile(order.verification.identityPhoto);
+        }
+        if (order.verification.paymentReceipt) {
+          deleteUploadedFile(order.verification.paymentReceipt);
+        }
+
+        await logAuditAction(db, AUDIT_ACTIONS.ORDER_VERIFICATION_REJECT, adminUser.username, 'order', orderId, request, {
+          reason: rejectionReason
+        });
+
+        // Send rejection email
+        const orderUser = await db.collection('users').findOne({ id: order.userId });
+        if (orderUser) {
+          sendVerificationRejectedEmail(db, order, orderUser, rejectionReason).catch(err => 
+            console.error('Rejection email failed:', err)
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: 'Doğrulama reddedildi ve sipariş iptal edildi. Para iadesi için Shopier panelinden işlem yapın.'
+        });
+      } else {
+        return NextResponse.json({ success: false, error: 'Geçersiz işlem' }, { status: 400 });
+      }
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

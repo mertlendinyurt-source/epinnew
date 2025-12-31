@@ -792,6 +792,7 @@ export default function AdminProducts() {
                     <TableHead className="text-slate-400">Fiyat</TableHead>
                     <TableHead className="text-slate-400">İndirimli Fiyat</TableHead>
                     <TableHead className="text-slate-400">İndirim %</TableHead>
+                    <TableHead className="text-slate-400">DijiPin Oto</TableHead>
                     <TableHead className="text-slate-400">Durum</TableHead>
                     <TableHead className="text-slate-400">İşlemler</TableHead>
                   </TableRow>

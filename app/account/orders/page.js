@@ -90,6 +90,10 @@ export default function AccountOrdersPage() {
       return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-green-500">✅ Teslim Edildi</span>;
     }
 
+    if (delivery.status === 'verification_pending' || delivery.status === 'verification_required') {
+      return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-amber-500">🔐 Doğrulama Bekleniyor</span>;
+    }
+
     if (delivery.status === 'pending') {
       return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-yellow-500">⏳ Stok Bekleniyor</span>;
     }

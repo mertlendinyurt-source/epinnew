@@ -77,8 +77,8 @@ export default function DijipinSettingsPage() {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
-      if (data.success) {
-        setBalance(data.data)
+      if (data.success && data.data?.balance) {
+        setBalance(data.data.balance)
       } else {
         setBalanceError(data.error || 'Bakiye alınamadı')
       }

@@ -1170,6 +1170,35 @@ async function sendPasswordChangedEmail(db, user) {
   return sendEmail(db, 'password_changed', user.email, content, user.id, null, null, true);
 }
 
+async function sendVerificationRejectedEmail(db, order, user, rejectionReason) {
+  const content = {
+    subject: `Doğrulama reddedildi - ${order.id.slice(-8)}`,
+    title: 'Doğrulama Reddedildi',
+    body: `
+      <p>Merhaba ${user.firstName},</p>
+      <p>Maalesef yüksek tutarlı siparişiniz için gönderdiğiniz doğrulama belgeleri uygun bulunmadı.</p>
+      
+      <p style="margin-top:20px;"><strong>Sipariş Bilgileri:</strong></p>
+      <ul>
+        <li>Sipariş No: ${order.id.slice(-8)}</li>
+        <li>Tutar: ${order.amount.toFixed(2)} TL</li>
+      </ul>
+      
+      <p style="margin-top:20px;"><strong>Red Sebebi:</strong></p>
+      <p style="padding:15px;background:#fff3cd;border-left:3px solid #ffc107;">
+        ${rejectionReason || 'Doğrulama belgeleri uygun değil'}
+      </p>
+    `,
+    warning: 'Siparişiniz iptal edildi ve para iadesi işlemi başlatıldı. İade süreci 3-5 iş günü sürebilir.',
+    cta: {
+      text: 'Destek Talebi Oluştur',
+      url: `${BASE_URL}/account/support/new`
+    }
+  };
+  
+  return sendEmail(db, 'verification_rejected', user.email, content, user.id, order.id);
+}
+
 let cachedClient = null;
 
 async function getDb() {

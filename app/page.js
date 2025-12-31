@@ -851,6 +851,16 @@ export default function App() {
               <div className="h-14 md:h-16 w-32 bg-white/5 rounded animate-pulse"></div>
             )}
           </div>
+          
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center gap-6">
+            <a href="/" className="text-white/70 hover:text-white transition-colors text-sm font-medium">
+              Anasayfa
+            </a>
+            <a href="/blog" className="text-white/70 hover:text-white transition-colors text-sm font-medium">
+              Blog
+            </a>
+          </nav>
             
           <div className="flex items-center gap-2 md:gap-4">
             {/* Mobile Menu */}
@@ -866,7 +876,18 @@ export default function App() {
               </SheetTrigger>
               <SheetContent side="left" className="w-[280px] bg-[#1e2229] border-white/10 p-0">
                 <div className="p-5">
-                  <FilterSidebar />
+                  {/* Mobile Navigation Links */}
+                  <div className="mb-4 space-y-2">
+                    <a href="/" className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                      Anasayfa
+                    </a>
+                    <a href="/blog" className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                      Blog / Haberler
+                    </a>
+                  </div>
+                  <div className="border-t border-white/10 pt-4">
+                    <FilterSidebar />
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>

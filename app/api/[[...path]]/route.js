@@ -3068,6 +3068,63 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
       });
     }
 
+    // Admin: Get orders pending verification
+    if (pathname === '/api/admin/orders/pending-verification') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const pendingOrders = await db.collection('orders').find({
+        'verification.required': true,
+        'verification.status': 'pending',
+        'verification.submittedAt': { $ne: null }
+      }).sort({ 'verification.submittedAt': -1 }).toArray();
+
+      // Populate user info
+      const ordersWithUsers = await Promise.all(pendingOrders.map(async (order) => {
+        const user = await db.collection('users').findOne({ id: order.userId });
+        return {
+          ...order,
+          userEmail: user?.email || 'N/A',
+          userName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim()
+        };
+      }));
+
+      return NextResponse.json({
+        success: true,
+        data: ordersWithUsers
+      });
+    }
+
+    // Customer: Get verification status
+    if (pathname.match(/^\/api\/account\/orders\/([^\/]+)\/verification$/)) {
+      const user = verifyToken(request);
+      if (!user || user.type !== 'user') {
+        return NextResponse.json({ success: false, error: 'Giriş gerekli' }, { status: 401 });
+      }
+
+      const orderId = pathname.match(/^\/api\/account\/orders\/([^\/]+)\/verification$/)[1];
+      
+      const order = await db.collection('orders').findOne({ id: orderId, userId: user.id });
+      if (!order) {
+        return NextResponse.json({ success: false, error: 'Sipariş bulunamadı' }, { status: 404 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          required: order.verification?.required || false,
+          status: order.verification?.status || 'not_required',
+          identityPhoto: order.verification?.identityPhoto || null,
+          paymentReceipt: order.verification?.paymentReceipt || null,
+          submittedAt: order.verification?.submittedAt || null,
+          reviewedAt: order.verification?.reviewedAt || null,
+          rejectionReason: order.verification?.rejectionReason || null
+        }
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

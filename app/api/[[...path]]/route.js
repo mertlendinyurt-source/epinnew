@@ -2207,6 +2207,9 @@ export async function GET(request) {
             status: order.verification.status,
             submittedAt: order.verification.submittedAt
           } : null,
+          delivery: order.delivery ? {
+            status: order.delivery.status
+          } : null,
           createdAt: order.createdAt
         }
       });

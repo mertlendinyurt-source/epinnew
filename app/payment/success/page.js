@@ -40,7 +40,9 @@ function PaymentSuccessContent() {
               setOrder(authData.data)
               
               // Redirect to verification page if required
-              if (authData.data.verification?.required && authData.data.verification?.status === 'pending' && !authData.data.verification?.submittedAt) {
+              const needsVerification = (authData.data.verification?.required && authData.data.verification?.status === 'pending' && !authData.data.verification?.submittedAt) || 
+                                        authData.data.delivery?.status === 'verification_required';
+              if (needsVerification) {
                 setTimeout(() => {
                   router.push(`/account/orders/${orderId}/verification`)
                 }, 3000)
@@ -60,7 +62,9 @@ function PaymentSuccessContent() {
             setOrder(publicData.data)
             
             // Redirect to verification page if required (from public endpoint)
-            if (publicData.data.verification?.required && publicData.data.verification?.status === 'pending' && !publicData.data.verification?.submittedAt) {
+            const needsVerification = (publicData.data.verification?.required && publicData.data.verification?.status === 'pending' && !publicData.data.verification?.submittedAt) ||
+                                      publicData.data.delivery?.status === 'verification_required';
+            if (needsVerification) {
               setTimeout(() => {
                 router.push(`/account/orders/${orderId}/verification`)
               }, 3000)
@@ -77,7 +81,8 @@ function PaymentSuccessContent() {
     fetchOrder()
   }, [orderId, router])
 
-  const isVerificationRequired = order?.verification?.required && order?.verification?.status === 'pending' && !order?.verification?.submittedAt
+  const isVerificationRequired = (order?.verification?.required && order?.verification?.status === 'pending' && !order?.verification?.submittedAt) ||
+                                  order?.delivery?.status === 'verification_required'
 
   const copyOrderId = () => {
     if (orderId) {

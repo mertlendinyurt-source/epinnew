@@ -5656,13 +5656,24 @@ export async function POST(request) {
       );
 
       if (assignedStock) {
-        // Get the stock document - MongoDB returns directly or in .value depending on version
-        const stockItem = assignedStock.value ? assignedStock.value : assignedStock;
-        // The actual code value is stored in the 'value' field of the stock document
+        // MongoDB 6+ returns the document directly, older versions may wrap in .value
+        // Check if result has nested document structure (older driver) or direct (newer driver)
+        let stockItem;
+        if (assignedStock._id) {
+          // Direct document return (newer MongoDB driver)
+          stockItem = assignedStock;
+        } else if (assignedStock.value && assignedStock.value._id) {
+          // Wrapped in .value (older MongoDB driver)
+          stockItem = assignedStock.value;
+        } else {
+          stockItem = assignedStock;
+        }
+        
+        // The actual stock code is stored in the 'value' field of the stock document
         const stockCode = stockItem.value;
         
         if (!stockCode) {
-          console.error('Stock code is empty:', stockItem);
+          console.error('Stock code is empty. Stock item:', JSON.stringify(stockItem));
           return NextResponse.json(
             { success: false, error: 'Stok kodu boş - lütfen tekrar deneyin' },
             { status: 400 }

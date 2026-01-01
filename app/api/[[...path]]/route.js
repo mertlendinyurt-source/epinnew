@@ -3748,8 +3748,14 @@ export async function POST(request) {
       });
     }
     
-    // For all other endpoints, parse JSON body
-    const body = await request.json();
+    // For all other endpoints, parse JSON body (with fallback for empty body)
+    let body = {};
+    try {
+      body = await request.json();
+    } catch (e) {
+      // Empty body or invalid JSON - use empty object
+      body = {};
+    }
 
     // Admin login
     // DEPRECATED: Old admin login - redirect to unified login

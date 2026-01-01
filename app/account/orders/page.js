@@ -197,7 +197,7 @@ export default function AccountOrdersPage() {
                         {order.productSnapshot?.title || order.productTitle || 'Ürün'}
                       </h3>
                       {getStatusBadge(order.status)}
-                      {getDeliveryBadge(order.delivery)}
+                      {getDeliveryBadge(order)}
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-400">

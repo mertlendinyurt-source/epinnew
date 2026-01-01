@@ -5985,6 +5985,19 @@ export async function POST(request) {
         );
       }
 
+      // Check if user already has an open ticket (not closed)
+      const openTicket = await db.collection('tickets').findOne({
+        userId,
+        status: { $ne: 'closed' }
+      });
+
+      if (openTicket) {
+        return NextResponse.json(
+          { success: false, error: 'Zaten açık bir destek talebiniz var. Mevcut talebiniz kapatıldıktan sonra yeni talep açabilirsiniz.' },
+          { status: 400 }
+        );
+      }
+
       // Create ticket
       const ticket = {
         id: uuidv4(),

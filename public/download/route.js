@@ -4878,7 +4878,7 @@ export async function POST(request) {
         API_key: apiKey, // Note: API_key not api_key
         website_index: 1,
         platform_order_id: order.id,
-        product_name: `PINLY - ${product.title}`,
+        product_name: 'Bakiye Yüklemesi',
         product_type: 1, // 0 = Physical, 1 = Digital
         buyer_name: customerSnapshot.firstName,
         buyer_surname: customerSnapshot.lastName,

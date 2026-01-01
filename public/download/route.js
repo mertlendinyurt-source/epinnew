@@ -3748,8 +3748,14 @@ export async function POST(request) {
       });
     }
     
-    // For all other endpoints, parse JSON body
-    const body = await request.json();
+    // For all other endpoints, parse JSON body (with fallback for empty body)
+    let body = {};
+    try {
+      body = await request.json();
+    } catch (e) {
+      // Empty body or invalid JSON - use empty object
+      body = {};
+    }
 
     // Admin login
     // DEPRECATED: Old admin login - redirect to unified login
@@ -5649,8 +5655,30 @@ export async function POST(request) {
         }
       );
 
-      if (assignedStock && assignedStock.value) {
-        const stockCode = assignedStock.value;
+      if (assignedStock) {
+        // MongoDB 6+ returns the document directly, older versions may wrap in .value
+        // Check if result has nested document structure (older driver) or direct (newer driver)
+        let stockItem;
+        if (assignedStock._id) {
+          // Direct document return (newer MongoDB driver)
+          stockItem = assignedStock;
+        } else if (assignedStock.value && assignedStock.value._id) {
+          // Wrapped in .value (older MongoDB driver)
+          stockItem = assignedStock.value;
+        } else {
+          stockItem = assignedStock;
+        }
+        
+        // The actual stock code is stored in the 'value' field of the stock document
+        const stockCode = stockItem.value;
+        
+        if (!stockCode) {
+          console.error('Stock code is empty. Stock item:', JSON.stringify(stockItem));
+          return NextResponse.json(
+            { success: false, error: 'Stok kodu boş - lütfen tekrar deneyin' },
+            { status: 400 }
+          );
+        }
         
         await db.collection('orders').updateOne(
           { id: order.id },
@@ -5659,7 +5687,7 @@ export async function POST(request) {
               delivery: {
                 status: 'delivered',
                 items: [stockCode],
-                stockId: assignedStock.id || assignedStock._id,
+                stockId: stockItem.id || stockItem._id?.toString(),
                 assignedAt: new Date(),
                 assignedBy: user.username || user.email,
                 method: 'manual'
@@ -5682,7 +5710,7 @@ export async function POST(request) {
           message: 'Stok başarıyla atandı',
           data: { 
             orderId: order.id,
-            stockCode: typeof stockCode === 'object' ? stockCode.value : stockCode,
+            stockCode: stockCode,
             deliveryStatus: 'delivered'
           }
         });

@@ -590,6 +590,20 @@ export default function AdminOrders() {
                   </Button>
                 </div>
               )}
+
+              {/* Stok Bekliyor durumundaki siparişler için Stok Ata butonu */}
+              {selectedOrder.delivery?.status === 'pending' && selectedOrder.status === 'paid' && (
+                <div className="flex gap-3 pt-4 border-t border-slate-800">
+                  <Button
+                    onClick={() => handleAssignStock(selectedOrder.id)}
+                    disabled={processingOrder === selectedOrder.id}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Package className="w-4 h-4 mr-2" />
+                    {processingOrder === selectedOrder.id ? 'Stok Atanıyor...' : 'Stok Ata'}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>

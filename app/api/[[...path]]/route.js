@@ -5191,14 +5191,30 @@ export async function POST(request) {
             // 🔐 HIGH-VALUE ORDER VERIFICATION (3000+ TL)
             // ============================================
             // For orders >= 3000 TL, require identity + payment receipt verification
-            const orderTotalAmount = order.totalAmount || order.amount || 0;
-            console.log(`Checking high-value order: ID=${order.id}, totalAmount=${order.totalAmount}, amount=${order.amount}, calculated=${orderTotalAmount}`);
+            // Get the actual order amount - try multiple sources
+            const productPrice = product ? (product.discountPrice || product.price || 0) : 0;
+            const orderTotalAmount = currentOrder.totalAmount || currentOrder.amount || order.totalAmount || order.amount || productPrice;
+            
+            console.log(`=== HIGH-VALUE CHECK ===`);
+            console.log(`Order ID: ${order.id}`);
+            console.log(`currentOrder.totalAmount: ${currentOrder.totalAmount}`);
+            console.log(`currentOrder.amount: ${currentOrder.amount}`);
+            console.log(`order.totalAmount: ${order.totalAmount}`);
+            console.log(`order.amount: ${order.amount}`);
+            console.log(`product.discountPrice: ${product?.discountPrice}`);
+            console.log(`product.price: ${product?.price}`);
+            console.log(`FINAL orderTotalAmount: ${orderTotalAmount}`);
+            console.log(`Is >= 3000? ${orderTotalAmount >= 3000}`);
+            console.log(`========================`);
             
             if (orderTotalAmount >= 3000) {
+              // Update order with amount if it was missing
               await db.collection('orders').updateOne(
                 { id: order.id },
                 {
                   $set: {
+                    amount: orderTotalAmount,
+                    totalAmount: orderTotalAmount,
                     verification: {
                       required: true,
                       status: 'pending', // pending/approved/rejected
@@ -5217,7 +5233,7 @@ export async function POST(request) {
                   }
                 }
               );
-              console.log(`Order ${order.id} requires verification (amount: ${orderTotalAmount} TL >= 3000 TL)`);
+              console.log(`✅ Order ${order.id} requires verification (amount: ${orderTotalAmount} TL >= 3000 TL)`);
               
               // Send email notifying verification is required
               if (orderUser && product) {

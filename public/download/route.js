@@ -2202,6 +2202,11 @@ export async function GET(request) {
             email: order.customer.email,
             phone: order.customer.phone
           } : null,
+          verification: order.verification ? {
+            required: order.verification.required,
+            status: order.verification.status,
+            submittedAt: order.verification.submittedAt
+          } : null,
           createdAt: order.createdAt
         }
       });

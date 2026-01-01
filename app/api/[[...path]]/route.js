@@ -4839,6 +4839,7 @@ export async function POST(request) {
       };
 
       // Create order with PENDING status
+      const orderAmount = product.discountPrice || product.price || 0;
       const order = {
         id: uuidv4(),
         userId: user.id, // Link order to user
@@ -4849,8 +4850,8 @@ export async function POST(request) {
         playerName,
         customer: customerSnapshot, // Store customer info snapshot
         status: 'pending',
-        amount: product.discountPrice, // Backend-controlled price
-        totalAmount: product.discountPrice, // For verification checks
+        amount: orderAmount, // Backend-controlled price
+        totalAmount: orderAmount, // For verification checks
         currency: 'TRY',
         createdAt: new Date(),
         updatedAt: new Date()

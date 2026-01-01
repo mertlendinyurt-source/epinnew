@@ -5065,12 +5065,77 @@ export async function POST(request) {
         createdAt: new Date()
       });
 
-      // 11. CALCULATE RISK & AUTO-ASSIGN STOCK (if PAID and not already assigned)
+      // 11. PROCESS PAID ORDERS
       if (newStatus === 'paid') {
         // Get user and product for email
         const orderUser = await db.collection('users').findOne({ id: order.userId });
         const product = await db.collection('products').findOne({ id: order.productId });
 
+        // ============================================
+        // 🔐 HIGH-VALUE ORDER CHECK - DO THIS FIRST!
+        // ============================================
+        // Get the order amount from multiple sources
+        const productPrice = product ? (product.discountPrice || product.price || 0) : 0;
+        const orderAmount = order.amount || order.totalAmount || productPrice || 0;
+        
+        console.log('========================================');
+        console.log('🔐 HIGH-VALUE ORDER CHECK');
+        console.log('Order ID:', order.id);
+        console.log('order.amount:', order.amount);
+        console.log('order.totalAmount:', order.totalAmount);
+        console.log('product.discountPrice:', product?.discountPrice);
+        console.log('product.price:', product?.price);
+        console.log('FINAL orderAmount:', orderAmount);
+        console.log('Is >= 3000?', orderAmount >= 3000);
+        console.log('========================================');
+
+        if (orderAmount >= 3000) {
+          // HIGH VALUE ORDER - REQUIRES VERIFICATION
+          await db.collection('orders').updateOne(
+            { id: order.id },
+            {
+              $set: {
+                amount: orderAmount,
+                totalAmount: orderAmount,
+                verification: {
+                  required: true,
+                  status: 'pending',
+                  identityPhoto: null,
+                  paymentReceipt: null,
+                  submittedAt: null,
+                  reviewedAt: null,
+                  reviewedBy: null,
+                  rejectionReason: null
+                },
+                delivery: {
+                  status: 'verification_required',
+                  message: 'Yüksek tutarlı sipariş - Kimlik ve ödeme dekontu doğrulaması gerekli',
+                  items: []
+                }
+              }
+            }
+          );
+          
+          console.log(`✅ Order ${order.id} marked for VERIFICATION (${orderAmount} TL >= 3000 TL)`);
+          
+          // Send verification required email
+          if (orderUser && product) {
+            sendVerificationRequiredEmail(db, order, orderUser, product).catch(err => 
+              console.error('Verification required email failed:', err)
+            );
+          }
+          
+          // Return early - no stock assignment or risk check needed
+          return NextResponse.json({
+            success: true,
+            message: 'Ödeme başarılı - Doğrulama gerekli'
+          });
+        }
+
+        // ============================================
+        // NORMAL FLOW - Orders < 3000 TL
+        // ============================================
+        
         // Calculate risk score
         const riskResult = await calculateOrderRisk(db, order, orderUser, request);
         

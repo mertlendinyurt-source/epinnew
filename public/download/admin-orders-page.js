@@ -351,7 +351,7 @@ export default function AdminOrders() {
                         <div className="text-xs text-slate-500">{order.playerId}</div>
                       </TableCell>
                       <TableCell className="text-white font-semibold">
-                        ₺{order.amount?.toFixed(2)}
+                        ₺{(order.amount || order.totalAmount || order.price || 0).toFixed(2)}
                       </TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
                       <TableCell>{getRiskBadge(order)}</TableCell>
@@ -457,7 +457,7 @@ export default function AdminOrders() {
                 </div>
                 <div>
                   <p className="text-slate-400 text-sm">Tutar</p>
-                  <p className="text-white font-bold">₺{selectedOrder.amount?.toFixed(2)}</p>
+                  <p className="text-white font-bold">₺{(selectedOrder.amount || selectedOrder.totalAmount || selectedOrder.price || 0).toFixed(2)}</p>
                 </div>
                 <div>
                   <p className="text-slate-400 text-sm">Durum</p>

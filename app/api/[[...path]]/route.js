@@ -5165,59 +5165,42 @@ export async function POST(request) {
           (actualStatus === 'SUSPICIOUS' && !riskSettings.suspiciousAutoApprove);
 
         // If FLAGGED/BLOCKED/SUSPICIOUS - HOLD delivery, don't assign stock
+        // Note: High-value orders (>= 3000 TL) are already handled above and won't reach here
         if (shouldHoldDelivery && !riskSettings.isTestMode) {
-          // Check for high-value order first (>= 3000 TL)
-          const productPrice = product ? (product.discountPrice || product.price || 0) : 0;
-          const orderTotalAmount = order.totalAmount || order.amount || productPrice;
-          
-          console.log(`=== RISK HOLD - HIGH-VALUE CHECK ===`);
-          console.log(`Order ID: ${order.id}`);
-          console.log(`order.totalAmount: ${order.totalAmount}`);
-          console.log(`order.amount: ${order.amount}`);
-          console.log(`product.price: ${productPrice}`);
-          console.log(`FINAL orderTotalAmount: ${orderTotalAmount}`);
-          console.log(`Is >= 3000? ${orderTotalAmount >= 3000}`);
-          console.log(`====================================`);
-          
-          if (orderTotalAmount >= 3000) {
-            // High-value + risky = requires verification
-            await db.collection('orders').updateOne(
-              { id: order.id },
-              {
-                $set: {
-                  amount: orderTotalAmount,
-                  totalAmount: orderTotalAmount,
-                  verification: {
-                    required: true,
-                    status: 'pending',
-                    identityPhoto: null,
-                    paymentReceipt: null,
-                    submittedAt: null,
-                    reviewedAt: null,
-                    reviewedBy: null,
-                    rejectionReason: null
-                  },
-                  delivery: {
-                    status: 'verification_required',
-                    message: 'Yüksek tutarlı sipariş - Kimlik ve ödeme dekontu doğrulaması gerekli',
-                    items: []
-                  },
-                  risk: {
-                    score: riskResult.score,
-                    status: actualStatus,
-                    reasons: riskResult.reasons
-                  }
+          // Normal risky order - hold for review
+          await db.collection('orders').updateOne(
+            { id: order.id },
+            {
+              $set: {
+                delivery: {
+                  status: 'hold',
+                  message: actualStatus === 'BLOCKED' ? 'Sipariş engellendi' : 
+                           actualStatus === 'FLAGGED' ? 'Sipariş kontrol altında - Riskli' :
+                           'Sipariş kontrol altında - Şüpheli',
+                  holdReason: actualStatus === 'BLOCKED' ? 'risk_blocked' : 
+                              actualStatus === 'FLAGGED' ? 'risk_flagged' : 'risk_suspicious',
+                  items: []
                 }
               }
-            );
-            console.log(`✅ High-value order ${order.id} (${orderTotalAmount} TL) requires verification`);
-            
-            if (orderUser && product) {
-              sendVerificationRequiredEmail(db, order, orderUser, product).catch(err => 
-                console.error('Verification required email failed:', err)
-              );
             }
-          } else {
+          );
+          
+          // Log the risk flag
+          await logAuditAction(db, AUDIT_ACTIONS.ORDER_RISK_FLAG, 'system', 'order', order.id, request, {
+            riskScore: riskResult.score,
+            riskStatus: actualStatus,
+            reasons: riskResult.reasons
+          });
+          
+          console.log(`Order ${order.id} ${actualStatus} with risk score ${riskResult.score}. Delivery on HOLD.`);
+          
+          // Send payment success email (but note delivery is pending review)
+          if (orderUser && product) {
+            sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
+              console.error('Payment success email failed:', err)
+            );
+          }
+        } else {
             // Normal risky order - hold
             await db.collection('orders').updateOne(
               { id: order.id },

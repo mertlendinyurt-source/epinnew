@@ -2199,7 +2199,8 @@ export async function GET(request) {
           customer: order.customer ? {
             firstName: order.customer.firstName,
             lastName: order.customer.lastName,
-            email: order.customer.email
+            email: order.customer.email,
+            phone: order.customer.phone
           } : null,
           createdAt: order.createdAt
         }

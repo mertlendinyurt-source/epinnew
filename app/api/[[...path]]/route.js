@@ -5089,8 +5089,8 @@ export async function POST(request) {
         // ============================================
         // 🔐 HIGH-VALUE ORDER CHECK - DO THIS FIRST!
         // ============================================
-        // Get the order amount from multiple sources
-        const productPrice = product ? (product.discountPrice || product.price || 0) : 0;
+        // Get the order amount from multiple sources - try ALL possible price fields
+        const productPrice = product ? (product.discountPrice || product.price || product.finalPrice || product.salePrice || product.currentPrice || product.sellingPrice || 0) : 0;
         const orderAmount = order.amount || order.totalAmount || productPrice || 0;
         
         console.log('========================================');
@@ -5100,6 +5100,8 @@ export async function POST(request) {
         console.log('order.totalAmount:', order.totalAmount);
         console.log('product.discountPrice:', product?.discountPrice);
         console.log('product.price:', product?.price);
+        console.log('product.finalPrice:', product?.finalPrice);
+        console.log('product.salePrice:', product?.salePrice);
         console.log('FINAL orderAmount:', orderAmount);
         console.log('Is >= 3000?', orderAmount >= 3000);
         console.log('========================================');

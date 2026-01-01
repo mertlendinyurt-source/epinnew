@@ -10,12 +10,8 @@ function PaymentSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   
-  // URL'den gelen parametreler
+  // URL'den gelen orderId
   const orderId = searchParams.get('orderId')
-  const urlAmount = searchParams.get('amount')
-  const urlName = searchParams.get('name')
-  const urlEmail = searchParams.get('email')
-  const urlProduct = searchParams.get('product')
   
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -30,33 +26,39 @@ function PaymentSuccessContent() {
     // Fetch order details
     const fetchOrder = async () => {
       try {
-        // userToken kullan (sitenin kullandığı key)
+        // Önce authenticated endpoint'i dene (userToken ile)
         const token = localStorage.getItem('userToken') || localStorage.getItem('token')
         
-        if (!token) {
-          console.log('No token found')
-          setLoading(false)
-          return
-        }
-
-        const response = await fetch(`/api/account/orders/${orderId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success && data.data) {
-            setOrder(data.data)
-            
-            // Redirect to verification page if required
-            if (data.data.verification?.required && data.data.verification?.status === 'pending' && !data.data.verification?.submittedAt) {
-              setTimeout(() => {
-                router.push(`/account/orders/${orderId}/verification`)
-              }, 3000)
+        if (token) {
+          const authResponse = await fetch(`/api/account/orders/${orderId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          
+          if (authResponse.ok) {
+            const authData = await authResponse.json()
+            if (authData.success && authData.data) {
+              setOrder(authData.data)
+              
+              // Redirect to verification page if required
+              if (authData.data.verification?.required && authData.data.verification?.status === 'pending' && !authData.data.verification?.submittedAt) {
+                setTimeout(() => {
+                  router.push(`/account/orders/${orderId}/verification`)
+                }, 3000)
+              }
+              setLoading(false)
+              return
             }
           }
-        } else {
-          console.log('Order fetch failed:', response.status)
+        }
+        
+        // Token yoksa veya auth başarısızsa, public endpoint'i kullan
+        const publicResponse = await fetch(`/api/orders/${orderId}/summary`)
+        
+        if (publicResponse.ok) {
+          const publicData = await publicResponse.json()
+          if (publicData.success && publicData.data) {
+            setOrder(publicData.data)
+          }
         }
       } catch (error) {
         console.error('Failed to fetch order:', error)
@@ -88,14 +90,14 @@ function PaymentSuccessContent() {
     }).format(amount)
   }
 
-  // Bilgileri al - önce order'dan, yoksa URL'den
+  // Bilgileri al
   const customerName = order?.customer 
     ? `${order.customer.firstName || ''} ${order.customer.lastName || ''}`.trim()
-    : urlName || null
+    : null
   
-  const customerEmail = order?.customer?.email || urlEmail || null
-  const productTitle = order?.productTitle || urlProduct || null
-  const amount = order?.amount || order?.totalAmount || (urlAmount ? parseFloat(urlAmount) : null)
+  const customerEmail = order?.customer?.email || null
+  const productTitle = order?.productTitle || null
+  const amount = order?.amount || order?.totalAmount || null
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
@@ -184,17 +186,19 @@ function PaymentSuccessContent() {
                 )}
 
                 {/* Sipariş Tutarı */}
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-700/50">
-                  <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                    <Receipt className="w-5 h-5 text-green-400" />
-                  </div>
-                  <div>
-                    <div className="text-xs text-slate-400 mb-0.5">Sipariş Tutarı</div>
-                    <div className="text-green-400 font-bold text-xl">
-                      {formatCurrency(amount)}
+                {amount && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-700/50">
+                    <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                      <Receipt className="w-5 h-5 text-green-400" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-400 mb-0.5">Sipariş Tutarı</div>
+                      <div className="text-green-400 font-bold text-xl">
+                        {formatCurrency(amount)}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Verification Warning */}

@@ -5201,40 +5201,6 @@ export async function POST(request) {
             );
           }
         } else {
-            // Normal risky order - hold
-            await db.collection('orders').updateOne(
-              { id: order.id },
-              {
-                $set: {
-                  delivery: {
-                    status: 'hold',
-                    message: actualStatus === 'BLOCKED' ? 'Sipariş engellendi' : 
-                             actualStatus === 'FLAGGED' ? 'Sipariş kontrol altında - Riskli' :
-                             'Sipariş kontrol altında - Şüpheli',
-                    holdReason: actualStatus === 'BLOCKED' ? 'risk_blocked' : 
-                                actualStatus === 'FLAGGED' ? 'risk_flagged' : 'risk_suspicious',
-                    items: []
-                  }
-                }
-              }
-            );
-            
-            console.log(`Order ${order.id} ${actualStatus} with risk score ${riskResult.score}. Delivery on HOLD.`);
-            
-            if (orderUser && product) {
-              sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
-                console.error('Payment success email failed:', err)
-              );
-            }
-          }
-          
-          // Log the risk flag
-          await logAuditAction(db, AUDIT_ACTIONS.ORDER_RISK_FLAG, 'system', 'order', order.id, request, {
-            riskScore: riskResult.score,
-            riskStatus: actualStatus,
-            reasons: riskResult.reasons
-          });
-        } else {
           // CLEAR risk (or test mode) - proceed with stock assignment
           // Send payment success email
           if (orderUser && product) {
@@ -5247,37 +5213,9 @@ export async function POST(request) {
           const currentOrder = await db.collection('orders').findOne({ id: order.id });
           
           if (!currentOrder.delivery || !currentOrder.delivery.items || currentOrder.delivery.items.length === 0) {
-            // ============================================
-            // 🔐 HIGH-VALUE ORDER VERIFICATION (3000+ TL)
-            // ============================================
-            // For orders >= 3000 TL, require identity + payment receipt verification
-            // Get the actual order amount - try multiple sources
-            const productPrice = product ? (product.discountPrice || product.price || 0) : 0;
-            const orderTotalAmount = currentOrder.totalAmount || currentOrder.amount || order.totalAmount || order.amount || productPrice;
-            
-            console.log(`=== HIGH-VALUE CHECK ===`);
-            console.log(`Order ID: ${order.id}`);
-            console.log(`currentOrder.totalAmount: ${currentOrder.totalAmount}`);
-            console.log(`currentOrder.amount: ${currentOrder.amount}`);
-            console.log(`order.totalAmount: ${order.totalAmount}`);
-            console.log(`order.amount: ${order.amount}`);
-            console.log(`product.discountPrice: ${product?.discountPrice}`);
-            console.log(`product.price: ${product?.price}`);
-            console.log(`FINAL orderTotalAmount: ${orderTotalAmount}`);
-            console.log(`Is >= 3000? ${orderTotalAmount >= 3000}`);
-            console.log(`========================`);
-            
-            if (orderTotalAmount >= 3000) {
-              // Update order with amount if it was missing
-              await db.collection('orders').updateOne(
-                { id: order.id },
-                {
-                  $set: {
-                    amount: orderTotalAmount,
-                    totalAmount: orderTotalAmount,
-                    verification: {
-                      required: true,
-                      status: 'pending', // pending/approved/rejected
+            // NORMAL FLOW: Auto-assign stock for orders < 3000 TL
+            // (Orders >= 3000 TL are already handled at the beginning)
+            console.log('Stock assignment starting for order:', order.id);
                       identityPhoto: null,
                       paymentReceipt: null,
                       submittedAt: null,

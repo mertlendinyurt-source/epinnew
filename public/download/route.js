@@ -5065,12 +5065,77 @@ export async function POST(request) {
         createdAt: new Date()
       });
 
-      // 11. CALCULATE RISK & AUTO-ASSIGN STOCK (if PAID and not already assigned)
+      // 11. PROCESS PAID ORDERS
       if (newStatus === 'paid') {
         // Get user and product for email
         const orderUser = await db.collection('users').findOne({ id: order.userId });
         const product = await db.collection('products').findOne({ id: order.productId });
 
+        // ============================================
+        // 🔐 HIGH-VALUE ORDER CHECK - DO THIS FIRST!
+        // ============================================
+        // Get the order amount from multiple sources
+        const productPrice = product ? (product.discountPrice || product.price || 0) : 0;
+        const orderAmount = order.amount || order.totalAmount || productPrice || 0;
+        
+        console.log('========================================');
+        console.log('🔐 HIGH-VALUE ORDER CHECK');
+        console.log('Order ID:', order.id);
+        console.log('order.amount:', order.amount);
+        console.log('order.totalAmount:', order.totalAmount);
+        console.log('product.discountPrice:', product?.discountPrice);
+        console.log('product.price:', product?.price);
+        console.log('FINAL orderAmount:', orderAmount);
+        console.log('Is >= 3000?', orderAmount >= 3000);
+        console.log('========================================');
+
+        if (orderAmount >= 3000) {
+          // HIGH VALUE ORDER - REQUIRES VERIFICATION
+          await db.collection('orders').updateOne(
+            { id: order.id },
+            {
+              $set: {
+                amount: orderAmount,
+                totalAmount: orderAmount,
+                verification: {
+                  required: true,
+                  status: 'pending',
+                  identityPhoto: null,
+                  paymentReceipt: null,
+                  submittedAt: null,
+                  reviewedAt: null,
+                  reviewedBy: null,
+                  rejectionReason: null
+                },
+                delivery: {
+                  status: 'verification_required',
+                  message: 'Yüksek tutarlı sipariş - Kimlik ve ödeme dekontu doğrulaması gerekli',
+                  items: []
+                }
+              }
+            }
+          );
+          
+          console.log(`✅ Order ${order.id} marked for VERIFICATION (${orderAmount} TL >= 3000 TL)`);
+          
+          // Send verification required email
+          if (orderUser && product) {
+            sendVerificationRequiredEmail(db, order, orderUser, product).catch(err => 
+              console.error('Verification required email failed:', err)
+            );
+          }
+          
+          // Return early - no stock assignment or risk check needed
+          return NextResponse.json({
+            success: true,
+            message: 'Ödeme başarılı - Doğrulama gerekli'
+          });
+        }
+
+        // ============================================
+        // NORMAL FLOW - Orders < 3000 TL
+        // ============================================
+        
         // Calculate risk score
         const riskResult = await calculateOrderRisk(db, order, orderUser, request);
         
@@ -5100,85 +5165,25 @@ export async function POST(request) {
           (actualStatus === 'SUSPICIOUS' && !riskSettings.suspiciousAutoApprove);
 
         // If FLAGGED/BLOCKED/SUSPICIOUS - HOLD delivery, don't assign stock
+        // Note: High-value orders (>= 3000 TL) are already handled above and won't reach here
         if (shouldHoldDelivery && !riskSettings.isTestMode) {
-          // Check for high-value order first (>= 3000 TL)
-          const productPrice = product ? (product.discountPrice || product.price || 0) : 0;
-          const orderTotalAmount = order.totalAmount || order.amount || productPrice;
-          
-          console.log(`=== RISK HOLD - HIGH-VALUE CHECK ===`);
-          console.log(`Order ID: ${order.id}`);
-          console.log(`order.totalAmount: ${order.totalAmount}`);
-          console.log(`order.amount: ${order.amount}`);
-          console.log(`product.price: ${productPrice}`);
-          console.log(`FINAL orderTotalAmount: ${orderTotalAmount}`);
-          console.log(`Is >= 3000? ${orderTotalAmount >= 3000}`);
-          console.log(`====================================`);
-          
-          if (orderTotalAmount >= 3000) {
-            // High-value + risky = requires verification
-            await db.collection('orders').updateOne(
-              { id: order.id },
-              {
-                $set: {
-                  amount: orderTotalAmount,
-                  totalAmount: orderTotalAmount,
-                  verification: {
-                    required: true,
-                    status: 'pending',
-                    identityPhoto: null,
-                    paymentReceipt: null,
-                    submittedAt: null,
-                    reviewedAt: null,
-                    reviewedBy: null,
-                    rejectionReason: null
-                  },
-                  delivery: {
-                    status: 'verification_required',
-                    message: 'Yüksek tutarlı sipariş - Kimlik ve ödeme dekontu doğrulaması gerekli',
-                    items: []
-                  },
-                  risk: {
-                    score: riskResult.score,
-                    status: actualStatus,
-                    reasons: riskResult.reasons
-                  }
+          // Normal risky order - hold for review
+          await db.collection('orders').updateOne(
+            { id: order.id },
+            {
+              $set: {
+                delivery: {
+                  status: 'hold',
+                  message: actualStatus === 'BLOCKED' ? 'Sipariş engellendi' : 
+                           actualStatus === 'FLAGGED' ? 'Sipariş kontrol altında - Riskli' :
+                           'Sipariş kontrol altında - Şüpheli',
+                  holdReason: actualStatus === 'BLOCKED' ? 'risk_blocked' : 
+                              actualStatus === 'FLAGGED' ? 'risk_flagged' : 'risk_suspicious',
+                  items: []
                 }
               }
-            );
-            console.log(`✅ High-value order ${order.id} (${orderTotalAmount} TL) requires verification`);
-            
-            if (orderUser && product) {
-              sendVerificationRequiredEmail(db, order, orderUser, product).catch(err => 
-                console.error('Verification required email failed:', err)
-              );
             }
-          } else {
-            // Normal risky order - hold
-            await db.collection('orders').updateOne(
-              { id: order.id },
-              {
-                $set: {
-                  delivery: {
-                    status: 'hold',
-                    message: actualStatus === 'BLOCKED' ? 'Sipariş engellendi' : 
-                             actualStatus === 'FLAGGED' ? 'Sipariş kontrol altında - Riskli' :
-                             'Sipariş kontrol altında - Şüpheli',
-                    holdReason: actualStatus === 'BLOCKED' ? 'risk_blocked' : 
-                                actualStatus === 'FLAGGED' ? 'risk_flagged' : 'risk_suspicious',
-                    items: []
-                  }
-                }
-              }
-            );
-            
-            console.log(`Order ${order.id} ${actualStatus} with risk score ${riskResult.score}. Delivery on HOLD.`);
-            
-            if (orderUser && product) {
-              sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
-                console.error('Payment success email failed:', err)
-              );
-            }
-          }
+          );
           
           // Log the risk flag
           await logAuditAction(db, AUDIT_ACTIONS.ORDER_RISK_FLAG, 'system', 'order', order.id, request, {
@@ -5186,6 +5191,15 @@ export async function POST(request) {
             riskStatus: actualStatus,
             reasons: riskResult.reasons
           });
+          
+          console.log(`Order ${order.id} ${actualStatus} with risk score ${riskResult.score}. Delivery on HOLD.`);
+          
+          // Send payment success email (but note delivery is pending review)
+          if (orderUser && product) {
+            sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
+              console.error('Payment success email failed:', err)
+            );
+          }
         } else {
           // CLEAR risk (or test mode) - proceed with stock assignment
           // Send payment success email
@@ -5199,71 +5213,10 @@ export async function POST(request) {
           const currentOrder = await db.collection('orders').findOne({ id: order.id });
           
           if (!currentOrder.delivery || !currentOrder.delivery.items || currentOrder.delivery.items.length === 0) {
-            // ============================================
-            // 🔐 HIGH-VALUE ORDER VERIFICATION (3000+ TL)
-            // ============================================
-            // For orders >= 3000 TL, require identity + payment receipt verification
-            // Get the actual order amount - try multiple sources
-            const productPrice = product ? (product.discountPrice || product.price || 0) : 0;
-            const orderTotalAmount = currentOrder.totalAmount || currentOrder.amount || order.totalAmount || order.amount || productPrice;
-            
-            console.log(`=== HIGH-VALUE CHECK ===`);
-            console.log(`Order ID: ${order.id}`);
-            console.log(`currentOrder.totalAmount: ${currentOrder.totalAmount}`);
-            console.log(`currentOrder.amount: ${currentOrder.amount}`);
-            console.log(`order.totalAmount: ${order.totalAmount}`);
-            console.log(`order.amount: ${order.amount}`);
-            console.log(`product.discountPrice: ${product?.discountPrice}`);
-            console.log(`product.price: ${product?.price}`);
-            console.log(`FINAL orderTotalAmount: ${orderTotalAmount}`);
-            console.log(`Is >= 3000? ${orderTotalAmount >= 3000}`);
-            console.log(`========================`);
-            
-            if (orderTotalAmount >= 3000) {
-              // Update order with amount if it was missing
-              await db.collection('orders').updateOne(
-                { id: order.id },
-                {
-                  $set: {
-                    amount: orderTotalAmount,
-                    totalAmount: orderTotalAmount,
-                    verification: {
-                      required: true,
-                      status: 'pending', // pending/approved/rejected
-                      identityPhoto: null,
-                      paymentReceipt: null,
-                      submittedAt: null,
-                      reviewedAt: null,
-                      reviewedBy: null,
-                      rejectionReason: null
-                    },
-                    delivery: {
-                      status: 'verification_required',
-                      message: 'Yüksek tutarlı sipariş - Kimlik ve ödeme dekontu doğrulaması gerekli',
-                      items: []
-                    }
-                  }
-                }
-              );
-              console.log(`✅ Order ${order.id} requires verification (amount: ${orderTotalAmount} TL >= 3000 TL)`);
-              
-              // Send email notifying verification is required
-              if (orderUser && product) {
-                sendVerificationRequiredEmail(db, order, orderUser, product).catch(err => 
-                  console.error('Verification required email failed:', err)
-                );
-              }
-              
-              // Exit early - no stock assignment until verification approved
-              return NextResponse.json({
-                success: true,
-                message: 'Ödeme başarılı - Doğrulama gerekli'
-              });
-            }
-            
-            // ============================================
             // NORMAL FLOW: Auto-assign stock for orders < 3000 TL
-            // ============================================
+            // (Orders >= 3000 TL are already handled at the beginning)
+            console.log('Stock assignment starting for order:', order.id);
+            
             try {
               // Find available stock for this product (atomic operation)
               const assignedStock = await db.collection('stock').findOneAndUpdate(

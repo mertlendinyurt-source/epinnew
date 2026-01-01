@@ -363,8 +363,33 @@ export default function OrderDetailPage() {
               </div>
             )}
 
-            {/* Pending Stock Warning */}
-            {order.delivery && order.delivery.status === 'pending' && (
+            {/* HIGH VALUE ORDER - Verification Required (Frontend check based on amount >= 3000 TL) */}
+            {!order.verification?.required && (order.amount >= 3000 || order.totalAmount >= 3000) && order.delivery?.status !== 'delivered' && (
+              <div className="bg-gradient-to-br from-amber-900/30 to-amber-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-amber-700/50">
+                <div className="flex items-center gap-3 mb-4">
+                  <AlertCircle className="w-6 h-6 text-amber-400" />
+                  <h2 className="text-xl font-bold text-white">🔐 Doğrulama Gerekli</h2>
+                </div>
+
+                <div className="bg-gray-900/50 rounded-xl p-4 border border-amber-700/30">
+                  <p className="text-amber-200 mb-3">
+                    Yüksek tutarlı siparişiniz (₺{(order.amount || order.totalAmount || 0).toLocaleString('tr-TR')}) için güvenlik doğrulaması gerekmektedir.
+                  </p>
+                  <p className="text-sm text-gray-300 mb-4">
+                    Lütfen kimlik fotoğrafınızı ve ödeme dekontunuzu yükleyin. Doğrulama onaylandıktan sonra siparişiniz teslim edilecektir.
+                  </p>
+                  <Button
+                    onClick={() => router.push(`/account/orders/${orderId}/verification`)}
+                    className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold"
+                  >
+                    Doğrulama Belgelerini Yükle
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Pending Stock Warning - Only show if NOT high value */}
+            {order.delivery && order.delivery.status === 'pending' && (order.amount < 3000 && order.totalAmount < 3000) && (
               <div className="bg-gradient-to-br from-yellow-900/30 to-yellow-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-yellow-700/50">
                 <div className="flex items-center gap-3 mb-4">
                   <Clock className="w-6 h-6 text-yellow-400" />

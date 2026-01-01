@@ -5656,9 +5656,18 @@ export async function POST(request) {
       );
 
       if (assignedStock) {
-        // MongoDB 4.x+ uses direct return, older versions use .value
-        const stockItem = assignedStock.value || assignedStock;
-        const stockCode = stockItem.value; // The actual code is in .value field
+        // Get the stock document - MongoDB returns directly or in .value depending on version
+        const stockItem = assignedStock.value ? assignedStock.value : assignedStock;
+        // The actual code value is stored in the 'value' field of the stock document
+        const stockCode = stockItem.value;
+        
+        if (!stockCode) {
+          console.error('Stock code is empty:', stockItem);
+          return NextResponse.json(
+            { success: false, error: 'Stok kodu boş - lütfen tekrar deneyin' },
+            { status: 400 }
+          );
+        }
         
         await db.collection('orders').updateOne(
           { id: order.id },
@@ -5667,7 +5676,7 @@ export async function POST(request) {
               delivery: {
                 status: 'delivered',
                 items: [stockCode],
-                stockId: stockItem.id || stockItem._id,
+                stockId: stockItem.id || stockItem._id?.toString(),
                 assignedAt: new Date(),
                 assignedBy: user.username || user.email,
                 method: 'manual'

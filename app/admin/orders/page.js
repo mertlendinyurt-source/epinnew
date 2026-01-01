@@ -383,6 +383,17 @@ export default function AdminOrders() {
                             </Button>
                           </div>
                         )}
+                        {order.delivery?.status === 'pending' && order.status === 'paid' && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleAssignStock(order.id)}
+                            disabled={processingOrder === order.id}
+                            className="bg-blue-600 hover:bg-blue-700 text-xs"
+                          >
+                            <Package className="w-3 h-3 mr-1" />
+                            {processingOrder === order.id ? 'Atanıyor...' : 'Stok Ata'}
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

@@ -2175,6 +2175,37 @@ export async function GET(request) {
       });
     }
 
+    // Public: Get order summary for payment success page (limited data - no sensitive info)
+    if (pathname.match(/^\/api\/orders\/([^\/]+)\/summary$/)) {
+      const orderId = pathname.match(/^\/api\/orders\/([^\/]+)\/summary$/)[1];
+      
+      const order = await db.collection('orders').findOne({ id: orderId });
+      
+      if (!order) {
+        return NextResponse.json(
+          { success: false, error: 'Sipariş bulunamadı' },
+          { status: 404 }
+        );
+      }
+      
+      // Return only safe, non-sensitive order summary data
+      return NextResponse.json({
+        success: true,
+        data: {
+          id: order.id,
+          productTitle: order.productTitle,
+          amount: order.amount || order.totalAmount,
+          status: order.status,
+          customer: order.customer ? {
+            firstName: order.customer.firstName,
+            lastName: order.customer.lastName,
+            email: order.customer.email
+          } : null,
+          createdAt: order.createdAt
+        }
+      });
+    }
+
     // Public: Get enabled regions (for frontend filter)
     if (pathname === '/api/regions') {
       let regions = await db.collection('regions').find({ enabled: true }).sort({ sortOrder: 1 }).toArray();

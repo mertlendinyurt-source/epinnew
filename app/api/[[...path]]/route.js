@@ -5216,40 +5216,7 @@ export async function POST(request) {
             // NORMAL FLOW: Auto-assign stock for orders < 3000 TL
             // (Orders >= 3000 TL are already handled at the beginning)
             console.log('Stock assignment starting for order:', order.id);
-                      identityPhoto: null,
-                      paymentReceipt: null,
-                      submittedAt: null,
-                      reviewedAt: null,
-                      reviewedBy: null,
-                      rejectionReason: null
-                    },
-                    delivery: {
-                      status: 'verification_required',
-                      message: 'Yüksek tutarlı sipariş - Kimlik ve ödeme dekontu doğrulaması gerekli',
-                      items: []
-                    }
-                  }
-                }
-              );
-              console.log(`✅ Order ${order.id} requires verification (amount: ${orderTotalAmount} TL >= 3000 TL)`);
-              
-              // Send email notifying verification is required
-              if (orderUser && product) {
-                sendVerificationRequiredEmail(db, order, orderUser, product).catch(err => 
-                  console.error('Verification required email failed:', err)
-                );
-              }
-              
-              // Exit early - no stock assignment until verification approved
-              return NextResponse.json({
-                success: true,
-                message: 'Ödeme başarılı - Doğrulama gerekli'
-              });
-            }
             
-            // ============================================
-            // NORMAL FLOW: Auto-assign stock for orders < 3000 TL
-            // ============================================
             try {
               // Find available stock for this product (atomic operation)
               const assignedStock = await db.collection('stock').findOneAndUpdate(

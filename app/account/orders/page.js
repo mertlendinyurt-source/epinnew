@@ -81,13 +81,29 @@ export default function AccountOrdersPage() {
     );
   };
 
-  const getDeliveryBadge = (delivery) => {
+  const getDeliveryBadge = (order) => {
+    const delivery = order.delivery;
+    const verification = order.verification;
+
     if (!delivery) {
       return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-gray-500">Bilinmiyor</span>;
     }
 
     if (delivery.status === 'delivered') {
       return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-green-500">✅ Teslim Edildi</span>;
+    }
+
+    // Check verification status
+    if (verification?.required) {
+      if (verification.status === 'pending' && !verification.submittedAt) {
+        return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-amber-500">🔐 Doğrulama Gerekli</span>;
+      }
+      if (verification.status === 'pending' && verification.submittedAt) {
+        return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-blue-500">🔍 İnceleniyor</span>;
+      }
+      if (verification.status === 'rejected') {
+        return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-red-500">❌ Reddedildi</span>;
+      }
     }
 
     if (delivery.status === 'verification_pending' || delivery.status === 'verification_required') {

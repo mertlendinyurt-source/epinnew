@@ -4627,7 +4627,7 @@ export async function POST(request) {
       // ============================================
       if (paymentMethod === 'balance') {
         const userBalance = user.balance || 0;
-        const orderAmount = product.discountPrice;
+        const orderAmount = product.discountPrice || product.price || 0;
 
         // Check sufficient balance
         if (userBalance < orderAmount) {
@@ -4657,6 +4657,7 @@ export async function POST(request) {
           customer: customerSnapshot,
           status: 'paid', // Already paid with balance
           paymentMethod: 'balance',
+          amount: orderAmount, // Added amount field
           totalAmount: orderAmount,
           currency: 'TRY',
           delivery: {

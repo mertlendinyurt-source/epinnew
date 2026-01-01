@@ -215,24 +215,14 @@ function PaymentSuccessContent() {
                 )}
               </div>
 
-              {/* Verification Warning */}
-              {isVerificationRequired ? (
+              {/* Verification Warning - Only show if verification required */}
+              {isVerificationRequired && (
                 <div className="p-4 rounded-xl bg-amber-900/20 border border-amber-700/50 text-sm text-amber-400">
                   <div className="flex items-start gap-3">
                     <Shield className="w-6 h-6 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-semibold mb-1">🔐 Doğrulama Gerekli</p>
                       <p className="text-xs text-amber-300/80">Yüksek tutarlı siparişiniz için güvenlik doğrulaması yapılması gerekmektedir. Yönlendiriliyorsunuz...</p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4 rounded-xl bg-green-900/20 border border-green-700/50 text-sm text-green-400">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="w-6 h-6 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold mb-1">✓ UC'leriniz yüklenecek</p>
-                      <p className="text-xs text-green-300/80">5-10 dakika içinde hesabınıza UC yüklemesi yapılacaktır.</p>
                     </div>
                   </div>
                 </div>

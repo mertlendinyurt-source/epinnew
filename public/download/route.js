@@ -3747,6 +3747,125 @@ export async function POST(request) {
         message: 'Doğrulama belgeleri başarıyla yüklendi. Admin incelemesi bekleniyor.'
       });
     }
+
+    // Admin: Manual stock assignment for pending orders (MUST BE BEFORE body parsing - no body needed)
+    if (pathname.match(/^\/api\/admin\/orders\/[^\/]+\/assign-stock$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const orderId = pathname.split('/')[4];
+      
+      const order = await db.collection('orders').findOne({ id: orderId });
+      
+      if (!order) {
+        return NextResponse.json(
+          { success: false, error: 'Sipariş bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Check if order needs stock assignment
+      if (order.delivery?.status === 'delivered') {
+        return NextResponse.json(
+          { success: false, error: 'Bu siparişe zaten stok atanmış' },
+          { status: 400 }
+        );
+      }
+
+      if (order.status !== 'paid') {
+        return NextResponse.json(
+          { success: false, error: 'Sadece ödenmiş siparişlere stok atanabilir' },
+          { status: 400 }
+        );
+      }
+
+      // Try to assign stock
+      const assignedStock = await db.collection('stock').findOneAndUpdate(
+        { 
+          productId: order.productId, 
+          status: 'available' 
+        },
+        { 
+          $set: { 
+            status: 'assigned', 
+            orderId: order.id,
+            assignedAt: new Date(),
+            assignedBy: user.username || user.email
+          } 
+        },
+        { 
+          returnDocument: 'after',
+          sort: { createdAt: 1 }
+        }
+      );
+
+      if (assignedStock) {
+        // MongoDB returns the document directly
+        let stockItem;
+        if (assignedStock._id) {
+          stockItem = assignedStock;
+        } else if (assignedStock.value && assignedStock.value._id) {
+          stockItem = assignedStock.value;
+        } else {
+          stockItem = assignedStock;
+        }
+        
+        const stockCode = stockItem.value;
+        
+        if (!stockCode) {
+          console.error('Stock code is empty. Stock item:', JSON.stringify(stockItem));
+          return NextResponse.json(
+            { success: false, error: 'Stok kodu boş - lütfen tekrar deneyin' },
+            { status: 400 }
+          );
+        }
+        
+        await db.collection('orders').updateOne(
+          { id: order.id },
+          {
+            $set: {
+              delivery: {
+                status: 'delivered',
+                items: [stockCode],
+                stockId: stockItem.id || stockItem._id?.toString(),
+                assignedAt: new Date(),
+                assignedBy: user.username || user.email,
+                method: 'manual'
+              }
+            }
+          }
+        );
+
+        // Send delivery email
+        const orderUser = await db.collection('users').findOne({ id: order.userId });
+        const product = await db.collection('products').findOne({ id: order.productId });
+        if (orderUser && product) {
+          sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
+            console.error('Delivered email failed:', err)
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: 'Stok başarıyla atandı',
+          data: { 
+            orderId: order.id,
+            stockCode: stockCode,
+            deliveryStatus: 'delivered'
+          }
+        });
+      } else {
+        return NextResponse.json(
+          { success: false, error: 'Bu ürün için mevcut stok bulunamadı' },
+          { status: 400 }
+        );
+      }
+    }
     
     // For all other endpoints, parse JSON body (with fallback for empty body)
     let body = {};
@@ -5596,129 +5715,6 @@ export async function POST(request) {
             deliveryStatus: 'pending'
           }
         });
-      }
-    }
-
-    // Admin: Manual stock assignment for pending orders (POST)
-    if (pathname.match(/^\/api\/admin\/orders\/[^\/]+\/assign-stock$/)) {
-      const user = verifyAdminToken(request);
-      if (!user) {
-        return NextResponse.json(
-          { success: false, error: 'Yetkisiz erişim' },
-          { status: 401 }
-        );
-      }
-
-      const orderId = pathname.split('/')[4];
-      
-      const order = await db.collection('orders').findOne({ id: orderId });
-      
-      if (!order) {
-        return NextResponse.json(
-          { success: false, error: 'Sipariş bulunamadı' },
-          { status: 404 }
-        );
-      }
-
-      // Check if order needs stock assignment
-      if (order.delivery?.status === 'delivered') {
-        return NextResponse.json(
-          { success: false, error: 'Bu siparişe zaten stok atanmış' },
-          { status: 400 }
-        );
-      }
-
-      if (order.status !== 'paid') {
-        return NextResponse.json(
-          { success: false, error: 'Sadece ödenmiş siparişlere stok atanabilir' },
-          { status: 400 }
-        );
-      }
-
-      // Try to assign stock
-      const assignedStock = await db.collection('stock').findOneAndUpdate(
-        { 
-          productId: order.productId, 
-          status: 'available' 
-        },
-        { 
-          $set: { 
-            status: 'assigned', 
-            orderId: order.id,
-            assignedAt: new Date(),
-            assignedBy: user.username || user.email
-          } 
-        },
-        { 
-          returnDocument: 'after',
-          sort: { createdAt: 1 }
-        }
-      );
-
-      if (assignedStock) {
-        // MongoDB 6+ returns the document directly, older versions may wrap in .value
-        // Check if result has nested document structure (older driver) or direct (newer driver)
-        let stockItem;
-        if (assignedStock._id) {
-          // Direct document return (newer MongoDB driver)
-          stockItem = assignedStock;
-        } else if (assignedStock.value && assignedStock.value._id) {
-          // Wrapped in .value (older MongoDB driver)
-          stockItem = assignedStock.value;
-        } else {
-          stockItem = assignedStock;
-        }
-        
-        // The actual stock code is stored in the 'value' field of the stock document
-        const stockCode = stockItem.value;
-        
-        if (!stockCode) {
-          console.error('Stock code is empty. Stock item:', JSON.stringify(stockItem));
-          return NextResponse.json(
-            { success: false, error: 'Stok kodu boş - lütfen tekrar deneyin' },
-            { status: 400 }
-          );
-        }
-        
-        await db.collection('orders').updateOne(
-          { id: order.id },
-          {
-            $set: {
-              delivery: {
-                status: 'delivered',
-                items: [stockCode],
-                stockId: stockItem.id || stockItem._id?.toString(),
-                assignedAt: new Date(),
-                assignedBy: user.username || user.email,
-                method: 'manual'
-              }
-            }
-          }
-        );
-
-        // Send delivery email
-        const orderUser = await db.collection('users').findOne({ id: order.userId });
-        const product = await db.collection('products').findOne({ id: order.productId });
-        if (orderUser && product) {
-          sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
-            console.error('Delivered email failed:', err)
-          );
-        }
-
-        return NextResponse.json({
-          success: true,
-          message: 'Stok başarıyla atandı',
-          data: { 
-            orderId: order.id,
-            stockCode: stockCode,
-            deliveryStatus: 'delivered'
-          }
-        });
-      } else {
-        return NextResponse.json(
-          { success: false, error: 'Bu ürün için mevcut stok bulunamadı' },
-          { status: 400 }
-        );
       }
     }
 

@@ -5649,8 +5649,10 @@ export async function POST(request) {
         }
       );
 
-      if (assignedStock && assignedStock.value) {
-        const stockCode = assignedStock.value;
+      if (assignedStock) {
+        // MongoDB 4.x+ uses direct return, older versions use .value
+        const stockItem = assignedStock.value || assignedStock;
+        const stockCode = stockItem.value; // The actual code is in .value field
         
         await db.collection('orders').updateOne(
           { id: order.id },
@@ -5659,7 +5661,7 @@ export async function POST(request) {
               delivery: {
                 status: 'delivered',
                 items: [stockCode],
-                stockId: assignedStock.id || assignedStock._id,
+                stockId: stockItem.id || stockItem._id,
                 assignedAt: new Date(),
                 assignedBy: user.username || user.email,
                 method: 'manual'
@@ -5682,7 +5684,7 @@ export async function POST(request) {
           message: 'Stok başarıyla atandı',
           data: { 
             orderId: order.id,
-            stockCode: typeof stockCode === 'object' ? stockCode.value : stockCode,
+            stockCode: stockCode,
             deliveryStatus: 'delivered'
           }
         });

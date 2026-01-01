@@ -2207,6 +2207,9 @@ export async function GET(request) {
             status: order.verification.status,
             submittedAt: order.verification.submittedAt
           } : null,
+          delivery: order.delivery ? {
+            status: order.delivery.status
+          } : null,
           createdAt: order.createdAt
         }
       });
@@ -5147,7 +5150,10 @@ export async function POST(request) {
             // 🔐 HIGH-VALUE ORDER VERIFICATION (3000+ TL)
             // ============================================
             // For orders >= 3000 TL, require identity + payment receipt verification
-            if (order.totalAmount >= 3000) {
+            const orderTotalAmount = order.totalAmount || order.amount || 0;
+            console.log(`Checking high-value order: ID=${order.id}, totalAmount=${order.totalAmount}, amount=${order.amount}, calculated=${orderTotalAmount}`);
+            
+            if (orderTotalAmount >= 3000) {
               await db.collection('orders').updateOne(
                 { id: order.id },
                 {
@@ -5170,7 +5176,7 @@ export async function POST(request) {
                   }
                 }
               );
-              console.log(`Order ${order.id} requires verification (amount: ${order.totalAmount} TL >= 3000 TL)`);
+              console.log(`Order ${order.id} requires verification (amount: ${orderTotalAmount} TL >= 3000 TL)`);
               
               // Send email notifying verification is required
               if (orderUser && product) {

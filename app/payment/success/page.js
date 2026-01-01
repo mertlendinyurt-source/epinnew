@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { CheckCircle, Shield, User, Mail, Receipt, Hash, Package, Copy, Check } from 'lucide-react'
+import { CheckCircle, Shield, User, Mail, Receipt, Hash, Package, Copy, Check, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useEffect, useState, Suspense } from 'react'
@@ -96,6 +96,7 @@ function PaymentSuccessContent() {
     : null
   
   const customerEmail = order?.customer?.email || null
+  const customerPhone = order?.customer?.phone || null
   const productTitle = order?.productTitle || null
   const amount = order?.amount || order?.totalAmount || null
 
@@ -168,6 +169,19 @@ function PaymentSuccessContent() {
                     <div>
                       <div className="text-xs text-slate-400 mb-0.5">E-posta Adresi</div>
                       <div className="text-white font-medium break-all">{customerEmail}</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Telefon Numarası */}
+                {customerPhone && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/50 border border-slate-600">
+                    <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center">
+                      <Phone className="w-5 h-5 text-pink-400" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-400 mb-0.5">Telefon Numarası</div>
+                      <div className="text-white font-medium">{customerPhone}</div>
                     </div>
                   </div>
                 )}

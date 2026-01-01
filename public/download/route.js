@@ -5593,6 +5593,107 @@ export async function POST(request) {
       }
     }
 
+    // Admin: Manual stock assignment for pending orders (POST)
+    if (pathname.match(/^\/api\/admin\/orders\/[^\/]+\/assign-stock$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const orderId = pathname.split('/')[4];
+      
+      const order = await db.collection('orders').findOne({ id: orderId });
+      
+      if (!order) {
+        return NextResponse.json(
+          { success: false, error: 'Sipariş bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Check if order needs stock assignment
+      if (order.delivery?.status === 'delivered') {
+        return NextResponse.json(
+          { success: false, error: 'Bu siparişe zaten stok atanmış' },
+          { status: 400 }
+        );
+      }
+
+      if (order.status !== 'paid') {
+        return NextResponse.json(
+          { success: false, error: 'Sadece ödenmiş siparişlere stok atanabilir' },
+          { status: 400 }
+        );
+      }
+
+      // Try to assign stock
+      const assignedStock = await db.collection('stock').findOneAndUpdate(
+        { 
+          productId: order.productId, 
+          status: 'available' 
+        },
+        { 
+          $set: { 
+            status: 'assigned', 
+            orderId: order.id,
+            assignedAt: new Date(),
+            assignedBy: user.username || user.email
+          } 
+        },
+        { 
+          returnDocument: 'after',
+          sort: { createdAt: 1 }
+        }
+      );
+
+      if (assignedStock && assignedStock.value) {
+        const stockCode = assignedStock.value;
+        
+        await db.collection('orders').updateOne(
+          { id: order.id },
+          {
+            $set: {
+              delivery: {
+                status: 'delivered',
+                items: [stockCode],
+                stockId: assignedStock.id || assignedStock._id,
+                assignedAt: new Date(),
+                assignedBy: user.username || user.email,
+                method: 'manual'
+              }
+            }
+          }
+        );
+
+        // Send delivery email
+        const orderUser = await db.collection('users').findOne({ id: order.userId });
+        const product = await db.collection('products').findOne({ id: order.productId });
+        if (orderUser && product) {
+          sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
+            console.error('Delivered email failed:', err)
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: 'Stok başarıyla atandı',
+          data: { 
+            orderId: order.id,
+            stockCode: typeof stockCode === 'object' ? stockCode.value : stockCode,
+            deliveryStatus: 'delivered'
+          }
+        });
+      } else {
+        return NextResponse.json(
+          { success: false, error: 'Bu ürün için mevcut stok bulunamadı' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Admin: Manual refund risky order (POST)
     if (pathname.match(/^\/api\/admin\/orders\/[^\/]+\/refund$/)) {
       const user = verifyAdminToken(request);

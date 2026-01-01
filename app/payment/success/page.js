@@ -58,6 +58,13 @@ function PaymentSuccessContent() {
           const publicData = await publicResponse.json()
           if (publicData.success && publicData.data) {
             setOrder(publicData.data)
+            
+            // Redirect to verification page if required (from public endpoint)
+            if (publicData.data.verification?.required && publicData.data.verification?.status === 'pending' && !publicData.data.verification?.submittedAt) {
+              setTimeout(() => {
+                router.push(`/account/orders/${orderId}/verification`)
+              }, 3000)
+            }
           }
         }
       } catch (error) {
@@ -70,7 +77,7 @@ function PaymentSuccessContent() {
     fetchOrder()
   }, [orderId, router])
 
-  const isVerificationRequired = order?.verification?.required && !order?.verification?.submittedAt
+  const isVerificationRequired = order?.verification?.required && order?.verification?.status === 'pending' && !order?.verification?.submittedAt
 
   const copyOrderId = () => {
     if (orderId) {

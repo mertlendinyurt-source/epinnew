@@ -109,6 +109,34 @@ export default function AdminOrders() {
     }
   }
 
+  const handleAssignStock = async (orderId) => {
+    setProcessingOrder(orderId)
+    try {
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+      const response = await fetch(`/api/admin/orders/${orderId}/assign-stock`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        toast.success('Stok başarıyla atandı ve müşteriye e-posta gönderildi')
+        fetchOrders()
+        setShowDetailModal(false)
+      } else {
+        toast.error(data.error || 'Stok atama başarısız')
+      }
+    } catch (error) {
+      console.error('Assign stock error:', error)
+      toast.error('Stok atama işlemi başarısız')
+    } finally {
+      setProcessingOrder(null)
+    }
+  }
+
   const handleRefundOrder = async (orderId) => {
     if (!confirm('Bu siparişi iade edildi olarak işaretlemek istediğinize emin misiniz? Shopier üzerinden manuel iade yapmalısınız.')) {
       return

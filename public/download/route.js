@@ -5101,22 +5101,72 @@ export async function POST(request) {
 
         // If FLAGGED/BLOCKED/SUSPICIOUS - HOLD delivery, don't assign stock
         if (shouldHoldDelivery && !riskSettings.isTestMode) {
-          await db.collection('orders').updateOne(
-            { id: order.id },
-            {
-              $set: {
-                delivery: {
-                  status: 'hold',
-                  message: actualStatus === 'BLOCKED' ? 'Sipariş engellendi' : 
-                           actualStatus === 'FLAGGED' ? 'Sipariş kontrol altında - Riskli' :
-                           'Sipariş kontrol altında - Şüpheli',
-                  holdReason: actualStatus === 'BLOCKED' ? 'risk_blocked' : 
-                              actualStatus === 'FLAGGED' ? 'risk_flagged' : 'risk_suspicious',
-                  items: []
+          // Check for high-value order first (>= 3000 TL)
+          const orderTotalAmount = order.totalAmount || order.amount || 0;
+          
+          if (orderTotalAmount >= 3000) {
+            // High-value + risky = requires verification
+            await db.collection('orders').updateOne(
+              { id: order.id },
+              {
+                $set: {
+                  verification: {
+                    required: true,
+                    status: 'pending',
+                    identityPhoto: null,
+                    paymentReceipt: null,
+                    submittedAt: null,
+                    reviewedAt: null,
+                    reviewedBy: null,
+                    rejectionReason: null
+                  },
+                  delivery: {
+                    status: 'verification_required',
+                    message: 'Yüksek tutarlı sipariş - Kimlik ve ödeme dekontu doğrulaması gerekli',
+                    items: []
+                  },
+                  risk: {
+                    score: riskResult.score,
+                    status: actualStatus,
+                    reasons: riskResult.reasons
+                  }
                 }
               }
+            );
+            console.log(`High-value order ${order.id} (${orderTotalAmount} TL) requires verification`);
+            
+            if (orderUser && product) {
+              sendVerificationRequiredEmail(db, order, orderUser, product).catch(err => 
+                console.error('Verification required email failed:', err)
+              );
             }
-          );
+          } else {
+            // Normal risky order - hold
+            await db.collection('orders').updateOne(
+              { id: order.id },
+              {
+                $set: {
+                  delivery: {
+                    status: 'hold',
+                    message: actualStatus === 'BLOCKED' ? 'Sipariş engellendi' : 
+                             actualStatus === 'FLAGGED' ? 'Sipariş kontrol altında - Riskli' :
+                             'Sipariş kontrol altında - Şüpheli',
+                    holdReason: actualStatus === 'BLOCKED' ? 'risk_blocked' : 
+                                actualStatus === 'FLAGGED' ? 'risk_flagged' : 'risk_suspicious',
+                    items: []
+                  }
+                }
+              }
+            );
+            
+            console.log(`Order ${order.id} ${actualStatus} with risk score ${riskResult.score}. Delivery on HOLD.`);
+            
+            if (orderUser && product) {
+              sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
+                console.error('Payment success email failed:', err)
+              );
+            }
+          }
           
           // Log the risk flag
           await logAuditAction(db, AUDIT_ACTIONS.ORDER_RISK_FLAG, 'system', 'order', order.id, request, {
@@ -5124,15 +5174,6 @@ export async function POST(request) {
             riskStatus: actualStatus,
             reasons: riskResult.reasons
           });
-          
-          console.log(`Order ${order.id} ${actualStatus} with risk score ${riskResult.score}. Delivery on HOLD.`);
-          
-          // Send payment success email (but note delivery is pending review)
-          if (orderUser && product) {
-            sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
-              console.error('Payment success email failed:', err)
-            );
-          }
         } else {
           // CLEAR risk (or test mode) - proceed with stock assignment
           // Send payment success email

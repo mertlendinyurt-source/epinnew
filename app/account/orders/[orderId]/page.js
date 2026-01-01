@@ -59,9 +59,9 @@ export default function OrderDetailPage() {
       console.log('Order API Response:', data);
       
       if (data.success) {
-        // API directly returns order in data.data (not data.data.order)
-        setOrder(data.data);
-        setPayment(null); // No separate payment object in this API
+        // API returns { order, payment } in data.data
+        setOrder(data.data.order);
+        setPayment(data.data.payment);
       } else {
         toast.error('Sipariş yüklenemedi');
         router.push('/account/orders');

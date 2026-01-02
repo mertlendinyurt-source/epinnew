@@ -7250,6 +7250,48 @@ export async function PUT(request) {
       });
     }
 
+    // Admin: Manually require verification for an order
+    if (pathname.match(/^\/api\/admin\/orders\/([^\/]+)\/require-verification$/)) {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const orderId = pathname.match(/^\/api\/admin\/orders\/([^\/]+)\/require-verification$/)[1];
+
+      const order = await db.collection('orders').findOne({ id: orderId });
+      if (!order) {
+        return NextResponse.json({ success: false, error: 'Sipariş bulunamadı' }, { status: 404 });
+      }
+
+      // Update order to require verification
+      await db.collection('orders').updateOne(
+        { id: orderId },
+        {
+          $set: {
+            verification: {
+              required: true,
+              status: 'pending',
+              identityPhoto: null,
+              paymentReceipt: null,
+              submittedAt: null,
+              reviewedAt: null,
+              reviewedBy: null,
+              rejectionReason: null
+            },
+            'delivery.status': 'verification_required',
+            'delivery.message': 'Yüksek tutarlı sipariş - Kimlik ve ödeme dekontu doğrulaması gerekli',
+            updatedAt: new Date()
+          }
+        }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: 'Sipariş doğrulama gerektiren duruma alındı'
+      });
+    }
+
     // Admin: Approve/Reject verification & Assign stock
     if (pathname.match(/^\/api\/admin\/orders\/([^\/]+)\/verify$/)) {
       const adminUser = verifyAdminToken(request);

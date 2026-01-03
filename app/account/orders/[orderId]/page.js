@@ -275,6 +275,78 @@ export default function OrderDetailPage() {
                 <div className="mt-4 text-xs text-gray-400">
                   Teslim tarihi: {order.delivery?.assignedAt ? new Date(order.delivery.assignedAt).toLocaleString('tr-TR') : 'N/A'}
                 </div>
+
+                {/* Kodu Nasıl Kullanırım? Açıklaması */}
+                <div className="mt-6 pt-6 border-t border-green-700/30">
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    📖 Kodu Nasıl Kullanırım?
+                  </h3>
+                  
+                  <div className="space-y-3 text-sm">
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                      <div>
+                        <p className="text-white font-medium">Tarayıcıdan siteye girin:</p>
+                        <a 
+                          href="https://www.midasbuy.com/midasbuy/tr/redeem/pubgm" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-green-400 hover:text-green-300 underline break-all"
+                        >
+                          👉 https://www.midasbuy.com/midasbuy/tr/redeem/pubgm
+                        </a>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                      <div>
+                        <p className="text-white font-medium">Hesap oluşturun / giriş yapın</p>
+                        <p className="text-gray-400 text-xs">(Google, Facebook veya e-posta ile giriş olabilir.)</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                      <div>
+                        <p className="text-white font-medium">OYUNCU ID'nizi girin</p>
+                        <p className="text-gray-400 text-xs">PUBG Mobile içinden Profil → Oyuncu ID bölümünden kopyalayın.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">4</span>
+                      <div>
+                        <p className="text-white font-medium">Satın aldığınız KODU girin</p>
+                        <p className="text-gray-400 text-xs">Yukarıdaki kodu kopyalayıp ilgili alana yapıştırın.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">5</span>
+                      <div>
+                        <p className="text-white font-medium">Onayla / Redeem butonuna basın</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">6</span>
+                      <div>
+                        <p className="text-white font-medium">UC otomatik yüklenir</p>
+                        <p className="text-gray-400 text-xs">Genelde anında, bazen birkaç dakika içinde oyun hesabınıza düşer. Oyunu kapatıp açmak gerekebilir.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Uyarılar */}
+                  <div className="mt-4 p-3 bg-red-900/20 rounded-lg border border-red-700/30">
+                    <p className="text-red-300 text-xs font-medium mb-2">⚠️ En sık yapılan hatalar:</p>
+                    <ul className="text-red-200 text-xs space-y-1">
+                      <li>❌ Yanlış Oyuncu ID girilmesi</li>
+                      <li>❌ Kodun boşluklu ya da hatalı kopyalanması</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             )}
 

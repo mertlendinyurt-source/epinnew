@@ -1,29 +1,39 @@
 'use client'
 
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { CheckCircle, Shield, User, Mail, Receipt, Hash, Package, Copy, Check, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 // 3000 TL ve üzeri siparişler için doğrulama gerekli
 const VERIFICATION_THRESHOLD = 3000;
 
-function PaymentSuccessContent() {
-  const searchParams = useSearchParams()
+export default function PaymentSuccess() {
   const router = useRouter()
   
-  const orderId = searchParams.get('orderId')
-  
+  const [orderId, setOrderId] = useState(null)
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+  const purchaseTracked = useRef(false)
 
+  // URL'den orderId'yi al (Suspense olmadan)
   useEffect(() => {
-    if (!orderId) {
-      setLoading(false)
-      return
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const id = params.get('orderId')
+      setOrderId(id)
+      
+      if (!id) {
+        setLoading(false)
+      }
     }
+  }, [])
+
+  // Order bilgisini çek
+  useEffect(() => {
+    if (!orderId) return
 
     const fetchOrder = async () => {
       try {
@@ -59,8 +69,10 @@ function PaymentSuccessContent() {
         if (orderData) {
           setOrder(orderData)
           
-          // GTM DataLayer Push - Google Ads ROAS için
-          if (typeof window !== 'undefined') {
+          // GTM DataLayer Push - Google Ads ROAS için (sadece bir kez)
+          if (!purchaseTracked.current && typeof window !== 'undefined') {
+            purchaseTracked.current = true;
+            
             window.dataLayer = window.dataLayer || [];
             window.dataLayer.push({ ecommerce: null });
             
@@ -97,15 +109,8 @@ function PaymentSuccessContent() {
           const isNotDelivered = orderData.delivery?.status !== 'delivered';
           const verificationNotSubmitted = !orderData.verification?.submittedAt;
           
-          console.log('=== FRONTEND VERIFICATION CHECK ===');
-          console.log('Order Amount:', orderAmount);
-          console.log('Is High Value (>= 3000):', isHighValue);
-          console.log('Is Not Delivered:', isNotDelivered);
-          console.log('Verification Not Submitted:', verificationNotSubmitted);
-          
           // 3000 TL üzeri + teslim edilmemiş + doğrulama gönderilmemiş = doğrulama gerekli
           if (isHighValue && isNotDelivered && verificationNotSubmitted) {
-            console.log('>>> REDIRECTING TO VERIFICATION PAGE <<<');
             setTimeout(() => {
               router.push(`/account/orders/${orderId}/verification`)
             }, 2000)
@@ -154,6 +159,11 @@ function PaymentSuccessContent() {
   const productTitle = order?.productTitle || null
   const amount = order?.amount || order?.totalAmount || null
 
+  // Skeleton component
+  const Skeleton = ({ width }) => (
+    <span className={`animate-pulse bg-slate-700 rounded h-4 inline-block ${width}`}></span>
+  )
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
       <Card className="bg-slate-900/50 border-slate-800 max-w-lg w-full shadow-2xl">
@@ -178,7 +188,7 @@ function PaymentSuccessContent() {
                 <div>
                   <div className="text-xs text-slate-400 mb-0.5">Sipariş Numarası</div>
                   <div className="text-white font-mono text-sm font-semibold break-all">
-                    {loading ? <span className="animate-pulse bg-slate-700 rounded h-4 w-48 inline-block"></span> : orderId}
+                    {orderId || <Skeleton width="w-48" />}
                   </div>
                 </div>
               </div>
@@ -199,7 +209,7 @@ function PaymentSuccessContent() {
               <div>
                 <div className="text-xs text-slate-400 mb-0.5">Müşteri Adı</div>
                 <div className="text-white font-semibold">
-                  {loading ? <span className="animate-pulse bg-slate-700 rounded h-4 w-32 inline-block"></span> : (customerName || '-')}
+                  {loading ? <Skeleton width="w-32" /> : (customerName || '-')}
                 </div>
               </div>
             </div>
@@ -212,7 +222,7 @@ function PaymentSuccessContent() {
               <div>
                 <div className="text-xs text-slate-400 mb-0.5">E-posta Adresi</div>
                 <div className="text-white font-medium break-all">
-                  {loading ? <span className="animate-pulse bg-slate-700 rounded h-4 w-40 inline-block"></span> : (customerEmail || '-')}
+                  {loading ? <Skeleton width="w-40" /> : (customerEmail || '-')}
                 </div>
               </div>
             </div>
@@ -225,7 +235,7 @@ function PaymentSuccessContent() {
               <div>
                 <div className="text-xs text-slate-400 mb-0.5">Telefon Numarası</div>
                 <div className="text-white font-medium">
-                  {loading ? <span className="animate-pulse bg-slate-700 rounded h-4 w-28 inline-block"></span> : (customerPhone || '-')}
+                  {loading ? <Skeleton width="w-28" /> : (customerPhone || '-')}
                 </div>
               </div>
             </div>
@@ -238,7 +248,7 @@ function PaymentSuccessContent() {
               <div>
                 <div className="text-xs text-slate-400 mb-0.5">Ürün</div>
                 <div className="text-white font-semibold">
-                  {loading ? <span className="animate-pulse bg-slate-700 rounded h-4 w-36 inline-block"></span> : (productTitle || '-')}
+                  {loading ? <Skeleton width="w-36" /> : (productTitle || '-')}
                 </div>
               </div>
             </div>
@@ -303,94 +313,5 @@ function PaymentSuccessContent() {
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-export default function PaymentSuccess() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
-        <Card className="bg-slate-900/50 border-slate-800 max-w-lg w-full shadow-2xl">
-          <CardHeader className="text-center pb-2">
-            <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30 animate-pulse">
-              <CheckCircle className="w-14 h-14 text-white" />
-            </div>
-            <CardTitle className="text-white text-3xl font-bold">Ödeme Başarılı!</CardTitle>
-            <CardDescription className="text-slate-400 text-lg">
-              Siparişiniz başarıyla oluşturuldu
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-4 pt-2">
-            <div className="p-5 rounded-xl bg-slate-800/80 border border-slate-700 space-y-4">
-              {/* Sipariş Numarası Skeleton */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-600">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                    <Hash className="w-5 h-5 text-blue-400" />
-                  </div>
-                  <div>
-                    <div className="text-xs text-slate-400 mb-0.5">Sipariş Numarası</div>
-                    <div className="animate-pulse bg-slate-700 rounded h-4 w-48"></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Müşteri Adı Skeleton */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/50 border border-slate-600">
-                <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
-                  <User className="w-5 h-5 text-purple-400" />
-                </div>
-                <div>
-                  <div className="text-xs text-slate-400 mb-0.5">Müşteri Adı</div>
-                  <div className="animate-pulse bg-slate-700 rounded h-4 w-32"></div>
-                </div>
-              </div>
-
-              {/* E-posta Skeleton */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/50 border border-slate-600">
-                <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-cyan-400" />
-                </div>
-                <div>
-                  <div className="text-xs text-slate-400 mb-0.5">E-posta Adresi</div>
-                  <div className="animate-pulse bg-slate-700 rounded h-4 w-40"></div>
-                </div>
-              </div>
-
-              {/* Ürün Skeleton */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/50 border border-slate-600">
-                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-                  <Package className="w-5 h-5 text-amber-400" />
-                </div>
-                <div>
-                  <div className="text-xs text-slate-400 mb-0.5">Ürün</div>
-                  <div className="animate-pulse bg-slate-700 rounded h-4 w-36"></div>
-                </div>
-              </div>
-
-              {/* Tutar Skeleton */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-700/50">
-                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                  <Receipt className="w-5 h-5 text-green-400" />
-                </div>
-                <div>
-                  <div className="text-xs text-slate-400 mb-0.5">Sipariş Tutarı</div>
-                  <div className="animate-pulse bg-slate-700 rounded h-6 w-24"></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Butonlar Skeleton */}
-            <div className="space-y-3 pt-2">
-              <div className="w-full h-12 bg-slate-700 rounded-lg animate-pulse"></div>
-              <div className="w-full h-12 bg-slate-800 rounded-lg animate-pulse"></div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    }>
-      <PaymentSuccessContent />
-    </Suspense>
   )
 }

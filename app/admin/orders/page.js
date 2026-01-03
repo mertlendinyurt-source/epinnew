@@ -364,86 +364,153 @@ export default function AdminOrders() {
                 <p className="text-slate-400">Sipariş bulunamadı</p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-slate-800">
-                    <TableHead className="text-slate-400">Sipariş No</TableHead>
-                    <TableHead className="text-slate-400">Ürün</TableHead>
-                    <TableHead className="text-slate-400">Oyuncu</TableHead>
-                    <TableHead className="text-slate-400">Tutar</TableHead>
-                    <TableHead className="text-slate-400">Durum</TableHead>
-                    <TableHead className="text-slate-400">Risk</TableHead>
-                    <TableHead className="text-slate-400">Teslimat</TableHead>
-                    <TableHead className="text-slate-400">Tarih</TableHead>
-                    <TableHead className="text-slate-400">İşlemler</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredOrders.map((order) => (
-                    <TableRow 
-                      key={order.id} 
-                      className={`border-slate-800 hover:bg-slate-800/50 ${order.risk?.status === 'FLAGGED' ? 'bg-red-950/20' : ''}`}
-                    >
-                      <TableCell 
-                        className="font-mono text-slate-400 text-xs cursor-pointer hover:text-blue-400"
-                        onClick={() => openOrderDetail(order)}
-                      >
-                        {order.id.substring(0, 8)}...
-                      </TableCell>
-                      <TableCell className="text-white">{order.productTitle}</TableCell>
-                      <TableCell className="text-slate-400">
-                        <div className="text-xs">{order.playerName}</div>
-                        <div className="text-xs text-slate-500">{order.playerId}</div>
-                      </TableCell>
-                      <TableCell className="text-white font-semibold">
-                        ₺{(order.amount || order.totalAmount || order.price || 0).toFixed(2)}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(order.status)}</TableCell>
-                      <TableCell>{getRiskBadge(order)}</TableCell>
-                      <TableCell>{getDeliveryBadge(order)}</TableCell>
-                      <TableCell className="text-slate-400 text-sm">
-                        {new Date(order.createdAt).toLocaleDateString('tr-TR')}
-                      </TableCell>
-                      <TableCell>
-                        {order.delivery?.status === 'hold' && (
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => handleApproveOrder(order.id)}
-                              disabled={processingOrder === order.id}
-                              className="bg-green-600 hover:bg-green-700 text-xs"
-                            >
-                              <CheckCircle className="w-3 h-3 mr-1" />
-                              Onayla
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleRefundOrder(order.id)}
-                              disabled={processingOrder === order.id}
-                              className="text-xs"
-                            >
-                              <XCircle className="w-3 h-3 mr-1" />
-                              İade
-                            </Button>
-                          </div>
-                        )}
-                        {order.delivery?.status === 'pending' && order.status === 'paid' && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleAssignStock(order.id)}
-                            disabled={processingOrder === order.id}
-                            className="bg-blue-600 hover:bg-blue-700 text-xs"
-                          >
-                            <Package className="w-3 h-3 mr-1" />
-                            {processingOrder === order.id ? 'Atanıyor...' : 'Stok Ata'}
-                          </Button>
-                        )}
-                      </TableCell>
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-slate-800">
+                      <TableHead className="text-slate-400">Sipariş No</TableHead>
+                      <TableHead className="text-slate-400">Ürün</TableHead>
+                      <TableHead className="text-slate-400">Oyuncu</TableHead>
+                      <TableHead className="text-slate-400">Tutar</TableHead>
+                      <TableHead className="text-slate-400">Durum</TableHead>
+                      <TableHead className="text-slate-400">Risk</TableHead>
+                      <TableHead className="text-slate-400">Teslimat</TableHead>
+                      <TableHead className="text-slate-400">Tarih</TableHead>
+                      <TableHead className="text-slate-400">İşlemler</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {currentOrders.map((order) => (
+                      <TableRow 
+                        key={order.id} 
+                        className={`border-slate-800 hover:bg-slate-800/50 ${order.risk?.status === 'FLAGGED' ? 'bg-red-950/20' : ''}`}
+                      >
+                        <TableCell 
+                          className="font-mono text-slate-400 text-xs cursor-pointer hover:text-blue-400"
+                          onClick={() => openOrderDetail(order)}
+                        >
+                          {order.id.substring(0, 8)}...
+                        </TableCell>
+                        <TableCell className="text-white">{order.productTitle}</TableCell>
+                        <TableCell className="text-slate-400">
+                          <div className="text-xs">{order.playerName}</div>
+                          <div className="text-xs text-slate-500">{order.playerId}</div>
+                        </TableCell>
+                        <TableCell className="text-white font-semibold">
+                          ₺{(order.amount || order.totalAmount || order.price || 0).toFixed(2)}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(order.status)}</TableCell>
+                        <TableCell>{getRiskBadge(order)}</TableCell>
+                        <TableCell>{getDeliveryBadge(order)}</TableCell>
+                        <TableCell className="text-slate-400 text-sm">
+                          {new Date(order.createdAt).toLocaleDateString('tr-TR')}
+                        </TableCell>
+                        <TableCell>
+                          {order.delivery?.status === 'hold' && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handleApproveOrder(order.id)}
+                                disabled={processingOrder === order.id}
+                                className="bg-green-600 hover:bg-green-700 text-xs"
+                              >
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Onayla
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleRefundOrder(order.id)}
+                                disabled={processingOrder === order.id}
+                                className="text-xs"
+                              >
+                                <XCircle className="w-3 h-3 mr-1" />
+                                İade
+                              </Button>
+                            </div>
+                          )}
+                          {order.delivery?.status === 'pending' && order.status === 'paid' && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleAssignStock(order.id)}
+                              disabled={processingOrder === order.id}
+                              className="bg-blue-600 hover:bg-blue-700 text-xs"
+                            >
+                              <Package className="w-3 h-3 mr-1" />
+                              {processingOrder === order.id ? 'Atanıyor...' : 'Stok Ata'}
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-800">
+                  <div className="flex items-center gap-4">
+                    <span className="text-slate-400 text-sm">
+                      Toplam {filteredOrders.length} sipariş
+                    </span>
+                    <Select value={itemsPerPage.toString()} onValueChange={(val) => { setItemsPerPage(Number(val)); setCurrentPage(1); }}>
+                      <SelectTrigger className="w-[100px] bg-slate-800 border-slate-700 text-white text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-700">
+                        <SelectItem value="10" className="text-white">10</SelectItem>
+                        <SelectItem value="20" className="text-white">20</SelectItem>
+                        <SelectItem value="50" className="text-white">50</SelectItem>
+                        <SelectItem value="100" className="text-white">100</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <span className="text-slate-400 text-sm">sipariş/sayfa</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-400 text-sm mr-4">
+                      Sayfa {currentPage} / {totalPages}
+                    </span>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goToPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    
+                    {getPageNumbers().map((page, index) => (
+                      page === '...' ? (
+                        <span key={`ellipsis-${index}`} className="text-slate-500 px-2">...</span>
+                      ) : (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => goToPage(page)}
+                          className={currentPage === page 
+                            ? "bg-blue-600 hover:bg-blue-700 text-white" 
+                            : "border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800"}
+                        >
+                          {page}
+                        </Button>
+                      )
+                    ))}
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goToPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

@@ -9,11 +9,26 @@ import { useEffect, useState, useRef } from 'react'
 // 3000 TL ve üzeri siparişler için doğrulama gerekli
 const VERIFICATION_THRESHOLD = 3000;
 
+// URL'den parametreleri oku (ilk render için)
+function getUrlParams() {
+  if (typeof window === 'undefined') return null
+  
+  const params = new URLSearchParams(window.location.search)
+  return {
+    orderId: params.get('orderId'),
+    amount: params.get('amount') ? Number(params.get('amount')) : null,
+    productTitle: params.get('productTitle') ? decodeURIComponent(params.get('productTitle')) : null,
+    customerName: params.get('customerName') ? decodeURIComponent(params.get('customerName')) : null,
+    customerEmail: params.get('customerEmail') ? decodeURIComponent(params.get('customerEmail')) : null,
+    customerPhone: params.get('customerPhone') ? decodeURIComponent(params.get('customerPhone')) : null
+  }
+}
+
 export default function PaymentSuccess() {
   const router = useRouter()
   
-  // URL'den hemen okunan değerler (sayfa açılır açılmaz görünür)
-  const [urlParams, setUrlParams] = useState({
+  // İlk render'da URL'den değerleri oku
+  const [urlParams] = useState(() => getUrlParams() || {
     orderId: null,
     amount: null,
     productTitle: null,
@@ -24,61 +39,54 @@ export default function PaymentSuccess() {
   
   const [order, setOrder] = useState(null)
   const [copied, setCopied] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const purchaseTracked = useRef(false)
   const apiCalled = useRef(false)
 
-  // URL'den parametreleri hemen oku (sayfa yüklendiğinde)
+  // Client-side mount kontrolü ve GTM push
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search)
+    setMounted(true)
+    
+    // URL'de bilgiler varsa hemen GTM push yap
+    const params = new URLSearchParams(window.location.search)
+    const urlAmount = params.get('amount')
+    const urlOrderId = params.get('orderId')
+    
+    if (urlAmount && urlOrderId && !purchaseTracked.current) {
+      purchaseTracked.current = true
       
-      setUrlParams({
-        orderId: params.get('orderId'),
-        amount: params.get('amount') ? Number(params.get('amount')) : null,
-        productTitle: params.get('productTitle') ? decodeURIComponent(params.get('productTitle')) : null,
-        customerName: params.get('customerName') ? decodeURIComponent(params.get('customerName')) : null,
-        customerEmail: params.get('customerEmail') ? decodeURIComponent(params.get('customerEmail')) : null,
-        customerPhone: params.get('customerPhone') ? decodeURIComponent(params.get('customerPhone')) : null
-      })
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ ecommerce: null });
       
-      // URL'de amount varsa hemen GTM push yap (API beklemeden)
-      const urlAmount = params.get('amount')
-      const urlOrderId = params.get('orderId')
+      const amountValue = Number(urlAmount);
       
-      if (urlAmount && urlOrderId && !purchaseTracked.current) {
-        purchaseTracked.current = true
-        
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({ ecommerce: null });
-        
-        const amountValue = Number(urlAmount);
-        
-        window.dataLayer.push({
-          event: 'purchase',
-          ads_value: amountValue,
-          ads_id: urlOrderId,
-          ads_currency: 'TRY',
-          ecommerce: {
-            transaction_id: urlOrderId,
-            value: amountValue,
-            currency: 'TRY',
-            items: [{
-              item_id: urlOrderId,
-              item_name: params.get('productTitle') ? decodeURIComponent(params.get('productTitle')) : 'Ürün',
-              price: amountValue,
-              quantity: 1
-            }]
-          }
-        });
-        
-        console.log('GTM DataLayer Push (URL params):', { urlOrderId, amountValue });
-      }
+      window.dataLayer.push({
+        event: 'purchase',
+        ads_value: amountValue,
+        ads_id: urlOrderId,
+        ads_currency: 'TRY',
+        ecommerce: {
+          transaction_id: urlOrderId,
+          value: amountValue,
+          currency: 'TRY',
+          items: [{
+            item_id: urlOrderId,
+            item_name: params.get('productTitle') ? decodeURIComponent(params.get('productTitle')) : 'Ürün',
+            price: amountValue,
+            quantity: 1
+          }]
+        }
+      });
+      
+      console.log('GTM DataLayer Push (URL params):', { urlOrderId, amountValue });
     }
   }, [])
 
-  // API'den sipariş bilgisini çek (arka planda)
+  // API'den sipariş bilgisini çek
   useEffect(() => {
-    if (!urlParams.orderId || apiCalled.current) return
+    const orderId = urlParams?.orderId || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('orderId') : null)
+    
+    if (!orderId || apiCalled.current) return
     apiCalled.current = true
 
     const fetchOrder = async () => {
@@ -88,7 +96,7 @@ export default function PaymentSuccess() {
         let orderData = null;
         
         if (token) {
-          const authResponse = await fetch(`/api/account/orders/${urlParams.orderId}`, {
+          const authResponse = await fetch(`/api/account/orders/${orderId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           })
           
@@ -101,7 +109,7 @@ export default function PaymentSuccess() {
         }
         
         if (!orderData) {
-          const publicResponse = await fetch(`/api/orders/${urlParams.orderId}/summary`)
+          const publicResponse = await fetch(`/api/orders/${orderId}/summary`)
           if (publicResponse.ok) {
             const publicData = await publicResponse.json()
             if (publicData.success && publicData.data) {
@@ -114,7 +122,7 @@ export default function PaymentSuccess() {
           setOrder(orderData)
           
           // Eğer URL'de amount yoksa API'den gelen değerle GTM push yap
-          if (!urlParams.amount && !purchaseTracked.current) {
+          if (!urlParams?.amount && !purchaseTracked.current) {
             purchaseTracked.current = true
             
             window.dataLayer = window.dataLayer || [];
@@ -125,14 +133,14 @@ export default function PaymentSuccess() {
             window.dataLayer.push({
               event: 'purchase',
               ads_value: amountValue,
-              ads_id: urlParams.orderId,
+              ads_id: orderId,
               ads_currency: 'TRY',
               ecommerce: {
-                transaction_id: urlParams.orderId,
+                transaction_id: orderId,
                 value: amountValue,
                 currency: 'TRY',
                 items: [{
-                  item_id: orderData.productId || urlParams.orderId,
+                  item_id: orderData.productId || orderId,
                   item_name: orderData.productTitle || 'Ürün',
                   price: amountValue,
                   quantity: 1
@@ -140,7 +148,7 @@ export default function PaymentSuccess() {
               }
             });
             
-            console.log('GTM DataLayer Push (API):', { orderId: urlParams.orderId, amountValue });
+            console.log('GTM DataLayer Push (API):', { orderId, amountValue });
           }
           
           // 3000 TL üzeri doğrulama kontrolü
@@ -151,7 +159,7 @@ export default function PaymentSuccess() {
           
           if (isHighValue && isNotDelivered && verificationNotSubmitted) {
             setTimeout(() => {
-              router.push(`/account/orders/${urlParams.orderId}/verification`)
+              router.push(`/account/orders/${orderId}/verification`)
             }, 2000)
           }
         }
@@ -161,15 +169,18 @@ export default function PaymentSuccess() {
     }
 
     fetchOrder()
-  }, [urlParams.orderId, urlParams.amount, router])
+  }, [urlParams, router])
 
+  // Client-side'da güncel URL parametrelerini al
+  const currentParams = mounted ? getUrlParams() : urlParams
+  
   // Gösterilecek değerler (önce URL, yoksa API)
-  const displayOrderId = urlParams.orderId
-  const displayAmount = urlParams.amount || order?.amount || order?.totalAmount || 0
-  const displayProductTitle = urlParams.productTitle || order?.productTitle || null
-  const displayCustomerName = urlParams.customerName || (order?.customer ? `${order.customer.firstName || ''} ${order.customer.lastName || ''}`.trim() : null)
-  const displayCustomerEmail = urlParams.customerEmail || order?.customer?.email || null
-  const displayCustomerPhone = urlParams.customerPhone || order?.customer?.phone || null
+  const displayOrderId = currentParams?.orderId || urlParams?.orderId
+  const displayAmount = currentParams?.amount || urlParams?.amount || order?.amount || order?.totalAmount || 0
+  const displayProductTitle = currentParams?.productTitle || urlParams?.productTitle || order?.productTitle || null
+  const displayCustomerName = currentParams?.customerName || urlParams?.customerName || (order?.customer ? `${order.customer.firstName || ''} ${order.customer.lastName || ''}`.trim() : null)
+  const displayCustomerEmail = currentParams?.customerEmail || urlParams?.customerEmail || order?.customer?.email || null
+  const displayCustomerPhone = currentParams?.customerPhone || urlParams?.customerPhone || order?.customer?.phone || null
 
   // Doğrulama kontrolü
   const isHighValue = displayAmount >= VERIFICATION_THRESHOLD;

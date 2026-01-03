@@ -150,8 +150,11 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="bg-slate-900 border-slate-800">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <Card 
+          className={`bg-slate-900 border-slate-800 cursor-pointer transition-all hover:border-blue-500 ${dateFilter === 'all' ? 'border-blue-500 ring-2 ring-blue-500/20' : ''}`}
+          onClick={() => { setDateFilter('all'); setPagination(prev => ({ ...prev, page: 1 })); }}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -163,28 +166,47 @@ export default function AdminUsersPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800">
+        <Card 
+          className={`bg-slate-900 border-slate-800 cursor-pointer transition-all hover:border-green-500 ${dateFilter === 'today' ? 'border-green-500 ring-2 ring-green-500/20' : ''}`}
+          onClick={() => { setDateFilter('today'); setPagination(prev => ({ ...prev, page: 1 })); }}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm">Toplam Bakiye</p>
-                <p className="text-3xl font-bold text-white">
-                  {users.reduce((sum, user) => sum + (user.balance || 0), 0).toFixed(0)} ₺
-                </p>
+                <p className="text-slate-400 text-sm">Bugün Kayıt</p>
+                <p className="text-3xl font-bold text-green-400">{stats.todayCount}</p>
               </div>
-              <Wallet className="w-12 h-12 text-green-500" />
+              <Calendar className="w-12 h-12 text-green-500" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800">
+        <Card 
+          className={`bg-slate-900 border-slate-800 cursor-pointer transition-all hover:border-yellow-500 ${dateFilter === 'week' ? 'border-yellow-500 ring-2 ring-yellow-500/20' : ''}`}
+          onClick={() => { setDateFilter('week'); setPagination(prev => ({ ...prev, page: 1 })); }}
+        >
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm">Aktif Sayfa</p>
-                <p className="text-3xl font-bold text-white">{pagination.page} / {pagination.pages}</p>
+                <p className="text-slate-400 text-sm">Bu Hafta</p>
+                <p className="text-3xl font-bold text-yellow-400">{stats.weekCount}</p>
               </div>
-              <Eye className="w-12 h-12 text-purple-500" />
+              <CalendarDays className="w-12 h-12 text-yellow-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className={`bg-slate-900 border-slate-800 cursor-pointer transition-all hover:border-purple-500 ${dateFilter === 'month' ? 'border-purple-500 ring-2 ring-purple-500/20' : ''}`}
+          onClick={() => { setDateFilter('month'); setPagination(prev => ({ ...prev, page: 1 })); }}
+        >
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-400 text-sm">Bu Ay</p>
+                <p className="text-3xl font-bold text-purple-400">{stats.monthCount}</p>
+              </div>
+              <CalendarRange className="w-12 h-12 text-purple-500" />
             </div>
           </CardContent>
         </Card>

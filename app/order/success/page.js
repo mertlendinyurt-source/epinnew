@@ -73,16 +73,29 @@ function OrderSuccessContent() {
       if (data.success) {
         setOrder(data.data)
         
-        // Track purchase event only once (GTM compatible)
+        // Track purchase event only once (GTM compatible for Google Ads ROAS)
         if (!purchaseTracked.current && typeof window !== 'undefined') {
           purchaseTracked.current = true;
 
           window.dataLayer = window.dataLayer || [];
+          
+          // Clear previous ecommerce data
+          window.dataLayer.push({ ecommerce: null });
+          
+          // Push purchase event in GA4 ecommerce format (Google Ads uses this for ROAS)
           window.dataLayer.push({
             event: 'purchase',
-            transaction_id: data.data.id,
-            value: data.data.amount,
-            currency: 'TRY'
+            ecommerce: {
+              transaction_id: data.data.id,
+              value: data.data.amount,
+              currency: 'TRY',
+              items: [{
+                item_id: data.data.productId || data.data.id,
+                item_name: data.data.productTitle,
+                price: data.data.amount,
+                quantity: 1
+              }]
+            }
           });
         }
       }

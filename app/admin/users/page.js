@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Users, Search, Wallet, TrendingUp, TrendingDown, Eye } from 'lucide-react'
+import { Users, Search, Wallet, TrendingUp, TrendingDown, Eye, Calendar, CalendarDays, CalendarRange } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -19,12 +19,20 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState([])
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 })
   const [search, setSearch] = useState('')
+  const [dateFilter, setDateFilter] = useState('all') // all, today, week, month
   const [selectedUser, setSelectedUser] = useState(null)
   const [showBalanceModal, setShowBalanceModal] = useState(false)
   const [balanceAction, setBalanceAction] = useState('add')
   const [balanceAmount, setBalanceAmount] = useState('')
   const [balanceNote, setBalanceNote] = useState('')
   const [processing, setProcessing] = useState(false)
+  
+  // Stats
+  const [stats, setStats] = useState({
+    todayCount: 0,
+    weekCount: 0,
+    monthCount: 0
+  })
 
   useEffect(() => {
     const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
@@ -33,12 +41,12 @@ export default function AdminUsersPage() {
       return
     }
     fetchUsers()
-  }, [pagination.page, search])
+  }, [pagination.page, search, dateFilter])
 
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
-      const response = await fetch(`/api/admin/users?page=${pagination.page}&limit=20&search=${search}`, {
+      const response = await fetch(`/api/admin/users?page=${pagination.page}&limit=20&search=${search}&dateFilter=${dateFilter}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
@@ -52,6 +60,11 @@ export default function AdminUsersPage() {
       if (data.success) {
         setUsers(data.data.users)
         setPagination(data.data.pagination)
+        
+        // Stats varsa güncelle
+        if (data.data.stats) {
+          setStats(data.data.stats)
+        }
       }
     } catch (error) {
       console.error('Error fetching users:', error)

@@ -1606,7 +1606,13 @@ export default function App() {
         </div>
       </div>
 
-      <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
+      <Dialog open={checkoutOpen} onOpenChange={(open) => {
+        setCheckoutOpen(open);
+        // Clear URL when modal is closed
+        if (!open) {
+          window.history.pushState({}, '', window.location.pathname);
+        }
+      }}>
         <DialogContent className="max-w-[95vw] md:max-w-4xl max-h-[90vh] p-0 gap-0 overflow-hidden border-0" style={{ backgroundColor: 'transparent' }}>
           <div 
             className="absolute inset-0 bg-cover bg-center blur-sm"

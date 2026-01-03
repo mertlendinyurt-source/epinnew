@@ -178,6 +178,52 @@ export default function App() {
     }
   }, [])
 
+  // Handle product parameter from URL for Google Ads site links
+  useEffect(() => {
+    if (products.length === 0) return;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const productParam = urlParams.get('product');
+    
+    if (productParam) {
+      // Find product by slug (e.g., "60uc", "325uc", "660uc")
+      const slug = productParam.toLowerCase().replace('-', '');
+      
+      // Try to match by UC amount in title
+      const ucAmount = parseInt(slug.replace('uc', ''));
+      
+      let matchedProduct = null;
+      
+      if (!isNaN(ucAmount)) {
+        // Find product that contains the UC amount in title
+        matchedProduct = products.find(p => {
+          const title = p.title.toLowerCase();
+          // Match patterns like "60 UC", "325 UC", "660 UC Yükleme Şansı"
+          const matches = title.match(/(\d+)\s*uc/i);
+          if (matches) {
+            return parseInt(matches[1]) === ucAmount;
+          }
+          return false;
+        });
+      }
+      
+      // Also try to match by product ID
+      if (!matchedProduct) {
+        matchedProduct = products.find(p => p.id === productParam);
+      }
+      
+      if (matchedProduct) {
+        // Open checkout modal for this product
+        setSelectedProduct(matchedProduct);
+        setCheckoutOpen(true);
+        
+        // Clean URL (remove product parameter)
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, [products]);
+
   // Handle login redirect from /admin/login
   const handleLoginRedirect = () => {
     const urlParams = new URLSearchParams(window.location.search)

@@ -71,7 +71,6 @@ function OrderSuccessContent() {
       })
       const data = await res.json()
       
-      // Düzeltme 1: data.data var mı diye kontrol ediyoruz (Hata vermemesi için)
       if (data.success && data.data) {
         setOrder(data.data)
         
@@ -80,20 +79,26 @@ function OrderSuccessContent() {
 
           window.dataLayer = window.dataLayer || [];
           window.dataLayer.push({ ecommerce: null });
-
-          // Düzeltme 2: Tutarı kesinlikle Sayı (Number) formatına çeviriyoruz
-          // Google Ads "150.00" (string) yerine 150.00 (number) ister.
+          
           const amountValue = Number(data.data.amount);
 
+          // GÜNCELLENMİŞ KISIM: Verileri dışarıya da ("ads_" ile başlayanlar) ekledik.
           window.dataLayer.push({
             event: 'purchase',
+            
+            // Google Ads için GARANTİ (Düz) Değişkenler:
+            ads_value: amountValue,
+            ads_id: data.data.id,
+            ads_currency: 'TRY',
+
+            // GA4 için Standart (Nested) Yapı (Burası Aynen Kalıyor):
             ecommerce: {
               transaction_id: data.data.id,
               value: amountValue,
               currency: 'TRY',
               items: [{
                 item_id: data.data.productId || data.data.id,
-                item_name: data.data.productTitle || 'Ürün', // Boşsa 'Ürün' yazar
+                item_name: data.data.productTitle || 'Ürün',
                 price: amountValue,
                 quantity: 1
               }]

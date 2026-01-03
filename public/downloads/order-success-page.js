@@ -70,29 +70,31 @@ function OrderSuccessContent() {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       })
       const data = await res.json()
-      if (data.success) {
+      
+      // Düzeltme 1: data.data var mı diye kontrol ediyoruz (Hata vermemesi için)
+      if (data.success && data.data) {
         setOrder(data.data)
         
-        // Track purchase event only once (GTM compatible for Google Ads ROAS)
         if (!purchaseTracked.current && typeof window !== 'undefined') {
           purchaseTracked.current = true;
 
           window.dataLayer = window.dataLayer || [];
-          
-          // Clear previous ecommerce data
           window.dataLayer.push({ ecommerce: null });
-          
-          // Push purchase event in GA4 ecommerce format (Google Ads uses this for ROAS)
+
+          // Düzeltme 2: Tutarı kesinlikle Sayı (Number) formatına çeviriyoruz
+          // Google Ads "150.00" (string) yerine 150.00 (number) ister.
+          const amountValue = Number(data.data.amount);
+
           window.dataLayer.push({
             event: 'purchase',
             ecommerce: {
               transaction_id: data.data.id,
-              value: data.data.amount,
+              value: amountValue,
               currency: 'TRY',
               items: [{
                 item_id: data.data.productId || data.data.id,
-                item_name: data.data.productTitle,
-                price: data.data.amount,
+                item_name: data.data.productTitle || 'Ürün', // Boşsa 'Ürün' yazar
+                price: amountValue,
                 quantity: 1
               }]
             }

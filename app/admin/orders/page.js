@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LayoutDashboard, Package, ShoppingBag, LogOut, Search, Filter, Image as ImageIcon, AlertTriangle, CheckCircle, XCircle, Shield, Ban } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingBag, LogOut, Search, Filter, Image as ImageIcon, AlertTriangle, CheckCircle, XCircle, Shield, Ban, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -23,6 +23,10 @@ export default function AdminOrders() {
   const [processingOrder, setProcessingOrder] = useState(null)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(20)
 
   useEffect(() => {
     const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
@@ -47,7 +51,48 @@ export default function AdminOrders() {
     }
     
     setFilteredOrders(filtered)
+    setCurrentPage(1) // Reset to first page when filter changes
   }, [statusFilter, riskFilter, orders])
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentOrders = filteredOrders.slice(startIndex, endIndex)
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
+  }
+
+  const getPageNumbers = () => {
+    const pages = []
+    const maxVisiblePages = 5
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i)
+        pages.push('...')
+        pages.push(totalPages)
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1)
+        pages.push('...')
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i)
+      } else {
+        pages.push(1)
+        pages.push('...')
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i)
+        pages.push('...')
+        pages.push(totalPages)
+      }
+    }
+    return pages
+  }
 
   const fetchOrders = async () => {
     try {

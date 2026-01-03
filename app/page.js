@@ -594,6 +594,13 @@ export default function App() {
     setPlayerName('')
     setPlayerValid(null)
     
+    // Update URL with product parameter for Google Ads tracking
+    const ucAmount = product.title.match(/(\d+)\s*UC/i);
+    if (ucAmount) {
+      const productSlug = ucAmount[1] + 'uc';
+      window.history.pushState({}, '', `?product=${productSlug}`);
+    }
+    
     // Auto-select payment method based on balance
     if (isAuthenticated && userBalance >= product.discountPrice) {
       setPaymentMethod('balance') // Sufficient balance - default to balance

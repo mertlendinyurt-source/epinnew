@@ -39,7 +39,8 @@ function PaymentSuccessContent() {
           if (authResponse.ok) {
             const authData = await authResponse.json()
             if (authData.success && authData.data) {
-              orderData = authData.data
+              // API returns { order, payment } or just order object
+              orderData = authData.data.order || authData.data
             }
           }
         }

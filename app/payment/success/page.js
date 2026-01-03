@@ -58,6 +58,38 @@ function PaymentSuccessContent() {
         if (orderData) {
           setOrder(orderData)
           
+          // GTM DataLayer Push - Google Ads ROAS için
+          if (typeof window !== 'undefined') {
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({ ecommerce: null });
+            
+            const amountValue = Number(orderData.amount || orderData.totalAmount || 0);
+            
+            window.dataLayer.push({
+              event: 'purchase',
+              
+              // Google Ads için GARANTİ (Düz) Değişkenler:
+              ads_value: amountValue,
+              ads_id: orderId,
+              ads_currency: 'TRY',
+
+              // GA4 için Standart (Nested) Yapı:
+              ecommerce: {
+                transaction_id: orderId,
+                value: amountValue,
+                currency: 'TRY',
+                items: [{
+                  item_id: orderData.productId || orderId,
+                  item_name: orderData.productTitle || 'Ürün',
+                  price: amountValue,
+                  quantity: 1
+                }]
+              }
+            });
+            
+            console.log('GTM DataLayer Push - Purchase Event:', { orderId, amountValue });
+          }
+          
           // TUTAR KONTROLÜ - 3000 TL ve üzeri ise doğrulama sayfasına yönlendir
           const orderAmount = orderData.amount || orderData.totalAmount || 0;
           const isHighValue = orderAmount >= VERIFICATION_THRESHOLD;

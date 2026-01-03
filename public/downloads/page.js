@@ -594,6 +594,13 @@ export default function App() {
     setPlayerName('')
     setPlayerValid(null)
     
+    // Update URL with product parameter for Google Ads tracking
+    const ucAmount = product.title.match(/(\d+)\s*UC/i);
+    if (ucAmount) {
+      const productSlug = ucAmount[1] + 'uc';
+      window.history.pushState({}, '', `?product=${productSlug}`);
+    }
+    
     // Auto-select payment method based on balance
     if (isAuthenticated && userBalance >= product.discountPrice) {
       setPaymentMethod('balance') // Sufficient balance - default to balance
@@ -1599,7 +1606,13 @@ export default function App() {
         </div>
       </div>
 
-      <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
+      <Dialog open={checkoutOpen} onOpenChange={(open) => {
+        setCheckoutOpen(open);
+        // Clear URL when modal is closed
+        if (!open) {
+          window.history.pushState({}, '', window.location.pathname);
+        }
+      }}>
         <DialogContent className="max-w-[95vw] md:max-w-4xl max-h-[90vh] p-0 gap-0 overflow-hidden border-0" style={{ backgroundColor: 'transparent' }}>
           <div 
             className="absolute inset-0 bg-cover bg-center blur-sm"

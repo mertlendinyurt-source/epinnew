@@ -236,10 +236,25 @@ export default function AdminUsersPage() {
       {/* Users Table */}
       <Card className="bg-slate-900 border-slate-800">
         <CardHeader>
-          <CardTitle className="text-white">Kullanıcı Listesi</CardTitle>
-          <CardDescription className="text-slate-400">
-            Tüm kayıtlı kullanıcılar ve bakiye bilgileri
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-white">Kullanıcı Listesi</CardTitle>
+              <CardDescription className="text-slate-400">
+                {dateFilter === 'all' && 'Tüm kayıtlı kullanıcılar'}
+                {dateFilter === 'today' && 'Bugün kayıt olan kullanıcılar'}
+                {dateFilter === 'week' && 'Bu hafta kayıt olan kullanıcılar'}
+                {dateFilter === 'month' && 'Bu ay kayıt olan kullanıcılar'}
+              </CardDescription>
+            </div>
+            {dateFilter !== 'all' && (
+              <Badge 
+                className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                onClick={() => { setDateFilter('all'); setPagination(prev => ({ ...prev, page: 1 })); }}
+              >
+                Filtreyi Temizle ✕
+              </Badge>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {users.length === 0 ? (

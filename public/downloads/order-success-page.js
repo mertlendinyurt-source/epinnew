@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { CheckCircle, Package, ArrowRight, Home } from 'lucide-react'
 
-export default function OrderSuccessPage() {
+function OrderSuccessContent() {
   const searchParams = useSearchParams()
   const orderId = searchParams.get('orderId')
   const [order, setOrder] = useState(null)
@@ -166,5 +166,30 @@ export default function OrderSuccessPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+// Loading fallback component
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-green-950/30 to-slate-950 flex items-center justify-center p-4">
+      <div className="max-w-lg w-full">
+        <div className="bg-slate-900/80 backdrop-blur-xl border border-green-500/30 rounded-2xl p-8 text-center shadow-2xl shadow-green-500/10">
+          <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/30">
+            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-2">Yükleniyor...</h1>
+          <p className="text-slate-400">Sipariş bilgileri getiriliyor...</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function OrderSuccessPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <OrderSuccessContent />
+    </Suspense>
   )
 }

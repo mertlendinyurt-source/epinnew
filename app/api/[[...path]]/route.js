@@ -3259,9 +3259,22 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
       }
 
       const search = searchParams.get('search') || '';
+      const dateFilter = searchParams.get('dateFilter') || 'all';
       const page = parseInt(searchParams.get('page') || '1');
       const limit = parseInt(searchParams.get('limit') || '20');
       const skip = (page - 1) * limit;
+
+      // Tarih filtreleri için başlangıç tarihleri
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      // Bu haftanın başlangıcı (Pazartesi)
+      const dayOfWeek = now.getDay();
+      const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday);
+      
+      // Bu ayın başlangıcı
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
       // Query: tüm kullanıcılar (admin hariç)
       let query = { 
@@ -3271,6 +3284,15 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
         ],
         role: { $ne: 'admin' }  // Admin rolü olmayanlar
       };
+
+      // Tarih filtresi
+      if (dateFilter === 'today') {
+        query.createdAt = { $gte: todayStart };
+      } else if (dateFilter === 'week') {
+        query.createdAt = { $gte: weekStart };
+      } else if (dateFilter === 'month') {
+        query.createdAt = { $gte: monthStart };
+      }
       
       if (search) {
         query.$and = query.$and || [];
@@ -3284,14 +3306,26 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
         });
       }
 
-      const [users, total] = await Promise.all([
+      // Stats için base query (tarih filtresi hariç)
+      const baseQuery = { 
+        $or: [
+          { type: 'user' },
+          { type: { $exists: false } }
+        ],
+        role: { $ne: 'admin' }
+      };
+
+      const [users, total, todayCount, weekCount, monthCount] = await Promise.all([
         db.collection('users')
           .find(query)
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit)
           .toArray(),
-        db.collection('users').countDocuments(query)
+        db.collection('users').countDocuments(query),
+        db.collection('users').countDocuments({ ...baseQuery, createdAt: { $gte: todayStart } }),
+        db.collection('users').countDocuments({ ...baseQuery, createdAt: { $gte: weekStart } }),
+        db.collection('users').countDocuments({ ...baseQuery, createdAt: { $gte: monthStart } })
       ]);
 
       // Remove password hashes
@@ -3312,6 +3346,11 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
             page,
             limit,
             pages: Math.ceil(total / limit)
+          },
+          stats: {
+            todayCount,
+            weekCount,
+            monthCount
           }
         }
       });

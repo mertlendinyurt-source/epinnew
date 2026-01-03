@@ -12,28 +12,74 @@ const VERIFICATION_THRESHOLD = 3000;
 export default function PaymentSuccess() {
   const router = useRouter()
   
-  const [orderId, setOrderId] = useState(null)
+  // URL'den hemen okunan değerler (sayfa açılır açılmaz görünür)
+  const [urlParams, setUrlParams] = useState({
+    orderId: null,
+    amount: null,
+    productTitle: null,
+    customerName: null,
+    customerEmail: null,
+    customerPhone: null
+  })
+  
   const [order, setOrder] = useState(null)
-  const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
   const purchaseTracked = useRef(false)
+  const apiCalled = useRef(false)
 
-  // URL'den orderId'yi al (Suspense olmadan)
+  // URL'den parametreleri hemen oku (sayfa yüklendiğinde)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
-      const id = params.get('orderId')
-      setOrderId(id)
       
-      if (!id) {
-        setLoading(false)
+      setUrlParams({
+        orderId: params.get('orderId'),
+        amount: params.get('amount') ? Number(params.get('amount')) : null,
+        productTitle: params.get('productTitle') ? decodeURIComponent(params.get('productTitle')) : null,
+        customerName: params.get('customerName') ? decodeURIComponent(params.get('customerName')) : null,
+        customerEmail: params.get('customerEmail') ? decodeURIComponent(params.get('customerEmail')) : null,
+        customerPhone: params.get('customerPhone') ? decodeURIComponent(params.get('customerPhone')) : null
+      })
+      
+      // URL'de amount varsa hemen GTM push yap (API beklemeden)
+      const urlAmount = params.get('amount')
+      const urlOrderId = params.get('orderId')
+      
+      if (urlAmount && urlOrderId && !purchaseTracked.current) {
+        purchaseTracked.current = true
+        
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ ecommerce: null });
+        
+        const amountValue = Number(urlAmount);
+        
+        window.dataLayer.push({
+          event: 'purchase',
+          ads_value: amountValue,
+          ads_id: urlOrderId,
+          ads_currency: 'TRY',
+          ecommerce: {
+            transaction_id: urlOrderId,
+            value: amountValue,
+            currency: 'TRY',
+            items: [{
+              item_id: urlOrderId,
+              item_name: params.get('productTitle') ? decodeURIComponent(params.get('productTitle')) : 'Ürün',
+              price: amountValue,
+              quantity: 1
+            }]
+          }
+        });
+        
+        console.log('GTM DataLayer Push (URL params):', { urlOrderId, amountValue });
       }
     }
   }, [])
 
-  // Order bilgisini çek
+  // API'den sipariş bilgisini çek (arka planda)
   useEffect(() => {
-    if (!orderId) return
+    if (!urlParams.orderId || apiCalled.current) return
+    apiCalled.current = true
 
     const fetchOrder = async () => {
       try {
@@ -42,22 +88,20 @@ export default function PaymentSuccess() {
         let orderData = null;
         
         if (token) {
-          const authResponse = await fetch(`/api/account/orders/${orderId}`, {
+          const authResponse = await fetch(`/api/account/orders/${urlParams.orderId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           })
           
           if (authResponse.ok) {
             const authData = await authResponse.json()
             if (authData.success && authData.data) {
-              // API returns { order, payment } or just order object
               orderData = authData.data.order || authData.data
             }
           }
         }
         
-        // Public endpoint'i dene
         if (!orderData) {
-          const publicResponse = await fetch(`/api/orders/${orderId}/summary`)
+          const publicResponse = await fetch(`/api/orders/${urlParams.orderId}/summary`)
           if (publicResponse.ok) {
             const publicData = await publicResponse.json()
             if (publicData.success && publicData.data) {
@@ -69,9 +113,9 @@ export default function PaymentSuccess() {
         if (orderData) {
           setOrder(orderData)
           
-          // GTM DataLayer Push - Google Ads ROAS için (sadece bir kez)
-          if (!purchaseTracked.current && typeof window !== 'undefined') {
-            purchaseTracked.current = true;
+          // Eğer URL'de amount yoksa API'den gelen değerle GTM push yap
+          if (!urlParams.amount && !purchaseTracked.current) {
+            purchaseTracked.current = true
             
             window.dataLayer = window.dataLayer || [];
             window.dataLayer.push({ ecommerce: null });
@@ -80,19 +124,15 @@ export default function PaymentSuccess() {
             
             window.dataLayer.push({
               event: 'purchase',
-              
-              // Google Ads için GARANTİ (Düz) Değişkenler:
               ads_value: amountValue,
-              ads_id: orderId,
+              ads_id: urlParams.orderId,
               ads_currency: 'TRY',
-
-              // GA4 için Standart (Nested) Yapı:
               ecommerce: {
-                transaction_id: orderId,
+                transaction_id: urlParams.orderId,
                 value: amountValue,
                 currency: 'TRY',
                 items: [{
-                  item_id: orderData.productId || orderId,
+                  item_id: orderData.productId || urlParams.orderId,
                   item_name: orderData.productTitle || 'Ürün',
                   price: amountValue,
                   quantity: 1
@@ -100,42 +140,46 @@ export default function PaymentSuccess() {
               }
             });
             
-            console.log('GTM DataLayer Push - Purchase Event:', { orderId, amountValue });
+            console.log('GTM DataLayer Push (API):', { orderId: urlParams.orderId, amountValue });
           }
           
-          // TUTAR KONTROLÜ - 3000 TL ve üzeri ise doğrulama sayfasına yönlendir
+          // 3000 TL üzeri doğrulama kontrolü
           const orderAmount = orderData.amount || orderData.totalAmount || 0;
           const isHighValue = orderAmount >= VERIFICATION_THRESHOLD;
           const isNotDelivered = orderData.delivery?.status !== 'delivered';
           const verificationNotSubmitted = !orderData.verification?.submittedAt;
           
-          // 3000 TL üzeri + teslim edilmemiş + doğrulama gönderilmemiş = doğrulama gerekli
           if (isHighValue && isNotDelivered && verificationNotSubmitted) {
             setTimeout(() => {
-              router.push(`/account/orders/${orderId}/verification`)
+              router.push(`/account/orders/${urlParams.orderId}/verification`)
             }, 2000)
           }
         }
       } catch (error) {
         console.error('Failed to fetch order:', error)
-      } finally {
-        setLoading(false)
       }
     }
 
     fetchOrder()
-  }, [orderId, router])
+  }, [urlParams.orderId, urlParams.amount, router])
 
-  // Doğrulama gerekli mi kontrolü - TUTAR BAZLI
-  const orderAmount = order?.amount || order?.totalAmount || 0;
-  const isHighValue = orderAmount >= VERIFICATION_THRESHOLD;
+  // Gösterilecek değerler (önce URL, yoksa API)
+  const displayOrderId = urlParams.orderId
+  const displayAmount = urlParams.amount || order?.amount || order?.totalAmount || 0
+  const displayProductTitle = urlParams.productTitle || order?.productTitle || null
+  const displayCustomerName = urlParams.customerName || (order?.customer ? `${order.customer.firstName || ''} ${order.customer.lastName || ''}`.trim() : null)
+  const displayCustomerEmail = urlParams.customerEmail || order?.customer?.email || null
+  const displayCustomerPhone = urlParams.customerPhone || order?.customer?.phone || null
+
+  // Doğrulama kontrolü
+  const isHighValue = displayAmount >= VERIFICATION_THRESHOLD;
   const isNotDelivered = order?.delivery?.status !== 'delivered';
   const verificationNotSubmitted = !order?.verification?.submittedAt;
-  const isVerificationRequired = isHighValue && isNotDelivered && verificationNotSubmitted;
+  const isVerificationRequired = order && isHighValue && isNotDelivered && verificationNotSubmitted;
 
   const copyOrderId = () => {
-    if (orderId) {
-      navigator.clipboard.writeText(orderId)
+    if (displayOrderId) {
+      navigator.clipboard.writeText(displayOrderId)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
@@ -150,25 +194,11 @@ export default function PaymentSuccess() {
     }).format(amount)
   }
 
-  const customerName = order?.customer 
-    ? `${order.customer.firstName || ''} ${order.customer.lastName || ''}`.trim()
-    : null
-  
-  const customerEmail = order?.customer?.email || null
-  const customerPhone = order?.customer?.phone || null
-  const productTitle = order?.productTitle || null
-  const amount = order?.amount || order?.totalAmount || null
-
-  // Skeleton component
-  const Skeleton = ({ width }) => (
-    <span className={`animate-pulse bg-slate-700 rounded h-4 inline-block ${width}`}></span>
-  )
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
       <Card className="bg-slate-900/50 border-slate-800 max-w-lg w-full shadow-2xl">
         <CardHeader className="text-center pb-2">
-          <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30 animate-pulse">
+          <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30">
             <CheckCircle className="w-14 h-14 text-white" />
           </div>
           <CardTitle className="text-white text-3xl font-bold">Ödeme Başarılı!</CardTitle>
@@ -188,7 +218,7 @@ export default function PaymentSuccess() {
                 <div>
                   <div className="text-xs text-slate-400 mb-0.5">Sipariş Numarası</div>
                   <div className="text-white font-mono text-sm font-semibold break-all">
-                    {orderId || <Skeleton width="w-48" />}
+                    {displayOrderId || '-'}
                   </div>
                 </div>
               </div>
@@ -209,7 +239,7 @@ export default function PaymentSuccess() {
               <div>
                 <div className="text-xs text-slate-400 mb-0.5">Müşteri Adı</div>
                 <div className="text-white font-semibold">
-                  {loading ? <Skeleton width="w-32" /> : (customerName || '-')}
+                  {displayCustomerName || '-'}
                 </div>
               </div>
             </div>
@@ -222,7 +252,7 @@ export default function PaymentSuccess() {
               <div>
                 <div className="text-xs text-slate-400 mb-0.5">E-posta Adresi</div>
                 <div className="text-white font-medium break-all">
-                  {loading ? <Skeleton width="w-40" /> : (customerEmail || '-')}
+                  {displayCustomerEmail || '-'}
                 </div>
               </div>
             </div>
@@ -235,7 +265,7 @@ export default function PaymentSuccess() {
               <div>
                 <div className="text-xs text-slate-400 mb-0.5">Telefon Numarası</div>
                 <div className="text-white font-medium">
-                  {loading ? <Skeleton width="w-28" /> : (customerPhone || '-')}
+                  {displayCustomerPhone || '-'}
                 </div>
               </div>
             </div>
@@ -248,7 +278,7 @@ export default function PaymentSuccess() {
               <div>
                 <div className="text-xs text-slate-400 mb-0.5">Ürün</div>
                 <div className="text-white font-semibold">
-                  {loading ? <Skeleton width="w-36" /> : (productTitle || '-')}
+                  {displayProductTitle || '-'}
                 </div>
               </div>
             </div>
@@ -261,14 +291,14 @@ export default function PaymentSuccess() {
               <div>
                 <div className="text-xs text-slate-400 mb-0.5">Sipariş Tutarı</div>
                 <div className="text-green-400 font-bold text-xl">
-                  {loading ? <span className="animate-pulse bg-slate-700 rounded h-6 w-24 inline-block"></span> : formatCurrency(amount)}
+                  {formatCurrency(displayAmount)}
                 </div>
               </div>
             </div>
           </div>
 
           {/* Doğrulama Uyarısı - 3000 TL ve üzeri için */}
-          {!loading && isVerificationRequired && (
+          {isVerificationRequired && (
             <div className="p-4 rounded-xl bg-amber-900/20 border border-amber-700/50 text-sm text-amber-400">
               <div className="flex items-start gap-3">
                 <Shield className="w-6 h-6 flex-shrink-0 mt-0.5" />
@@ -282,9 +312,9 @@ export default function PaymentSuccess() {
 
           {/* Butonlar */}
           <div className="space-y-3 pt-2">
-            {!loading && isVerificationRequired ? (
+            {isVerificationRequired ? (
               <Button
-                onClick={() => router.push(`/account/orders/${orderId}/verification`)}
+                onClick={() => router.push(`/account/orders/${displayOrderId}/verification`)}
                 className="w-full h-12 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold text-base shadow-lg shadow-amber-600/20"
               >
                 <Shield className="w-5 h-5 mr-2" />
@@ -294,7 +324,6 @@ export default function PaymentSuccess() {
               <>
                 <Button
                   onClick={() => router.push('/account/orders')}
-                  disabled={loading}
                   className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold text-base shadow-lg shadow-blue-600/20"
                 >
                   <Package className="w-5 h-5 mr-2" />

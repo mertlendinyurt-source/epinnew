@@ -73,20 +73,17 @@ export default function OrderSuccessPage() {
       if (data.success) {
         setOrder(data.data)
         
-        // Track purchase event only once
-        if (!purchaseTracked.current && typeof window !== 'undefined' && window.gtag) {
-          purchaseTracked.current = true
-          window.gtag('event', 'purchase', {
+        // Track purchase event only once (GTM compatible)
+        if (!purchaseTracked.current && typeof window !== 'undefined') {
+          purchaseTracked.current = true;
+
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({
+            event: 'purchase',
             transaction_id: data.data.id,
             value: data.data.amount,
-            currency: 'TRY',
-            items: [{
-              item_id: data.data.productId,
-              item_name: data.data.productTitle,
-              price: data.data.amount,
-              quantity: 1
-            }]
-          })
+            currency: 'TRY'
+          });
         }
       }
     } catch (err) {

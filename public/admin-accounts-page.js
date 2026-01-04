@@ -125,10 +125,10 @@ export default function AdminAccountsPage() {
     try {
       const formDataUpload = new FormData()
       formDataUpload.append('file', file)
-      formDataUpload.append('folder', 'accounts')
+      formDataUpload.append('category', 'accounts')
 
       const token = localStorage.getItem('adminToken')
-      const response = await fetch('/api/upload', {
+      const response = await fetch('/api/admin/upload', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -138,7 +138,7 @@ export default function AdminAccountsPage() {
 
       const data = await response.json()
       if (data.success) {
-        setFormData(prev => ({ ...prev, imageUrl: data.url }))
+        setFormData(prev => ({ ...prev, imageUrl: data.data.url }))
         toast.success('Resim yüklendi')
       } else {
         toast.error(data.error || 'Resim yüklenemedi')

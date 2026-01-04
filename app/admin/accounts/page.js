@@ -27,7 +27,8 @@ export default function AdminAccountsPage() {
     rank: '',
     features: '',
     credentials: '',
-    unlimited: true
+    unlimited: true,
+    order: ''
   })
   const [saving, setSaving] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')

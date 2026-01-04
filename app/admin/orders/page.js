@@ -127,6 +127,40 @@ export default function AdminOrders() {
     }
   }
 
+  const fetchAvailableStocks = async (accountId) => {
+    setLoadingStocks(true)
+    try {
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+      const response = await fetch(`/api/admin/accounts/${accountId}/stock`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        // Filter only available stocks
+        const available = data.data.stocks?.filter(s => s.status === 'available') || []
+        setAvailableStocks(available)
+        if (available.length > 0) {
+          setSelectedStockId(available[0].id)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching stocks:', error)
+    } finally {
+      setLoadingStocks(false)
+    }
+  }
+
+  const handleOrderClick = async (order) => {
+    setSelectedOrder(order)
+    setShowDetailModal(true)
+    
+    // If account order, fetch available stocks
+    if (order.accountId) {
+      await fetchAvailableStocks(order.accountId)
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('adminToken')
     localStorage.removeItem('adminUsername')

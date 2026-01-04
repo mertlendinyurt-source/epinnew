@@ -5651,6 +5651,69 @@ export async function POST(request) {
       });
     }
 
+    // Admin: Add stock to account
+    if (pathname.match(/^\/api\/admin\/accounts\/[^\/]+\/stock$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const accountId = pathname.split('/')[4];
+      const { items } = body; // Array of strings (credentials)
+
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        return NextResponse.json(
+          { success: false, error: 'Hesap bilgileri gereklidir' },
+          { status: 400 }
+        );
+      }
+
+      // Validate account exists
+      const account = await db.collection('accounts').findOne({ id: accountId });
+      if (!account) {
+        return NextResponse.json(
+          { success: false, error: 'Hesap bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Create stock items
+      const stockItems = items.map(item => ({
+        id: uuidv4(),
+        accountId,
+        credentials: item.trim(), // Hesap bilgileri (email, şifre vs)
+        status: 'available',
+        orderId: null,
+        assignedAt: null,
+        createdAt: new Date(),
+        createdBy: user.username
+      }));
+
+      await db.collection('account_stock').insertMany(stockItems);
+
+      // Update account stock count
+      const availableCount = await db.collection('account_stock').countDocuments({ 
+        accountId, 
+        status: 'available' 
+      });
+      
+      await db.collection('accounts').updateOne(
+        { id: accountId },
+        { $set: { stockCount: availableCount } }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: `${stockItems.length} adet hesap bilgisi eklendi`,
+        data: {
+          count: stockItems.length
+        }
+      });
+    }
+
     // Admin: Update product DijiPin setting
     if (pathname === '/api/admin/products/dijipin') {
       const authHeader = request.headers.get('authorization');

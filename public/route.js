@@ -5404,6 +5404,122 @@ export async function POST(request) {
             console.log('Stock assignment starting for order:', order.id);
             
             try {
+              // ============================================
+              // CHECK IF THIS IS AN ACCOUNT ORDER
+              // ============================================
+              if (order.type === 'account' && order.accountId) {
+                // ACCOUNT ORDER - Use account_stock collection
+                console.log('Account order detected, using account_stock collection');
+                
+                const assignedAccountStock = await db.collection('account_stock').findOneAndUpdate(
+                  { 
+                    accountId: order.accountId, 
+                    status: 'available' 
+                  },
+                  { 
+                    $set: { 
+                      status: 'assigned', 
+                      orderId: order.id,
+                      assignedAt: new Date()
+                    } 
+                  },
+                  { 
+                    returnDocument: 'after',
+                    sort: { createdAt: 1 } // FIFO
+                  }
+                );
+
+                console.log('Account stock assignment result:', JSON.stringify(assignedAccountStock));
+
+                if (assignedAccountStock) {
+                  const credentials = assignedAccountStock.credentials;
+                  
+                  await db.collection('orders').updateOne(
+                    { id: order.id },
+                    {
+                      $set: {
+                        delivery: {
+                          status: 'delivered',
+                          message: 'Hesap bilgileri hazır',
+                          credentials: credentials,
+                          stockId: assignedAccountStock.id || assignedAccountStock._id,
+                          assignedAt: new Date()
+                        }
+                      }
+                    }
+                  );
+                  console.log(`Account stock assigned: Order ${order.id} received credentials`);
+                  
+                  // Update account stock count
+                  const account = await db.collection('accounts').findOne({ id: order.accountId });
+                  if (account) {
+                    const remainingStock = await db.collection('account_stock').countDocuments({
+                      accountId: order.accountId,
+                      status: 'available'
+                    });
+                    
+                    const updateData = { stockCount: remainingStock };
+                    
+                    // If not unlimited and no more stock, mark as sold
+                    if (!account.unlimited && remainingStock === 0) {
+                      updateData.status = 'sold';
+                      updateData.soldAt = new Date();
+                    }
+                    
+                    // Increment sales count
+                    await db.collection('accounts').updateOne(
+                      { id: order.accountId },
+                      { 
+                        $set: updateData,
+                        $inc: { salesCount: 1 }
+                      }
+                    );
+                  }
+                } else {
+                  // No stock available - check for default credentials
+                  const account = await db.collection('accounts').findOne({ id: order.accountId });
+                  if (account && account.credentials) {
+                    await db.collection('orders').updateOne(
+                      { id: order.id },
+                      {
+                        $set: {
+                          delivery: {
+                            status: 'delivered',
+                            message: 'Hesap bilgileri hazır',
+                            credentials: account.credentials,
+                            assignedAt: new Date()
+                          }
+                        }
+                      }
+                    );
+                    console.log(`Default credentials assigned to order ${order.id}`);
+                  } else {
+                    await db.collection('orders').updateOne(
+                      { id: order.id },
+                      {
+                        $set: {
+                          delivery: {
+                            status: 'pending',
+                            message: 'Stok bekleniyor - Admin tarafından atanacak',
+                            items: []
+                          }
+                        }
+                      }
+                    );
+                    console.log(`No stock available for account order ${order.id}`);
+                  }
+                }
+                
+                // Return success for account orders
+                return NextResponse.json({
+                  success: true,
+                  message: 'Ödeme başarılı'
+                });
+              }
+
+              // ============================================
+              // UC ORDER - Use stock collection (original logic)
+              // ============================================
               // Find available stock for this product (atomic operation)
               const assignedStock = await db.collection('stock').findOneAndUpdate(
                 { 

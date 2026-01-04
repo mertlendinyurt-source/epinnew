@@ -350,6 +350,100 @@ export default function OrderDetailPage() {
               </div>
             )}
 
+            {/* ACCOUNT ORDER - Credentials Display */}
+            {order.type === 'account' && order.delivery && order.delivery.status === 'delivered' && order.delivery.credentials && (
+              <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-purple-700/50">
+                <div className="flex items-center gap-3 mb-4">
+                  <CheckCircle className="w-6 h-6 text-purple-400" />
+                  <h2 className="text-xl font-bold text-white">Hesap Bilgileri</h2>
+                </div>
+
+                <div className="bg-gray-900/50 rounded-xl p-4 mb-4 border border-purple-700/30">
+                  <p className="text-sm text-purple-200">
+                    🎉 Hesap bilgileriniz hazır! Aşağıdaki bilgileri kullanarak giriş yapabilirsiniz.
+                  </p>
+                </div>
+
+                <div className="bg-gray-900/70 rounded-xl p-4 border border-gray-700">
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div className="text-xs text-gray-400">Hesap Giriş Bilgileri</div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowCodes(prev => ({ ...prev, credentials: !prev.credentials }))}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        {showCodes.credentials ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        <span className="ml-1 text-xs">{showCodes.credentials ? 'Gizle' : 'Göster'}</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(order.delivery.credentials);
+                          setCopiedCode('credentials');
+                          setTimeout(() => setCopiedCode(null), 2000);
+                          toast.success('Kopyalandı!');
+                        }}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        {copiedCode === 'credentials' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                        <span className="ml-1 text-xs">Kopyala</span>
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="font-mono text-sm text-white whitespace-pre-wrap bg-gray-800/50 rounded-lg p-3">
+                    {showCodes.credentials ? order.delivery.credentials : '••••••••••••••••••••'}
+                  </div>
+                </div>
+
+                {/* Account Usage Instructions */}
+                <div className="mt-6 pt-6 border-t border-purple-700/30">
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    📖 Hesabı Nasıl Kullanırım?
+                  </h3>
+                  
+                  <div className="space-y-3 text-sm">
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                      <div>
+                        <p className="text-white font-medium">PUBG Mobile'ı açın</p>
+                        <p className="text-gray-400 text-xs">Oyunu başlatın ve giriş ekranına gelin.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                      <div>
+                        <p className="text-white font-medium">Mevcut hesaptan çıkış yapın</p>
+                        <p className="text-gray-400 text-xs">Ayarlar → Hesap → Çıkış Yap</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                      <div>
+                        <p className="text-white font-medium">Satın aldığınız hesap bilgileriyle giriş yapın</p>
+                        <p className="text-gray-400 text-xs">Yukarıdaki bilgileri kullanarak hesaba giriş yapın.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Warnings */}
+                  <div className="mt-4 p-3 bg-amber-900/20 rounded-lg border border-amber-700/30">
+                    <p className="text-amber-300 text-xs font-medium mb-2">⚠️ Önemli Uyarılar:</p>
+                    <ul className="text-amber-200 text-xs space-y-1">
+                      <li>• Hesap bilgilerini kimseyle paylaşmayın</li>
+                      <li>• Giriş yaptıktan sonra şifreyi değiştirin</li>
+                      <li>• Sorun yaşarsanız destek ekibiyle iletişime geçin</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Verification Required/Pending Warning */}
             {order.verification && order.verification.required && (
               <div className={`backdrop-blur-lg rounded-2xl p-6 border-2 ${

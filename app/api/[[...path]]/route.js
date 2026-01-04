@@ -1451,7 +1451,7 @@ export async function GET(request) {
     if (pathname === '/api/accounts') {
       const accounts = await db.collection('accounts')
         .find({ active: true, status: 'available' })
-        .sort({ sortOrder: 1, createdAt: -1 })
+        .sort({ order: 1, createdAt: -1 })
         .toArray();
 
       // Hide sensitive info
@@ -1468,6 +1468,7 @@ export async function GET(request) {
         level: acc.level,
         rank: acc.rank,
         features: acc.features,
+        order: acc.order || 0,
         createdAt: acc.createdAt
       }));
 

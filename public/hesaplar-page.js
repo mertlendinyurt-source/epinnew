@@ -113,8 +113,8 @@ export default function HesaplarPage() {
       if (data.success) {
         setReviews(data.data.reviews || [])
         setReviewStats({
-          avgRating: data.data.avgRating || 5.0,
-          reviewCount: data.data.totalCount || 0
+          avgRating: data.data.stats?.avgRating || 5.0,
+          reviewCount: data.data.stats?.reviewCount || data.data.pagination?.total || 0
         })
       }
     } catch (error) {

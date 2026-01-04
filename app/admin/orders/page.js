@@ -199,13 +199,14 @@ export default function AdminOrders() {
     try {
       const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
       
-      // Determine order type
+      // Determine order type - check both 'type' and 'orderType' fields, plus accountId
       const order = orders.find(o => o.id === orderId)
-      const isAccountOrder = order?.orderType === 'account' || order?.accountId
+      const isAccountOrder = order?.type === 'account' || order?.orderType === 'account' || order?.accountId
       
       console.log('DEBUG - Assign Stock:', {
         orderId,
         hasOrder: !!order,
+        type: order?.type,
         orderType: order?.orderType,
         hasAccountId: !!order?.accountId,
         hasProductId: !!order?.productId,

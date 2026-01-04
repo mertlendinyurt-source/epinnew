@@ -100,10 +100,12 @@ export default function HesaplarPage() {
     // Check authentication
     const token = localStorage.getItem('userToken')
     if (!token) {
+      // Ödeme modalını kapat ve auth modalı aç
       setCheckoutOpen(false)
-      setAuthModalTab('login')
-      setAuthModalOpen(true)
-      toast.error('Satın almak için giriş yapmalısınız')
+      setTimeout(() => {
+        setAuthModalTab('register')
+        setAuthModalOpen(true)
+      }, 100)
       return
     }
 

@@ -7237,26 +7237,46 @@ export async function POST(request) {
         // Insert order
         await db.collection('orders').insertOne(order);
 
-        // Mark account as sold ONLY if not unlimited
+        // Mark account as sold ONLY if not unlimited AND no more stock
         if (!account.unlimited) {
-          await db.collection('accounts').updateOne(
-            { id: accountId },
-            { 
-              $set: { 
-                status: 'sold', 
-                soldAt: new Date(),
-                soldToUserId: user.id,
-                orderId: order.id
-              } 
-            }
-          );
+          // Check remaining stock
+          const remainingStock = await db.collection('account_stock').countDocuments({
+            accountId,
+            status: 'available'
+          });
+          
+          if (remainingStock === 0) {
+            await db.collection('accounts').updateOne(
+              { id: accountId },
+              { 
+                $set: { 
+                  status: 'sold', 
+                  stockCount: 0,
+                  soldAt: new Date(),
+                  soldToUserId: user.id,
+                  orderId: order.id
+                } 
+              }
+            );
+          } else {
+            // Update stock count
+            await db.collection('accounts').updateOne(
+              { id: accountId },
+              { $set: { stockCount: remainingStock } }
+            );
+          }
         } else {
-          // For unlimited accounts, just increment sales count
+          // For unlimited accounts, just increment sales count and update stock count
+          const remainingStock = await db.collection('account_stock').countDocuments({
+            accountId,
+            status: 'available'
+          });
+          
           await db.collection('accounts').updateOne(
             { id: accountId },
             { 
               $inc: { salesCount: 1 },
-              $set: { lastSoldAt: new Date() }
+              $set: { lastSoldAt: new Date(), stockCount: remainingStock }
             }
           );
         }

@@ -1705,7 +1705,13 @@ export async function GET(request) {
       
       // Combine both order types
       const allOrders = [...ucOrders, ...markedAccountOrders];
-      allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      // Sort by date (newest first)
+      allOrders.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
       
       // Get user details for each order
       const userIds = [...new Set(allOrders.map(o => o.userId).filter(Boolean))];

@@ -28,10 +28,12 @@ export default function HesaplarPage() {
   const [orderProcessing, setOrderProcessing] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalTab, setAuthModalTab] = useState('login')
+  const [footerSettings, setFooterSettings] = useState(null)
 
   useEffect(() => {
     fetchAccounts()
     fetchSiteSettings()
+    fetchFooterSettings()
     checkAuth()
   }, [])
 

@@ -1443,6 +1443,137 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: products });
     }
 
+    // ============================================
+    // 🎮 PUBG HESAP SATIŞ API - PUBLIC GET ENDPOINTS
+    // ============================================
+
+    // Public: Get all active accounts
+    if (pathname === '/api/accounts') {
+      const accounts = await db.collection('accounts')
+        .find({ active: true, status: 'available' })
+        .sort({ order: 1, createdAt: -1 })
+        .toArray();
+
+      // Hide sensitive info
+      const publicAccounts = accounts.map(acc => ({
+        id: acc.id,
+        title: acc.title,
+        description: acc.description,
+        price: acc.price,
+        discountPrice: acc.discountPrice,
+        discountPercent: acc.discountPercent,
+        imageUrl: acc.imageUrl,
+        legendaryMin: acc.legendaryMin,
+        legendaryMax: acc.legendaryMax,
+        level: acc.level,
+        rank: acc.rank,
+        features: acc.features,
+        order: acc.order || 0,
+        createdAt: acc.createdAt
+      }));
+
+      return NextResponse.json({ success: true, data: publicAccounts });
+    }
+
+    // Public: Get single account
+    if (pathname.match(/^\/api\/accounts\/([^\/]+)$/)) {
+      const accountId = pathname.split('/').pop();
+      const account = await db.collection('accounts').findOne({ 
+        id: accountId, 
+        active: true, 
+        status: 'available' 
+      });
+
+      if (!account) {
+        return NextResponse.json({ success: false, error: 'Hesap bulunamadı' }, { status: 404 });
+      }
+
+      // Hide sensitive info
+      const publicAccount = {
+        id: account.id,
+        title: account.title,
+        description: account.description,
+        price: account.price,
+        discountPrice: account.discountPrice,
+        discountPercent: account.discountPercent,
+        imageUrl: account.imageUrl,
+        legendaryMin: account.legendaryMin,
+        legendaryMax: account.legendaryMax,
+        level: account.level,
+        rank: account.rank,
+        features: account.features,
+        createdAt: account.createdAt
+      };
+
+      return NextResponse.json({ success: true, data: publicAccount });
+    }
+
+    // Admin: Get all accounts (including inactive and sold)
+    if (pathname === '/api/admin/accounts') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const accounts = await db.collection('accounts')
+        .find({})
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      return NextResponse.json({ success: true, data: accounts });
+    }
+
+    // Admin: Get single account
+    if (pathname.match(/^\/api\/admin\/accounts\/([^\/]+)$/)) {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const accountId = pathname.split('/').pop();
+      const account = await db.collection('accounts').findOne({ id: accountId });
+
+      if (!account) {
+        return NextResponse.json({ success: false, error: 'Hesap bulunamadı' }, { status: 404 });
+      }
+
+      return NextResponse.json({ success: true, data: account });
+    }
+
+    // Admin: Get account stock
+    if (pathname.match(/^\/api\/admin\/accounts\/[^\/]+\/stock$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const accountId = pathname.split('/')[4];
+      
+      // Get stock items for this account
+      const stocks = await db.collection('account_stock')
+        .find({ accountId })
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      const availableCount = stocks.filter(s => s.status === 'available').length;
+      const assignedCount = stocks.filter(s => s.status === 'assigned').length;
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          stocks,
+          summary: {
+            total: stocks.length,
+            available: availableCount,
+            assigned: assignedCount
+          }
+        }
+      });
+    }
+
     // Resolve player name (Real PUBG Mobile API via RapidAPI - ID Game Checker)
     if (pathname === '/api/player/resolve') {
       const playerId = searchParams.get('id');
@@ -1535,7 +1666,7 @@ export async function GET(request) {
       }
     }
 
-    // Admin: Get all orders
+    // Admin: Get all orders (UC + Account Orders combined)
     if (pathname === '/api/admin/orders') {
       const user = verifyAdminToken(request);
       if (!user) {
@@ -1554,19 +1685,42 @@ export async function GET(request) {
       if (riskStatus) query['risk.status'] = riskStatus;
       if (deliveryStatus) query['delivery.status'] = deliveryStatus;
       
-      const orders = await db.collection('orders')
+      // Fetch UC orders
+      const ucOrders = await db.collection('orders')
         .find(query)
         .sort({ createdAt: -1 })
         .toArray();
       
+      // Fetch Account orders
+      const accountOrders = await db.collection('account_orders')
+        .find(query)
+        .sort({ createdAt: -1 })
+        .toArray();
+      
+      // Mark account orders with orderType
+      const markedAccountOrders = accountOrders.map(order => ({
+        ...order,
+        orderType: 'account'
+      }));
+      
+      // Combine both order types
+      const allOrders = [...ucOrders, ...markedAccountOrders];
+      
+      // Sort by date (newest first)
+      allOrders.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+      
       // Get user details for each order
-      const userIds = [...new Set(orders.map(o => o.userId).filter(Boolean))];
+      const userIds = [...new Set(allOrders.map(o => o.userId).filter(Boolean))];
       const users = await db.collection('users').find({ id: { $in: userIds } }).toArray();
       const userMap = {};
       users.forEach(u => { userMap[u.id] = u; });
       
       // Enrich orders with user info
-      const enrichedOrders = orders.map(order => {
+      const enrichedOrders = allOrders.map(order => {
         const user = userMap[order.userId];
         return {
           ...order,
@@ -1576,11 +1730,16 @@ export async function GET(request) {
         };
       });
       
-      // Add flagged count for badge
-      const flaggedCount = await db.collection('orders').countDocuments({ 
+      // Add flagged count for badge (both order types)
+      const ucFlaggedCount = await db.collection('orders').countDocuments({ 
         'risk.status': 'FLAGGED',
         'delivery.status': 'hold'
       });
+      const accountFlaggedCount = await db.collection('account_orders').countDocuments({ 
+        'risk.status': 'FLAGGED',
+        'delivery.status': 'hold'
+      });
+      const flaggedCount = ucFlaggedCount + accountFlaggedCount;
       
       return NextResponse.json({ 
         success: true, 
@@ -3913,6 +4072,169 @@ export async function POST(request) {
         );
       }
     }
+
+    // Admin: Assign Account Stock to Order
+    if (pathname.match(/^\/api\/admin\/account-orders\/[^\/]+\/assign-stock$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const orderId = pathname.split('/')[4];
+      
+      // Parse body for stockId
+      let body = {};
+      try {
+        const text = await request.text();
+        if (text) body = JSON.parse(text);
+      } catch (e) {}
+      
+      const { stockId } = body;
+      
+      // DÜZELTME: Hesap siparişleri 'orders' koleksiyonunda type: 'account' olarak saklanıyor
+      // Önce orders koleksiyonunda ara
+      let order = await db.collection('orders').findOne({ id: orderId, type: 'account' });
+      
+      // Bulunamazsa eski account_orders koleksiyonunda da ara (geriye dönük uyumluluk)
+      if (!order) {
+        order = await db.collection('account_orders').findOne({ id: orderId });
+      }
+      
+      if (!order) {
+        return NextResponse.json(
+          { success: false, error: 'Sipariş bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Siparişin hangi koleksiyonda olduğunu belirle
+      const orderCollection = order.type === 'account' ? 'orders' : 'account_orders';
+
+      // Check if order already has stock assigned
+      if (order.delivery?.credentials || order.credentials) {
+        return NextResponse.json(
+          { success: false, error: 'Bu siparişe zaten hesap bilgisi atanmış' },
+          { status: 400 }
+        );
+      }
+
+      if (order.status !== 'paid') {
+        return NextResponse.json(
+          { success: false, error: 'Sadece ödenmiş siparişlere hesap atanabilir' },
+          { status: 400 }
+        );
+      }
+
+      // Build query for stock
+      let stockQuery = {
+        accountId: order.accountId,
+        status: 'available'
+      };
+      
+      // If specific stockId provided, use it
+      if (stockId) {
+        stockQuery.id = stockId;
+      }
+
+      // Try to assign account stock
+      const assignedStock = await db.collection('account_stock').findOneAndUpdate(
+        stockQuery,
+        { 
+          $set: { 
+            status: 'sold', 
+            orderId: order.id,
+            soldAt: new Date(),
+            soldBy: user.username || user.email
+          } 
+        },
+        { 
+          returnDocument: 'after',
+          sort: { createdAt: 1 }
+        }
+      );
+
+      if (assignedStock) {
+        let stockItem;
+        if (assignedStock._id) {
+          stockItem = assignedStock;
+        } else if (assignedStock.value && assignedStock.value._id) {
+          stockItem = assignedStock.value;
+        } else {
+          stockItem = assignedStock;
+        }
+        
+        const credentials = stockItem.credentials || stockItem.value;
+        
+        if (!credentials) {
+          console.error('Credentials empty. Stock item:', JSON.stringify(stockItem));
+          return NextResponse.json(
+            { success: false, error: 'Hesap bilgisi boş - lütfen tekrar deneyin' },
+            { status: 400 }
+          );
+        }
+        
+        // DÜZELTME: Doğru koleksiyonda güncelle
+        await db.collection(orderCollection).updateOne(
+          { id: order.id },
+          {
+            $set: {
+              'delivery.credentials': credentials,
+              'delivery.status': 'delivered',
+              'delivery.message': 'Hesap bilgileri teslim edildi',
+              'delivery.stockId': stockItem.id || stockItem._id?.toString(),
+              'delivery.deliveredAt': new Date(),
+              'delivery.deliveredBy': user.username || user.email,
+              status: 'delivered',
+              deliveredAt: new Date(),
+              updatedAt: new Date()
+            }
+          }
+        );
+
+        // Send delivery email
+        const orderUser = await db.collection('users').findOne({ id: order.userId });
+        const account = await db.collection('accounts').findOne({ id: order.accountId });
+        
+        if (orderUser && account && orderUser.email) {
+          try {
+            // Hesap teslimat e-postası gönder
+            await sendDeliveredEmail(db, order, orderUser, account, [credentials]);
+            console.log('Account delivery email sent to:', orderUser.email);
+          } catch (err) {
+            console.error('Delivery email failed:', err);
+          }
+        }
+
+        // Stok sayısını güncelle
+        const remainingStock = await db.collection('account_stock').countDocuments({
+          accountId: order.accountId,
+          status: 'available'
+        });
+        
+        await db.collection('accounts').updateOne(
+          { id: order.accountId },
+          { $set: { stockCount: remainingStock, updatedAt: new Date() } }
+        );
+
+        return NextResponse.json({
+          success: true,
+          message: 'Hesap stoku başarıyla atandı ve müşteriye e-posta gönderildi',
+          data: { 
+            orderId: order.id,
+            status: 'delivered',
+            credentials: credentials
+          }
+        });
+      } else {
+        return NextResponse.json(
+          { success: false, error: 'Bu hesap için mevcut stok bulunamadı' },
+          { status: 400 }
+        );
+      }
+    }
     
     // For all other endpoints, parse JSON body (with fallback for empty body)
     let body = {};
@@ -5274,6 +5596,122 @@ export async function POST(request) {
             console.log('Stock assignment starting for order:', order.id);
             
             try {
+              // ============================================
+              // CHECK IF THIS IS AN ACCOUNT ORDER
+              // ============================================
+              if (order.type === 'account' && order.accountId) {
+                // ACCOUNT ORDER - Use account_stock collection
+                console.log('Account order detected, using account_stock collection');
+                
+                const assignedAccountStock = await db.collection('account_stock').findOneAndUpdate(
+                  { 
+                    accountId: order.accountId, 
+                    status: 'available' 
+                  },
+                  { 
+                    $set: { 
+                      status: 'assigned', 
+                      orderId: order.id,
+                      assignedAt: new Date()
+                    } 
+                  },
+                  { 
+                    returnDocument: 'after',
+                    sort: { createdAt: 1 } // FIFO
+                  }
+                );
+
+                console.log('Account stock assignment result:', JSON.stringify(assignedAccountStock));
+
+                if (assignedAccountStock) {
+                  const credentials = assignedAccountStock.credentials;
+                  
+                  await db.collection('orders').updateOne(
+                    { id: order.id },
+                    {
+                      $set: {
+                        delivery: {
+                          status: 'delivered',
+                          message: 'Hesap bilgileri hazır',
+                          credentials: credentials,
+                          stockId: assignedAccountStock.id || assignedAccountStock._id,
+                          assignedAt: new Date()
+                        }
+                      }
+                    }
+                  );
+                  console.log(`Account stock assigned: Order ${order.id} received credentials`);
+                  
+                  // Update account stock count
+                  const account = await db.collection('accounts').findOne({ id: order.accountId });
+                  if (account) {
+                    const remainingStock = await db.collection('account_stock').countDocuments({
+                      accountId: order.accountId,
+                      status: 'available'
+                    });
+                    
+                    const updateData = { stockCount: remainingStock };
+                    
+                    // If not unlimited and no more stock, mark as sold
+                    if (!account.unlimited && remainingStock === 0) {
+                      updateData.status = 'sold';
+                      updateData.soldAt = new Date();
+                    }
+                    
+                    // Increment sales count
+                    await db.collection('accounts').updateOne(
+                      { id: order.accountId },
+                      { 
+                        $set: updateData,
+                        $inc: { salesCount: 1 }
+                      }
+                    );
+                  }
+                } else {
+                  // No stock available - check for default credentials
+                  const account = await db.collection('accounts').findOne({ id: order.accountId });
+                  if (account && account.credentials) {
+                    await db.collection('orders').updateOne(
+                      { id: order.id },
+                      {
+                        $set: {
+                          delivery: {
+                            status: 'delivered',
+                            message: 'Hesap bilgileri hazır',
+                            credentials: account.credentials,
+                            assignedAt: new Date()
+                          }
+                        }
+                      }
+                    );
+                    console.log(`Default credentials assigned to order ${order.id}`);
+                  } else {
+                    await db.collection('orders').updateOne(
+                      { id: order.id },
+                      {
+                        $set: {
+                          delivery: {
+                            status: 'pending',
+                            message: 'Stok bekleniyor - Admin tarafından atanacak',
+                            items: []
+                          }
+                        }
+                      }
+                    );
+                    console.log(`No stock available for account order ${order.id}`);
+                  }
+                }
+                
+                // Return success for account orders
+                return NextResponse.json({
+                  success: true,
+                  message: 'Ödeme başarılı'
+                });
+              }
+
+              // ============================================
+              // UC ORDER - Use stock collection (original logic)
+              // ============================================
               // Find available stock for this product (atomic operation)
               const assignedStock = await db.collection('stock').findOneAndUpdate(
                 { 
@@ -5461,6 +5899,150 @@ export async function POST(request) {
       return NextResponse.json({
         success: true,
         data: product
+      });
+    }
+
+    // Admin: Create PUBG Account
+    if (pathname === '/api/admin/accounts') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { title, description, price, discountPrice, imageUrl, legendaryMin, legendaryMax, level, rank, features, credentials, unlimited, order } = body;
+
+      if (!title || !price) {
+        return NextResponse.json(
+          { success: false, error: 'Başlık ve fiyat zorunludur' },
+          { status: 400 }
+        );
+      }
+
+      // Calculate discount percent
+      let discountPercent = 0;
+      if (discountPrice && discountPrice < price) {
+        discountPercent = Math.round(((price - discountPrice) / price) * 100);
+      }
+
+      const account = {
+        id: uuidv4(),
+        title,
+        description: description || '',
+        price: parseFloat(price),
+        discountPrice: discountPrice ? parseFloat(discountPrice) : parseFloat(price),
+        discountPercent,
+        imageUrl: imageUrl || '',
+        legendaryMin: legendaryMin || 0,
+        legendaryMax: legendaryMax || 0,
+        level: level || 0,
+        rank: rank || '',
+        features: features || [],
+        credentials: credentials || '', // Hesap bilgileri (gizli - sadece admin görür)
+        unlimited: unlimited !== false, // Varsayılan: true (sınırsız satış)
+        order: order !== undefined ? parseInt(order) : 0, // Sıralama
+        salesCount: 0,
+        status: 'available', // available, reserved, sold
+        active: true,
+        sortOrder: 0,
+        createdAt: new Date(),
+        createdBy: user.username
+      };
+
+      await db.collection('accounts').insertOne(account);
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Hesap oluşturuldu',
+        data: account
+      });
+    }
+
+    // Admin: Fix missing order values (migration - one-time use)
+    if (pathname === '/api/admin/accounts/fix-order') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      // Update all accounts without order field
+      const result = await db.collection('accounts').updateMany(
+        { $or: [{ order: { $exists: false } }, { order: null }] },
+        { $set: { order: 0 } }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: `${result.modifiedCount} hesap güncellendi`,
+        data: { modifiedCount: result.modifiedCount }
+      });
+    }
+
+    // Admin: Add stock to account
+    if (pathname.match(/^\/api\/admin\/accounts\/[^\/]+\/stock$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const accountId = pathname.split('/')[4];
+      const { items } = body; // Array of strings (credentials)
+
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        return NextResponse.json(
+          { success: false, error: 'Hesap bilgileri gereklidir' },
+          { status: 400 }
+        );
+      }
+
+      // Validate account exists
+      const account = await db.collection('accounts').findOne({ id: accountId });
+      if (!account) {
+        return NextResponse.json(
+          { success: false, error: 'Hesap bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Create stock items
+      const stockItems = items.map(item => ({
+        id: uuidv4(),
+        accountId,
+        credentials: item.trim(), // Hesap bilgileri (email, şifre vs)
+        status: 'available',
+        orderId: null,
+        assignedAt: null,
+        createdAt: new Date(),
+        createdBy: user.username
+      }));
+
+      await db.collection('account_stock').insertMany(stockItems);
+
+      // Update account stock count
+      const availableCount = await db.collection('account_stock').countDocuments({ 
+        accountId, 
+        status: 'available' 
+      });
+      
+      await db.collection('accounts').updateOne(
+        { id: accountId },
+        { $set: { stockCount: availableCount } }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: `${stockItems.length} adet hesap bilgisi eklendi`,
+        data: {
+          count: stockItems.length
+        }
       });
     }
 
@@ -6830,6 +7412,325 @@ export async function POST(request) {
       });
     }
 
+    // ============================================
+    // 🎮 PUBG HESAP SATIŞ API - ORDER CREATION
+    // ============================================
+
+    // Hesap Siparişi Oluştur (AUTH REQUIRED)
+    if (pathname === '/api/account-orders') {
+      // Verify user authentication
+      const authUser = verifyToken(request);
+      if (!authUser || authUser.type !== 'user') {
+        return NextResponse.json(
+          { success: false, error: 'Sipariş vermek için giriş yapmalısınız', code: 'AUTH_REQUIRED' },
+          { status: 401 }
+        );
+      }
+
+      const { accountId, paymentMethod } = body;
+      
+      if (!accountId) {
+        return NextResponse.json(
+          { success: false, error: 'Hesap ID gerekli' },
+          { status: 400 }
+        );
+      }
+
+      // Get user details
+      const user = await db.collection('users').findOne({ id: authUser.id });
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 });
+      }
+
+      // Validate user has required customer information
+      if (!user.firstName || !user.lastName || !user.email || !user.phone) {
+        return NextResponse.json(
+          { success: false, error: 'Profil bilgileriniz eksik. Lütfen hesap ayarlarından tamamlayın.', code: 'INCOMPLETE_PROFILE' },
+          { status: 400 }
+        );
+      }
+
+      // Get account (price controlled by backend)
+      const account = await db.collection('accounts').findOne({ 
+        id: accountId, 
+        active: true
+      });
+
+      if (!account) {
+        return NextResponse.json({ success: false, error: 'Hesap bulunamadı veya satışta değil' }, { status: 404 });
+      }
+
+      // Check if stock available (for non-unlimited accounts)
+      let availableStock = null;
+      if (!account.unlimited) {
+        availableStock = await db.collection('account_stock').findOne({
+          accountId,
+          status: 'available'
+        });
+        
+        if (!availableStock) {
+          return NextResponse.json({ success: false, error: 'Bu hesap için stok bulunmuyor' }, { status: 400 });
+        }
+      } else {
+        // For unlimited accounts, still try to get stock if available
+        availableStock = await db.collection('account_stock').findOne({
+          accountId,
+          status: 'available'
+        });
+      }
+
+      const orderAmount = account.discountPrice || account.price || 0;
+      const customerSnapshot = {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone
+      };
+
+      // Balance Payment
+      if (paymentMethod === 'balance') {
+        const userBalance = user.balance || 0;
+
+        if (userBalance < orderAmount) {
+          return NextResponse.json(
+            { success: false, error: `Yetersiz bakiye. Mevcut: ${userBalance.toFixed(2)} ₺, Gerekli: ${orderAmount.toFixed(2)} ₺` },
+            { status: 400 }
+          );
+        }
+
+        // Assign stock to order
+        let assignedCredentials = account.credentials || null; // Fallback to account's default credentials
+        if (availableStock) {
+          assignedCredentials = availableStock.credentials;
+          // Mark stock as assigned
+          await db.collection('account_stock').updateOne(
+            { id: availableStock.id },
+            { 
+              $set: { 
+                status: 'assigned',
+                assignedAt: new Date()
+              }
+            }
+          );
+        }
+
+        // Create order
+        const order = {
+          id: uuidv4(),
+          type: 'account', // HESAP SİPARİŞİ
+          userId: user.id,
+          accountId: accountId,
+          accountTitle: account.title,
+          accountImageUrl: account.imageUrl || null,
+          customer: customerSnapshot,
+          status: 'paid',
+          paymentMethod: 'balance',
+          amount: orderAmount,
+          totalAmount: orderAmount,
+          currency: 'TRY',
+          delivery: {
+            status: assignedCredentials ? 'delivered' : 'pending',
+            message: assignedCredentials ? 'Hesap bilgileri hazır' : 'Hesap bilgileri hazırlanıyor...',
+            credentials: assignedCredentials,
+            stockId: availableStock?.id || null
+          },
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        // Update stock with order ID
+        if (availableStock) {
+          await db.collection('account_stock').updateOne(
+            { id: availableStock.id },
+            { $set: { orderId: order.id } }
+          );
+        }
+
+        // Deduct balance
+        const newBalance = userBalance - orderAmount;
+        await db.collection('users').updateOne(
+          { id: user.id },
+          { $set: { balance: newBalance, updatedAt: new Date() } }
+        );
+
+        // Balance transaction record
+        await db.collection('balance_transactions').insertOne({
+          id: uuidv4(),
+          userId: user.id,
+          type: 'account_purchase',
+          amount: -orderAmount,
+          balanceBefore: userBalance,
+          balanceAfter: newBalance,
+          description: `Hesap satın alma: ${account.title}`,
+          orderId: order.id,
+          createdAt: new Date()
+        });
+
+        // Insert order
+        await db.collection('orders').insertOne(order);
+
+        // Mark account as sold ONLY if not unlimited AND no more stock
+        if (!account.unlimited) {
+          // Check remaining stock
+          const remainingStock = await db.collection('account_stock').countDocuments({
+            accountId,
+            status: 'available'
+          });
+          
+          if (remainingStock === 0) {
+            await db.collection('accounts').updateOne(
+              { id: accountId },
+              { 
+                $set: { 
+                  status: 'sold', 
+                  stockCount: 0,
+                  soldAt: new Date(),
+                  soldToUserId: user.id,
+                  orderId: order.id
+                } 
+              }
+            );
+          } else {
+            // Update stock count
+            await db.collection('accounts').updateOne(
+              { id: accountId },
+              { $set: { stockCount: remainingStock } }
+            );
+          }
+        } else {
+          // For unlimited accounts, just increment sales count and update stock count
+          const remainingStock = await db.collection('account_stock').countDocuments({
+            accountId,
+            status: 'available'
+          });
+          
+          await db.collection('accounts').updateOne(
+            { id: accountId },
+            { 
+              $inc: { salesCount: 1 },
+              $set: { lastSoldAt: new Date(), stockCount: remainingStock }
+            }
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: 'Hesap siparişi oluşturuldu!',
+          data: { orderId: order.id }
+        });
+      }
+
+      // Card Payment - Shopier
+      const shopierSettings = await db.collection('shopier_settings').findOne({ isActive: true });
+      if (!shopierSettings) {
+        return NextResponse.json(
+          { success: false, error: 'Ödeme sistemi yapılandırılmamış' },
+          { status: 503 }
+        );
+      }
+
+      // Create pending order
+      const order = {
+        id: uuidv4(),
+        type: 'account', // HESAP SİPARİŞİ
+        userId: user.id,
+        accountId: accountId,
+        accountTitle: account.title,
+        accountImageUrl: account.imageUrl || null,
+        customer: customerSnapshot,
+        status: 'pending',
+        paymentMethod: 'card',
+        amount: orderAmount,
+        totalAmount: orderAmount,
+        currency: 'TRY',
+        delivery: {
+          status: 'pending',
+          message: 'Ödeme bekleniyor...',
+          credentials: null
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      await db.collection('orders').insertOne(order);
+
+      // Mark account as reserved temporarily (only for non-unlimited accounts)
+      if (!account.unlimited) {
+        await db.collection('accounts').updateOne(
+          { id: accountId },
+          { $set: { status: 'reserved', reservedAt: new Date(), reservedByOrderId: order.id } }
+        );
+      }
+
+      // Generate Shopier form - use same format as UC orders
+      const apiKey = decrypt(shopierSettings.apiKey);
+      const apiSecret = decrypt(shopierSettings.apiSecret);
+      
+      // Generate random number for Shopier request (6 digits as per API spec)
+      const randomNr = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+      const crypto = require('crypto');
+
+      // Currency codes: 0 = TRY, 1 = USD, 2 = EUR
+      const currencyCode = 0; // TRY
+
+      // Prepare Shopier payment request with REAL customer data
+      const shopierPayload = {
+        API_key: apiKey,
+        website_index: 1,
+        platform_order_id: order.id,
+        product_name: 'Bakiye Yüklemesi',
+        product_type: 1, // 0 = Physical, 1 = Digital
+        buyer_name: customerSnapshot.firstName,
+        buyer_surname: customerSnapshot.lastName,
+        buyer_email: customerSnapshot.email,
+        buyer_account_age: 0,
+        buyer_id_nr: '',
+        buyer_phone: customerSnapshot.phone,
+        billing_address: 'Turkey',
+        billing_city: 'Istanbul',
+        billing_country: 'Turkey',
+        billing_postcode: '34000',
+        shipping_address: 'Turkey',
+        shipping_city: 'Istanbul',
+        shipping_country: 'Turkey',
+        shipping_postcode: '34000',
+        total_order_value: orderAmount,
+        currency: currencyCode,
+        platform: 0,
+        is_in_frame: 0,
+        current_language: 0,
+        modul_version: '1.0.4',
+        random_nr: randomNr,
+      };
+
+      // Generate Shopier signature
+      const signatureData = `${randomNr}${order.id}${orderAmount}${currencyCode}`;
+      const signature = crypto.createHmac('sha256', apiSecret)
+        .update(signatureData)
+        .digest('base64');
+
+      shopierPayload.signature = signature;
+
+      const paymentUrl = 'https://www.shopier.com/ShowProduct/api_pay4.php';
+
+      // Store payment request for audit
+      await db.collection('payment_requests').insertOne({
+        orderId: order.id,
+        type: 'account',
+        shopierPayload: { ...shopierPayload, API_key: '***MASKED***', signature: '***MASKED***' },
+        createdAt: new Date()
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          orderId: order.id,
+          paymentUrl,
+          formData: shopierPayload
+        }
+      });
+    }
+
     // Customer: Get verification status
 
     return NextResponse.json(
@@ -7061,6 +7962,43 @@ export async function PUT(request) {
       
       return NextResponse.json({
         success: true,
+        data: updated
+      });
+    }
+
+    // Update PUBG Account (Admin)
+    if (pathname.match(/^\/api\/admin\/accounts\/[^\/]+$/)) {
+      const accountId = pathname.split('/').pop();
+      
+      const existingAccount = await db.collection('accounts').findOne({ id: accountId });
+      if (!existingAccount) {
+        return NextResponse.json(
+          { success: false, error: 'Hesap bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      const updateData = {
+        ...body,
+        updatedAt: new Date(),
+        updatedBy: user.username
+      };
+
+      // Calculate discount percent if both prices provided
+      if (body.price && body.discountPrice) {
+        updateData.discountPercent = Math.round(((body.price - body.discountPrice) / body.price) * 100);
+      }
+
+      await db.collection('accounts').updateOne(
+        { id: accountId },
+        { $set: updateData }
+      );
+
+      const updated = await db.collection('accounts').findOne({ id: accountId });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Hesap güncellendi',
         data: updated
       });
     }
@@ -7622,6 +8560,34 @@ export async function DELETE(request) {
       });
     }
 
+    // Delete PUBG Account (Admin)
+    if (pathname.match(/^\/api\/admin\/accounts\/[^\/]+$/)) {
+      const accountId = pathname.split('/').pop();
+      
+      const account = await db.collection('accounts').findOne({ id: accountId });
+      if (!account) {
+        return NextResponse.json(
+          { success: false, error: 'Hesap bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Satılmış hesap silinemez
+      if (account.status === 'sold') {
+        return NextResponse.json(
+          { success: false, error: 'Satılmış hesap silinemez' },
+          { status: 400 }
+        );
+      }
+
+      await db.collection('accounts').deleteOne({ id: accountId });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Hesap silindi'
+      });
+    }
+
     // Delete product (HARD DELETE - permanently remove from database)
     if (pathname.match(/^\/api\/admin\/products\/[^\/]+$/)) {
       const user = verifyAdminToken(request);
@@ -7865,6 +8831,112 @@ export async function DELETE(request) {
         }
       });
     }
+
+    // ============================================
+    // 🎮 PUBG HESAP SATIŞ API - ADMIN ENDPOINTS
+    // ============================================
+
+    // Admin: Hesap Listesi
+    if (pathname === '/api/admin/accounts') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const accounts = await db.collection('accounts')
+        .find({})
+        .sort({ order: 1, createdAt: -1 })
+        .toArray();
+
+      return NextResponse.json({ success: true, data: accounts });
+    }
+
+    // Admin: Tek Hesap Detayı
+    if (pathname.match(/^\/api\/admin\/accounts\/([^\/]+)$/)) {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const accountId = pathname.split('/').pop();
+      const account = await db.collection('accounts').findOne({ id: accountId });
+
+      if (!account) {
+        return NextResponse.json({ success: false, error: 'Hesap bulunamadı' }, { status: 404 });
+      }
+
+      return NextResponse.json({ success: true, data: account });
+    }
+
+    // ============================================
+    // 🎮 PUBG HESAP SATIŞ API - PUBLIC ENDPOINTS
+    // ============================================
+
+    // Public: Aktif Hesap Listesi
+    if (pathname === '/api/accounts') {
+      const accounts = await db.collection('accounts')
+        .find({ active: true, status: 'available' })
+        .sort({ order: 1, createdAt: -1 })
+        .toArray();
+
+      // Hassas bilgileri gizle
+      const publicAccounts = accounts.map(acc => {
+        console.log('Account order:', acc.title, acc.order); // DEBUG
+        return {
+          id: acc.id,
+          title: acc.title,
+          description: acc.description,
+          price: acc.price,
+          discountPrice: acc.discountPrice,
+          discountPercent: acc.discountPercent,
+          imageUrl: acc.imageUrl,
+          legendaryMin: acc.legendaryMin,
+          legendaryMax: acc.legendaryMax,
+          level: acc.level,
+          rank: acc.rank,
+          features: acc.features,
+          order: acc.order || 0,
+          createdAt: acc.createdAt
+        };
+      });
+
+      return NextResponse.json({ success: true, data: publicAccounts });
+    }
+
+    // Public: Tek Hesap Detayı
+    if (pathname.match(/^\/api\/accounts\/([^\/]+)$/)) {
+      const accountId = pathname.split('/').pop();
+      const account = await db.collection('accounts').findOne({ 
+        id: accountId, 
+        active: true, 
+        status: 'available' 
+      });
+
+      if (!account) {
+        return NextResponse.json({ success: false, error: 'Hesap bulunamadı' }, { status: 404 });
+      }
+
+      // Hassas bilgileri gizle
+      const publicAccount = {
+        id: account.id,
+        title: account.title,
+        description: account.description,
+        price: account.price,
+        discountPrice: account.discountPrice,
+        discountPercent: account.discountPercent,
+        imageUrl: account.imageUrl,
+        legendaryMin: account.legendaryMin,
+        legendaryMax: account.legendaryMax,
+        level: account.level,
+        rank: account.rank,
+        features: account.features,
+        createdAt: account.createdAt
+      };
+
+      return NextResponse.json({ success: true, data: publicAccount });
+    }
+
+    // Account orders endpoint moved to POST function
 
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },

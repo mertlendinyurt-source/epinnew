@@ -1,12 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Loader2, ShoppingCart, Star, Filter, Search, ChevronDown, User, Menu } from 'lucide-react'
+import { Loader2, Check, Star, Menu, User, ChevronDown, Filter, Search, CreditCard, Wallet, Shield, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Label } from '@/components/ui/label'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import AuthModal from '@/components/AuthModal'
 
 export default function HesaplarPage() {
   const [accounts, setAccounts] = useState([])
@@ -14,8 +17,17 @@ export default function HesaplarPage() {
   const [siteSettings, setSiteSettings] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
+  const [userBalance, setUserBalance] = useState(0)
   const [priceFilter, setPriceFilter] = useState({ min: '', max: '' })
   const [searchQuery, setSearchQuery] = useState('')
+  
+  // Modal states
+  const [selectedAccount, setSelectedAccount] = useState(null)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState('card')
+  const [orderProcessing, setOrderProcessing] = useState(false)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [authModalTab, setAuthModalTab] = useState('login')
 
   useEffect(() => {
     fetchAccounts()
@@ -23,13 +35,23 @@ export default function HesaplarPage() {
     checkAuth()
   }, [])
 
-  const checkAuth = () => {
+  const checkAuth = async () => {
     const token = localStorage.getItem('userToken')
     const userData = localStorage.getItem('userData')
     setIsAuthenticated(!!token)
     if (token && userData) {
       try {
         setUser(JSON.parse(userData))
+        // Fetch balance
+        const balanceResponse = await fetch('/api/account/balance', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (balanceResponse.ok) {
+          const balanceData = await balanceResponse.json()
+          if (balanceData.success) {
+            setUserBalance(balanceData.data.balance || 0)
+          }
+        }
       } catch (error) {
         console.error('Error loading user data:', error)
       }
@@ -63,6 +85,129 @@ export default function HesaplarPage() {
     }
   }
 
+  const handleAccountSelect = (account) => {
+    setSelectedAccount(account)
+    // Auto-select payment method based on balance
+    if (isAuthenticated && userBalance >= account.discountPrice) {
+      setPaymentMethod('balance')
+    } else {
+      setPaymentMethod('card')
+    }
+    setCheckoutOpen(true)
+  }
+
+  const handleCheckout = async () => {
+    // Check authentication
+    const token = localStorage.getItem('userToken')
+    if (!token) {
+      setCheckoutOpen(false)
+      setAuthModalTab('login')
+      setAuthModalOpen(true)
+      toast.error('Satın almak için giriş yapmalısınız')
+      return
+    }
+
+    // Check balance if payment method is balance
+    if (paymentMethod === 'balance' && userBalance < selectedAccount.discountPrice) {
+      toast.error(`Yetersiz bakiye. Eksik: ${(selectedAccount.discountPrice - userBalance).toFixed(2)} ₺`)
+      return
+    }
+
+    setOrderProcessing(true)
+    try {
+      const response = await fetch('/api/account-orders', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          accountId: selectedAccount.id,
+          paymentMethod: paymentMethod
+        })
+      })
+
+      const data = await response.json()
+      
+      if (response.status === 401) {
+        localStorage.removeItem('userToken')
+        localStorage.removeItem('userData')
+        setIsAuthenticated(false)
+        setCheckoutOpen(false)
+        setAuthModalTab('login')
+        setAuthModalOpen(true)
+        toast.error('Oturumunuz sonlandı. Lütfen tekrar giriş yapın')
+        return
+      }
+      
+      if (data.success) {
+        // Balance payment - direct success
+        if (paymentMethod === 'balance') {
+          toast.success('Hesap satın alındı! Siparişlerinizden detayları görebilirsiniz.')
+          setCheckoutOpen(false)
+          // Refresh balance
+          const balanceResponse = await fetch('/api/account/balance', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          if (balanceResponse.ok) {
+            const balanceData = await balanceResponse.json()
+            if (balanceData.success) {
+              setUserBalance(balanceData.data.balance || 0)
+            }
+          }
+          // Refresh accounts
+          fetchAccounts()
+          // Redirect to order page
+          setTimeout(() => {
+            window.location.href = `/account/orders/${data.data.orderId}`
+          }, 1500)
+          return
+        }
+
+        // Card payment - Shopier redirect
+        if (data.data.formData && data.data.paymentUrl) {
+          const form = document.createElement('form')
+          form.method = 'POST'
+          form.action = data.data.paymentUrl
+          
+          Object.entries(data.data.formData).forEach(([key, value]) => {
+            const input = document.createElement('input')
+            input.type = 'hidden'
+            input.name = key
+            input.value = value
+            form.appendChild(input)
+          })
+          
+          document.body.appendChild(form)
+          form.submit()
+        } else {
+          toast.error('Ödeme formu oluşturulamadı')
+        }
+      } else {
+        if (data.code === 'AUTH_REQUIRED') {
+          setCheckoutOpen(false)
+          setAuthModalTab('login')
+          setAuthModalOpen(true)
+        } else if (data.code === 'INCOMPLETE_PROFILE') {
+          toast.error('Profil bilgilerinizi tamamlayın')
+          window.location.href = '/account/profile'
+        }
+        toast.error(data.error || 'Sipariş oluşturulamadı')
+      }
+    } catch (error) {
+      console.error('Error creating order:', error)
+      toast.error('Sipariş oluşturulurken hata oluştu')
+    } finally {
+      setOrderProcessing(false)
+    }
+  }
+
+  const handleAuthSuccess = () => {
+    setIsAuthenticated(true)
+    checkAuth()
+    toast.success('Giriş başarılı!')
+  }
+
   const filteredAccounts = accounts.filter(account => {
     // Price filter
     if (priceFilter.min && account.discountPrice < parseFloat(priceFilter.min)) return false
@@ -75,7 +220,7 @@ export default function HesaplarPage() {
   const FilterSidebar = () => (
     <div className="w-full rounded-lg bg-[#1e2229] p-5">
       <div className="flex items-center gap-2 mb-5">
-        <Filter className="w-4 h-4 text-blue-400" />
+        <Filter className="w-4 h-4 text-purple-400" />
         <span className="text-white font-bold text-base uppercase">Filtrele</span>
       </div>
 
@@ -113,7 +258,7 @@ export default function HesaplarPage() {
 
         <Button 
           onClick={() => { setPriceFilter({ min: '', max: '' }); setSearchQuery(''); }}
-          className="w-full h-10 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-full"
+          className="w-full h-10 bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm rounded-full"
         >
           Filtreleri Temizle
         </Button>
@@ -125,6 +270,14 @@ export default function HesaplarPage() {
     <div className="min-h-screen bg-[#1a1a1a]">
       <Toaster position="top-center" richColors />
       
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialTab={authModalTab}
+        onSuccess={handleAuthSuccess}
+      />
+
       {/* Header */}
       <header className="h-[60px] bg-[#1a1a1a] border-b border-white/5">
         <div className="h-full max-w-[1920px] mx-auto px-4 md:px-6 flex items-center justify-between">
@@ -149,7 +302,7 @@ export default function HesaplarPage() {
             <Link href="/" className="text-white/70 hover:text-white transition-colors text-sm font-medium">
               UC Satış
             </Link>
-            <Link href="/hesaplar" className="text-white transition-colors text-sm font-medium border-b-2 border-blue-500 pb-1">
+            <Link href="/hesaplar" className="text-white transition-colors text-sm font-medium border-b-2 border-purple-500 pb-1">
               Hesap Satış
             </Link>
             <Link href="/blog" className="text-white/70 hover:text-white transition-colors text-sm font-medium">
@@ -175,7 +328,7 @@ export default function HesaplarPage() {
                     <Link href="/" className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
                       UC Satış
                     </Link>
-                    <Link href="/hesaplar" className="block px-3 py-2 text-white bg-blue-600/20 rounded-lg transition-colors">
+                    <Link href="/hesaplar" className="block px-3 py-2 text-white bg-purple-600/20 rounded-lg transition-colors">
                       Hesap Satış
                     </Link>
                     <Link href="/blog" className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
@@ -192,16 +345,19 @@ export default function HesaplarPage() {
             {/* Auth Buttons / User Menu */}
             {!isAuthenticated ? (
               <div className="flex items-center gap-2">
-                <Link href="/?login=true">
-                  <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-sm">
-                    Giriş Yap
-                  </Button>
-                </Link>
-                <Link href="/?login=true">
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white text-sm">
-                    Kayıt Ol
-                  </Button>
-                </Link>
+                <Button 
+                  onClick={() => { setAuthModalTab('login'); setAuthModalOpen(true); }}
+                  variant="ghost" 
+                  className="text-white/80 hover:text-white hover:bg-white/10 text-sm"
+                >
+                  Giriş Yap
+                </Button>
+                <Button 
+                  onClick={() => { setAuthModalTab('register'); setAuthModalOpen(true); }}
+                  className="bg-purple-600 hover:bg-purple-700 text-white text-sm"
+                >
+                  Kayıt Ol
+                </Button>
               </div>
             ) : (
               <div className="relative group">
@@ -213,6 +369,10 @@ export default function HesaplarPage() {
                 
                 <div className="absolute right-0 mt-2 w-48 bg-[#1e2229] rounded-xl shadow-xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                   <div className="p-2">
+                    <div className="px-4 py-2 border-b border-white/10 mb-2">
+                      <div className="text-xs text-white/50">Bakiye</div>
+                      <div className="text-green-400 font-bold">{userBalance.toFixed(2)} ₺</div>
+                    </div>
                     <Link href="/account/orders" className="block px-4 py-2 text-sm text-white hover:bg-white/10 rounded-lg">
                       📦 Siparişlerim
                     </Link>
@@ -221,6 +381,7 @@ export default function HesaplarPage() {
                         localStorage.removeItem('userToken')
                         localStorage.removeItem('userData')
                         setIsAuthenticated(false)
+                        setUser(null)
                         toast.success('Çıkış yapıldı')
                       }}
                       className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-600/10 rounded-lg"
@@ -240,56 +401,41 @@ export default function HesaplarPage() {
         <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-2.5">
           <div className="flex items-center justify-center gap-4 md:gap-8 flex-wrap text-xs md:text-sm">
             <div className="flex items-center gap-1.5 text-white/80">
-              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
+              <Shield className="w-4 h-4 text-green-500" />
               <span>Güvenli Alışveriş</span>
             </div>
             <div className="hidden md:block w-px h-4 bg-white/20"></div>
             <div className="flex items-center gap-1.5 text-white/80">
-              <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-              </svg>
+              <Clock className="w-4 h-4 text-yellow-500" />
               <span>Hızlı Teslimat</span>
             </div>
             <div className="hidden md:block w-px h-4 bg-white/20"></div>
             <div className="flex items-center gap-1.5 text-white/80">
-              <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
-              </svg>
-              <span>7/24 Destek</span>
+              <Star className="w-4 h-4 text-purple-500" />
+              <span>Destansı Skinler</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Hero Section */}
-      <div className="relative h-[180px] md:h-[240px] flex items-center overflow-hidden bg-gradient-to-r from-purple-900/50 to-blue-900/50">
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-40"
-          style={{
-            backgroundImage: 'url(https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1920&h=400&fit=crop)'
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-[#1a1a1a]" />
-        
-        <div className="relative z-10 max-w-[1920px] w-full mx-auto px-4 md:px-6">
+      {/* Hero Section - Compact */}
+      <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border-b border-white/5">
+        <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-4 md:py-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shadow-lg">
-              <ShoppingCart className="w-8 h-8 md:w-10 md:h-10 text-white" />
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
+              <Star className="w-6 h-6 md:w-7 md:h-7 text-white fill-white" />
             </div>
             <div>
-              <div className="text-xs md:text-sm text-white/60 mb-1">Anasayfa &gt; Hesap Satış</div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white">PUBG Mobile Hesap Satış</h1>
-              <p className="text-white/70 text-sm mt-1">Destansı skinli hazır hesaplar</p>
+              <h1 className="text-xl md:text-2xl font-bold text-white">PUBG Mobile Hesap Satış</h1>
+              <p className="text-white/60 text-sm">Destansı skinli hazır hesaplar</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-6">
-        <div className="flex gap-5">
+      <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-4 md:py-6">
+        <div className="flex gap-4 md:gap-5">
           {/* Sidebar */}
           <div className="hidden lg:block w-[240px] xl:w-[265px] flex-shrink-0">
             <div className="sticky top-24">
@@ -297,94 +443,307 @@ export default function HesaplarPage() {
             </div>
           </div>
 
-          {/* Accounts Grid */}
+          {/* Accounts Grid - UC kartları gibi */}
           <div className="flex-1">
             {loading ? (
               <div className="flex items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
               </div>
             ) : filteredAccounts.length === 0 ? (
               <div className="text-center py-20">
-                <ShoppingCart className="w-16 h-16 text-white/20 mx-auto mb-4" />
+                <Star className="w-16 h-16 text-white/20 mx-auto mb-4" />
                 <p className="text-white/60 text-lg">Şu an satışta hesap bulunmuyor</p>
                 <p className="text-white/40 text-sm mt-2">Yeni hesaplar için takipte kalın!</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                 {filteredAccounts.map((account) => (
-                  <Link key={account.id} href={`/hesaplar/${account.id}`}>
-                    <div className="group relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] border border-white/10 hover:border-purple-500/50 bg-[#252a34]">
-                      {/* Image */}
-                      <div className="relative h-[180px] bg-gradient-to-b from-[#2d3444] to-[#252a34] overflow-hidden">
-                        {account.imageUrl ? (
-                          <img 
-                            src={account.imageUrl}
-                            alt={account.title}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <ShoppingCart className="w-16 h-16 text-white/20" />
-                          </div>
-                        )}
-                        
-                        {/* Discount Badge */}
-                        {account.discountPercent > 0 && (
-                          <div className="absolute top-3 right-3 px-2 py-1 bg-red-500 rounded-full text-white text-xs font-bold">
-                            %{account.discountPercent} İndirim
-                          </div>
-                        )}
+                  <div
+                    key={account.id}
+                    onClick={() => handleAccountSelect(account)}
+                    className="group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border border-white/10 hover:border-purple-500/50 w-full aspect-[2/3.5] md:aspect-[2/3]"
+                    style={{ backgroundColor: '#252a34', maxWidth: '270px', margin: '0 auto' }}
+                  >
+                    {/* Info Icon */}
+                    <div className="absolute top-3 right-3 w-7 h-7 md:w-5 md:h-5 rounded-full bg-white/90 flex items-center justify-center z-20">
+                      <span className="text-gray-700 font-bold text-sm md:text-xs">i</span>
+                    </div>
+
+                    {/* Discount Badge */}
+                    {account.discountPercent > 0 && (
+                      <div className="absolute top-3 left-3 px-2 py-0.5 bg-red-500 rounded text-white text-[10px] md:text-[9px] font-bold z-20">
+                        %{account.discountPercent} İndirim
+                      </div>
+                    )}
+
+                    {/* Image Section */}
+                    <div className="relative h-[45%] md:h-[55%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-3 md:p-4">
+                      {account.imageUrl ? (
+                        <img 
+                          src={account.imageUrl}
+                          alt={account.title}
+                          className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                          onError={(e) => {
+                            e.target.src = "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&h=300&fit=crop";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Star className="w-12 h-12 text-white/30" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Content Section */}
+                    <div className="h-[55%] md:h-[45%] flex flex-col justify-between p-3 md:p-3.5">
+                      <div>
+                        <div className="text-[12px] md:text-[10px] text-purple-400 font-bold uppercase">HESAP</div>
+                        <div className="text-[15px] md:text-[12px] font-bold text-white line-clamp-2">{account.title}</div>
                         
                         {/* Legendary Badge */}
                         {account.legendaryMax > 0 && (
-                          <div className="absolute top-3 left-3 px-2 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full text-white text-xs font-bold flex items-center gap-1">
-                            <Star className="w-3 h-3 fill-current" />
-                            {account.legendaryMin}-{account.legendaryMax} Destansı
+                          <div className="flex items-center gap-1 mt-1">
+                            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                            <span className="text-[11px] md:text-[9px] text-yellow-400 font-medium">
+                              {account.legendaryMin}-{account.legendaryMax} Destansı
+                            </span>
                           </div>
                         )}
-                      </div>
-
-                      {/* Content */}
-                      <div className="p-4">
-                        <h3 className="text-white font-bold text-lg mb-2 line-clamp-1">{account.title}</h3>
                         
-                        {/* Features */}
-                        <div className="flex flex-wrap gap-1 mb-3">
+                        {/* Level & Rank */}
+                        <div className="flex items-center gap-2 mt-1">
                           {account.level > 0 && (
-                            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full">
-                              Level {account.level}
-                            </span>
+                            <span className="text-[10px] md:text-[9px] text-white/60">Lv.{account.level}</span>
                           )}
                           {account.rank && (
-                            <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded-full">
-                              {account.rank}
-                            </span>
+                            <span className="text-[10px] md:text-[9px] text-white/60">{account.rank}</span>
                           )}
                         </div>
-
-                        {/* Price */}
-                        <div className="flex items-end justify-between">
-                          <div>
-                            {account.discountPrice < account.price && (
-                              <span className="text-sm text-red-400 line-through">₺{account.price.toFixed(2)}</span>
-                            )}
-                            <div className="text-2xl font-bold text-white">
-                              ₺{account.discountPrice.toFixed(2)}
-                            </div>
-                          </div>
-                          <Button size="sm" className="bg-purple-600 hover:bg-purple-500 text-white">
-                            Satın Al
-                          </Button>
-                        </div>
+                      </div>
+                      
+                      <div className="mt-2">
+                        {account.discountPrice < account.price && (
+                          <div className="text-[13px] md:text-[9px] text-red-500 line-through">₺{account.price.toFixed(2).replace('.', ',')}</div>
+                        )}
+                        <div className="text-[22px] md:text-[15px] font-bold text-white">₺ {account.discountPrice.toFixed(2).replace('.', ',')}</div>
+                        {account.discountPercent > 0 && (
+                          <div className="text-[13px] md:text-[11px] text-emerald-400 font-medium">{account.discountPercent}% ▼ indirim</div>
+                        )}
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Payment Modal - UC modalı gibi ama Oyuncu ID olmadan */}
+      <Dialog open={checkoutOpen} onOpenChange={(open) => {
+        if (!orderProcessing) {
+          setCheckoutOpen(open)
+        }
+      }}>
+        <DialogContent className="max-w-[95vw] md:max-w-4xl max-h-[90vh] p-0 gap-0 overflow-hidden border-0" style={{ backgroundColor: 'transparent' }}>
+          <div 
+            className="absolute inset-0 bg-cover bg-center blur-sm"
+            style={{
+              backgroundImage: 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)',
+              zIndex: -1
+            }}
+          />
+          <div className="absolute inset-0 bg-black/70" style={{ zIndex: -1 }} />
+          
+          <div className="relative bg-[#1e2229]/95 backdrop-blur-md flex flex-col max-h-[90vh]">
+            <div className="px-5 md:px-8 py-4 md:py-6 border-b border-white/5 flex-shrink-0">
+              <h2 className="text-lg md:text-xl font-bold text-white uppercase tracking-wide">ÖDEME TÜRÜNÜ SEÇİN</h2>
+            </div>
+            
+            <div className="overflow-y-auto flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2">
+                {/* Left Column - Payment Methods */}
+                <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
+                  <div>
+                    <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Ödeme yöntemleri</Label>
+                    
+                    {/* Balance Payment Option - Only show if user has SUFFICIENT balance */}
+                    {isAuthenticated && selectedAccount && userBalance >= selectedAccount.discountPrice && (
+                      <div 
+                        onClick={() => setPaymentMethod('balance')}
+                        className={`relative p-4 md:p-5 rounded-lg border-2 mb-3 cursor-pointer transition-all ${
+                          paymentMethod === 'balance'
+                            ? 'bg-green-900/20 border-green-500'
+                            : 'bg-[#12161D] border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        {paymentMethod === 'balance' && (
+                          <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <Check className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                        
+                        <div className="mb-3">
+                          <div className="text-base md:text-lg font-bold text-white mb-1 flex items-center gap-2">
+                            <Wallet className="w-5 h-5" />
+                            Bakiye ile Öde
+                          </div>
+                          <div className="inline-block px-2 py-0.5 rounded bg-green-500/20 text-[11px] text-green-400 font-semibold">
+                            Anında teslimat
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <div className="text-sm text-white/70">
+                            Mevcut Bakiye: <span className="font-bold text-green-400">{userBalance.toFixed(2)} ₺</span>
+                          </div>
+                          <div className="text-xs text-green-400 font-semibold">
+                            ✓ Yeterli bakiye
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Card Payment Option */}
+                    <div 
+                      onClick={() => setPaymentMethod('card')}
+                      className={`relative p-4 md:p-5 rounded-lg border-2 cursor-pointer transition-all ${
+                        paymentMethod === 'card'
+                          ? 'bg-purple-900/20 border-purple-500'
+                          : 'bg-[#12161D] border-white/10 hover:border-white/20'
+                      }`}
+                    >
+                      {paymentMethod === 'card' && (
+                        <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                      
+                      <div className="mb-3">
+                        <div className="text-base md:text-lg font-bold text-white mb-1 flex items-center gap-2">
+                          <CreditCard className="w-5 h-5" />
+                          Kredi / Banka Kartı
+                        </div>
+                        <div className="inline-block px-2 py-0.5 rounded bg-white/10 text-[11px] text-white/70">
+                          Anında teslimat
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <img src="/uploads/cards/visa.svg" alt="VISA" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none'; }} />
+                        <img src="/uploads/cards/mastercard.svg" alt="Mastercard" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none'; }} />
+                        <img src="/uploads/cards/troy.svg" alt="Troy" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none'; }} />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Account Description in Modal */}
+                  {selectedAccount?.description && (
+                    <div className="pt-4 border-t border-white/10">
+                      <Label className="text-sm text-white/80 uppercase mb-3 block">Hesap Açıklaması</Label>
+                      <div className="text-sm text-white/60 whitespace-pre-wrap max-h-32 overflow-y-auto">
+                        {selectedAccount.description}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column - Product Details */}
+                {selectedAccount && (
+                  <div className="p-5 md:p-8 space-y-6 md:space-y-8 bg-[#1a1e24]/95">
+                    <div>
+                      <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Hesap</Label>
+                      <div className="flex items-start gap-4">
+                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg flex items-center justify-center bg-[#12161D] overflow-hidden p-2">
+                          {selectedAccount.imageUrl ? (
+                            <img 
+                              src={selectedAccount.imageUrl}
+                              alt={selectedAccount.title}
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                e.target.src = "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100&h=100&fit=crop";
+                              }}
+                            />
+                          ) : (
+                            <Star className="w-8 h-8 text-white/30" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-lg md:text-xl font-bold text-white mb-2">{selectedAccount.title}</div>
+                          
+                          {/* Features */}
+                          <div className="flex flex-wrap gap-1.5">
+                            {selectedAccount.legendaryMax > 0 && (
+                              <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded">
+                                ⭐ {selectedAccount.legendaryMin}-{selectedAccount.legendaryMax} Destansı
+                              </span>
+                            )}
+                            {selectedAccount.level > 0 && (
+                              <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded">
+                                Lv.{selectedAccount.level}
+                              </span>
+                            )}
+                            {selectedAccount.rank && (
+                              <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded">
+                                {selectedAccount.rank}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Fiyat detayları</Label>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center text-sm md:text-base">
+                          <span className="text-white/70">Orjinal Fiyat</span>
+                          <span className="text-white font-bold">₺ {selectedAccount.price.toFixed(2)}</span>
+                        </div>
+                        {selectedAccount.discountPrice < selectedAccount.price && (
+                          <div className="flex justify-between items-center text-sm md:text-base">
+                            <span className="text-purple-400 font-semibold">Size Özel Fiyat</span>
+                            <span className="text-purple-400 font-bold">₺ {selectedAccount.discountPrice.toFixed(2)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-5 border-t border-white/10">
+                      <div className="flex justify-between items-center mb-6">
+                        <span className="text-sm md:text-base text-white/70 uppercase">Ödenecek Tutar</span>
+                        <span className="text-2xl md:text-3xl font-black text-white">
+                          ₺ {selectedAccount.discountPrice.toFixed(2)}
+                        </span>
+                      </div>
+
+                      <Button
+                        onClick={handleCheckout}
+                        disabled={orderProcessing}
+                        className="w-full h-12 md:h-14 bg-purple-600 hover:bg-purple-500 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg"
+                      >
+                        {orderProcessing ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            İşleniyor...
+                          </>
+                        ) : (
+                          'Ödemeye Git'
+                        )}
+                      </Button>
+                      
+                      {/* Info Note */}
+                      <p className="text-center text-white/40 text-xs mt-4">
+                        Hesap bilgileri ödeme sonrası siparişlerinizden görüntülenebilir.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Footer */}
       <footer className="bg-[#0d0d0d] border-t border-white/5 mt-12 py-8">

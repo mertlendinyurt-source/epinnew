@@ -8701,6 +8701,7 @@ export async function DELETE(request) {
         level: acc.level,
         rank: acc.rank,
         features: acc.features,
+        order: acc.order || 0,
         createdAt: acc.createdAt
       }));
 

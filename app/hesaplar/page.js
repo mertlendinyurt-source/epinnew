@@ -575,49 +575,6 @@ export default function HesaplarPage() {
             </div>
             
             <div className="overflow-y-auto flex-1">
-              {/* Mobile: Price & Button First */}
-              {selectedAccount && (
-                <div className="md:hidden p-5 bg-[#1a1e24]/95 border-b border-white/5">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 rounded-lg flex items-center justify-center bg-[#12161D] overflow-hidden p-1.5">
-                      {selectedAccount.imageUrl ? (
-                        <img 
-                          src={selectedAccount.imageUrl}
-                          alt={selectedAccount.title}
-                          className="w-full h-full object-contain"
-                        />
-                      ) : (
-                        <Star className="w-6 h-6 text-white/30" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-base font-bold text-white line-clamp-1">{selectedAccount.title}</div>
-                      <div className="flex items-baseline gap-2 mt-1">
-                        {selectedAccount.discountPrice < selectedAccount.price && (
-                          <span className="text-xs text-red-400 line-through">₺{selectedAccount.price.toFixed(2)}</span>
-                        )}
-                        <span className="text-xl font-black text-white">₺{selectedAccount.discountPrice.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <Button
-                    onClick={handleCheckout}
-                    disabled={orderProcessing}
-                    className="w-full h-12 bg-purple-600 hover:bg-purple-500 text-white font-bold text-base uppercase tracking-wide rounded-lg"
-                  >
-                    {orderProcessing ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        İşleniyor...
-                      </>
-                    ) : (
-                      'Ödemeye Git'
-                    )}
-                  </Button>
-                </div>
-              )}
-
               <div className="grid grid-cols-1 md:grid-cols-2">
                 {/* Left Column - Payment Methods - HIDDEN ON MOBILE */}
                 <div className="hidden md:block p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">

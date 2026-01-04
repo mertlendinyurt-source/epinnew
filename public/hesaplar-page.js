@@ -456,7 +456,11 @@ export default function HesaplarPage() {
         
         <div className="relative z-10 max-w-[1920px] w-full mx-auto px-4 md:px-6 pt-6 md:pt-10">
           <div className="flex items-center gap-3 md:gap-4">
-            {siteSettings?.categoryIcon ? (
+            {!siteSettings ? (
+              <div className="w-14 h-14 md:w-20 md:h-20 rounded-lg bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shadow-lg">
+                <Loader2 className="w-7 h-7 md:w-10 md:h-10 text-white animate-spin" />
+              </div>
+            ) : siteSettings.categoryIcon ? (
               <div className="w-14 h-14 md:w-20 md:h-20 rounded-lg overflow-hidden shadow-lg">
                 <img 
                   src={siteSettings.categoryIcon}

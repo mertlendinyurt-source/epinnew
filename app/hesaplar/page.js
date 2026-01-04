@@ -281,9 +281,9 @@ export default function HesaplarPage() {
       
       {/* Auth Modal */}
       <AuthModal 
-        isOpen={authModalOpen}
+        open={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
-        initialTab={authModalTab}
+        defaultTab={authModalTab}
         onSuccess={handleAuthSuccess}
       />
 

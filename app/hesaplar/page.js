@@ -208,6 +208,14 @@ export default function HesaplarPage() {
     setIsAuthenticated(true)
     checkAuth()
     toast.success('Giriş başarılı!')
+    
+    // Eğer seçili hesap varsa, ödeme modalını tekrar aç
+    if (selectedAccount) {
+      setTimeout(() => {
+        setCheckoutOpen(true)
+      }, 300)
+    }
+  }
   }
 
   const filteredAccounts = accounts.filter(account => {

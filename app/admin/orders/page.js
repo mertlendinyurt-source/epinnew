@@ -209,7 +209,8 @@ export default function AdminOrders() {
         orderType: order?.orderType,
         hasAccountId: !!order?.accountId,
         hasProductId: !!order?.productId,
-        isAccountOrder
+        isAccountOrder,
+        selectedStockId
       })
       
       // Use correct endpoint based on order type
@@ -224,7 +225,10 @@ export default function AdminOrders() {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({
+          stockId: selectedStockId // Send selected stock ID
+        })
       })
 
       const data = await response.json()

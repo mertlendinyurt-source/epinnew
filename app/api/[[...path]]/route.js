@@ -4044,6 +4044,125 @@ export async function POST(request) {
         );
       }
     }
+
+    // Admin: Assign Account Stock to Order
+    if (pathname.match(/^\/api\/admin\/account-orders\/[^\/]+\/assign-stock$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const orderId = pathname.split('/')[4];
+      
+      const order = await db.collection('account_orders').findOne({ id: orderId });
+      
+      if (!order) {
+        return NextResponse.json(
+          { success: false, error: 'Sipariş bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Check if order already has stock assigned
+      if (order.credentials) {
+        return NextResponse.json(
+          { success: false, error: 'Bu siparişe zaten hesap bilgisi atanmış' },
+          { status: 400 }
+        );
+      }
+
+      if (order.status !== 'paid') {
+        return NextResponse.json(
+          { success: false, error: 'Sadece ödenmiş siparişlere hesap atanabilir' },
+          { status: 400 }
+        );
+      }
+
+      // Try to assign account stock
+      const assignedStock = await db.collection('account_stock').findOneAndUpdate(
+        { 
+          accountId: order.accountId, 
+          status: 'available' 
+        },
+        { 
+          $set: { 
+            status: 'sold', 
+            orderId: order.id,
+            soldAt: new Date(),
+            soldBy: user.username || user.email
+          } 
+        },
+        { 
+          returnDocument: 'after',
+          sort: { createdAt: 1 }
+        }
+      );
+
+      if (assignedStock) {
+        let stockItem;
+        if (assignedStock._id) {
+          stockItem = assignedStock;
+        } else if (assignedStock.value && assignedStock.value._id) {
+          stockItem = assignedStock.value;
+        } else {
+          stockItem = assignedStock;
+        }
+        
+        const credentials = stockItem.credentials || stockItem.value;
+        
+        if (!credentials) {
+          console.error('Credentials empty. Stock item:', JSON.stringify(stockItem));
+          return NextResponse.json(
+            { success: false, error: 'Hesap bilgisi boş - lütfen tekrar deneyin' },
+            { status: 400 }
+          );
+        }
+        
+        await db.collection('account_orders').updateOne(
+          { id: order.id },
+          {
+            $set: {
+              credentials: credentials,
+              stockId: stockItem.id || stockItem._id?.toString(),
+              status: 'delivered',
+              deliveredAt: new Date(),
+              deliveredBy: user.username || user.email
+            }
+          }
+        );
+
+        // Send delivery email
+        const orderUser = await db.collection('users').findOne({ id: order.userId });
+        const account = await db.collection('accounts').findOne({ id: order.accountId });
+        
+        if (orderUser && account && orderUser.email) {
+          try {
+            // Basit email gönderimi
+            console.log('Sending account delivery email to:', orderUser.email);
+            // TODO: Email service eklenebilir
+          } catch (err) {
+            console.error('Delivery email failed:', err);
+          }
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: 'Hesap stoku başarıyla atandı',
+          data: { 
+            orderId: order.id,
+            status: 'delivered'
+          }
+        });
+      } else {
+        return NextResponse.json(
+          { success: false, error: 'Bu hesap için mevcut stok bulunamadı' },
+          { status: 400 }
+        );
+      }
+    }
     
     // For all other endpoints, parse JSON body (with fallback for empty body)
     let body = {};

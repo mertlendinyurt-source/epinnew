@@ -7065,6 +7065,43 @@ export async function PUT(request) {
       });
     }
 
+    // Update PUBG Account (Admin)
+    if (pathname.match(/^\/api\/admin\/accounts\/[^\/]+$/)) {
+      const accountId = pathname.split('/').pop();
+      
+      const existingAccount = await db.collection('accounts').findOne({ id: accountId });
+      if (!existingAccount) {
+        return NextResponse.json(
+          { success: false, error: 'Hesap bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      const updateData = {
+        ...body,
+        updatedAt: new Date(),
+        updatedBy: user.username
+      };
+
+      // Calculate discount percent if both prices provided
+      if (body.price && body.discountPrice) {
+        updateData.discountPercent = Math.round(((body.price - body.discountPrice) / body.price) * 100);
+      }
+
+      await db.collection('accounts').updateOne(
+        { id: accountId },
+        { $set: updateData }
+      );
+
+      const updated = await db.collection('accounts').findOne({ id: accountId });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Hesap güncellendi',
+        data: updated
+      });
+    }
+
     // Update legal page
     if (pathname.match(/^\/api\/admin\/legal-pages\/[^\/]+$/)) {
       const pageId = pathname.split('/').pop();

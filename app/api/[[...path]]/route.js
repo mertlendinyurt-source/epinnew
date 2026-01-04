@@ -7121,12 +7121,30 @@ export async function POST(request) {
       // Get account (price controlled by backend)
       const account = await db.collection('accounts').findOne({ 
         id: accountId, 
-        active: true, 
-        status: 'available' 
+        active: true
       });
 
       if (!account) {
         return NextResponse.json({ success: false, error: 'Hesap bulunamadı veya satışta değil' }, { status: 404 });
+      }
+
+      // Check if stock available (for non-unlimited accounts)
+      let availableStock = null;
+      if (!account.unlimited) {
+        availableStock = await db.collection('account_stock').findOne({
+          accountId,
+          status: 'available'
+        });
+        
+        if (!availableStock) {
+          return NextResponse.json({ success: false, error: 'Bu hesap için stok bulunmuyor' }, { status: 400 });
+        }
+      } else {
+        // For unlimited accounts, still try to get stock if available
+        availableStock = await db.collection('account_stock').findOne({
+          accountId,
+          status: 'available'
+        });
       }
 
       const orderAmount = account.discountPrice || account.price || 0;
@@ -7148,6 +7166,22 @@ export async function POST(request) {
           );
         }
 
+        // Assign stock to order
+        let assignedCredentials = account.credentials || null; // Fallback to account's default credentials
+        if (availableStock) {
+          assignedCredentials = availableStock.credentials;
+          // Mark stock as assigned
+          await db.collection('account_stock').updateOne(
+            { id: availableStock.id },
+            { 
+              $set: { 
+                status: 'assigned',
+                assignedAt: new Date()
+              }
+            }
+          );
+        }
+
         // Create order
         const order = {
           id: uuidv4(),
@@ -7163,13 +7197,22 @@ export async function POST(request) {
           totalAmount: orderAmount,
           currency: 'TRY',
           delivery: {
-            status: 'pending',
-            message: 'Hesap bilgileri hazırlanıyor...',
-            credentials: null // Admin tarafından doldurulacak
+            status: assignedCredentials ? 'delivered' : 'pending',
+            message: assignedCredentials ? 'Hesap bilgileri hazır' : 'Hesap bilgileri hazırlanıyor...',
+            credentials: assignedCredentials,
+            stockId: availableStock?.id || null
           },
           createdAt: new Date(),
           updatedAt: new Date()
         };
+
+        // Update stock with order ID
+        if (availableStock) {
+          await db.collection('account_stock').updateOne(
+            { id: availableStock.id },
+            { $set: { orderId: order.id } }
+          );
+        }
 
         // Deduct balance
         const newBalance = userBalance - orderAmount;

@@ -5464,6 +5464,61 @@ export async function POST(request) {
       });
     }
 
+    // Admin: Create PUBG Account
+    if (pathname === '/api/admin/accounts') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { title, description, price, discountPrice, imageUrl, legendaryMin, legendaryMax, level, rank, features, credentials } = body;
+
+      if (!title || !price) {
+        return NextResponse.json(
+          { success: false, error: 'Başlık ve fiyat zorunludur' },
+          { status: 400 }
+        );
+      }
+
+      // Calculate discount percent
+      let discountPercent = 0;
+      if (discountPrice && discountPrice < price) {
+        discountPercent = Math.round(((price - discountPrice) / price) * 100);
+      }
+
+      const account = {
+        id: uuidv4(),
+        title,
+        description: description || '',
+        price: parseFloat(price),
+        discountPrice: discountPrice ? parseFloat(discountPrice) : parseFloat(price),
+        discountPercent,
+        imageUrl: imageUrl || '',
+        legendaryMin: legendaryMin || 0,
+        legendaryMax: legendaryMax || 0,
+        level: level || 0,
+        rank: rank || '',
+        features: features || [],
+        credentials: credentials || '', // Hesap bilgileri (gizli - sadece admin görür)
+        status: 'available', // available, reserved, sold
+        active: true,
+        sortOrder: 0,
+        createdAt: new Date(),
+        createdBy: user.username
+      };
+
+      await db.collection('accounts').insertOne(account);
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Hesap oluşturuldu',
+        data: account
+      });
+    }
+
     // Admin: Update product DijiPin setting
     if (pathname === '/api/admin/products/dijipin') {
       const authHeader = request.headers.get('authorization');

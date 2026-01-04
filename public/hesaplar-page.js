@@ -774,10 +774,11 @@ export default function HesaplarPage() {
                         </span>
                       </div>
 
+                      {/* Payment Button - Only on Desktop (Mobile has it at top) */}
                       <Button
                         onClick={handleCheckout}
                         disabled={orderProcessing}
-                        className="w-full h-12 md:h-14 bg-purple-600 hover:bg-purple-500 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg"
+                        className="hidden md:flex w-full h-12 md:h-14 bg-purple-600 hover:bg-purple-500 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg items-center justify-center"
                       >
                         {orderProcessing ? (
                           <>

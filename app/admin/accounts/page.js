@@ -138,7 +138,7 @@ export default function AdminAccountsPage() {
 
       const data = await response.json()
       if (data.success) {
-        setFormData(prev => ({ ...prev, imageUrl: data.url }))
+        setFormData(prev => ({ ...prev, imageUrl: data.data.url }))
         toast.success('Resim yüklendi')
       } else {
         toast.error(data.error || 'Resim yüklenemedi')

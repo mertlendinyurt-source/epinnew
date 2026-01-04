@@ -1443,6 +1443,102 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: products });
     }
 
+    // ============================================
+    // 🎮 PUBG HESAP SATIŞ API - PUBLIC GET ENDPOINTS
+    // ============================================
+
+    // Public: Get all active accounts
+    if (pathname === '/api/accounts') {
+      const accounts = await db.collection('accounts')
+        .find({ active: true, status: 'available' })
+        .sort({ sortOrder: 1, createdAt: -1 })
+        .toArray();
+
+      // Hide sensitive info
+      const publicAccounts = accounts.map(acc => ({
+        id: acc.id,
+        title: acc.title,
+        description: acc.description,
+        price: acc.price,
+        discountPrice: acc.discountPrice,
+        discountPercent: acc.discountPercent,
+        imageUrl: acc.imageUrl,
+        legendaryMin: acc.legendaryMin,
+        legendaryMax: acc.legendaryMax,
+        level: acc.level,
+        rank: acc.rank,
+        features: acc.features,
+        createdAt: acc.createdAt
+      }));
+
+      return NextResponse.json({ success: true, data: publicAccounts });
+    }
+
+    // Public: Get single account
+    if (pathname.match(/^\/api\/accounts\/([^\/]+)$/)) {
+      const accountId = pathname.split('/').pop();
+      const account = await db.collection('accounts').findOne({ 
+        id: accountId, 
+        active: true, 
+        status: 'available' 
+      });
+
+      if (!account) {
+        return NextResponse.json({ success: false, error: 'Hesap bulunamadı' }, { status: 404 });
+      }
+
+      // Hide sensitive info
+      const publicAccount = {
+        id: account.id,
+        title: account.title,
+        description: account.description,
+        price: account.price,
+        discountPrice: account.discountPrice,
+        discountPercent: account.discountPercent,
+        imageUrl: account.imageUrl,
+        legendaryMin: account.legendaryMin,
+        legendaryMax: account.legendaryMax,
+        level: account.level,
+        rank: account.rank,
+        features: account.features,
+        createdAt: account.createdAt
+      };
+
+      return NextResponse.json({ success: true, data: publicAccount });
+    }
+
+    // Admin: Get all accounts (including inactive and sold)
+    if (pathname === '/api/admin/accounts') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const accounts = await db.collection('accounts')
+        .find({})
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      return NextResponse.json({ success: true, data: accounts });
+    }
+
+    // Admin: Get single account
+    if (pathname.match(/^\/api\/admin\/accounts\/([^\/]+)$/)) {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const accountId = pathname.split('/').pop();
+      const account = await db.collection('accounts').findOne({ id: accountId });
+
+      if (!account) {
+        return NextResponse.json({ success: false, error: 'Hesap bulunamadı' }, { status: 404 });
+      }
+
+      return NextResponse.json({ success: true, data: account });
+    }
+
     // Resolve player name (Real PUBG Mobile API via RapidAPI - ID Game Checker)
     if (pathname === '/api/player/resolve') {
       const playerId = searchParams.get('id');

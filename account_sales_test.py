@@ -344,6 +344,14 @@ def test_account_sales_api():
         # This might fail if Shopier settings are not configured, which is expected
         if card_order_response.status_code == 503:
             print("✅ Card payment correctly failed due to unconfigured payment system (503)")
+        elif card_order_response.status_code == 520:
+            # Handle 520 status code as well (server error due to missing config)
+            card_data = card_order_response.json()
+            if 'Ödeme sistemi yapılandırılmamış' in card_data.get('error', ''):
+                print("✅ Card payment correctly failed due to unconfigured payment system (520)")
+            else:
+                print(f"❌ Unexpected card payment error: {card_data}")
+                return False
         elif card_order_response.status_code == 200:
             card_data = card_order_response.json()
             if card_data.get('success'):

@@ -4085,6 +4085,15 @@ export async function POST(request) {
 
       const orderId = pathname.split('/')[4];
       
+      // Parse body for stockId
+      let body = {};
+      try {
+        const text = await request.text();
+        if (text) body = JSON.parse(text);
+      } catch (e) {}
+      
+      const { stockId } = body;
+      
       const order = await db.collection('account_orders').findOne({ id: orderId });
       
       if (!order) {
@@ -4109,12 +4118,20 @@ export async function POST(request) {
         );
       }
 
+      // Build query for stock
+      let stockQuery = {
+        accountId: order.accountId,
+        status: 'available'
+      };
+      
+      // If specific stockId provided, use it
+      if (stockId) {
+        stockQuery.id = stockId;
+      }
+
       // Try to assign account stock
       const assignedStock = await db.collection('account_stock').findOneAndUpdate(
-        { 
-          accountId: order.accountId, 
-          status: 'available' 
-        },
+        stockQuery,
         { 
           $set: { 
             status: 'sold', 

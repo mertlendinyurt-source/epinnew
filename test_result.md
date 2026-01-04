@@ -813,6 +813,90 @@ backend:
         agent: "testing"
         comment: "Site settings persistence working correctly. Settings saved via POST /api/admin/settings/site are properly stored in database and retrievable via both admin and public endpoints. All field values persist correctly (siteName, metaTitle, metaDescription, contactEmail, contactPhone). Deactivation of previous settings and creation of new active settings working correctly. Full persistence cycle verified."
 
+  - task: "PUBG Account Sales - Public List Accounts"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "GET /api/accounts working correctly. Returns all active and available accounts with public fields only (id, title, description, price, discountPrice, discountPercent, imageUrl, legendaryMin, legendaryMax, level, rank, features, createdAt). Sensitive credentials properly hidden from public endpoint. Sorting by sortOrder and createdAt working correctly."
+
+  - task: "PUBG Account Sales - Public Single Account"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "GET /api/accounts/:id working correctly. Returns single account detail with public fields only. Properly filters by active=true and status=available. Returns 404 for invalid/unavailable accounts. Sensitive credentials properly hidden from public endpoint."
+
+  - task: "PUBG Account Sales - Admin List Accounts"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "GET /api/admin/accounts working correctly. Requires admin JWT authentication (401 without token). Returns all accounts including inactive and sold ones. Sorted by createdAt descending. Admin can see all account fields including sensitive credentials."
+
+  - task: "PUBG Account Sales - Admin Create Account"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "POST /api/admin/accounts working correctly. Requires admin JWT authentication. Validates required fields (title, price). Calculates discount percent automatically. Creates account with all fields (title, description, price, discountPrice, imageUrl, legendaryMin, legendaryMax, level, rank, features, credentials). Returns 400 for missing required fields."
+
+  - task: "PUBG Account Sales - Admin Update Account"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PUT /api/admin/accounts/:id working correctly. Requires admin JWT authentication. Updates account fields and recalculates discount percent. Returns 404 for invalid account ID. Updates working correctly with proper field validation."
+
+  - task: "PUBG Account Sales - Admin Delete Account"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "DELETE /api/admin/accounts/:id working correctly. Requires admin JWT authentication. Prevents deletion of sold accounts (400 error with 'Satılmış hesap silinemez'). Successfully deletes available accounts. Returns 404 for invalid account ID. Delete protection working as expected."
+
+  - task: "PUBG Account Sales - Account Order Creation"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "POST /api/account-orders working correctly. Requires user JWT authentication (401 without token, AUTH_REQUIRED code). Validates required fields (accountId). Validates account exists and is available (404 for invalid/unavailable accounts). Handles insufficient balance correctly (400 error). Card payment integration with Shopier working (fails gracefully when unconfigured with 520/503). Account status changes to 'sold' for balance payments and 'reserved' for card payments. Order creation with type='account' working correctly. FIXED: Endpoint was incorrectly placed in GET function, moved to POST function."
+
 frontend:
   - task: "Auth Modal (Register + Login)"
     implemented: true

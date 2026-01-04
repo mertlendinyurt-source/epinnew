@@ -493,12 +493,12 @@ export default function HesaplarPage() {
                     </div>
 
                     {/* Image Section */}
-                    <div className="relative aspect-square bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-2">
+                    <div className="relative aspect-[4/3] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-2">
                       {account.imageUrl ? (
                         <img 
                           src={account.imageUrl}
                           alt={account.title}
-                          className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-105"
+                          className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
                           onError={(e) => {
                             e.target.src = "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&h=300&fit=crop";
                           }}

@@ -125,7 +125,7 @@ export default function AdminAccountsPage() {
     try {
       const formDataUpload = new FormData()
       formDataUpload.append('file', file)
-      formDataUpload.append('folder', 'accounts')
+      formDataUpload.append('category', 'accounts')
 
       const token = localStorage.getItem('adminToken')
       const response = await fetch('/api/admin/upload', {

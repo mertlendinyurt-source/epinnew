@@ -205,7 +205,8 @@ export default function OrderDetailPage() {
               </div>
             </div>
 
-            {/* Player Info Card */}
+            {/* Player Info Card - Only for UC orders */}
+            {order.type !== 'account' && (
             <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
               <h2 className="text-xl font-bold text-white mb-4">Oyuncu Bilgileri</h2>
               
@@ -220,6 +221,25 @@ export default function OrderDetailPage() {
                 </div>
               </div>
             </div>
+            )}
+
+            {/* Account Info Card - Only for Account orders */}
+            {order.type === 'account' && (
+            <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
+              <h2 className="text-xl font-bold text-white mb-4">Hesap Detayları</h2>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-400">Ürün</span>
+                  <span className="text-white font-semibold">{order.accountTitle || 'PUBG Hesap'}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-t border-gray-700">
+                  <span className="text-gray-400">Sipariş Türü</span>
+                  <span className="text-purple-400 font-semibold">Hesap Satışı</span>
+                </div>
+              </div>
+            </div>
+            )}
 
             {/* Delivery Items - CODES */}
             {order.delivery && order.delivery.status === 'delivered' && order.delivery.items && Array.isArray(order.delivery.items) && order.delivery.items.length > 0 && (

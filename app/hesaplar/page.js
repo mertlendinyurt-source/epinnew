@@ -34,6 +34,8 @@ export default function HesaplarPage() {
   const [reviews, setReviews] = useState([])
   const [reviewStats, setReviewStats] = useState({ avgRating: 5.0, reviewCount: 0 })
   const [loadingReviews, setLoadingReviews] = useState(false)
+  const [reviewsPage, setReviewsPage] = useState(1)
+  const [reviewsHasMore, setReviewsHasMore] = useState(false)
 
   useEffect(() => {
     fetchAccounts()

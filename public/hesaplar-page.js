@@ -731,11 +731,11 @@ export default function HesaplarPage() {
                         </span>
                       </div>
 
-                      {/* Payment Button - Only on Desktop (Mobile has it at top) */}
+                      {/* Payment Button - Visible on all screens */}
                       <Button
                         onClick={handleCheckout}
                         disabled={orderProcessing}
-                        className="hidden md:flex w-full h-12 md:h-14 bg-purple-600 hover:bg-purple-500 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg items-center justify-center"
+                        className="flex w-full h-12 md:h-14 bg-purple-600 hover:bg-purple-500 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg items-center justify-center"
                       >
                         {orderProcessing ? (
                           <>
@@ -746,6 +746,16 @@ export default function HesaplarPage() {
                           'Ödemeye Git'
                         )}
                       </Button>
+                      
+                      {/* Account Description - Visible on mobile at bottom */}
+                      {selectedAccount?.description && (
+                        <div className="pt-4 mt-4 border-t border-white/10">
+                          <Label className="text-sm text-white/80 uppercase mb-3 block">Hesap Açıklaması</Label>
+                          <div className="text-sm text-white/60 whitespace-pre-wrap max-h-32 overflow-y-auto">
+                            {selectedAccount.description}
+                          </div>
+                        </div>
+                      )}
                       
                       {/* Info Note */}
                       <p className="text-center text-white/40 text-xs mt-4">

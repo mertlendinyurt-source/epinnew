@@ -8630,7 +8630,7 @@ export async function DELETE(request) {
 
       const accounts = await db.collection('accounts')
         .find({})
-        .sort({ createdAt: -1 })
+        .sort({ order: 1, createdAt: -1 })
         .toArray();
 
       return NextResponse.json({ success: true, data: accounts });

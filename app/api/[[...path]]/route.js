@@ -1539,6 +1539,40 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: account });
     }
 
+    // Admin: Get account stock
+    if (pathname.match(/^\/api\/admin\/accounts\/[^\/]+\/stock$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const accountId = pathname.split('/')[4];
+      
+      // Get stock items for this account
+      const stocks = await db.collection('account_stock')
+        .find({ accountId })
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      const availableCount = stocks.filter(s => s.status === 'available').length;
+      const assignedCount = stocks.filter(s => s.status === 'assigned').length;
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          stocks,
+          summary: {
+            total: stocks.length,
+            available: availableCount,
+            assigned: assignedCount
+          }
+        }
+      });
+    }
+
     // Resolve player name (Real PUBG Mobile API via RapidAPI - ID Game Checker)
     if (pathname === '/api/player/resolve') {
       const playerId = searchParams.get('id');

@@ -610,6 +610,96 @@ export default function HesaplarPage() {
         </div>
       </div>
 
+      {/* Reviews Section */}
+      <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-8 md:py-12">
+        <div className="bg-[#1e2229] rounded-lg overflow-hidden">
+          {/* Header */}
+          <div className="px-6 py-4 border-b border-white/10">
+            <h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+              <span>Değerlendirmeler</span>
+              <div className="flex items-center gap-1 text-yellow-400">
+                <Star className="w-4 h-4 fill-current" />
+                <span className="text-sm">{reviewStats.avgRating.toFixed(1)} / 5</span>
+              </div>
+            </h2>
+          </div>
+
+          {/* Content */}
+          <div className="p-6">
+            {/* Stats Summary */}
+            <div className="bg-[#282d36] rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star 
+                        key={star} 
+                        className={`w-5 h-5 ${star <= Math.round(reviewStats.avgRating) ? 'fill-yellow-400 text-yellow-400' : 'text-white/20'}`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xl font-bold text-white">{reviewStats.avgRating.toFixed(2)}</span>
+                  <span className="text-white/60">/ 5</span>
+                </div>
+                <div className="h-6 w-px bg-white/20" />
+                <p className="text-white/70 text-sm">
+                  Değerlendirme anketine toplamda <span className="text-white font-semibold">{reviewStats.reviewCount.toLocaleString()}</span> kişi katıldı
+                </p>
+              </div>
+            </div>
+
+            {/* Reviews List */}
+            <div className="space-y-4">
+              {loadingReviews ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+                </div>
+              ) : reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <div key={review.id} className="bg-[#282d36] rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      {/* Avatar */}
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        {review.userName?.charAt(0)?.toUpperCase() || 'M'}
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-white">{review.userName || 'Misafir'}</span>
+                          <div className="flex">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star 
+                                key={star} 
+                                className={`w-3.5 h-3.5 ${star <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-white/20'}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        {review.comment && (
+                          <p className="text-white/70 text-sm mb-2">{review.comment}</p>
+                        )}
+                        <p className="text-white/40 text-xs">
+                          {new Date(review.createdAt).toLocaleDateString('tr-TR', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-white/60">
+                  Henüz değerlendirme bulunmuyor.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Payment Modal - UC modalı gibi ama Oyuncu ID olmadan */}
       <Dialog open={checkoutOpen} onOpenChange={(open) => {
         if (!orderProcessing) {

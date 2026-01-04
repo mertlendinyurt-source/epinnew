@@ -26,6 +26,9 @@ export default function AdminOrders() {
   const [processingOrder, setProcessingOrder] = useState(null)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  const [availableStocks, setAvailableStocks] = useState([])
+  const [selectedStockId, setSelectedStockId] = useState(null)
+  const [loadingStocks, setLoadingStocks] = useState(false)
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)

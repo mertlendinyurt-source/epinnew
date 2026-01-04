@@ -927,9 +927,9 @@ export default function HesaplarPage() {
                         )}
                       </Button>
                       
-                      {/* Account Description - Visible on mobile at bottom */}
+                      {/* Account Description - Only visible on mobile (on desktop it's on the left) */}
                       {selectedAccount?.description && (
-                        <div className="pt-4 mt-4 border-t border-white/10">
+                        <div className="md:hidden pt-4 mt-4 border-t border-white/10">
                           <Label className="text-sm text-white/80 uppercase mb-3 block">Hesap Açıklaması</Label>
                           <div className="text-sm text-white/60 whitespace-pre-wrap max-h-32 overflow-y-auto">
                             {selectedAccount.description}

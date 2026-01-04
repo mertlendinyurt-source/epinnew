@@ -8661,7 +8661,7 @@ export async function DELETE(request) {
     if (pathname === '/api/accounts') {
       const accounts = await db.collection('accounts')
         .find({ active: true, status: 'available' })
-        .sort({ sortOrder: 1, createdAt: -1 })
+        .sort({ order: 1, createdAt: -1 })
         .toArray();
 
       // Hassas bilgileri gizle

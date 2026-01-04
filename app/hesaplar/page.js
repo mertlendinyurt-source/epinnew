@@ -487,11 +487,6 @@ export default function HesaplarPage() {
                     className="group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border border-white/10 hover:border-purple-500/50 w-full"
                     style={{ backgroundColor: '#252a34', maxWidth: '280px', margin: '0 auto' }}
                   >
-                    {/* Info Icon */}
-                    <div className="absolute top-3 right-3 w-7 h-7 md:w-5 md:h-5 rounded-full bg-white/90 flex items-center justify-center z-20">
-                      <span className="text-gray-700 font-bold text-sm md:text-xs">i</span>
-                    </div>
-
                     {/* Image Section */}
                     <div className="relative aspect-[4/3] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-2">
                       {account.imageUrl ? (

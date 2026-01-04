@@ -174,7 +174,8 @@ export default function AdminAccountsPage() {
         rank: formData.rank,
         features: formData.features.split('\n').filter(f => f.trim()),
         credentials: formData.credentials,
-        unlimited: formData.unlimited
+        unlimited: formData.unlimited,
+        order: formData.order ? parseInt(formData.order) : undefined
       }
 
       const url = editingAccount 

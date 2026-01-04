@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Edit, Trash2, Star, Eye, EyeOff, Loader2, Search, ShoppingCart, Upload, Image, Infinity } from 'lucide-react'
+import { Plus, Edit, Trash2, Star, Eye, EyeOff, Loader2, Search, ShoppingCart, Upload, Infinity, Package, Database } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -27,12 +27,18 @@ export default function AdminAccountsPage() {
     rank: '',
     features: '',
     credentials: '',
-    unlimited: true // Varsayılan: sınırsız satış
+    unlimited: true
   })
   const [saving, setSaving] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef(null)
+  
+  // Stock Dialog States
+  const [stockDialogOpen, setStockDialogOpen] = useState(false)
+  const [selectedAccountForStock, setSelectedAccountForStock] = useState(null)
+  const [stockData, setStockData] = useState({ items: '', summary: null })
+  const [stockLoading, setStockLoading] = useState(false)
 
   useEffect(() => {
     fetchAccounts()
@@ -78,7 +84,7 @@ export default function AdminAccountsPage() {
         rank: account.rank || '',
         features: account.features?.join('\n') || '',
         credentials: account.credentials || '',
-        unlimited: account.unlimited !== false // Varsayılan true
+        unlimited: account.unlimited !== false
       })
     } else {
       setEditingAccount(null)
@@ -105,13 +111,11 @@ export default function AdminAccountsPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Dosya tipi kontrolü
     if (!file.type.startsWith('image/')) {
       toast.error('Sadece resim dosyaları yüklenebilir')
       return
     }
 
-    // Dosya boyutu kontrolü (5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Dosya boyutu 5MB\'dan küçük olmalı')
       return
@@ -243,6 +247,67 @@ export default function AdminAccountsPage() {
     }
   }
 
+  // ========== STOK YÖNETİMİ ==========
+  const handleOpenStockDialog = async (account) => {
+    setSelectedAccountForStock(account)
+    setStockDialogOpen(true)
+    setStockData({ items: '', summary: null })
+    await fetchStock(account.id)
+  }
+
+  const fetchStock = async (accountId) => {
+    try {
+      const response = await fetch(`/api/admin/accounts/${accountId}/stock`, {
+        headers: getAuthHeaders()
+      })
+      const data = await response.json()
+      if (data.success) {
+        setStockData(prev => ({ ...prev, summary: data.data.summary }))
+      }
+    } catch (error) {
+      console.error('Error fetching stock:', error)
+    }
+  }
+
+  const handleAddStock = async () => {
+    if (!stockData.items.trim()) {
+      toast.error('Lütfen en az bir hesap bilgisi girin')
+      return
+    }
+
+    const items = stockData.items.split('\n').filter(line => line.trim())
+    
+    if (items.length === 0) {
+      toast.error('Geçerli hesap bilgisi bulunamadı')
+      return
+    }
+
+    setStockLoading(true)
+    try {
+      const response = await fetch(`/api/admin/accounts/${selectedAccountForStock.id}/stock`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ items })
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        toast.success(data.message || `${items.length} adet hesap bilgisi eklendi`)
+        setStockData({ items: '', summary: null })
+        await fetchStock(selectedAccountForStock.id)
+        fetchAccounts() // Refresh accounts to update stock count
+      } else {
+        toast.error(data.error || 'Stok eklenemedi')
+      }
+    } catch (error) {
+      console.error('Error adding stock:', error)
+      toast.error('Stok eklenirken hata oluştu')
+    } finally {
+      setStockLoading(false)
+    }
+  }
+
   const filteredAccounts = accounts.filter(acc => 
     acc.title.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -298,19 +363,19 @@ export default function AdminAccountsPage() {
         <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
           <div className="text-slate-400 text-sm">Satışta</div>
           <div className="text-2xl font-bold text-green-400 mt-1">
-            {accounts.filter(a => a.status === 'available' && a.active).length}
+            {accounts.filter(a => a.active && a.status !== 'sold').length}
           </div>
         </div>
         <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-          <div className="text-slate-400 text-sm">Sınırsız</div>
+          <div className="text-slate-400 text-sm">Toplam Stok</div>
+          <div className="text-2xl font-bold text-blue-400 mt-1">
+            {accounts.reduce((sum, a) => sum + (a.stockCount || 0), 0)}
+          </div>
+        </div>
+        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+          <div className="text-slate-400 text-sm">Satılan</div>
           <div className="text-2xl font-bold text-purple-400 mt-1">
-            {accounts.filter(a => a.unlimited).length}
-          </div>
-        </div>
-        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-          <div className="text-slate-400 text-sm">Gizli</div>
-          <div className="text-2xl font-bold text-slate-400 mt-1">
-            {accounts.filter(a => !a.active).length}
+            {accounts.reduce((sum, a) => sum + (a.salesCount || 0), 0)}
           </div>
         </div>
       </div>
@@ -376,18 +441,31 @@ export default function AdminAccountsPage() {
                     )}
                   </td>
                   <td className="p-4">
-                    {account.unlimited ? (
-                      <span className="flex items-center gap-1 text-purple-400 font-medium">
-                        <Infinity className="w-4 h-4" />
-                        Sınırsız
-                      </span>
-                    ) : (
-                      <span className="text-slate-400">1 Adet</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {account.unlimited ? (
+                        <span className="flex items-center gap-1 text-purple-400 font-medium">
+                          <Infinity className="w-4 h-4" />
+                          {account.stockCount || 0}
+                        </span>
+                      ) : (
+                        <span className={`font-medium ${(account.stockCount || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {account.stockCount || 0}
+                        </span>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleOpenStockDialog(account)}
+                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 h-7 px-2"
+                      >
+                        <Database className="w-3 h-3 mr-1" />
+                        Stok
+                      </Button>
+                    </div>
                   </td>
                   <td className="p-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[account.status]}`}>
-                      {statusLabels[account.status]}
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[account.status] || statusColors.available}`}>
+                      {statusLabels[account.status] || 'Satışta'}
                     </span>
                     {!account.active && (
                       <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium bg-slate-600/50 text-slate-400">
@@ -431,6 +509,88 @@ export default function AdminAccountsPage() {
         </div>
       )}
 
+      {/* Stock Management Dialog */}
+      <Dialog open={stockDialogOpen} onOpenChange={setStockDialogOpen}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Stok Yönetimi</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              {selectedAccountForStock?.title} - Hesap bilgilerini yönetin
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Stock Summary */}
+          {stockData.summary && (
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
+                <div className="text-2xl font-bold text-white mb-1">
+                  {stockData.summary.total}
+                </div>
+                <div className="text-sm text-slate-400">Toplam</div>
+              </div>
+              <div className="bg-green-900/20 rounded-lg p-4 border border-green-700/50">
+                <div className="text-2xl font-bold text-green-400 mb-1">
+                  {stockData.summary.available}
+                </div>
+                <div className="text-sm text-green-300">Mevcut</div>
+              </div>
+              <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-700/50">
+                <div className="text-2xl font-bold text-blue-400 mb-1">
+                  {stockData.summary.assigned}
+                </div>
+                <div className="text-sm text-blue-300">Satılan</div>
+              </div>
+            </div>
+          )}
+
+          {/* Add Stock Section */}
+          <div className="space-y-4">
+            <div>
+              <Label className="text-slate-300 mb-2 block">
+                Hesap Bilgisi Ekle (Her satıra bir hesap bilgisi)
+              </Label>
+              <textarea
+                value={stockData.items}
+                onChange={(e) => setStockData({ ...stockData, items: e.target.value })}
+                placeholder="Örnek:&#10;Email: hesap1@mail.com | Şifre: sifre123&#10;Email: hesap2@mail.com | Şifre: sifre456&#10;Email: hesap3@mail.com | Şifre: sifre789"
+                className="w-full h-40 px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 font-mono text-sm resize-none"
+              />
+              <div className="text-xs text-slate-400 mt-2">
+                {stockData.items.split('\n').filter(l => l.trim()).length} satır girildi
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                onClick={() => setStockDialogOpen(false)}
+                variant="outline"
+                className="border-slate-700 text-white"
+              >
+                İptal
+              </Button>
+              <Button
+                onClick={handleAddStock}
+                disabled={stockLoading || !stockData.items.trim()}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {stockLoading ? 'Ekleniyor...' : 'Toplu Ekle'}
+              </Button>
+            </DialogFooter>
+          </div>
+
+          {/* Stock Information */}
+          <div className="mt-4 p-4 bg-purple-900/20 rounded-lg border border-purple-700/50">
+            <div className="flex items-start gap-3">
+              <Package className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-purple-200">
+                <p className="font-semibold mb-1">Otomatik Teslimat:</p>
+                <p>Eklenen hesap bilgileri, ödeme onaylandığında otomatik olarak müşteriye atanır. Her satır bir hesap bilgisi olarak kabul edilir.</p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Create/Edit Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -456,7 +616,6 @@ export default function AdminAccountsPage() {
             <div>
               <Label className="text-slate-300">Hesap Görseli</Label>
               <div className="mt-2 space-y-3">
-                {/* Preview */}
                 {formData.imageUrl && (
                   <div className="relative w-32 h-32 rounded-lg overflow-hidden bg-slate-800">
                     <img 
@@ -473,7 +632,6 @@ export default function AdminAccountsPage() {
                   </div>
                 )}
                 
-                {/* Upload Button */}
                 <div className="flex gap-2">
                   <input
                     type="file"
@@ -503,7 +661,6 @@ export default function AdminAccountsPage() {
                   </Button>
                 </div>
                 
-                {/* Or URL Input */}
                 <div className="flex items-center gap-2">
                   <span className="text-slate-500 text-sm">veya URL girin:</span>
                 </div>
@@ -546,7 +703,7 @@ export default function AdminAccountsPage() {
                 <Infinity className="w-5 h-5 text-purple-400" />
                 <div>
                   <Label className="text-white font-medium">Sınırsız Satış</Label>
-                  <p className="text-slate-400 text-sm">Random hesap için - satıldığında tekrar satılabilir</p>
+                  <p className="text-slate-400 text-sm">Stok bitene kadar satılabilir</p>
                 </div>
               </div>
               <Switch
@@ -626,11 +783,11 @@ export default function AdminAccountsPage() {
               />
             </div>
 
-            {/* Credentials (Secret) */}
+            {/* Default Credentials (for non-stock sales) */}
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
               <Label className="text-amber-400 flex items-center gap-2">
                 <EyeOff className="w-4 h-4" />
-                Hesap Bilgileri (Gizli - Sadece satış sonrası gösterilir)
+                Varsayılan Hesap Bilgisi (Stok yoksa kullanılır)
               </Label>
               <Textarea
                 value={formData.credentials}
@@ -639,6 +796,9 @@ export default function AdminAccountsPage() {
                 rows={3}
                 className="mt-2 bg-slate-800 border-slate-700 text-white font-mono text-sm"
               />
+              <p className="text-amber-400/60 text-xs mt-2">
+                Not: Stok eklerseniz, stoktan otomatik atama yapılır. Bu alan sadece stok yoksa kullanılır.
+              </p>
             </div>
           </div>
 

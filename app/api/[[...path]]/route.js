@@ -4094,7 +4094,14 @@ export async function POST(request) {
       
       const { stockId } = body;
       
-      const order = await db.collection('account_orders').findOne({ id: orderId });
+      // DÜZELTME: Hesap siparişleri 'orders' koleksiyonunda type: 'account' olarak saklanıyor
+      // Önce orders koleksiyonunda ara
+      let order = await db.collection('orders').findOne({ id: orderId, type: 'account' });
+      
+      // Bulunamazsa eski account_orders koleksiyonunda da ara (geriye dönük uyumluluk)
+      if (!order) {
+        order = await db.collection('account_orders').findOne({ id: orderId });
+      }
       
       if (!order) {
         return NextResponse.json(
@@ -4103,8 +4110,11 @@ export async function POST(request) {
         );
       }
 
+      // Siparişin hangi koleksiyonda olduğunu belirle
+      const orderCollection = order.type === 'account' ? 'orders' : 'account_orders';
+
       // Check if order already has stock assigned
-      if (order.credentials) {
+      if (order.delivery?.credentials || order.credentials) {
         return NextResponse.json(
           { success: false, error: 'Bu siparişe zaten hesap bilgisi atanmış' },
           { status: 400 }
@@ -4166,15 +4176,20 @@ export async function POST(request) {
           );
         }
         
-        await db.collection('account_orders').updateOne(
+        // DÜZELTME: Doğru koleksiyonda güncelle
+        await db.collection(orderCollection).updateOne(
           { id: order.id },
           {
             $set: {
-              credentials: credentials,
-              stockId: stockItem.id || stockItem._id?.toString(),
+              'delivery.credentials': credentials,
+              'delivery.status': 'delivered',
+              'delivery.message': 'Hesap bilgileri teslim edildi',
+              'delivery.stockId': stockItem.id || stockItem._id?.toString(),
+              'delivery.deliveredAt': new Date(),
+              'delivery.deliveredBy': user.username || user.email,
               status: 'delivered',
               deliveredAt: new Date(),
-              deliveredBy: user.username || user.email
+              updatedAt: new Date()
             }
           }
         );
@@ -4185,20 +4200,32 @@ export async function POST(request) {
         
         if (orderUser && account && orderUser.email) {
           try {
-            // Basit email gönderimi
-            console.log('Sending account delivery email to:', orderUser.email);
-            // TODO: Email service eklenebilir
+            // Hesap teslimat e-postası gönder
+            await sendDeliveredEmail(db, order, orderUser, account, [credentials]);
+            console.log('Account delivery email sent to:', orderUser.email);
           } catch (err) {
             console.error('Delivery email failed:', err);
           }
         }
 
+        // Stok sayısını güncelle
+        const remainingStock = await db.collection('account_stock').countDocuments({
+          accountId: order.accountId,
+          status: 'available'
+        });
+        
+        await db.collection('accounts').updateOne(
+          { id: order.accountId },
+          { $set: { stockCount: remainingStock, updatedAt: new Date() } }
+        );
+
         return NextResponse.json({
           success: true,
-          message: 'Hesap stoku başarıyla atandı',
+          message: 'Hesap stoku başarıyla atandı ve müşteriye e-posta gönderildi',
           data: { 
             orderId: order.id,
-            status: 'delivered'
+            status: 'delivered',
+            credentials: credentials
           }
         });
       } else {

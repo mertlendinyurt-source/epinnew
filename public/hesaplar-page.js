@@ -484,28 +484,21 @@ export default function HesaplarPage() {
                   <div
                     key={account.id}
                     onClick={() => handleAccountSelect(account)}
-                    className="group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border border-white/10 hover:border-purple-500/50 w-full aspect-[2/3.5] md:aspect-[2/3]"
-                    style={{ backgroundColor: '#252a34', maxWidth: '270px', margin: '0 auto' }}
+                    className="group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border border-white/10 hover:border-purple-500/50 w-full aspect-[2/3.2] md:aspect-[2/2.8]"
+                    style={{ backgroundColor: '#252a34', maxWidth: '280px', margin: '0 auto' }}
                   >
                     {/* Info Icon */}
                     <div className="absolute top-3 right-3 w-7 h-7 md:w-5 md:h-5 rounded-full bg-white/90 flex items-center justify-center z-20">
                       <span className="text-gray-700 font-bold text-sm md:text-xs">i</span>
                     </div>
 
-                    {/* Discount Badge */}
-                    {account.discountPercent > 0 && (
-                      <div className="absolute top-3 left-3 px-2 py-0.5 bg-red-500 rounded text-white text-[10px] md:text-[9px] font-bold z-20">
-                        %{account.discountPercent} İndirim
-                      </div>
-                    )}
-
-                    {/* Image Section */}
-                    <div className="relative h-[45%] md:h-[55%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-3 md:p-4">
+                    {/* Image Section - Büyütüldü */}
+                    <div className="relative h-[55%] md:h-[60%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-2 md:p-3">
                       {account.imageUrl ? (
                         <img 
                           src={account.imageUrl}
                           alt={account.title}
-                          className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                          className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-105"
                           onError={(e) => {
                             e.target.src = "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&h=300&fit=crop";
                           }}
@@ -518,10 +511,10 @@ export default function HesaplarPage() {
                     </div>
 
                     {/* Content Section */}
-                    <div className="h-[55%] md:h-[45%] flex flex-col justify-between p-3 md:p-3.5">
+                    <div className="h-[45%] md:h-[40%] flex flex-col justify-between p-3 md:p-3.5">
                       <div>
                         <div className="text-[12px] md:text-[10px] text-purple-400 font-bold uppercase">HESAP</div>
-                        <div className="text-[15px] md:text-[12px] font-bold text-white line-clamp-2">{account.title}</div>
+                        <div className="text-[14px] md:text-[12px] font-bold text-white line-clamp-2">{account.title}</div>
                         
                         {/* Legendary Badge */}
                         {account.legendaryMax > 0 && (
@@ -545,12 +538,14 @@ export default function HesaplarPage() {
                       </div>
                       
                       <div className="mt-2">
-                        {account.discountPrice < account.price && (
-                          <div className="text-[13px] md:text-[9px] text-red-500 line-through">₺{account.price.toFixed(2).replace('.', ',')}</div>
-                        )}
-                        <div className="text-[22px] md:text-[15px] font-bold text-white">₺ {account.discountPrice.toFixed(2).replace('.', ',')}</div>
+                        <div className="flex items-center gap-2">
+                          {account.discountPrice < account.price && (
+                            <span className="text-[12px] md:text-[10px] text-red-400 line-through">₺{account.price.toFixed(2).replace('.', ',')}</span>
+                          )}
+                          <span className="text-[20px] md:text-[16px] font-bold text-white">₺{account.discountPrice.toFixed(2).replace('.', ',')}</span>
+                        </div>
                         {account.discountPercent > 0 && (
-                          <div className="text-[13px] md:text-[11px] text-emerald-400 font-medium">{account.discountPercent}% ▼ indirim</div>
+                          <div className="text-[12px] md:text-[10px] text-emerald-400 font-medium mt-0.5">%{account.discountPercent} indirim</div>
                         )}
                       </div>
                     </div>

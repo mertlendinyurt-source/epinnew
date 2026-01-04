@@ -166,10 +166,21 @@ export default function AdminOrders() {
       const order = orders.find(o => o.id === orderId)
       const isAccountOrder = order?.orderType === 'account' || order?.accountId
       
+      console.log('DEBUG - Assign Stock:', {
+        orderId,
+        hasOrder: !!order,
+        orderType: order?.orderType,
+        hasAccountId: !!order?.accountId,
+        hasProductId: !!order?.productId,
+        isAccountOrder
+      })
+      
       // Use correct endpoint based on order type
       const endpoint = isAccountOrder 
         ? `/api/admin/account-orders/${orderId}/assign-stock`
         : `/api/admin/orders/${orderId}/assign-stock`
+      
+      console.log('DEBUG - Using endpoint:', endpoint)
       
       const response = await fetch(endpoint, {
         method: 'POST',

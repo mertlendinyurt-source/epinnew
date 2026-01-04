@@ -7330,42 +7330,71 @@ export async function POST(request) {
         );
       }
 
-      // Generate Shopier form
+      // Generate Shopier form - use same format as UC orders
       const apiKey = decrypt(shopierSettings.apiKey);
       const apiSecret = decrypt(shopierSettings.apiSecret);
       
-      const formData = {
+      // Generate random number for Shopier request (6 digits as per API spec)
+      const randomNr = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+      const crypto = require('crypto');
+
+      // Currency codes: 0 = TRY, 1 = USD, 2 = EUR
+      const currencyCode = 0; // TRY
+
+      // Prepare Shopier payment request with REAL customer data
+      const shopierPayload = {
         API_key: apiKey,
-        website_index: '1',
+        website_index: 1,
         platform_order_id: order.id,
         product_name: account.title,
-        product_type: '2', // Digital product
-        buyer_name: user.firstName,
-        buyer_surname: user.lastName,
-        buyer_email: user.email,
-        buyer_phone: user.phone.replace(/[^0-9]/g, ''),
-        buyer_account: user.id,
+        product_type: 1, // 0 = Physical, 1 = Digital
+        buyer_name: customerSnapshot.firstName,
+        buyer_surname: customerSnapshot.lastName,
+        buyer_email: customerSnapshot.email,
+        buyer_account_age: 0,
         buyer_id_nr: '',
-        total: orderAmount.toFixed(2),
-        random_nr: Date.now().toString(),
-        currency: '0' // TRY
+        buyer_phone: customerSnapshot.phone,
+        billing_address: 'Turkey',
+        billing_city: 'Istanbul',
+        billing_country: 'Turkey',
+        billing_postcode: '34000',
+        shipping_address: 'Turkey',
+        shipping_city: 'Istanbul',
+        shipping_country: 'Turkey',
+        shipping_postcode: '34000',
+        total_order_value: orderAmount,
+        currency: currencyCode,
+        platform: 0,
+        is_in_frame: 0,
+        current_language: 0,
+        modul_version: '1.0.4',
+        random_nr: randomNr,
       };
 
-      // Generate signature
-      const signatureData = `${formData.random_nr}${formData.platform_order_id}${formData.total}${formData.currency}`;
-      const signature = require('crypto')
-        .createHmac('sha256', apiSecret)
+      // Generate Shopier signature
+      const signatureData = `${randomNr}${order.id}${orderAmount}${currencyCode}`;
+      const signature = crypto.createHmac('sha256', apiSecret)
         .update(signatureData)
         .digest('base64');
-      
-      formData.signature = signature;
+
+      shopierPayload.signature = signature;
+
+      const paymentUrl = 'https://www.shopier.com/ShowProduct/api_pay4.php';
+
+      // Store payment request for audit
+      await db.collection('payment_requests').insertOne({
+        orderId: order.id,
+        type: 'account',
+        shopierPayload: { ...shopierPayload, API_key: '***MASKED***', signature: '***MASKED***' },
+        createdAt: new Date()
+      });
 
       return NextResponse.json({
         success: true,
         data: {
           orderId: order.id,
-          paymentUrl: 'https://www.shopier.com/ShowProduct/api_pay4.php',
-          formData: formData
+          paymentUrl,
+          formData: shopierPayload
         }
       });
     }

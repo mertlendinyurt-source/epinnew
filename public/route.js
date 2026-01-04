@@ -1539,6 +1539,40 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: account });
     }
 
+    // Admin: Get account stock
+    if (pathname.match(/^\/api\/admin\/accounts\/[^\/]+\/stock$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const accountId = pathname.split('/')[4];
+      
+      // Get stock items for this account
+      const stocks = await db.collection('account_stock')
+        .find({ accountId })
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      const availableCount = stocks.filter(s => s.status === 'available').length;
+      const assignedCount = stocks.filter(s => s.status === 'assigned').length;
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          stocks,
+          summary: {
+            total: stocks.length,
+            available: availableCount,
+            assigned: assignedCount
+          }
+        }
+      });
+    }
+
     // Resolve player name (Real PUBG Mobile API via RapidAPI - ID Game Checker)
     if (pathname === '/api/player/resolve') {
       const playerId = searchParams.get('id');
@@ -5617,6 +5651,69 @@ export async function POST(request) {
       });
     }
 
+    // Admin: Add stock to account
+    if (pathname.match(/^\/api\/admin\/accounts\/[^\/]+\/stock$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const accountId = pathname.split('/')[4];
+      const { items } = body; // Array of strings (credentials)
+
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        return NextResponse.json(
+          { success: false, error: 'Hesap bilgileri gereklidir' },
+          { status: 400 }
+        );
+      }
+
+      // Validate account exists
+      const account = await db.collection('accounts').findOne({ id: accountId });
+      if (!account) {
+        return NextResponse.json(
+          { success: false, error: 'Hesap bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Create stock items
+      const stockItems = items.map(item => ({
+        id: uuidv4(),
+        accountId,
+        credentials: item.trim(), // Hesap bilgileri (email, şifre vs)
+        status: 'available',
+        orderId: null,
+        assignedAt: null,
+        createdAt: new Date(),
+        createdBy: user.username
+      }));
+
+      await db.collection('account_stock').insertMany(stockItems);
+
+      // Update account stock count
+      const availableCount = await db.collection('account_stock').countDocuments({ 
+        accountId, 
+        status: 'available' 
+      });
+      
+      await db.collection('accounts').updateOne(
+        { id: accountId },
+        { $set: { stockCount: availableCount } }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: `${stockItems.length} adet hesap bilgisi eklendi`,
+        data: {
+          count: stockItems.length
+        }
+      });
+    }
+
     // Admin: Update product DijiPin setting
     if (pathname === '/api/admin/products/dijipin') {
       const authHeader = request.headers.get('authorization');
@@ -7024,12 +7121,30 @@ export async function POST(request) {
       // Get account (price controlled by backend)
       const account = await db.collection('accounts').findOne({ 
         id: accountId, 
-        active: true, 
-        status: 'available' 
+        active: true
       });
 
       if (!account) {
         return NextResponse.json({ success: false, error: 'Hesap bulunamadı veya satışta değil' }, { status: 404 });
+      }
+
+      // Check if stock available (for non-unlimited accounts)
+      let availableStock = null;
+      if (!account.unlimited) {
+        availableStock = await db.collection('account_stock').findOne({
+          accountId,
+          status: 'available'
+        });
+        
+        if (!availableStock) {
+          return NextResponse.json({ success: false, error: 'Bu hesap için stok bulunmuyor' }, { status: 400 });
+        }
+      } else {
+        // For unlimited accounts, still try to get stock if available
+        availableStock = await db.collection('account_stock').findOne({
+          accountId,
+          status: 'available'
+        });
       }
 
       const orderAmount = account.discountPrice || account.price || 0;
@@ -7051,6 +7166,22 @@ export async function POST(request) {
           );
         }
 
+        // Assign stock to order
+        let assignedCredentials = account.credentials || null; // Fallback to account's default credentials
+        if (availableStock) {
+          assignedCredentials = availableStock.credentials;
+          // Mark stock as assigned
+          await db.collection('account_stock').updateOne(
+            { id: availableStock.id },
+            { 
+              $set: { 
+                status: 'assigned',
+                assignedAt: new Date()
+              }
+            }
+          );
+        }
+
         // Create order
         const order = {
           id: uuidv4(),
@@ -7066,13 +7197,22 @@ export async function POST(request) {
           totalAmount: orderAmount,
           currency: 'TRY',
           delivery: {
-            status: 'pending',
-            message: 'Hesap bilgileri hazırlanıyor...',
-            credentials: null // Admin tarafından doldurulacak
+            status: assignedCredentials ? 'delivered' : 'pending',
+            message: assignedCredentials ? 'Hesap bilgileri hazır' : 'Hesap bilgileri hazırlanıyor...',
+            credentials: assignedCredentials,
+            stockId: availableStock?.id || null
           },
           createdAt: new Date(),
           updatedAt: new Date()
         };
+
+        // Update stock with order ID
+        if (availableStock) {
+          await db.collection('account_stock').updateOne(
+            { id: availableStock.id },
+            { $set: { orderId: order.id } }
+          );
+        }
 
         // Deduct balance
         const newBalance = userBalance - orderAmount;
@@ -7097,26 +7237,46 @@ export async function POST(request) {
         // Insert order
         await db.collection('orders').insertOne(order);
 
-        // Mark account as sold ONLY if not unlimited
+        // Mark account as sold ONLY if not unlimited AND no more stock
         if (!account.unlimited) {
-          await db.collection('accounts').updateOne(
-            { id: accountId },
-            { 
-              $set: { 
-                status: 'sold', 
-                soldAt: new Date(),
-                soldToUserId: user.id,
-                orderId: order.id
-              } 
-            }
-          );
+          // Check remaining stock
+          const remainingStock = await db.collection('account_stock').countDocuments({
+            accountId,
+            status: 'available'
+          });
+          
+          if (remainingStock === 0) {
+            await db.collection('accounts').updateOne(
+              { id: accountId },
+              { 
+                $set: { 
+                  status: 'sold', 
+                  stockCount: 0,
+                  soldAt: new Date(),
+                  soldToUserId: user.id,
+                  orderId: order.id
+                } 
+              }
+            );
+          } else {
+            // Update stock count
+            await db.collection('accounts').updateOne(
+              { id: accountId },
+              { $set: { stockCount: remainingStock } }
+            );
+          }
         } else {
-          // For unlimited accounts, just increment sales count
+          // For unlimited accounts, just increment sales count and update stock count
+          const remainingStock = await db.collection('account_stock').countDocuments({
+            accountId,
+            status: 'available'
+          });
+          
           await db.collection('accounts').updateOne(
             { id: accountId },
             { 
               $inc: { salesCount: 1 },
-              $set: { lastSoldAt: new Date() }
+              $set: { lastSoldAt: new Date(), stockCount: remainingStock }
             }
           );
         }

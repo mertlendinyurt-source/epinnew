@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Star, Eye, EyeOff, Loader2, Search, ShoppingCart } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Plus, Edit, Trash2, Star, Eye, EyeOff, Loader2, Search, ShoppingCart, Upload, Image, Infinity } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 
 export default function AdminAccountsPage() {
@@ -25,10 +26,13 @@ export default function AdminAccountsPage() {
     level: '',
     rank: '',
     features: '',
-    credentials: ''
+    credentials: '',
+    unlimited: true // Varsayılan: sınırsız satış
   })
   const [saving, setSaving] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     fetchAccounts()
@@ -73,7 +77,8 @@ export default function AdminAccountsPage() {
         level: account.level?.toString() || '',
         rank: account.rank || '',
         features: account.features?.join('\n') || '',
-        credentials: account.credentials || ''
+        credentials: account.credentials || '',
+        unlimited: account.unlimited !== false // Varsayılan true
       })
     } else {
       setEditingAccount(null)
@@ -88,10 +93,58 @@ export default function AdminAccountsPage() {
         level: '',
         rank: '',
         features: '',
-        credentials: ''
+        credentials: '',
+        unlimited: true
       })
     }
     setModalOpen(true)
+  }
+
+  // Resim yükleme fonksiyonu
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Dosya tipi kontrolü
+    if (!file.type.startsWith('image/')) {
+      toast.error('Sadece resim dosyaları yüklenebilir')
+      return
+    }
+
+    // Dosya boyutu kontrolü (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Dosya boyutu 5MB\'dan küçük olmalı')
+      return
+    }
+
+    setUploading(true)
+    try {
+      const formDataUpload = new FormData()
+      formDataUpload.append('file', file)
+      formDataUpload.append('folder', 'accounts')
+
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formDataUpload
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setFormData(prev => ({ ...prev, imageUrl: data.url }))
+        toast.success('Resim yüklendi')
+      } else {
+        toast.error(data.error || 'Resim yüklenemedi')
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      toast.error('Resim yüklenirken hata oluştu')
+    } finally {
+      setUploading(false)
+    }
   }
 
   const handleSave = async () => {
@@ -113,7 +166,8 @@ export default function AdminAccountsPage() {
         level: parseInt(formData.level) || 0,
         rank: formData.rank,
         features: formData.features.split('\n').filter(f => f.trim()),
-        credentials: formData.credentials
+        credentials: formData.credentials,
+        unlimited: formData.unlimited
       }
 
       const url = editingAccount 
@@ -248,9 +302,9 @@ export default function AdminAccountsPage() {
           </div>
         </div>
         <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-          <div className="text-slate-400 text-sm">Satılan</div>
-          <div className="text-2xl font-bold text-red-400 mt-1">
-            {accounts.filter(a => a.status === 'sold').length}
+          <div className="text-slate-400 text-sm">Sınırsız</div>
+          <div className="text-2xl font-bold text-purple-400 mt-1">
+            {accounts.filter(a => a.unlimited).length}
           </div>
         </div>
         <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
@@ -282,8 +336,8 @@ export default function AdminAccountsPage() {
               <tr className="border-b border-slate-700">
                 <th className="text-left p-4 text-slate-400 font-medium">Hesap</th>
                 <th className="text-left p-4 text-slate-400 font-medium">Destansı</th>
-                <th className="text-left p-4 text-slate-400 font-medium">Level</th>
                 <th className="text-left p-4 text-slate-400 font-medium">Fiyat</th>
+                <th className="text-left p-4 text-slate-400 font-medium">Stok</th>
                 <th className="text-left p-4 text-slate-400 font-medium">Durum</th>
                 <th className="text-right p-4 text-slate-400 font-medium">İşlemler</th>
               </tr>
@@ -316,12 +370,19 @@ export default function AdminAccountsPage() {
                     )}
                   </td>
                   <td className="p-4">
-                    <span className="text-white">{account.level || '-'}</span>
-                  </td>
-                  <td className="p-4">
                     <div className="text-white font-medium">₺{account.discountPrice?.toFixed(2)}</div>
                     {account.discountPrice < account.price && (
                       <div className="text-slate-500 text-sm line-through">₺{account.price?.toFixed(2)}</div>
+                    )}
+                  </td>
+                  <td className="p-4">
+                    {account.unlimited ? (
+                      <span className="flex items-center gap-1 text-purple-400 font-medium">
+                        <Infinity className="w-4 h-4" />
+                        Sınırsız
+                      </span>
+                    ) : (
+                      <span className="text-slate-400">1 Adet</span>
                     )}
                   </td>
                   <td className="p-4">
@@ -358,7 +419,6 @@ export default function AdminAccountsPage() {
                         size="icon"
                         onClick={() => handleDelete(account)}
                         className="text-slate-400 hover:text-red-400"
-                        disabled={account.status === 'sold'}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -392,15 +452,68 @@ export default function AdminAccountsPage() {
               />
             </div>
 
-            {/* Image URL */}
+            {/* Image Upload */}
             <div>
-              <Label className="text-slate-300">Görsel URL</Label>
-              <Input
-                value={formData.imageUrl}
-                onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
-                placeholder="https://..."
-                className="mt-1 bg-slate-800 border-slate-700 text-white"
-              />
+              <Label className="text-slate-300">Hesap Görseli</Label>
+              <div className="mt-2 space-y-3">
+                {/* Preview */}
+                {formData.imageUrl && (
+                  <div className="relative w-32 h-32 rounded-lg overflow-hidden bg-slate-800">
+                    <img 
+                      src={formData.imageUrl} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+                      className="absolute top-1 right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-sm hover:bg-red-600"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                
+                {/* Upload Button */}
+                <div className="flex gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Yükleniyor...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Resim Yükle (PNG/JPG)
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
+                {/* Or URL Input */}
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 text-sm">veya URL girin:</span>
+                </div>
+                <Input
+                  value={formData.imageUrl}
+                  onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
+                  placeholder="https://..."
+                  className="bg-slate-800 border-slate-700 text-white"
+                />
+              </div>
             </div>
 
             {/* Price Row */}
@@ -425,6 +538,21 @@ export default function AdminAccountsPage() {
                   className="mt-1 bg-slate-800 border-slate-700 text-white"
                 />
               </div>
+            </div>
+
+            {/* Unlimited Toggle */}
+            <div className="flex items-center justify-between p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Infinity className="w-5 h-5 text-purple-400" />
+                <div>
+                  <Label className="text-white font-medium">Sınırsız Satış</Label>
+                  <p className="text-slate-400 text-sm">Random hesap için - satıldığında tekrar satılabilir</p>
+                </div>
+              </div>
+              <Switch
+                checked={formData.unlimited}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, unlimited: checked }))}
+              />
             </div>
 
             {/* Legendary Range */}
@@ -480,7 +608,7 @@ export default function AdminAccountsPage() {
               <Textarea
                 value={formData.features}
                 onChange={(e) => setFormData(prev => ({ ...prev, features: e.target.value }))}
-                placeholder="Glacier M416\nPharaoh X-Suit\nMaxed RP"
+                placeholder="Glacier M416&#10;Pharaoh X-Suit&#10;Maxed RP"
                 rows={3}
                 className="mt-1 bg-slate-800 border-slate-700 text-white"
               />
@@ -507,7 +635,7 @@ export default function AdminAccountsPage() {
               <Textarea
                 value={formData.credentials}
                 onChange={(e) => setFormData(prev => ({ ...prev, credentials: e.target.value }))}
-                placeholder="E-posta: xxx@xxx.com\nŞifre: xxxxxx\n..."
+                placeholder="E-posta: xxx@xxx.com&#10;Şifre: xxxxxx&#10;..."
                 rows={3}
                 className="mt-2 bg-slate-800 border-slate-700 text-white font-mono text-sm"
               />

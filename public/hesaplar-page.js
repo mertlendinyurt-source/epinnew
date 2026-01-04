@@ -108,10 +108,10 @@ export default function HesaplarPage() {
   const fetchReviews = async () => {
     setLoadingReviews(true)
     try {
-      const response = await fetch('/api/reviews?game=pubg&page=1&limit=5')
+      const response = await fetch('/api/reviews?page=1&limit=5')
       const data = await response.json()
       if (data.success) {
-        setReviews(data.data.reviews)
+        setReviews(data.data.reviews || [])
         setReviewStats({
           avgRating: data.data.avgRating || 5.0,
           reviewCount: data.data.totalCount || 0

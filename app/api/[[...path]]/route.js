@@ -7714,6 +7714,34 @@ export async function DELETE(request) {
       });
     }
 
+    // Delete PUBG Account (Admin)
+    if (pathname.match(/^\/api\/admin\/accounts\/[^\/]+$/)) {
+      const accountId = pathname.split('/').pop();
+      
+      const account = await db.collection('accounts').findOne({ id: accountId });
+      if (!account) {
+        return NextResponse.json(
+          { success: false, error: 'Hesap bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Satılmış hesap silinemez
+      if (account.status === 'sold') {
+        return NextResponse.json(
+          { success: false, error: 'Satılmış hesap silinemez' },
+          { status: 400 }
+        );
+      }
+
+      await db.collection('accounts').deleteOne({ id: accountId });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Hesap silindi'
+      });
+    }
+
     // Delete product (HARD DELETE - permanently remove from database)
     if (pathname.match(/^\/api\/admin\/products\/[^\/]+$/)) {
       const user = verifyAdminToken(request);

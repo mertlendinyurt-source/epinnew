@@ -8688,22 +8688,25 @@ export async function DELETE(request) {
         .toArray();
 
       // Hassas bilgileri gizle
-      const publicAccounts = accounts.map(acc => ({
-        id: acc.id,
-        title: acc.title,
-        description: acc.description,
-        price: acc.price,
-        discountPrice: acc.discountPrice,
-        discountPercent: acc.discountPercent,
-        imageUrl: acc.imageUrl,
-        legendaryMin: acc.legendaryMin,
-        legendaryMax: acc.legendaryMax,
-        level: acc.level,
-        rank: acc.rank,
-        features: acc.features,
-        order: acc.order || 0,
-        createdAt: acc.createdAt
-      }));
+      const publicAccounts = accounts.map(acc => {
+        console.log('Account order:', acc.title, acc.order); // DEBUG
+        return {
+          id: acc.id,
+          title: acc.title,
+          description: acc.description,
+          price: acc.price,
+          discountPrice: acc.discountPrice,
+          discountPercent: acc.discountPercent,
+          imageUrl: acc.imageUrl,
+          legendaryMin: acc.legendaryMin,
+          legendaryMax: acc.legendaryMax,
+          level: acc.level,
+          rank: acc.rank,
+          features: acc.features,
+          order: acc.order || 0,
+          createdAt: acc.createdAt
+        };
+      });
 
       return NextResponse.json({ success: true, data: publicAccounts });
     }

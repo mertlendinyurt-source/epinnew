@@ -1666,7 +1666,7 @@ export async function GET(request) {
       }
     }
 
-    // Admin: Get all orders
+    // Admin: Get all orders (UC + Account Orders combined)
     if (pathname === '/api/admin/orders') {
       const user = verifyAdminToken(request);
       if (!user) {
@@ -1685,19 +1685,36 @@ export async function GET(request) {
       if (riskStatus) query['risk.status'] = riskStatus;
       if (deliveryStatus) query['delivery.status'] = deliveryStatus;
       
-      const orders = await db.collection('orders')
+      // Fetch UC orders
+      const ucOrders = await db.collection('orders')
         .find(query)
         .sort({ createdAt: -1 })
         .toArray();
       
+      // Fetch Account orders
+      const accountOrders = await db.collection('account_orders')
+        .find(query)
+        .sort({ createdAt: -1 })
+        .toArray();
+      
+      // Mark account orders with orderType
+      const markedAccountOrders = accountOrders.map(order => ({
+        ...order,
+        orderType: 'account'
+      }));
+      
+      // Combine both order types
+      const allOrders = [...ucOrders, ...markedAccountOrders];
+      allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
       // Get user details for each order
-      const userIds = [...new Set(orders.map(o => o.userId).filter(Boolean))];
+      const userIds = [...new Set(allOrders.map(o => o.userId).filter(Boolean))];
       const users = await db.collection('users').find({ id: { $in: userIds } }).toArray();
       const userMap = {};
       users.forEach(u => { userMap[u.id] = u; });
       
       // Enrich orders with user info
-      const enrichedOrders = orders.map(order => {
+      const enrichedOrders = allOrders.map(order => {
         const user = userMap[order.userId];
         return {
           ...order,
@@ -1707,11 +1724,16 @@ export async function GET(request) {
         };
       });
       
-      // Add flagged count for badge
-      const flaggedCount = await db.collection('orders').countDocuments({ 
+      // Add flagged count for badge (both order types)
+      const ucFlaggedCount = await db.collection('orders').countDocuments({ 
         'risk.status': 'FLAGGED',
         'delivery.status': 'hold'
       });
+      const accountFlaggedCount = await db.collection('account_orders').countDocuments({ 
+        'risk.status': 'FLAGGED',
+        'delivery.status': 'hold'
+      });
+      const flaggedCount = ucFlaggedCount + accountFlaggedCount;
       
       return NextResponse.json({ 
         success: true, 

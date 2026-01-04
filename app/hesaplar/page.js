@@ -118,9 +118,29 @@ export default function HesaplarPage() {
           avgRating: data.data.stats?.avgRating || 5.0,
           reviewCount: data.data.stats?.reviewCount || data.data.pagination?.total || 0
         })
+        setReviewsPage(1)
+        setReviewsHasMore(data.data.pagination?.hasMore || false)
       }
     } catch (error) {
       console.error('Error fetching reviews:', error)
+    } finally {
+      setLoadingReviews(false)
+    }
+  }
+
+  const loadMoreReviews = async () => {
+    setLoadingReviews(true)
+    try {
+      const nextPage = reviewsPage + 1
+      const response = await fetch(`/api/reviews?game=pubg&page=${nextPage}&limit=5`)
+      const data = await response.json()
+      if (data.success) {
+        setReviews(prev => [...prev, ...(data.data.reviews || [])])
+        setReviewsPage(nextPage)
+        setReviewsHasMore(data.data.pagination?.hasMore || false)
+      }
+    } catch (error) {
+      console.error('Error loading more reviews:', error)
     } finally {
       setLoadingReviews(false)
     }

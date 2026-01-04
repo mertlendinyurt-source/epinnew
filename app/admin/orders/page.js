@@ -158,7 +158,17 @@ export default function AdminOrders() {
     setProcessingOrder(orderId)
     try {
       const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
-      const response = await fetch(`/api/admin/orders/${orderId}/assign-stock`, {
+      
+      // Determine order type
+      const order = orders.find(o => o.id === orderId)
+      const isAccountOrder = order?.orderType === 'account' || order?.accountId
+      
+      // Use correct endpoint based on order type
+      const endpoint = isAccountOrder 
+        ? `/api/admin/account-orders/${orderId}/assign-stock`
+        : `/api/admin/orders/${orderId}/assign-stock`
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

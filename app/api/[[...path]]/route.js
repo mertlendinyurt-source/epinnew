@@ -5720,7 +5720,7 @@ export async function POST(request) {
         );
       }
 
-      const { title, description, price, discountPrice, imageUrl, legendaryMin, legendaryMax, level, rank, features, credentials, unlimited } = body;
+      const { title, description, price, discountPrice, imageUrl, legendaryMin, legendaryMax, level, rank, features, credentials, unlimited, order } = body;
 
       if (!title || !price) {
         return NextResponse.json(
@@ -5750,6 +5750,7 @@ export async function POST(request) {
         features: features || [],
         credentials: credentials || '', // Hesap bilgileri (gizli - sadece admin görür)
         unlimited: unlimited !== false, // Varsayılan: true (sınırsız satış)
+        order: order !== undefined ? parseInt(order) : 0, // Sıralama
         salesCount: 0,
         status: 'available', // available, reserved, sold
         active: true,

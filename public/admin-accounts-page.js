@@ -27,7 +27,8 @@ export default function AdminAccountsPage() {
     rank: '',
     features: '',
     credentials: '',
-    unlimited: true
+    unlimited: true,
+    order: ''
   })
   const [saving, setSaving] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -84,7 +85,8 @@ export default function AdminAccountsPage() {
         rank: account.rank || '',
         features: account.features?.join('\n') || '',
         credentials: account.credentials || '',
-        unlimited: account.unlimited !== false
+        unlimited: account.unlimited !== false,
+        order: account.order?.toString() || ''
       })
     } else {
       setEditingAccount(null)
@@ -100,7 +102,8 @@ export default function AdminAccountsPage() {
         rank: '',
         features: '',
         credentials: '',
-        unlimited: true
+        unlimited: true,
+        order: ''
       })
     }
     setModalOpen(true)
@@ -171,7 +174,8 @@ export default function AdminAccountsPage() {
         rank: formData.rank,
         features: formData.features.split('\n').filter(f => f.trim()),
         credentials: formData.credentials,
-        unlimited: formData.unlimited
+        unlimited: formData.unlimited,
+        order: formData.order ? parseInt(formData.order) : undefined
       }
 
       const url = editingAccount 
@@ -695,6 +699,19 @@ export default function AdminAccountsPage() {
                   className="mt-1 bg-slate-800 border-slate-700 text-white"
                 />
               </div>
+            </div>
+
+            {/* Order / Sıralama */}
+            <div>
+              <Label className="text-slate-300">Sıralama (Düşük numara üstte görünür)</Label>
+              <Input
+                type="number"
+                value={formData.order}
+                onChange={(e) => setFormData(prev => ({ ...prev, order: e.target.value }))}
+                placeholder="0"
+                className="mt-1 bg-slate-800 border-slate-700 text-white"
+              />
+              <p className="text-xs text-slate-400 mt-1">Örn: 1, 2, 3... (Boş bırakılırsa otomatik sıralanır)</p>
             </div>
 
             {/* Unlimited Toggle */}

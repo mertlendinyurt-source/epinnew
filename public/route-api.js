@@ -5768,6 +5768,29 @@ export async function POST(request) {
       });
     }
 
+    // Admin: Fix missing order values (migration - one-time use)
+    if (pathname === '/api/admin/accounts/fix-order') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      // Update all accounts without order field
+      const result = await db.collection('accounts').updateMany(
+        { $or: [{ order: { $exists: false } }, { order: null }] },
+        { $set: { order: 0 } }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: `${result.modifiedCount} hesap güncellendi`,
+        data: { modifiedCount: result.modifiedCount }
+      });
+    }
+
     // Admin: Add stock to account
     if (pathname.match(/^\/api\/admin\/accounts\/[^\/]+\/stock$/)) {
       const user = verifyAdminToken(request);
@@ -8630,7 +8653,7 @@ export async function DELETE(request) {
 
       const accounts = await db.collection('accounts')
         .find({})
-        .sort({ createdAt: -1 })
+        .sort({ order: 1, createdAt: -1 })
         .toArray();
 
       return NextResponse.json({ success: true, data: accounts });

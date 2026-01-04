@@ -7866,6 +7866,316 @@ export async function DELETE(request) {
       });
     }
 
+    // ============================================
+    // 🎮 PUBG HESAP SATIŞ API - ADMIN ENDPOINTS
+    // ============================================
+
+    // Admin: Hesap Listesi
+    if (pathname === '/api/admin/accounts') {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const accounts = await db.collection('accounts')
+        .find({})
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      return NextResponse.json({ success: true, data: accounts });
+    }
+
+    // Admin: Tek Hesap Detayı
+    if (pathname.match(/^\/api\/admin\/accounts\/([^\/]+)$/)) {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const accountId = pathname.split('/').pop();
+      const account = await db.collection('accounts').findOne({ id: accountId });
+
+      if (!account) {
+        return NextResponse.json({ success: false, error: 'Hesap bulunamadı' }, { status: 404 });
+      }
+
+      return NextResponse.json({ success: true, data: account });
+    }
+
+    // ============================================
+    // 🎮 PUBG HESAP SATIŞ API - PUBLIC ENDPOINTS
+    // ============================================
+
+    // Public: Aktif Hesap Listesi
+    if (pathname === '/api/accounts') {
+      const accounts = await db.collection('accounts')
+        .find({ active: true, status: 'available' })
+        .sort({ sortOrder: 1, createdAt: -1 })
+        .toArray();
+
+      // Hassas bilgileri gizle
+      const publicAccounts = accounts.map(acc => ({
+        id: acc.id,
+        title: acc.title,
+        description: acc.description,
+        price: acc.price,
+        discountPrice: acc.discountPrice,
+        discountPercent: acc.discountPercent,
+        imageUrl: acc.imageUrl,
+        legendaryMin: acc.legendaryMin,
+        legendaryMax: acc.legendaryMax,
+        level: acc.level,
+        rank: acc.rank,
+        features: acc.features,
+        createdAt: acc.createdAt
+      }));
+
+      return NextResponse.json({ success: true, data: publicAccounts });
+    }
+
+    // Public: Tek Hesap Detayı
+    if (pathname.match(/^\/api\/accounts\/([^\/]+)$/)) {
+      const accountId = pathname.split('/').pop();
+      const account = await db.collection('accounts').findOne({ 
+        id: accountId, 
+        active: true, 
+        status: 'available' 
+      });
+
+      if (!account) {
+        return NextResponse.json({ success: false, error: 'Hesap bulunamadı' }, { status: 404 });
+      }
+
+      // Hassas bilgileri gizle
+      const publicAccount = {
+        id: account.id,
+        title: account.title,
+        description: account.description,
+        price: account.price,
+        discountPrice: account.discountPrice,
+        discountPercent: account.discountPercent,
+        imageUrl: account.imageUrl,
+        legendaryMin: account.legendaryMin,
+        legendaryMax: account.legendaryMax,
+        level: account.level,
+        rank: account.rank,
+        features: account.features,
+        createdAt: account.createdAt
+      };
+
+      return NextResponse.json({ success: true, data: publicAccount });
+    }
+
+    // Hesap Siparişi Oluştur (AUTH REQUIRED)
+    if (pathname === '/api/account-orders') {
+      // Verify user authentication
+      const authUser = verifyToken(request);
+      if (!authUser || authUser.type !== 'user') {
+        return NextResponse.json(
+          { success: false, error: 'Sipariş vermek için giriş yapmalısınız', code: 'AUTH_REQUIRED' },
+          { status: 401 }
+        );
+      }
+
+      const { accountId, paymentMethod } = body;
+      
+      if (!accountId) {
+        return NextResponse.json(
+          { success: false, error: 'Hesap ID gerekli' },
+          { status: 400 }
+        );
+      }
+
+      // Get user details
+      const user = await db.collection('users').findOne({ id: authUser.id });
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 });
+      }
+
+      // Validate user has required customer information
+      if (!user.firstName || !user.lastName || !user.email || !user.phone) {
+        return NextResponse.json(
+          { success: false, error: 'Profil bilgileriniz eksik. Lütfen hesap ayarlarından tamamlayın.', code: 'INCOMPLETE_PROFILE' },
+          { status: 400 }
+        );
+      }
+
+      // Get account (price controlled by backend)
+      const account = await db.collection('accounts').findOne({ 
+        id: accountId, 
+        active: true, 
+        status: 'available' 
+      });
+
+      if (!account) {
+        return NextResponse.json({ success: false, error: 'Hesap bulunamadı veya satışta değil' }, { status: 404 });
+      }
+
+      const orderAmount = account.discountPrice || account.price || 0;
+      const customerSnapshot = {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone
+      };
+
+      // Balance Payment
+      if (paymentMethod === 'balance') {
+        const userBalance = user.balance || 0;
+
+        if (userBalance < orderAmount) {
+          return NextResponse.json(
+            { success: false, error: `Yetersiz bakiye. Mevcut: ${userBalance.toFixed(2)} ₺, Gerekli: ${orderAmount.toFixed(2)} ₺` },
+            { status: 400 }
+          );
+        }
+
+        // Create order
+        const order = {
+          id: uuidv4(),
+          type: 'account', // HESAP SİPARİŞİ
+          userId: user.id,
+          accountId: accountId,
+          accountTitle: account.title,
+          accountImageUrl: account.imageUrl || null,
+          customer: customerSnapshot,
+          status: 'paid',
+          paymentMethod: 'balance',
+          amount: orderAmount,
+          totalAmount: orderAmount,
+          currency: 'TRY',
+          delivery: {
+            status: 'pending',
+            message: 'Hesap bilgileri hazırlanıyor...',
+            credentials: null // Admin tarafından doldurulacak
+          },
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        // Deduct balance
+        const newBalance = userBalance - orderAmount;
+        await db.collection('users').updateOne(
+          { id: user.id },
+          { $set: { balance: newBalance, updatedAt: new Date() } }
+        );
+
+        // Balance transaction record
+        await db.collection('balance_transactions').insertOne({
+          id: uuidv4(),
+          userId: user.id,
+          type: 'account_purchase',
+          amount: -orderAmount,
+          balanceBefore: userBalance,
+          balanceAfter: newBalance,
+          description: `Hesap satın alma: ${account.title}`,
+          orderId: order.id,
+          createdAt: new Date()
+        });
+
+        // Insert order
+        await db.collection('orders').insertOne(order);
+
+        // Mark account as sold
+        await db.collection('accounts').updateOne(
+          { id: accountId },
+          { 
+            $set: { 
+              status: 'sold', 
+              soldAt: new Date(),
+              soldToUserId: user.id,
+              orderId: order.id
+            } 
+          }
+        );
+
+        return NextResponse.json({
+          success: true,
+          message: 'Hesap siparişi oluşturuldu!',
+          data: { orderId: order.id }
+        });
+      }
+
+      // Card Payment - Shopier
+      const shopierSettings = await db.collection('shopier_settings').findOne({ isActive: true });
+      if (!shopierSettings) {
+        return NextResponse.json(
+          { success: false, error: 'Ödeme sistemi yapılandırılmamış' },
+          { status: 503 }
+        );
+      }
+
+      // Create pending order
+      const order = {
+        id: uuidv4(),
+        type: 'account', // HESAP SİPARİŞİ
+        userId: user.id,
+        accountId: accountId,
+        accountTitle: account.title,
+        accountImageUrl: account.imageUrl || null,
+        customer: customerSnapshot,
+        status: 'pending',
+        paymentMethod: 'card',
+        amount: orderAmount,
+        totalAmount: orderAmount,
+        currency: 'TRY',
+        delivery: {
+          status: 'pending',
+          message: 'Ödeme bekleniyor...',
+          credentials: null
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      await db.collection('orders').insertOne(order);
+
+      // Mark account as reserved temporarily
+      await db.collection('accounts').updateOne(
+        { id: accountId },
+        { $set: { status: 'reserved', reservedAt: new Date(), reservedByOrderId: order.id } }
+      );
+
+      // Generate Shopier form
+      const apiKey = decrypt(shopierSettings.apiKey);
+      const apiSecret = decrypt(shopierSettings.apiSecret);
+      
+      const formData = {
+        API_key: apiKey,
+        website_index: '1',
+        platform_order_id: order.id,
+        product_name: account.title,
+        product_type: '2', // Digital product
+        buyer_name: user.firstName,
+        buyer_surname: user.lastName,
+        buyer_email: user.email,
+        buyer_phone: user.phone.replace(/[^0-9]/g, ''),
+        buyer_account: user.id,
+        buyer_id_nr: '',
+        total: orderAmount.toFixed(2),
+        random_nr: Date.now().toString(),
+        currency: '0' // TRY
+      };
+
+      // Generate signature
+      const signatureData = `${formData.random_nr}${formData.platform_order_id}${formData.total}${formData.currency}`;
+      const signature = require('crypto')
+        .createHmac('sha256', apiSecret)
+        .update(signatureData)
+        .digest('base64');
+      
+      formData.signature = signature;
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          orderId: order.id,
+          paymentUrl: 'https://www.shopier.com/ShowProduct/api_pay4.php',
+          formData: formData
+        }
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

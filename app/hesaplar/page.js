@@ -705,9 +705,9 @@ export default function HesaplarPage() {
                   )}
                 </div>
 
-                {/* Right Column - Product Details */}
+                {/* Right Column - Product Details - HIDDEN ON MOBILE */}
                 {selectedAccount && (
-                  <div className="p-5 md:p-8 space-y-6 md:space-y-8 bg-[#1a1e24]/95">
+                  <div className="hidden md:block p-5 md:p-8 space-y-6 md:space-y-8 bg-[#1a1e24]/95">
                     <div>
                       <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Hesap</Label>
                       <div className="flex items-start gap-4">

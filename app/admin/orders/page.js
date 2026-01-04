@@ -779,13 +779,40 @@ export default function AdminOrders() {
                 </div>
               )}
 
-              {/* Stok Bekliyor durumundaki siparişler için Stok Ata butonu */}
+              {/* Stok Bekliyor durumundaki siparişler için Stok Seçme + Ata */}
               {selectedOrder.delivery?.status === 'pending' && selectedOrder.status === 'paid' && (
-                <div className="flex gap-3 pt-4 border-t border-slate-800">
+                <div className="space-y-3 pt-4 border-t border-slate-800">
+                  {/* Account orders için stok seçme dropdown */}
+                  {selectedOrder.accountId && (
+                    <div>
+                      <label className="text-sm font-medium text-slate-300 mb-2 block">
+                        Atanacak Hesap Stoğu Seçin:
+                      </label>
+                      {loadingStocks ? (
+                        <div className="text-sm text-slate-400">Stoklar yükleniyor...</div>
+                      ) : availableStocks.length > 0 ? (
+                        <Select value={selectedStockId} onValueChange={setSelectedStockId}>
+                          <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                            <SelectValue placeholder="Stok seçin..." />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-700">
+                            {availableStocks.map((stock) => (
+                              <SelectItem key={stock.id} value={stock.id} className="text-white hover:bg-slate-700">
+                                {stock.credentials?.substring(0, 50)}... (Stok ID: {stock.id.substring(0, 8)})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="text-sm text-red-400">⚠️ Bu hesap için mevcut stok yok</div>
+                      )}
+                    </div>
+                  )}
+                  
                   <Button
                     onClick={() => handleAssignStock(selectedOrder.id)}
-                    disabled={processingOrder === selectedOrder.id}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    disabled={processingOrder === selectedOrder.id || (selectedOrder.accountId && !selectedStockId)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                   >
                     <Package className="w-4 h-4 mr-2" />
                     {processingOrder === selectedOrder.id ? 'Stok Atanıyor...' : 'Stok Ata'}

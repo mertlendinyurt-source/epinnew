@@ -216,7 +216,6 @@ export default function HesaplarPage() {
       }, 300)
     }
   }
-  }
 
   const filteredAccounts = accounts.filter(account => {
     // Price filter

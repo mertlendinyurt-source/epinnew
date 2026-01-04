@@ -718,6 +718,17 @@ export default function HesaplarPage() {
                 </div>
               )}
             </div>
+
+            {/* Load More Button */}
+            {reviewsHasMore && (
+              <button
+                onClick={loadMoreReviews}
+                disabled={loadingReviews}
+                className="mt-6 w-full py-3 bg-[#282d36] hover:bg-[#323842] rounded-lg text-blue-400 font-medium text-sm transition-colors disabled:opacity-50"
+              >
+                {loadingReviews ? 'Yükleniyor...' : 'Daha fazla görüntüle'}
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -700,6 +700,19 @@ export default function AdminAccountsPage() {
               </div>
             </div>
 
+            {/* Order / Sıralama */}
+            <div>
+              <Label className="text-slate-300">Sıralama (Düşük numara üstte görünür)</Label>
+              <Input
+                type="number"
+                value={formData.order}
+                onChange={(e) => setFormData(prev => ({ ...prev, order: e.target.value }))}
+                placeholder="0"
+                className="mt-1 bg-slate-800 border-slate-700 text-white"
+              />
+              <p className="text-xs text-slate-400 mt-1">Örn: 1, 2, 3... (Boş bırakılırsa otomatik sıralanır)</p>
+            </div>
+
             {/* Unlimited Toggle */}
             <div className="flex items-center justify-between p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
               <div className="flex items-center gap-3">

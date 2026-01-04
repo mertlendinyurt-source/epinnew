@@ -484,7 +484,7 @@ export default function HesaplarPage() {
                   <div
                     key={account.id}
                     onClick={() => handleAccountSelect(account)}
-                    className="group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border border-white/10 hover:border-purple-500/50 w-full aspect-[2/3.2] md:aspect-[2/2.8]"
+                    className="group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border border-white/10 hover:border-purple-500/50 w-full"
                     style={{ backgroundColor: '#252a34', maxWidth: '280px', margin: '0 auto' }}
                   >
                     {/* Info Icon */}
@@ -492,8 +492,8 @@ export default function HesaplarPage() {
                       <span className="text-gray-700 font-bold text-sm md:text-xs">i</span>
                     </div>
 
-                    {/* Image Section - Büyütüldü */}
-                    <div className="relative h-[55%] md:h-[60%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-2 md:p-3">
+                    {/* Image Section */}
+                    <div className="relative aspect-square bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-2">
                       {account.imageUrl ? (
                         <img 
                           src={account.imageUrl}
@@ -511,41 +511,42 @@ export default function HesaplarPage() {
                     </div>
 
                     {/* Content Section */}
-                    <div className="h-[45%] md:h-[40%] flex flex-col justify-between p-3 md:p-3.5">
-                      <div>
-                        <div className="text-[12px] md:text-[10px] text-purple-400 font-bold uppercase">HESAP</div>
-                        <div className="text-[14px] md:text-[12px] font-bold text-white line-clamp-2">{account.title}</div>
-                        
-                        {/* Legendary Badge */}
-                        {account.legendaryMax > 0 && (
-                          <div className="flex items-center gap-1 mt-1">
-                            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                            <span className="text-[11px] md:text-[9px] text-yellow-400 font-medium">
-                              {account.legendaryMin}-{account.legendaryMax} Destansı
-                            </span>
-                          </div>
-                        )}
-                        
-                        {/* Level & Rank */}
+                    <div className="flex flex-col p-3">
+                      <div className="text-[11px] text-purple-400 font-bold uppercase">HESAP</div>
+                      <div className="text-[14px] md:text-[13px] font-bold text-white line-clamp-2 min-h-[40px]">{account.title}</div>
+                      
+                      {/* Legendary Badge */}
+                      {account.legendaryMax > 0 && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                          <span className="text-[11px] text-yellow-400 font-medium">
+                            {account.legendaryMin}-{account.legendaryMax} Destansı
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Level & Rank */}
+                      {(account.level > 0 || account.rank) && (
                         <div className="flex items-center gap-2 mt-1">
                           {account.level > 0 && (
-                            <span className="text-[10px] md:text-[9px] text-white/60">Lv.{account.level}</span>
+                            <span className="text-[10px] text-white/60">Lv.{account.level}</span>
                           )}
                           {account.rank && (
-                            <span className="text-[10px] md:text-[9px] text-white/60">{account.rank}</span>
+                            <span className="text-[10px] text-white/60">{account.rank}</span>
                           )}
                         </div>
-                      </div>
+                      )}
                       
-                      <div className="mt-2">
-                        <div className="flex items-center gap-2">
+                      {/* Price Section */}
+                      <div className="mt-3 pt-2 border-t border-white/10">
+                        <div className="flex items-baseline gap-2 flex-wrap">
                           {account.discountPrice < account.price && (
-                            <span className="text-[12px] md:text-[10px] text-red-400 line-through">₺{account.price.toFixed(2).replace('.', ',')}</span>
+                            <span className="text-[12px] text-red-400 line-through">₺{account.price.toFixed(2).replace('.', ',')}</span>
                           )}
-                          <span className="text-[20px] md:text-[16px] font-bold text-white">₺{account.discountPrice.toFixed(2).replace('.', ',')}</span>
+                          <span className="text-[18px] font-bold text-white">₺{account.discountPrice.toFixed(2).replace('.', ',')}</span>
                         </div>
                         {account.discountPercent > 0 && (
-                          <div className="text-[12px] md:text-[10px] text-emerald-400 font-medium mt-0.5">%{account.discountPercent} indirim</div>
+                          <div className="text-[11px] text-emerald-400 font-medium mt-1">%{account.discountPercent} indirim</div>
                         )}
                       </div>
                     </div>

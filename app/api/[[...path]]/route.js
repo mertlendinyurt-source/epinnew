@@ -7160,11 +7160,13 @@ export async function POST(request) {
 
       await db.collection('orders').insertOne(order);
 
-      // Mark account as reserved temporarily
-      await db.collection('accounts').updateOne(
-        { id: accountId },
-        { $set: { status: 'reserved', reservedAt: new Date(), reservedByOrderId: order.id } }
-      );
+      // Mark account as reserved temporarily (only for non-unlimited accounts)
+      if (!account.unlimited) {
+        await db.collection('accounts').updateOne(
+          { id: accountId },
+          { $set: { status: 'reserved', reservedAt: new Date(), reservedByOrderId: order.id } }
+        );
+      }
 
       // Generate Shopier form
       const apiKey = decrypt(shopierSettings.apiKey);

@@ -72,6 +72,18 @@ export default function HesaplarPage() {
     }
   }
 
+  const fetchFooterSettings = async () => {
+    try {
+      const response = await fetch('/api/footer-settings')
+      const data = await response.json()
+      if (data.success) {
+        setFooterSettings(data.data)
+      }
+    } catch (error) {
+      console.error('Error fetching footer settings:', error)
+    }
+  }
+
   const fetchAccounts = async () => {
     try {
       const response = await fetch('/api/accounts')

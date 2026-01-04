@@ -5570,7 +5570,7 @@ export async function POST(request) {
         );
       }
 
-      const { title, description, price, discountPrice, imageUrl, legendaryMin, legendaryMax, level, rank, features, credentials } = body;
+      const { title, description, price, discountPrice, imageUrl, legendaryMin, legendaryMax, level, rank, features, credentials, unlimited } = body;
 
       if (!title || !price) {
         return NextResponse.json(
@@ -5599,6 +5599,8 @@ export async function POST(request) {
         rank: rank || '',
         features: features || [],
         credentials: credentials || '', // Hesap bilgileri (gizli - sadece admin görür)
+        unlimited: unlimited !== false, // Varsayılan: true (sınırsız satış)
+        salesCount: 0,
         status: 'available', // available, reserved, sold
         active: true,
         sortOrder: 0,
@@ -7095,18 +7097,29 @@ export async function POST(request) {
         // Insert order
         await db.collection('orders').insertOne(order);
 
-        // Mark account as sold
-        await db.collection('accounts').updateOne(
-          { id: accountId },
-          { 
-            $set: { 
-              status: 'sold', 
-              soldAt: new Date(),
-              soldToUserId: user.id,
-              orderId: order.id
-            } 
-          }
-        );
+        // Mark account as sold ONLY if not unlimited
+        if (!account.unlimited) {
+          await db.collection('accounts').updateOne(
+            { id: accountId },
+            { 
+              $set: { 
+                status: 'sold', 
+                soldAt: new Date(),
+                soldToUserId: user.id,
+                orderId: order.id
+              } 
+            }
+          );
+        } else {
+          // For unlimited accounts, just increment sales count
+          await db.collection('accounts').updateOne(
+            { id: accountId },
+            { 
+              $inc: { salesCount: 1 },
+              $set: { lastSoldAt: new Date() }
+            }
+          );
+        }
 
         return NextResponse.json({
           success: true,
@@ -7149,11 +7162,13 @@ export async function POST(request) {
 
       await db.collection('orders').insertOne(order);
 
-      // Mark account as reserved temporarily
-      await db.collection('accounts').updateOne(
-        { id: accountId },
-        { $set: { status: 'reserved', reservedAt: new Date(), reservedByOrderId: order.id } }
-      );
+      // Mark account as reserved temporarily (only for non-unlimited accounts)
+      if (!account.unlimited) {
+        await db.collection('accounts').updateOne(
+          { id: accountId },
+          { $set: { status: 'reserved', reservedAt: new Date(), reservedByOrderId: order.id } }
+        );
+      }
 
       // Generate Shopier form
       const apiKey = decrypt(shopierSettings.apiKey);

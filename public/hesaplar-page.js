@@ -482,8 +482,18 @@ export default function HesaplarPage() {
           {/* Accounts Grid - UC kartları gibi */}
           <div className="flex-1">
             {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+                {[1,2,3,4,5,6].map(i => (
+                  <div key={i} className="rounded-lg overflow-hidden" style={{backgroundColor: '#252a34', maxWidth: '280px', margin: '0 auto'}}>
+                    <div className="aspect-[4/3] bg-gray-700/20 animate-pulse" />
+                    <div className="p-3 space-y-2">
+                      <div className="h-3 bg-gray-700/20 rounded animate-pulse w-16" />
+                      <div className="h-4 bg-gray-700/20 rounded animate-pulse w-full" />
+                      <div className="h-3 bg-gray-700/20 rounded animate-pulse w-20" />
+                      <div className="h-6 bg-gray-700/20 rounded animate-pulse w-24 mt-3" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredAccounts.length === 0 ? (
               <div className="text-center py-20">

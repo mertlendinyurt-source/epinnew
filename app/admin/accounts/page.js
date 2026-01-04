@@ -85,7 +85,8 @@ export default function AdminAccountsPage() {
         rank: account.rank || '',
         features: account.features?.join('\n') || '',
         credentials: account.credentials || '',
-        unlimited: account.unlimited !== false
+        unlimited: account.unlimited !== false,
+        order: account.order?.toString() || ''
       })
     } else {
       setEditingAccount(null)
@@ -101,7 +102,8 @@ export default function AdminAccountsPage() {
         rank: '',
         features: '',
         credentials: '',
-        unlimited: true
+        unlimited: true,
+        order: ''
       })
     }
     setModalOpen(true)

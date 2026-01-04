@@ -105,6 +105,25 @@ export default function HesaplarPage() {
     }
   }
 
+  const fetchReviews = async () => {
+    setLoadingReviews(true)
+    try {
+      const response = await fetch('/api/reviews?game=pubg&page=1&limit=5')
+      const data = await response.json()
+      if (data.success) {
+        setReviews(data.data.reviews)
+        setReviewStats({
+          avgRating: data.data.avgRating || 5.0,
+          reviewCount: data.data.totalCount || 0
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error)
+    } finally {
+      setLoadingReviews(false)
+    }
+  }
+
   const handleAccountSelect = (account) => {
     setSelectedAccount(account)
     // Auto-select payment method based on balance

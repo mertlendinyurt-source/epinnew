@@ -29,12 +29,18 @@ export default function HesaplarPage() {
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalTab, setAuthModalTab] = useState('login')
   const [footerSettings, setFooterSettings] = useState(null)
+  
+  // Reviews states
+  const [reviews, setReviews] = useState([])
+  const [reviewStats, setReviewStats] = useState({ avgRating: 5.0, reviewCount: 0 })
+  const [loadingReviews, setLoadingReviews] = useState(false)
 
   useEffect(() => {
     fetchAccounts()
     fetchSiteSettings()
     fetchFooterSettings()
     checkAuth()
+    fetchReviews()
   }, [])
 
   const checkAuth = async () => {

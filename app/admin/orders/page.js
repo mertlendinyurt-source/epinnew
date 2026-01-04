@@ -14,7 +14,6 @@ import { toast } from 'sonner'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
-export const revalidate = 0
 
 export default function AdminOrders() {
   const router = useRouter()

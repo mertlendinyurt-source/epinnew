@@ -34,6 +34,8 @@ export default function HesaplarPage() {
   const [reviews, setReviews] = useState([])
   const [reviewStats, setReviewStats] = useState({ avgRating: 5.0, reviewCount: 0 })
   const [loadingReviews, setLoadingReviews] = useState(false)
+  const [reviewsPage, setReviewsPage] = useState(1)
+  const [reviewsHasMore, setReviewsHasMore] = useState(false)
 
   useEffect(() => {
     fetchAccounts()
@@ -116,9 +118,29 @@ export default function HesaplarPage() {
           avgRating: data.data.stats?.avgRating || 5.0,
           reviewCount: data.data.stats?.reviewCount || data.data.pagination?.total || 0
         })
+        setReviewsPage(1)
+        setReviewsHasMore(data.data.pagination?.hasMore || false)
       }
     } catch (error) {
       console.error('Error fetching reviews:', error)
+    } finally {
+      setLoadingReviews(false)
+    }
+  }
+
+  const loadMoreReviews = async () => {
+    setLoadingReviews(true)
+    try {
+      const nextPage = reviewsPage + 1
+      const response = await fetch(`/api/reviews?game=pubg&page=${nextPage}&limit=5`)
+      const data = await response.json()
+      if (data.success) {
+        setReviews(prev => [...prev, ...(data.data.reviews || [])])
+        setReviewsPage(nextPage)
+        setReviewsHasMore(data.data.pagination?.hasMore || false)
+      }
+    } catch (error) {
+      console.error('Error loading more reviews:', error)
     } finally {
       setLoadingReviews(false)
     }
@@ -696,6 +718,17 @@ export default function HesaplarPage() {
                 </div>
               )}
             </div>
+
+            {/* Load More Button */}
+            {reviewsHasMore && (
+              <button
+                onClick={loadMoreReviews}
+                disabled={loadingReviews}
+                className="mt-6 w-full py-3 bg-[#282d36] hover:bg-[#323842] rounded-lg text-blue-400 font-medium text-sm transition-colors disabled:opacity-50"
+              >
+                {loadingReviews ? 'Yükleniyor...' : 'Daha fazla görüntüle'}
+              </button>
+            )}
           </div>
         </div>
       </div>

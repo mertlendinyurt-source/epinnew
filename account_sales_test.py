@@ -38,7 +38,7 @@ def test_account_sales_api():
     user_data = {
         "firstName": "Test",
         "lastName": "User",
-        "email": "testuser@example.com",
+        "email": f"testuser{int(time.time())}@example.com",  # Unique email
         "phone": "5551234567",
         "password": "testpass123",
         "confirmPassword": "testpass123"

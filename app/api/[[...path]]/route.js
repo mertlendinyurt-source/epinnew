@@ -7095,18 +7095,29 @@ export async function POST(request) {
         // Insert order
         await db.collection('orders').insertOne(order);
 
-        // Mark account as sold
-        await db.collection('accounts').updateOne(
-          { id: accountId },
-          { 
-            $set: { 
-              status: 'sold', 
-              soldAt: new Date(),
-              soldToUserId: user.id,
-              orderId: order.id
-            } 
-          }
-        );
+        // Mark account as sold ONLY if not unlimited
+        if (!account.unlimited) {
+          await db.collection('accounts').updateOne(
+            { id: accountId },
+            { 
+              $set: { 
+                status: 'sold', 
+                soldAt: new Date(),
+                soldToUserId: user.id,
+                orderId: order.id
+              } 
+            }
+          );
+        } else {
+          // For unlimited accounts, just increment sales count
+          await db.collection('accounts').updateOne(
+            { id: accountId },
+            { 
+              $inc: { salesCount: 1 },
+              $set: { lastSoldAt: new Date() }
+            }
+          );
+        }
 
         return NextResponse.json({
           success: true,

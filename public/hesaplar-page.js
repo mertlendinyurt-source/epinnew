@@ -306,18 +306,18 @@ export default function HesaplarPage() {
         <div className="h-full max-w-[1920px] mx-auto px-4 md:px-6 flex items-center justify-between">
           <div className="flex items-center gap-2 md:gap-3">
             <Link href="/">
-              {!siteSettings ? (
-                <div className="h-14 md:h-16 w-32 bg-gray-700/10 rounded animate-pulse" />
-              ) : siteSettings.logo ? (
+              {siteSettings?.logo ? (
                 <img 
                   src={siteSettings.logo} 
                   alt={siteSettings.siteName || 'Logo'} 
                   className="h-14 md:h-16 object-contain"
                 />
-              ) : (
+              ) : siteSettings?.siteName ? (
                 <span className="text-white font-semibold text-xl md:text-2xl">
-                  {siteSettings.siteName || 'PINLY'}
+                  {siteSettings.siteName}
                 </span>
+              ) : (
+                <div className="h-14 md:h-16 w-32 bg-gray-700/10 rounded animate-pulse" />
               )}
             </Link>
           </div>

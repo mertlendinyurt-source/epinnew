@@ -108,7 +108,7 @@ export default function HesaplarPage() {
   const fetchReviews = async () => {
     setLoadingReviews(true)
     try {
-      const response = await fetch('/api/reviews?page=1&limit=5')
+      const response = await fetch('/api/reviews?game=pubg&page=1&limit=5')
       const data = await response.json()
       if (data.success) {
         setReviews(data.data.reviews || [])

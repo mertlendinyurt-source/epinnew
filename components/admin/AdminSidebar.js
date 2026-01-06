@@ -62,6 +62,7 @@ const menuGroups = [
     items: [
       { href: '/admin/settings/site', icon: Settings, label: 'Site Ayarları' },
       { href: '/admin/settings/email', icon: Mail, label: 'E-posta Ayarları' },
+      { href: '/admin/settings/sms', icon: MessageCircle, label: 'SMS Ayarları', color: 'text-green-400' },
       { href: '/admin/settings/seo', icon: Search, label: 'SEO & Analytics' },
       { href: '/admin/settings/oauth', icon: Globe, label: 'OAuth Ayarları' },
       { href: '/admin/settings/regions', icon: Globe, label: 'Bölge Ayarları' },

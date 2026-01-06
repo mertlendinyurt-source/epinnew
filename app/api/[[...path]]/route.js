@@ -5694,8 +5694,8 @@ export async function POST(request) {
                   }
                   
                   // Update account stock count
-                  const account = await db.collection('accounts').findOne({ id: order.accountId });
-                  if (account) {
+                  const accountForUpdate = await db.collection('accounts').findOne({ id: order.accountId });
+                  if (accountForUpdate) {
                     const remainingStock = await db.collection('account_stock').countDocuments({
                       accountId: order.accountId,
                       status: 'available'
@@ -5704,7 +5704,7 @@ export async function POST(request) {
                     const updateData = { stockCount: remainingStock };
                     
                     // If not unlimited and no more stock, mark as sold
-                    if (!account.unlimited && remainingStock === 0) {
+                    if (!accountForUpdate.unlimited && remainingStock === 0) {
                       updateData.status = 'sold';
                       updateData.soldAt = new Date();
                     }
@@ -5731,11 +5731,24 @@ export async function POST(request) {
                             message: 'Hesap bilgileri hazır',
                             credentials: account.credentials,
                             assignedAt: new Date()
-                          }
+                          },
+                          status: 'delivered',
+                          deliveredAt: new Date()
                         }
                       }
                     );
                     console.log(`Default credentials assigned to order ${order.id}`);
+                    
+                    // Müşteriye e-posta gönder
+                    const orderUser = await db.collection('users').findOne({ id: order.userId });
+                    if (orderUser && orderUser.email) {
+                      try {
+                        await sendDeliveredEmail(db, order, orderUser, account, [account.credentials]);
+                        console.log('Default credentials delivery email sent to:', orderUser.email);
+                      } catch (emailErr) {
+                        console.error('Default credentials delivery email failed:', emailErr);
+                      }
+                    }
                   } else {
                     await db.collection('orders').updateOne(
                       { id: order.id },

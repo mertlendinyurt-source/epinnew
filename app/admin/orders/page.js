@@ -863,6 +863,21 @@ export default function AdminOrders() {
                   </Button>
                 </div>
               )}
+              
+              {/* Manuel SMS Gönder Butonu */}
+              {selectedOrder.status === 'paid' && (
+                <div className="mt-4 pt-4 border-t border-slate-700">
+                  <Button
+                    onClick={() => handleSendSms(selectedOrder.id)}
+                    disabled={processingOrder === selectedOrder.id}
+                    variant="outline"
+                    className="w-full border-green-500/50 text-green-400 hover:bg-green-500/10"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    {processingOrder === selectedOrder.id ? 'SMS Gönderiliyor...' : 'Manuel SMS Gönder'}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>

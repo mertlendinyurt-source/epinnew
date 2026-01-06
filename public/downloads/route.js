@@ -824,6 +824,31 @@ function validatePhone(phone) {
 }
 
 // ============================================
+// SHOPIER EMAIL MASKING - Gerçek e-posta yerine sahte e-posta gönder
+// ============================================
+function maskEmailForShopier(email) {
+  if (!email || typeof email !== 'string') return email;
+  
+  // E-postayı @ işaretinden böl
+  const parts = email.split('@');
+  if (parts.length !== 2) return email;
+  
+  const localPart = parts[0];
+  const domain = parts[1];
+  
+  // 1-2 rastgele karakter oluştur (harf + sayı karışık)
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const randomLength = Math.random() > 0.5 ? 2 : 1; // %50 ihtimalle 1 veya 2 karakter
+  let randomSuffix = '';
+  for (let i = 0; i < randomLength; i++) {
+    randomSuffix += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  // Yeni e-posta: localpart + rastgele karakterler + @domain
+  return `${localPart}${randomSuffix}@${domain}`;
+}
+
+// ============================================
 // EMAIL SERVICE
 // ============================================
 
@@ -5253,6 +5278,8 @@ export async function POST(request) {
 
       // Prepare Shopier payment request with REAL customer data
       // Field names MUST match exactly what Shopier expects
+      // E-posta adresi maskeleniyor - Shopier'den müşteriye mail gitmesin
+      const maskedEmail = maskEmailForShopier(customerSnapshot.email);
       const shopierPayload = {
         API_key: apiKey, // Note: API_key not api_key
         website_index: 1,
@@ -5261,7 +5288,7 @@ export async function POST(request) {
         product_type: 1, // 0 = Physical, 1 = Digital
         buyer_name: customerSnapshot.firstName,
         buyer_surname: customerSnapshot.lastName,
-        buyer_email: customerSnapshot.email,
+        buyer_email: maskedEmail, // Maskelenmiş e-posta
         buyer_account_age: 0,
         buyer_id_nr: playerId,
         buyer_phone: customerSnapshot.phone,
@@ -7674,6 +7701,8 @@ export async function POST(request) {
       const currencyCode = 0; // TRY
 
       // Prepare Shopier payment request with REAL customer data
+      // E-posta adresi maskeleniyor - Shopier'den müşteriye mail gitmesin
+      const maskedEmail = maskEmailForShopier(customerSnapshot.email);
       const shopierPayload = {
         API_key: apiKey,
         website_index: 1,
@@ -7682,7 +7711,7 @@ export async function POST(request) {
         product_type: 1, // 0 = Physical, 1 = Digital
         buyer_name: customerSnapshot.firstName,
         buyer_surname: customerSnapshot.lastName,
-        buyer_email: customerSnapshot.email,
+        buyer_email: maskedEmail, // Maskelenmiş e-posta
         buyer_account_age: 0,
         buyer_id_nr: '',
         buyer_phone: customerSnapshot.phone,

@@ -457,10 +457,15 @@ export default function AdminOrders() {
                         >
                           {order.id.substring(0, 8)}...
                         </TableCell>
-                        <TableCell className="text-white">{order.productTitle}</TableCell>
+                        <TableCell className="text-white">
+                          {order.productTitle || order.accountTitle || '-'}
+                          {(order.type === 'account' || order.accountId) && (
+                            <span className="ml-2 text-xs px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded">Hesap</span>
+                          )}
+                        </TableCell>
                         <TableCell className="text-slate-400">
-                          <div className="text-xs">{order.playerName}</div>
-                          <div className="text-xs text-slate-500">{order.playerId}</div>
+                          <div className="text-xs">{order.playerName || '-'}</div>
+                          <div className="text-xs text-slate-500">{order.playerId || '-'}</div>
                         </TableCell>
                         <TableCell className="text-white font-semibold">
                           ₺{(order.amount || order.totalAmount || order.price || 0).toFixed(2)}
@@ -627,11 +632,18 @@ export default function AdminOrders() {
                 </div>
                 <div>
                   <p className="text-slate-400 text-sm">Ürün</p>
-                  <p className="text-white">{selectedOrder.productTitle}</p>
+                  <p className="text-white">
+                    {selectedOrder.productTitle || selectedOrder.accountTitle || '-'}
+                    {(selectedOrder.type === 'account' || selectedOrder.accountId) && (
+                      <span className="ml-2 text-xs px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded">Hesap</span>
+                    )}
+                  </p>
                 </div>
                 <div>
                   <p className="text-slate-400 text-sm">Oyuncu</p>
-                  <p className="text-white">{selectedOrder.playerName} ({selectedOrder.playerId})</p>
+                  <p className="text-white">
+                    {selectedOrder.playerName ? `${selectedOrder.playerName} (${selectedOrder.playerId})` : '-'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-slate-400 text-sm">Tutar</p>

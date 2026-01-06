@@ -3958,6 +3958,85 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
       });
     }
 
+    // ============================================
+    // CRON: Terk Edilmiş Sipariş SMS Gönderimi
+    // ============================================
+    // Bu endpoint cPanel cron job ile çağrılacak
+    // Her 5 dakikada bir: curl https://pinly.com.tr/api/cron/abandoned-sms
+    if (pathname === '/api/cron/abandoned-sms') {
+      console.log('Cron: Checking abandoned orders for SMS...');
+      
+      // 15 dakika önce oluşturulmuş ve hala ödenmemiş siparişleri bul
+      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+      const twentyMinutesAgo = new Date(Date.now() - 20 * 60 * 1000); // 20 dakikadan eski olmasın
+      
+      // Pending durumundaki siparişleri bul (15-20 dakika arası)
+      const abandonedOrders = await db.collection('orders').find({
+        status: 'pending',
+        createdAt: { 
+          $gte: twentyMinutesAgo, // 20 dakikadan yeni
+          $lte: fifteenMinutesAgo // 15 dakikadan eski
+        },
+        abandonedSmsSent: { $ne: true } // SMS henüz gönderilmemiş
+      }).toArray();
+      
+      console.log(`Found ${abandonedOrders.length} abandoned orders`);
+      
+      let sentCount = 0;
+      let errorCount = 0;
+      
+      for (const order of abandonedOrders) {
+        try {
+          // Kullanıcıyı bul
+          const user = await db.collection('users').findOne({ id: order.userId });
+          
+          if (user && user.phone) {
+            // SMS gönder
+            const result = await sendAbandonedOrderSms(db, order, user);
+            
+            // SMS gönderildi olarak işaretle (tekrar gönderilmesin)
+            await db.collection('orders').updateOne(
+              { id: order.id },
+              { 
+                $set: { 
+                  abandonedSmsSent: true,
+                  abandonedSmsSentAt: new Date()
+                } 
+              }
+            );
+            
+            if (result.success) {
+              sentCount++;
+              console.log(`Abandoned SMS sent to order ${order.id}`);
+            } else {
+              errorCount++;
+              console.log(`Abandoned SMS failed for order ${order.id}: ${result.reason}`);
+            }
+          } else {
+            // Telefon yoksa da işaretle
+            await db.collection('orders').updateOne(
+              { id: order.id },
+              { $set: { abandonedSmsSent: true, abandonedSmsSkipped: 'no_phone' } }
+            );
+          }
+        } catch (err) {
+          errorCount++;
+          console.error(`Error processing order ${order.id}:`, err);
+        }
+      }
+      
+      return NextResponse.json({
+        success: true,
+        message: `Terk edilmiş sipariş kontrolü tamamlandı`,
+        data: {
+          checked: abandonedOrders.length,
+          sent: sentCount,
+          errors: errorCount,
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

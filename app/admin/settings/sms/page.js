@@ -161,6 +161,31 @@ export default function SmsSettingsPage() {
     }
   }
 
+  // NetGSM'den mevcut başlıkları sorgula
+  const fetchHeaders = async () => {
+    setHeadersLoading(true)
+    try {
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch('/api/admin/settings/sms/headers', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await response.json()
+      
+      if (data.success) {
+        setHeaders(data.data || [])
+        toast.success(data.message || 'Başlıklar yüklendi')
+      } else {
+        toast.error(data.error || 'Başlıklar yüklenemedi')
+        setHeaders([])
+      }
+    } catch (error) {
+      console.error('Headers fetch error:', error)
+      toast.error('Başlıklar yüklenemedi')
+    } finally {
+      setHeadersLoading(false)
+    }
+  }
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'sent':

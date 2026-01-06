@@ -6787,6 +6787,92 @@ export async function POST(request) {
       });
     }
 
+    // Admin: Update SMS settings
+    if (pathname === '/api/admin/settings/sms') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { enabled, usercode, password, msgheader, sendOnPayment, sendOnDelivery } = body;
+
+      // Mevcut ayarları al
+      const existingSettings = await db.collection('sms_settings').findOne({ id: 'main' });
+
+      // Şifreyi encrypt et (sadece değişmişse)
+      let encryptedPassword = existingSettings?.password || '';
+      if (password && password !== '********') {
+        encryptedPassword = encrypt(password);
+      }
+
+      const smsSettings = {
+        id: 'main',
+        enabled: enabled || false,
+        usercode: usercode || '',
+        password: encryptedPassword,
+        msgheader: msgheader || 'PINLY',
+        sendOnPayment: sendOnPayment !== false,
+        sendOnDelivery: sendOnDelivery !== false,
+        updatedAt: new Date(),
+        updatedBy: user.username || user.email
+      };
+
+      await db.collection('sms_settings').updateOne(
+        { id: 'main' },
+        { $set: smsSettings },
+        { upsert: true }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: 'SMS ayarları kaydedildi',
+        data: {
+          ...smsSettings,
+          password: '********'
+        }
+      });
+    }
+
+    // Admin: Test SMS
+    if (pathname === '/api/admin/settings/sms/test') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { phone } = body;
+
+      if (!phone) {
+        return NextResponse.json(
+          { success: false, error: 'Telefon numarası gereklidir' },
+          { status: 400 }
+        );
+      }
+
+      const testMessage = 'Bu bir test mesajidir. SMS sistemi basariyla calisiyor! - PINLY';
+      const result = await sendSms(db, phone, testMessage, 'test');
+
+      if (result.success) {
+        return NextResponse.json({
+          success: true,
+          message: 'Test SMS\'i gönderildi',
+          data: result
+        });
+      } else {
+        return NextResponse.json({
+          success: false,
+          error: `SMS gönderilemedi: ${result.reason || result.response || 'Bilinmeyen hata'}`,
+          data: result
+        });
+      }
+    }
+
     // Admin: Update site settings
     if (pathname === '/api/admin/settings/site') {
       const user = verifyAdminToken(request);

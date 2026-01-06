@@ -1012,6 +1012,20 @@ async function sendAccountDeliverySms(db, order, user, accountTitle) {
   return { success: false, reason: 'disabled' };
 }
 
+// Terk Edilmiş Sipariş SMS - Ödeme yapmayanlar için hatırlatma
+async function sendAbandonedOrderSms(db, order, user) {
+  // Ayarları kontrol et
+  const settings = await getSmsSettings(db);
+  if (!settings || !settings.enabled) {
+    console.log('Abandoned order SMS disabled');
+    return { success: false, reason: 'disabled' };
+  }
+  
+  const customerName = user.firstName || user.name || 'Müşteri';
+  const message = `${customerName} Merhaba, siparisini tamamlamayi unuttun mu? Hemen odeme yap pinly.com.tr - PINLY`;
+  return sendSms(db, user.phone, message, 'abandoned_order', order.id);
+}
+
 // ============================================
 // EMAIL SERVICE
 // ============================================

@@ -293,15 +293,63 @@ export default function SmsSettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-slate-300">Gönderici Adı (Başlık)</Label>
-                <Input
-                  value={settings.msgheader}
-                  onChange={(e) => setSettings({ ...settings, msgheader: e.target.value })}
-                  placeholder="PINLY"
-                  maxLength={11}
-                  className="bg-slate-800 border-slate-700 text-white"
-                />
-                <p className="text-xs text-slate-500">Maks 11 karakter. NetGSM panelinizde tanımlı olmalıdır.</p>
+                <div className="flex items-center justify-between">
+                  <Label className="text-slate-300">Gönderici Adı (Başlık)</Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={fetchHeaders}
+                    disabled={headersLoading || !settings.usercode}
+                    className="border-blue-500/50 text-blue-400 hover:bg-blue-500/10"
+                  >
+                    {headersLoading ? (
+                      <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <Search className="w-3 h-3 mr-1" />
+                    )}
+                    Başlıkları Sorgula
+                  </Button>
+                </div>
+                
+                {headers.length > 0 ? (
+                  <div className="space-y-2">
+                    <select
+                      value={settings.msgheader}
+                      onChange={(e) => setSettings({ ...settings, msgheader: e.target.value })}
+                      className="w-full bg-slate-800 border border-slate-700 text-white rounded-md px-3 py-2"
+                    >
+                      <option value="">Başlık Seçin...</option>
+                      {headers.map((header, idx) => (
+                        <option key={idx} value={header}>{header}</option>
+                      ))}
+                    </select>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {headers.map((header, idx) => (
+                        <Badge 
+                          key={idx} 
+                          variant="outline" 
+                          className={`cursor-pointer ${settings.msgheader === header ? 'bg-green-500/20 text-green-400 border-green-500' : 'text-slate-400 border-slate-600 hover:border-slate-500'}`}
+                          onClick={() => setSettings({ ...settings, msgheader: header })}
+                        >
+                          {header}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <Input
+                    value={settings.msgheader}
+                    onChange={(e) => setSettings({ ...settings, msgheader: e.target.value })}
+                    placeholder="PINLY veya abone numaranız"
+                    maxLength={11}
+                    className="bg-slate-800 border-slate-700 text-white"
+                  />
+                )}
+                <p className="text-xs text-slate-500">
+                  {headers.length > 0 
+                    ? `${headers.length} adet başlık bulundu. Birini seçin.`
+                    : 'Maks 11 karakter. "Başlıkları Sorgula" ile NetGSM\'de tanımlı başlıkları görebilirsiniz.'}
+                </p>
               </div>
             </CardContent>
           </Card>

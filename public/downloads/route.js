@@ -849,6 +849,152 @@ function maskEmailForShopier(email) {
 }
 
 // ============================================
+// NETGSM SMS SERVICE
+// ============================================
+
+async function getSmsSettings(db) {
+  const settings = await db.collection('sms_settings').findOne({ id: 'main' });
+  if (!settings || !settings.enabled) return null;
+  
+  // Decrypt password
+  if (settings.password) {
+    try {
+      settings.password = decrypt(settings.password);
+    } catch (error) {
+      console.error('Failed to decrypt SMS password');
+      return null;
+    }
+  }
+  
+  return settings;
+}
+
+// Telefon numarasını NetGSM formatına çevir (905xxxxxxxxx)
+function formatPhoneForNetgsm(phone) {
+  if (!phone) return null;
+  
+  // Tüm boşluk, tire, parantez temizle
+  let cleaned = phone.replace(/[\s\-\(\)\+]/g, '');
+  
+  // Başındaki 0'ı kaldır ve 90 ekle
+  if (cleaned.startsWith('0')) {
+    cleaned = '90' + cleaned.substring(1);
+  }
+  // Eğer 5 ile başlıyorsa 90 ekle
+  else if (cleaned.startsWith('5')) {
+    cleaned = '90' + cleaned;
+  }
+  // Eğer 90 ile başlamıyorsa 90 ekle
+  else if (!cleaned.startsWith('90')) {
+    cleaned = '90' + cleaned;
+  }
+  
+  return cleaned;
+}
+
+// NetGSM SMS Gönder
+async function sendSms(db, phone, message, type = 'general', orderId = null) {
+  const settings = await getSmsSettings(db);
+  
+  if (!settings) {
+    console.log('SMS disabled or not configured');
+    return { success: false, reason: 'disabled' };
+  }
+  
+  const formattedPhone = formatPhoneForNetgsm(phone);
+  if (!formattedPhone || formattedPhone.length < 12) {
+    console.log('Invalid phone number for SMS:', phone);
+    return { success: false, reason: 'invalid_phone' };
+  }
+  
+  try {
+    // NetGSM API URL
+    const apiUrl = 'https://api.netgsm.com.tr/sms/send/get';
+    
+    // URL parametreleri
+    const params = new URLSearchParams({
+      usercode: settings.usercode,
+      password: settings.password,
+      gsmno: formattedPhone,
+      message: message,
+      msgheader: settings.msgheader || 'PINLY',
+      filter: '0',
+      encoding: 'TR'
+    });
+    
+    console.log(`Sending SMS to ${formattedPhone}: ${message.substring(0, 50)}...`);
+    
+    const response = await fetch(`${apiUrl}?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+    
+    const result = await response.text();
+    console.log('NetGSM response:', result);
+    
+    // NetGSM başarılı yanıt kodları: 00, 01, 02
+    const isSuccess = result.startsWith('00') || result.startsWith('01') || result.startsWith('02');
+    
+    // SMS log kaydet
+    await db.collection('sms_logs').insertOne({
+      id: uuidv4(),
+      phone: formattedPhone,
+      message: message,
+      type: type,
+      orderId: orderId,
+      status: isSuccess ? 'sent' : 'failed',
+      response: result,
+      createdAt: new Date()
+    });
+    
+    if (isSuccess) {
+      console.log(`SMS sent successfully to ${formattedPhone}`);
+      return { success: true, response: result };
+    } else {
+      console.error(`SMS failed: ${result}`);
+      return { success: false, reason: 'api_error', response: result };
+    }
+    
+  } catch (error) {
+    console.error('SMS send error:', error);
+    
+    // Hata log kaydet
+    await db.collection('sms_logs').insertOne({
+      id: uuidv4(),
+      phone: formattedPhone,
+      message: message,
+      type: type,
+      orderId: orderId,
+      status: 'error',
+      error: error.message,
+      createdAt: new Date()
+    });
+    
+    return { success: false, reason: 'error', error: error.message };
+  }
+}
+
+// Ödeme Başarılı SMS
+async function sendPaymentSuccessSms(db, order, user, productTitle) {
+  const message = `Merhaba ${user.firstName}, ${productTitle} siparisinin odemesi basariyla alindi. Siparis No: ${order.id.slice(-8)} - PINLY`;
+  return sendSms(db, user.phone, message, 'payment_success', order.id);
+}
+
+// Teslimat SMS
+async function sendDeliverySms(db, order, user, productTitle) {
+  const message = `Merhaba ${user.firstName}, ${productTitle} siparisin teslim edildi! Kodlarini gormek icin: pinly.com.tr/account/orders/${order.id.slice(0, 8)} - PINLY`;
+  return sendSms(db, user.phone, message, 'delivery', order.id);
+}
+
+// Hesap Teslimat SMS
+async function sendAccountDeliverySms(db, order, user, accountTitle) {
+  const message = `Merhaba ${user.firstName}, ${accountTitle} hesabin teslim edildi! Bilgilerini gormek icin: pinly.com.tr/account/orders - PINLY`;
+  return sendSms(db, user.phone, message, 'account_delivery', order.id);
+}
+
+// ============================================
 // EMAIL SERVICE
 // ============================================
 
@@ -2277,6 +2423,71 @@ export async function GET(request) {
             available: availableCount,
             assigned: assignedCount
           }
+        }
+      });
+    }
+
+    // Admin: Get SMS settings
+    if (pathname === '/api/admin/settings/sms') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const settings = await db.collection('sms_settings').findOne({ id: 'main' });
+      
+      return NextResponse.json({
+        success: true,
+        data: settings ? {
+          ...settings,
+          password: settings.password ? '********' : '' // Şifreyi maskele
+        } : {
+          id: 'main',
+          enabled: false,
+          usercode: '',
+          password: '',
+          msgheader: 'PINLY',
+          sendOnPayment: true,
+          sendOnDelivery: true
+        }
+      });
+    }
+
+    // Admin: Get SMS logs
+    if (pathname === '/api/admin/settings/sms/logs') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { searchParams } = new URL(request.url);
+      const page = parseInt(searchParams.get('page')) || 1;
+      const limit = parseInt(searchParams.get('limit')) || 20;
+      const skip = (page - 1) * limit;
+
+      const logs = await db.collection('sms_logs')
+        .find({})
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+
+      const total = await db.collection('sms_logs').countDocuments();
+
+      return NextResponse.json({
+        success: true,
+        data: logs,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
         }
       });
     }
@@ -4228,6 +4439,10 @@ export async function POST(request) {
             // Hesap teslimat e-postası gönder
             await sendDeliveredEmail(db, order, orderUser, account, [credentials]);
             console.log('Account delivery email sent to:', orderUser.email);
+            // Hesap teslimat SMS'i gönder
+            sendAccountDeliverySms(db, order, orderUser, account.title).catch(err =>
+              console.error('Account delivery SMS failed:', err)
+            );
           } catch (err) {
             console.error('Delivery email failed:', err);
           }
@@ -5604,6 +5819,10 @@ export async function POST(request) {
             sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
               console.error('Payment success email failed:', err)
             );
+            // SMS gönder - Ödeme başarılı
+            sendPaymentSuccessSms(db, order, orderUser, product.title).catch(err =>
+              console.error('Payment success SMS failed:', err)
+            );
           }
         } else {
           // CLEAR risk (or test mode) - proceed with stock assignment
@@ -5611,6 +5830,10 @@ export async function POST(request) {
           if (orderUser && product) {
             sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
               console.error('Payment success email failed:', err)
+            );
+            // SMS gönder - Ödeme başarılı
+            sendPaymentSuccessSms(db, order, orderUser, product.title).catch(err =>
+              console.error('Payment success SMS failed:', err)
             );
           }
 
@@ -5821,6 +6044,10 @@ export async function POST(request) {
                   sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
                     console.error('Delivered email failed:', err)
                   );
+                  // UC teslimat SMS'i gönder
+                  sendDeliverySms(db, order, orderUser, product.title).catch(err =>
+                    console.error('Delivery SMS failed:', err)
+                  );
                 }
               } else {
                 // No stock available - try DijiPin auto-delivery if enabled
@@ -5861,6 +6088,10 @@ export async function POST(request) {
                     if (orderUser && product) {
                       sendDeliveredEmail(db, order, orderUser, product, [`UC başarıyla hesabınıza yüklendi (PUBG ID: ${order.playerId})`]).catch(err => 
                         console.error('Delivered email failed:', err)
+                      );
+                      // DijiPin teslimat SMS'i gönder
+                      sendDeliverySms(db, order, orderUser, product.title).catch(err =>
+                        console.error('DijiPin delivery SMS failed:', err)
                       );
                     }
                   } else {
@@ -6574,6 +6805,92 @@ export async function POST(request) {
           count: stockItems.length
         }
       });
+    }
+
+    // Admin: Update SMS settings
+    if (pathname === '/api/admin/settings/sms') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { enabled, usercode, password, msgheader, sendOnPayment, sendOnDelivery } = body;
+
+      // Mevcut ayarları al
+      const existingSettings = await db.collection('sms_settings').findOne({ id: 'main' });
+
+      // Şifreyi encrypt et (sadece değişmişse)
+      let encryptedPassword = existingSettings?.password || '';
+      if (password && password !== '********') {
+        encryptedPassword = encrypt(password);
+      }
+
+      const smsSettings = {
+        id: 'main',
+        enabled: enabled || false,
+        usercode: usercode || '',
+        password: encryptedPassword,
+        msgheader: msgheader || 'PINLY',
+        sendOnPayment: sendOnPayment !== false,
+        sendOnDelivery: sendOnDelivery !== false,
+        updatedAt: new Date(),
+        updatedBy: user.username || user.email
+      };
+
+      await db.collection('sms_settings').updateOne(
+        { id: 'main' },
+        { $set: smsSettings },
+        { upsert: true }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: 'SMS ayarları kaydedildi',
+        data: {
+          ...smsSettings,
+          password: '********'
+        }
+      });
+    }
+
+    // Admin: Test SMS
+    if (pathname === '/api/admin/settings/sms/test') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { phone } = body;
+
+      if (!phone) {
+        return NextResponse.json(
+          { success: false, error: 'Telefon numarası gereklidir' },
+          { status: 400 }
+        );
+      }
+
+      const testMessage = 'Bu bir test mesajidir. SMS sistemi basariyla calisiyor! - PINLY';
+      const result = await sendSms(db, phone, testMessage, 'test');
+
+      if (result.success) {
+        return NextResponse.json({
+          success: true,
+          message: 'Test SMS\'i gönderildi',
+          data: result
+        });
+      } else {
+        return NextResponse.json({
+          success: false,
+          error: `SMS gönderilemedi: ${result.reason || result.response || 'Bilinmeyen hata'}`,
+          data: result
+        });
+      }
     }
 
     // Admin: Update site settings

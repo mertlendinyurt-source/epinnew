@@ -4439,6 +4439,10 @@ export async function POST(request) {
             // Hesap teslimat e-postası gönder
             await sendDeliveredEmail(db, order, orderUser, account, [credentials]);
             console.log('Account delivery email sent to:', orderUser.email);
+            // Hesap teslimat SMS'i gönder
+            sendAccountDeliverySms(db, order, orderUser, account.title).catch(err =>
+              console.error('Account delivery SMS failed:', err)
+            );
           } catch (err) {
             console.error('Delivery email failed:', err);
           }

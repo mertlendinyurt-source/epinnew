@@ -30,6 +30,11 @@ export default function AdminOrders() {
   const [selectedStockId, setSelectedStockId] = useState(null)
   const [loadingStocks, setLoadingStocks] = useState(false)
   
+  // Search filters
+  const [emailSearch, setEmailSearch] = useState('')
+  const [phoneSearch, setPhoneSearch] = useState('')
+  const [orderIdSearch, setOrderIdSearch] = useState('')
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(20)
@@ -56,9 +61,35 @@ export default function AdminOrders() {
       filtered = filtered.filter(order => order.delivery?.status === 'hold')
     }
     
+    // E-posta ile arama
+    if (emailSearch.trim()) {
+      const searchTerm = emailSearch.toLowerCase().trim()
+      filtered = filtered.filter(order => 
+        order.customer?.email?.toLowerCase().includes(searchTerm) ||
+        order.userEmail?.toLowerCase().includes(searchTerm)
+      )
+    }
+    
+    // Telefon ile arama
+    if (phoneSearch.trim()) {
+      const searchTerm = phoneSearch.replace(/\s/g, '').trim()
+      filtered = filtered.filter(order => 
+        order.customer?.phone?.replace(/\s/g, '').includes(searchTerm) ||
+        order.userPhone?.replace(/\s/g, '').includes(searchTerm)
+      )
+    }
+    
+    // Sipariş ID ile arama
+    if (orderIdSearch.trim()) {
+      const searchTerm = orderIdSearch.toLowerCase().trim()
+      filtered = filtered.filter(order => 
+        order.id?.toLowerCase().includes(searchTerm)
+      )
+    }
+    
     setFilteredOrders(filtered)
     setCurrentPage(1) // Reset to first page when filter changes
-  }, [statusFilter, riskFilter, orders])
+  }, [statusFilter, riskFilter, orders, emailSearch, phoneSearch, orderIdSearch])
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage)

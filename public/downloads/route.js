@@ -5650,8 +5650,18 @@ export async function POST(request) {
 
                 console.log('Account stock assignment result:', JSON.stringify(assignedAccountStock));
 
+                // findOneAndUpdate bazen value içinde döndürüyor
+                let stockItem = null;
                 if (assignedAccountStock) {
-                  const credentials = assignedAccountStock.credentials;
+                  if (assignedAccountStock.value) {
+                    stockItem = assignedAccountStock.value;
+                  } else if (assignedAccountStock._id || assignedAccountStock.id) {
+                    stockItem = assignedAccountStock;
+                  }
+                }
+
+                if (stockItem && stockItem.credentials) {
+                  const credentials = stockItem.credentials;
                   
                   await db.collection('orders').updateOne(
                     { id: order.id },
@@ -5661,17 +5671,31 @@ export async function POST(request) {
                           status: 'delivered',
                           message: 'Hesap bilgileri hazır',
                           credentials: credentials,
-                          stockId: assignedAccountStock.id || assignedAccountStock._id,
+                          stockId: stockItem.id || stockItem._id,
                           assignedAt: new Date()
-                        }
+                        },
+                        status: 'delivered',
+                        deliveredAt: new Date()
                       }
                     }
                   );
                   console.log(`Account stock assigned: Order ${order.id} received credentials`);
                   
-                  // Update account stock count
+                  // Müşteriye e-posta gönder
+                  const orderUser = await db.collection('users').findOne({ id: order.userId });
                   const account = await db.collection('accounts').findOne({ id: order.accountId });
-                  if (account) {
+                  if (orderUser && account && orderUser.email) {
+                    try {
+                      await sendDeliveredEmail(db, order, orderUser, account, [credentials]);
+                      console.log('Account delivery email sent to:', orderUser.email);
+                    } catch (emailErr) {
+                      console.error('Account delivery email failed:', emailErr);
+                    }
+                  }
+                  
+                  // Update account stock count
+                  const accountForUpdate = await db.collection('accounts').findOne({ id: order.accountId });
+                  if (accountForUpdate) {
                     const remainingStock = await db.collection('account_stock').countDocuments({
                       accountId: order.accountId,
                       status: 'available'
@@ -5680,7 +5704,7 @@ export async function POST(request) {
                     const updateData = { stockCount: remainingStock };
                     
                     // If not unlimited and no more stock, mark as sold
-                    if (!account.unlimited && remainingStock === 0) {
+                    if (!accountForUpdate.unlimited && remainingStock === 0) {
                       updateData.status = 'sold';
                       updateData.soldAt = new Date();
                     }
@@ -5707,11 +5731,24 @@ export async function POST(request) {
                             message: 'Hesap bilgileri hazır',
                             credentials: account.credentials,
                             assignedAt: new Date()
-                          }
+                          },
+                          status: 'delivered',
+                          deliveredAt: new Date()
                         }
                       }
                     );
                     console.log(`Default credentials assigned to order ${order.id}`);
+                    
+                    // Müşteriye e-posta gönder
+                    const orderUser = await db.collection('users').findOne({ id: order.userId });
+                    if (orderUser && orderUser.email) {
+                      try {
+                        await sendDeliveredEmail(db, order, orderUser, account, [account.credentials]);
+                        console.log('Default credentials delivery email sent to:', orderUser.email);
+                      } catch (emailErr) {
+                        console.error('Default credentials delivery email failed:', emailErr);
+                      }
+                    }
                   } else {
                     await db.collection('orders').updateOne(
                       { id: order.id },

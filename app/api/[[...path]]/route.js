@@ -892,7 +892,7 @@ function formatPhoneForNetgsm(phone) {
   return cleaned;
 }
 
-// NetGSM SMS Gönder
+// NetGSM SMS Gönder - YENİ API v2
 async function sendSms(db, phone, message, type = 'general', orderId = null) {
   const settings = await getSmsSettings(db);
   
@@ -908,34 +908,41 @@ async function sendSms(db, phone, message, type = 'general', orderId = null) {
   }
   
   try {
-    // NetGSM API URL
-    const apiUrl = 'https://api.netgsm.com.tr/sms/send/get';
+    // NetGSM API URL - YENİ v2 endpoint
+    const apiUrl = 'https://api.netgsm.com.tr/sms/rest/v2/send';
     
-    // URL parametreleri
-    const params = new URLSearchParams({
-      usercode: settings.usercode,
-      password: settings.password,
-      gsmno: formattedPhone,
-      message: message,
+    // Basic Auth credentials (Base64 encoded)
+    const credentials = Buffer.from(`${settings.usercode}:${settings.password}`).toString('base64');
+    
+    // JSON payload
+    const payload = {
       msgheader: settings.msgheader || 'PINLY',
-      filter: '0',
-      encoding: 'TR'
-    });
+      messages: [
+        {
+          msg: message,
+          no: formattedPhone
+        }
+      ],
+      encoding: 'TR', // Türkçe karakter desteği
+      iysfilter: '0' // Bilgilendirme SMS'i (İYS kontrolsüz)
+    };
     
     console.log(`Sending SMS to ${formattedPhone}: ${message.substring(0, 50)}...`);
     
-    const response = await fetch(`${apiUrl}?${params.toString()}`, {
-      method: 'GET',
+    const response = await fetch(apiUrl, {
+      method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${credentials}`
+      },
+      body: JSON.stringify(payload)
     });
     
-    const result = await response.text();
-    console.log('NetGSM response:', result);
+    const result = await response.json();
+    console.log('NetGSM response:', JSON.stringify(result));
     
-    // NetGSM başarılı yanıt kodları: 00, 01, 02
-    const isSuccess = result.startsWith('00') || result.startsWith('01') || result.startsWith('02');
+    // Başarılı yanıt kontrolü
+    const isSuccess = result.code === '00' || result.code === '01' || result.code === '02';
     
     // SMS log kaydet
     await db.collection('sms_logs').insertOne({
@@ -945,15 +952,16 @@ async function sendSms(db, phone, message, type = 'general', orderId = null) {
       type: type,
       orderId: orderId,
       status: isSuccess ? 'sent' : 'failed',
-      response: result,
+      response: JSON.stringify(result),
+      jobId: result.jobid || null,
       createdAt: new Date()
     });
     
     if (isSuccess) {
-      console.log(`SMS sent successfully to ${formattedPhone}`);
-      return { success: true, response: result };
+      console.log(`SMS sent successfully to ${formattedPhone}, jobId: ${result.jobid}`);
+      return { success: true, response: result, jobId: result.jobid };
     } else {
-      console.error(`SMS failed: ${result}`);
+      console.error(`SMS failed: ${result.code} - ${result.description || 'Unknown error'}`);
       return { success: false, reason: 'api_error', response: result };
     }
     

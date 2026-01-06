@@ -5815,6 +5815,10 @@ export async function POST(request) {
             sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
               console.error('Payment success email failed:', err)
             );
+            // SMS gönder - Ödeme başarılı
+            sendPaymentSuccessSms(db, order, orderUser, product.title).catch(err =>
+              console.error('Payment success SMS failed:', err)
+            );
           }
         } else {
           // CLEAR risk (or test mode) - proceed with stock assignment
@@ -5822,6 +5826,10 @@ export async function POST(request) {
           if (orderUser && product) {
             sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
               console.error('Payment success email failed:', err)
+            );
+            // SMS gönder - Ödeme başarılı
+            sendPaymentSuccessSms(db, order, orderUser, product.title).catch(err =>
+              console.error('Payment success SMS failed:', err)
             );
           }
 

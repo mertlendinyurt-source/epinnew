@@ -8045,6 +8045,11 @@ export async function POST(request) {
         // Insert order
         await db.collection('orders').insertOne(order);
 
+        // SMS gönder - Hesap bakiye ödemesi başarılı
+        sendPaymentSuccessSms(db, order, user, account.title).catch(err =>
+          console.error('Account balance payment SMS failed:', err)
+        );
+
         // Mark account as sold ONLY if not unlimited AND no more stock
         if (!account.unlimited) {
           // Check remaining stock

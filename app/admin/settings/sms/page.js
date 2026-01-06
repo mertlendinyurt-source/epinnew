@@ -299,17 +299,6 @@ export default function SmsSettingsPage() {
                   onCheckedChange={(checked) => setSettings({ ...settings, sendOnPayment: checked })}
                 />
               </div>
-
-              <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
-                <div>
-                  <Label className="text-white font-medium">Teslimat Yapıldı</Label>
-                  <p className="text-sm text-slate-400">Ürün teslim edildiğinde SMS gönder</p>
-                </div>
-                <Switch
-                  checked={settings.sendOnDelivery}
-                  onCheckedChange={(checked) => setSettings({ ...settings, sendOnDelivery: checked })}
-                />
-              </div>
             </CardContent>
           </Card>
 

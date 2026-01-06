@@ -7000,6 +7000,65 @@ export async function POST(request) {
       });
     }
 
+    // Admin: Manuel SMS Gönder (Sipariş için)
+    if (pathname.match(/^\/api\/admin\/orders\/[^\/]+\/send-sms$/)) {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const orderId = pathname.split('/')[4];
+      
+      // Siparişi bul
+      const order = await db.collection('orders').findOne({ id: orderId });
+      if (!order) {
+        return NextResponse.json(
+          { success: false, error: 'Sipariş bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Kullanıcıyı bul
+      const orderUser = await db.collection('users').findOne({ id: order.userId });
+      if (!orderUser || !orderUser.phone) {
+        return NextResponse.json(
+          { success: false, error: 'Kullanıcı veya telefon numarası bulunamadı' },
+          { status: 400 }
+        );
+      }
+
+      // Ürün/Hesap bilgisi
+      const product = order.productId ? await db.collection('products').findOne({ id: order.productId }) : null;
+      const account = order.accountId ? await db.collection('accounts').findOne({ id: order.accountId }) : null;
+      const itemTitle = product?.title || account?.title || order.productTitle || order.accountTitle || 'Sipariş';
+
+      console.log('📱 Manuel SMS gönderiliyor:', {
+        orderId: order.id,
+        phone: orderUser.phone,
+        itemTitle
+      });
+
+      // SMS gönder
+      const result = await sendPaymentSuccessSms(db, order, orderUser, itemTitle);
+
+      if (result.success) {
+        return NextResponse.json({
+          success: true,
+          message: `SMS gönderildi: ${orderUser.phone}`,
+          data: result
+        });
+      } else {
+        return NextResponse.json({
+          success: false,
+          error: `SMS gönderilemedi: ${result.reason || 'Bilinmeyen hata'}`,
+          data: result
+        });
+      }
+    }
+
     // Admin: Add stock to product (bulk)
     if (pathname.match(/^\/api\/admin\/products\/[^\/]+\/stock$/)) {
       const user = verifyAdminToken(request);

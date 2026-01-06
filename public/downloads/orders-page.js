@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LayoutDashboard, Package, ShoppingBag, LogOut, Search, Filter, Image as ImageIcon, AlertTriangle, CheckCircle, XCircle, Shield, Ban, ChevronLeft, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingBag, LogOut, Search, Filter, Image as ImageIcon, AlertTriangle, CheckCircle, XCircle, Shield, Ban, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -243,6 +243,37 @@ export default function AdminOrders() {
     } catch (error) {
       console.error('Assign stock error:', error)
       toast.error('Stok atama işlemi başarısız')
+    } finally {
+      setProcessingOrder(null)
+    }
+  }
+
+  // Manuel SMS Gönder
+  const handleSendSms = async (orderId) => {
+    if (!confirm('Bu siparişe SMS göndermek istediğinize emin misiniz?')) {
+      return
+    }
+    
+    setProcessingOrder(orderId)
+    try {
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+      const response = await fetch(`/api/admin/orders/${orderId}/send-sms`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        toast.success(data.message || 'SMS gönderildi')
+      } else {
+        toast.error(data.error || 'SMS gönderilemedi')
+      }
+    } catch (error) {
+      console.error('SMS error:', error)
+      toast.error('SMS gönderimi başarısız')
     } finally {
       setProcessingOrder(null)
     }
@@ -829,6 +860,21 @@ export default function AdminOrders() {
                   >
                     <Package className="w-4 h-4 mr-2" />
                     {processingOrder === selectedOrder.id ? 'Stok Atanıyor...' : 'Stok Ata'}
+                  </Button>
+                </div>
+              )}
+              
+              {/* Manuel SMS Gönder Butonu */}
+              {selectedOrder.status === 'paid' && (
+                <div className="mt-4 pt-4 border-t border-slate-700">
+                  <Button
+                    onClick={() => handleSendSms(selectedOrder.id)}
+                    disabled={processingOrder === selectedOrder.id}
+                    variant="outline"
+                    className="w-full border-green-500/50 text-green-400 hover:bg-green-500/10"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    {processingOrder === selectedOrder.id ? 'SMS Gönderiliyor...' : 'Manuel SMS Gönder'}
                   </Button>
                 </div>
               )}

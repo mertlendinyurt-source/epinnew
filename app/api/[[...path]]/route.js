@@ -5386,6 +5386,11 @@ export async function POST(request) {
         // Insert order
         await db.collection('orders').insertOne(order);
 
+        // SMS gönder - Bakiye ile ödeme başarılı
+        sendPaymentSuccessSms(db, order, user, product.title).catch(err =>
+          console.error('Balance payment SMS failed:', err)
+        );
+
         // Check if high-value order (>= 3000 TL) - requires verification
         if (orderAmount >= 3000) {
           await db.collection('orders').updateOne(

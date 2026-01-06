@@ -248,6 +248,37 @@ export default function AdminOrders() {
     }
   }
 
+  // Manuel SMS Gönder
+  const handleSendSms = async (orderId) => {
+    if (!confirm('Bu siparişe SMS göndermek istediğinize emin misiniz?')) {
+      return
+    }
+    
+    setProcessingOrder(orderId)
+    try {
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+      const response = await fetch(`/api/admin/orders/${orderId}/send-sms`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        toast.success(data.message || 'SMS gönderildi')
+      } else {
+        toast.error(data.error || 'SMS gönderilemedi')
+      }
+    } catch (error) {
+      console.error('SMS error:', error)
+      toast.error('SMS gönderimi başarısız')
+    } finally {
+      setProcessingOrder(null)
+    }
+  }
+
   const handleRefundOrder = async (orderId) => {
     if (!confirm('Bu siparişi iade edildi olarak işaretlemek istediğinize emin misiniz? Shopier üzerinden manuel iade yapmalısınız.')) {
       return

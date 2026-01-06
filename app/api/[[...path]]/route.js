@@ -6044,6 +6044,10 @@ export async function POST(request) {
                   sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
                     console.error('Delivered email failed:', err)
                   );
+                  // UC teslimat SMS'i gönder
+                  sendDeliverySms(db, order, orderUser, product.title).catch(err =>
+                    console.error('Delivery SMS failed:', err)
+                  );
                 }
               } else {
                 // No stock available - try DijiPin auto-delivery if enabled

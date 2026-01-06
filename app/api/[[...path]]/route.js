@@ -5882,6 +5882,20 @@ export async function POST(request) {
         // Get user and product for email
         const orderUser = await db.collection('users').findOne({ id: order.userId });
         const product = await db.collection('products').findOne({ id: order.productId });
+        
+        // Hesap siparişleri için account bilgisini al
+        const account = order.accountId ? await db.collection('accounts').findOne({ id: order.accountId }) : null;
+        
+        // Log for debugging
+        console.log('========================================');
+        console.log('📧 SMS/EMAIL DEBUG');
+        console.log('Order ID:', order.id);
+        console.log('Order Type:', order.type);
+        console.log('User found:', !!orderUser);
+        console.log('User phone:', orderUser?.phone);
+        console.log('Product found:', !!product);
+        console.log('Account found:', !!account);
+        console.log('========================================');
 
         // ============================================
         // 🔐 HIGH-VALUE ORDER CHECK - DO THIS FIRST!

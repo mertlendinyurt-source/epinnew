@@ -20,7 +20,9 @@ import {
   Send,
   Settings,
   History,
-  RefreshCw
+  RefreshCw,
+  Search,
+  List
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -33,6 +35,8 @@ export default function SmsSettingsPage() {
   const [logs, setLogs] = useState([])
   const [logsLoading, setLogsLoading] = useState(false)
   const [logsPagination, setLogsPagination] = useState({ page: 1, totalPages: 1 })
+  const [headers, setHeaders] = useState([])
+  const [headersLoading, setHeadersLoading] = useState(false)
   
   const [settings, setSettings] = useState({
     enabled: false,

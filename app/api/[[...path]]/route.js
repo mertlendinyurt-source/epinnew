@@ -824,6 +824,31 @@ function validatePhone(phone) {
 }
 
 // ============================================
+// SHOPIER EMAIL MASKING - Gerçek e-posta yerine sahte e-posta gönder
+// ============================================
+function maskEmailForShopier(email) {
+  if (!email || typeof email !== 'string') return email;
+  
+  // E-postayı @ işaretinden böl
+  const parts = email.split('@');
+  if (parts.length !== 2) return email;
+  
+  const localPart = parts[0];
+  const domain = parts[1];
+  
+  // 1-2 rastgele karakter oluştur (harf + sayı karışık)
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const randomLength = Math.random() > 0.5 ? 2 : 1; // %50 ihtimalle 1 veya 2 karakter
+  let randomSuffix = '';
+  for (let i = 0; i < randomLength; i++) {
+    randomSuffix += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  // Yeni e-posta: localpart + rastgele karakterler + @domain
+  return `${localPart}${randomSuffix}@${domain}`;
+}
+
+// ============================================
 // EMAIL SERVICE
 // ============================================
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LayoutDashboard, Package, ShoppingBag, LogOut, Search, Filter, Image as ImageIcon, AlertTriangle, CheckCircle, XCircle, Shield, Ban, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingBag, LogOut, Search, Filter, Image as ImageIcon, AlertTriangle, CheckCircle, XCircle, Shield, Ban, ChevronLeft, ChevronRight, MessageSquare, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -30,6 +30,11 @@ export default function AdminOrders() {
   const [selectedStockId, setSelectedStockId] = useState(null)
   const [loadingStocks, setLoadingStocks] = useState(false)
   
+  // Search filters
+  const [emailSearch, setEmailSearch] = useState('')
+  const [phoneSearch, setPhoneSearch] = useState('')
+  const [orderIdSearch, setOrderIdSearch] = useState('')
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(20)
@@ -56,9 +61,35 @@ export default function AdminOrders() {
       filtered = filtered.filter(order => order.delivery?.status === 'hold')
     }
     
+    // E-posta ile arama
+    if (emailSearch.trim()) {
+      const searchTerm = emailSearch.toLowerCase().trim()
+      filtered = filtered.filter(order => 
+        order.customer?.email?.toLowerCase().includes(searchTerm) ||
+        order.userEmail?.toLowerCase().includes(searchTerm)
+      )
+    }
+    
+    // Telefon ile arama
+    if (phoneSearch.trim()) {
+      const searchTerm = phoneSearch.replace(/\s/g, '').trim()
+      filtered = filtered.filter(order => 
+        order.customer?.phone?.replace(/\s/g, '').includes(searchTerm) ||
+        order.userPhone?.replace(/\s/g, '').includes(searchTerm)
+      )
+    }
+    
+    // Sipariş ID ile arama
+    if (orderIdSearch.trim()) {
+      const searchTerm = orderIdSearch.toLowerCase().trim()
+      filtered = filtered.filter(order => 
+        order.id?.toLowerCase().includes(searchTerm)
+      )
+    }
+    
     setFilteredOrders(filtered)
     setCurrentPage(1) // Reset to first page when filter changes
-  }, [statusFilter, riskFilter, orders])
+  }, [statusFilter, riskFilter, orders, emailSearch, phoneSearch, orderIdSearch])
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage)
@@ -453,6 +484,68 @@ export default function AdminOrders() {
                 </Select>
               </div>
             </div>
+            
+            {/* Arama Filtreleri */}
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Input
+                  placeholder="E-posta ile ara..."
+                  value={emailSearch}
+                  onChange={(e) => setEmailSearch(e.target.value)}
+                  className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+                />
+              </div>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Input
+                  placeholder="Telefon ile ara..."
+                  value={phoneSearch}
+                  onChange={(e) => setPhoneSearch(e.target.value)}
+                  className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+                />
+              </div>
+              <div className="relative">
+                <Package className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Input
+                  placeholder="Sipariş ID ile ara..."
+                  value={orderIdSearch}
+                  onChange={(e) => setOrderIdSearch(e.target.value)}
+                  className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+                />
+              </div>
+            </div>
+            
+            {/* Aktif Filtre Göstergesi */}
+            {(emailSearch || phoneSearch || orderIdSearch) && (
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-slate-400 text-sm">Aktif filtreler:</span>
+                {emailSearch && (
+                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-400">
+                    E-posta: {emailSearch}
+                    <button onClick={() => setEmailSearch('')} className="ml-1 hover:text-blue-200">×</button>
+                  </Badge>
+                )}
+                {phoneSearch && (
+                  <Badge variant="secondary" className="bg-green-500/20 text-green-400">
+                    Telefon: {phoneSearch}
+                    <button onClick={() => setPhoneSearch('')} className="ml-1 hover:text-green-200">×</button>
+                  </Badge>
+                )}
+                {orderIdSearch && (
+                  <Badge variant="secondary" className="bg-purple-500/20 text-purple-400">
+                    Sipariş ID: {orderIdSearch}
+                    <button onClick={() => setOrderIdSearch('')} className="ml-1 hover:text-purple-200">×</button>
+                  </Badge>
+                )}
+                <button 
+                  onClick={() => { setEmailSearch(''); setPhoneSearch(''); setOrderIdSearch(''); }}
+                  className="text-slate-500 hover:text-slate-300 text-sm ml-2"
+                >
+                  Tümünü temizle
+                </button>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             {filteredOrders.length === 0 ? (

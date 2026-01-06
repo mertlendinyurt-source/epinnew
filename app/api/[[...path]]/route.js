@@ -6089,6 +6089,10 @@ export async function POST(request) {
                       sendDeliveredEmail(db, order, orderUser, product, [`UC başarıyla hesabınıza yüklendi (PUBG ID: ${order.playerId})`]).catch(err => 
                         console.error('Delivered email failed:', err)
                       );
+                      // DijiPin teslimat SMS'i gönder
+                      sendDeliverySms(db, order, orderUser, product.title).catch(err =>
+                        console.error('DijiPin delivery SMS failed:', err)
+                      );
                     }
                   } else {
                     // DijiPin failed - mark as pending for manual review

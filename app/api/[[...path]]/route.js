@@ -978,20 +978,30 @@ async function sendSms(db, phone, message, type = 'general', orderId = null) {
 
 // Ödeme Başarılı SMS
 async function sendPaymentSuccessSms(db, order, user, productTitle) {
-  const message = `Merhaba ${user.firstName}, ${productTitle} siparisinin odemesi basariyla alindi. Siparis No: ${order.id.slice(-8)} - PINLY`;
+  // Ayarları kontrol et
+  const settings = await getSmsSettings(db);
+  if (!settings || !settings.sendOnPayment) {
+    console.log('Payment SMS disabled');
+    return { success: false, reason: 'disabled' };
+  }
+  
+  const customerName = user.firstName || user.name || 'Müşteri';
+  const message = `${customerName} Merhaba siparisin onaylandi lutfen siparislerim kismindaki kodunu aktif et daha detayli bilgi icin destek talebi olusturabilirsin - PINLY`;
   return sendSms(db, user.phone, message, 'payment_success', order.id);
 }
 
-// Teslimat SMS
+// Teslimat SMS - Devre dışı (sadece ödeme SMS'i aktif)
 async function sendDeliverySms(db, order, user, productTitle) {
-  const message = `Merhaba ${user.firstName}, ${productTitle} siparisin teslim edildi! Kodlarini gormek icin: pinly.com.tr/account/orders/${order.id.slice(0, 8)} - PINLY`;
-  return sendSms(db, user.phone, message, 'delivery', order.id);
+  // Teslimat SMS'i devre dışı - sadece ödeme SMS'i gönderilecek
+  console.log('Delivery SMS disabled - only payment SMS active');
+  return { success: false, reason: 'disabled' };
 }
 
-// Hesap Teslimat SMS
+// Hesap Teslimat SMS - Devre dışı (sadece ödeme SMS'i aktif)
 async function sendAccountDeliverySms(db, order, user, accountTitle) {
-  const message = `Merhaba ${user.firstName}, ${accountTitle} hesabin teslim edildi! Bilgilerini gormek icin: pinly.com.tr/account/orders - PINLY`;
-  return sendSms(db, user.phone, message, 'account_delivery', order.id);
+  // Teslimat SMS'i devre dışı - sadece ödeme SMS'i gönderilecek
+  console.log('Account delivery SMS disabled - only payment SMS active');
+  return { success: false, reason: 'disabled' };
 }
 
 // ============================================

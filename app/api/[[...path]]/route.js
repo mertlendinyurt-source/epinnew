@@ -4043,6 +4043,89 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
       });
     }
 
+    // ============================================
+    // CRON: Ödenen Siparişlere SMS Gönderimi
+    // ============================================
+    // Bu endpoint cPanel cron job ile çağrılacak
+    // Her 2 dakikada bir: curl https://pinly.com.tr/api/cron/payment-sms
+    if (pathname === '/api/cron/payment-sms') {
+      console.log('Cron: Checking paid orders for SMS...');
+      
+      // Son 30 dakikada ödenen ve SMS gönderilmemiş siparişleri bul
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+      
+      // Paid durumundaki siparişleri bul (SMS gönderilmemiş)
+      const paidOrders = await db.collection('orders').find({
+        status: { $in: ['paid', 'delivered'] },
+        createdAt: { $gte: thirtyMinutesAgo },
+        paymentSmsSent: { $ne: true }
+      }).toArray();
+      
+      console.log(`Found ${paidOrders.length} paid orders without SMS`);
+      
+      let sentCount = 0;
+      let errorCount = 0;
+      
+      for (const order of paidOrders) {
+        try {
+          // Kullanıcıyı bul
+          const user = await db.collection('users').findOne({ id: order.userId });
+          
+          if (user && user.phone) {
+            // Ürün/hesap bilgisi
+            const product = order.productId ? await db.collection('products').findOne({ id: order.productId }) : null;
+            const account = order.accountId ? await db.collection('accounts').findOne({ id: order.accountId }) : null;
+            const itemTitle = product?.title || account?.title || order.productTitle || order.accountTitle || 'Sipariş';
+            
+            // SMS gönder
+            console.log(`Sending payment SMS for order ${order.id} to ${user.phone}`);
+            const result = await sendPaymentSuccessSms(db, order, user, itemTitle);
+            
+            // SMS gönderildi olarak işaretle (tekrar gönderilmesin)
+            await db.collection('orders').updateOne(
+              { id: order.id },
+              { 
+                $set: { 
+                  paymentSmsSent: true,
+                  paymentSmsSentAt: new Date(),
+                  paymentSmsResult: result.success ? 'sent' : 'failed'
+                } 
+              }
+            );
+            
+            if (result.success) {
+              sentCount++;
+              console.log(`Payment SMS sent for order ${order.id}`);
+            } else {
+              errorCount++;
+              console.log(`Payment SMS failed for order ${order.id}: ${result.reason}`);
+            }
+          } else {
+            // Telefon yoksa da işaretle
+            await db.collection('orders').updateOne(
+              { id: order.id },
+              { $set: { paymentSmsSent: true, paymentSmsSkipped: 'no_phone' } }
+            );
+            console.log(`Order ${order.id} skipped - no phone number`);
+          }
+        } catch (err) {
+          errorCount++;
+          console.error(`Error processing order ${order.id}:`, err);
+        }
+      }
+      
+      return NextResponse.json({
+        success: true,
+        message: `Ödeme SMS kontrolü tamamlandı`,
+        data: {
+          checked: paidOrders.length,
+          sent: sentCount,
+          errors: errorCount,
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

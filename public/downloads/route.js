@@ -2510,6 +2510,78 @@ export async function GET(request) {
       });
     }
 
+    // Admin: NetGSM Gönderici Adı (Başlık) Sorgula - GET
+    if (pathname === '/api/admin/settings/sms/headers') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const settings = await db.collection('sms_settings').findOne({ id: 'main' });
+      
+      if (!settings || !settings.usercode || !settings.password) {
+        return NextResponse.json({
+          success: false,
+          error: 'SMS ayarları yapılmamış. Önce kullanıcı kodu ve şifre girin ve kaydedin.'
+        });
+      }
+
+      try {
+        // Şifreyi decrypt et
+        let password = settings.password;
+        try {
+          password = decrypt(settings.password);
+        } catch (e) {
+          console.log('Password decrypt failed, using as-is');
+        }
+
+        // NetGSM Gönderici Adı Sorgulama API
+        const apiUrl = 'https://api.netgsm.com.tr/sms/rest/v2/msgheader';
+        const credentials = Buffer.from(`${settings.usercode}:${password}`).toString('base64');
+
+        console.log('Fetching NetGSM headers for usercode:', settings.usercode);
+
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Basic ${credentials}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+        console.log('NetGSM headers response:', JSON.stringify(result));
+
+        if (result.msgheader && Array.isArray(result.msgheader)) {
+          return NextResponse.json({
+            success: true,
+            data: result.msgheader,
+            message: `${result.msgheader.length} adet gönderici adı bulundu`
+          });
+        } else if (result.code === '30') {
+          return NextResponse.json({
+            success: false,
+            error: 'Geçersiz kullanıcı adı/şifre veya API erişim izni yok. Alt kullanıcı şifresini kullandığınızdan emin olun.'
+          });
+        } else {
+          return NextResponse.json({
+            success: false,
+            error: 'Gönderici adı bulunamadı. NetGSM panelinden başlık tanımlamanız gerekebilir.',
+            data: result
+          });
+        }
+      } catch (error) {
+        console.error('NetGSM headers error:', error);
+        return NextResponse.json({
+          success: false,
+          error: 'NetGSM API hatası: ' + error.message
+        });
+      }
+    }
+
     // Admin: Get site settings
     if (pathname === '/api/admin/settings/site') {
       const user = verifyAdminToken(request);
@@ -6907,74 +6979,6 @@ export async function POST(request) {
           success: false,
           error: `SMS gönderilemedi: ${result.reason || result.response || 'Bilinmeyen hata'}`,
           data: result
-        });
-      }
-    }
-
-    // Admin: NetGSM Gönderici Adı (Başlık) Sorgula
-    if (pathname === '/api/admin/settings/sms/headers') {
-      const user = verifyAdminToken(request);
-      if (!user) {
-        return NextResponse.json(
-          { success: false, error: 'Yetkisiz erişim' },
-          { status: 401 }
-        );
-      }
-
-      const settings = await db.collection('sms_settings').findOne({ id: 'main' });
-      
-      if (!settings || !settings.usercode || !settings.password) {
-        return NextResponse.json({
-          success: false,
-          error: 'SMS ayarları yapılmamış. Önce kullanıcı kodu ve şifre girin.'
-        });
-      }
-
-      try {
-        // Şifreyi decrypt et
-        let password = settings.password;
-        try {
-          password = decrypt(settings.password);
-        } catch (e) {}
-
-        // NetGSM Gönderici Adı Sorgulama API
-        const apiUrl = 'https://api.netgsm.com.tr/sms/rest/v2/msgheader';
-        const credentials = Buffer.from(`${settings.usercode}:${password}`).toString('base64');
-
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Basic ${credentials}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        const result = await response.json();
-        console.log('NetGSM headers response:', JSON.stringify(result));
-
-        if (result.msgheader && Array.isArray(result.msgheader)) {
-          return NextResponse.json({
-            success: true,
-            data: result.msgheader,
-            message: `${result.msgheader.length} adet gönderici adı bulundu`
-          });
-        } else if (result.code === '30') {
-          return NextResponse.json({
-            success: false,
-            error: 'Geçersiz kullanıcı adı/şifre veya API erişim izni yok'
-          });
-        } else {
-          return NextResponse.json({
-            success: false,
-            error: 'Gönderici adı bulunamadı veya henüz tanımlanmamış',
-            data: result
-          });
-        }
-      } catch (error) {
-        console.error('NetGSM headers error:', error);
-        return NextResponse.json({
-          success: false,
-          error: 'NetGSM API hatası: ' + error.message
         });
       }
     }

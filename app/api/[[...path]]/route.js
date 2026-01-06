@@ -854,15 +854,21 @@ function maskEmailForShopier(email) {
 
 async function getSmsSettings(db) {
   const settings = await db.collection('sms_settings').findOne({ id: 'main' });
-  if (!settings || !settings.enabled) return null;
+  console.log('SMS Settings raw:', settings ? { enabled: settings.enabled, usercode: settings.usercode, hasPassword: !!settings.password } : 'null');
+  
+  if (!settings || !settings.enabled) {
+    console.log('SMS settings disabled or not found');
+    return null;
+  }
   
   // Decrypt password
   if (settings.password) {
     try {
       settings.password = decrypt(settings.password);
+      console.log('SMS password decrypted successfully');
     } catch (error) {
-      console.error('Failed to decrypt SMS password');
-      return null;
+      console.error('Failed to decrypt SMS password, trying as plain text');
+      // Şifre düz metin olabilir, decrypt etmeden kullan
     }
   }
   

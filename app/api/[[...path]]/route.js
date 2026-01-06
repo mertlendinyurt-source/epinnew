@@ -6023,26 +6023,40 @@ export async function POST(request) {
           console.log(`Order ${order.id} ${actualStatus} with risk score ${riskResult.score}. Delivery on HOLD.`);
           
           // Send payment success email (but note delivery is pending review)
-          if (orderUser && product) {
-            sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
-              console.error('Payment success email failed:', err)
-            );
+          if (orderUser && (product || account)) {
+            const itemTitle = product?.title || account?.title || 'Sipariş';
+            
+            if (product) {
+              sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
+                console.error('Payment success email failed:', err)
+              );
+            }
             // SMS gönder - Ödeme başarılı
-            sendPaymentSuccessSms(db, order, orderUser, product.title).catch(err =>
+            console.log('📱 Sending payment SMS to:', orderUser.phone, 'for:', itemTitle);
+            sendPaymentSuccessSms(db, order, orderUser, itemTitle).catch(err =>
               console.error('Payment success SMS failed:', err)
             );
+          } else {
+            console.log('⚠️ Cannot send SMS - orderUser:', !!orderUser, 'product:', !!product, 'account:', !!account);
           }
         } else {
           // CLEAR risk (or test mode) - proceed with stock assignment
           // Send payment success email
-          if (orderUser && product) {
-            sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
-              console.error('Payment success email failed:', err)
-            );
+          if (orderUser && (product || account)) {
+            const itemTitle = product?.title || account?.title || 'Sipariş';
+            
+            if (product) {
+              sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
+                console.error('Payment success email failed:', err)
+              );
+            }
             // SMS gönder - Ödeme başarılı
-            sendPaymentSuccessSms(db, order, orderUser, product.title).catch(err =>
+            console.log('📱 Sending payment SMS to:', orderUser.phone, 'for:', itemTitle);
+            sendPaymentSuccessSms(db, order, orderUser, itemTitle).catch(err =>
               console.error('Payment success SMS failed:', err)
             );
+          } else {
+            console.log('⚠️ Cannot send SMS - orderUser:', !!orderUser, 'product:', !!product, 'account:', !!account);
           }
 
           // Check if stock already assigned (idempotency)

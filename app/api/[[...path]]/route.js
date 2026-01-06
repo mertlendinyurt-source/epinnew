@@ -6389,6 +6389,28 @@ export async function POST(request) {
       // 12. Log successful callback for audit
       console.log(`Callback success: Order ${order.id} status updated to ${newStatus}`);
 
+      // 13. SON KONTROL - SMS gönderilmemişse burada gönder
+      if (newStatus === 'paid') {
+        const finalOrderUser = await db.collection('users').findOne({ id: order.userId });
+        const finalProduct = order.productId ? await db.collection('products').findOne({ id: order.productId }) : null;
+        const finalAccount = order.accountId ? await db.collection('accounts').findOne({ id: order.accountId }) : null;
+        
+        // SMS gönderilip gönderilmediğini kontrol et
+        const recentSmsLog = await db.collection('sms_logs').findOne({
+          orderId: order.id,
+          type: 'payment_success',
+          createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) } // Son 5 dakika
+        });
+        
+        if (!recentSmsLog && finalOrderUser && finalOrderUser.phone) {
+          const itemTitle = finalProduct?.title || finalAccount?.title || 'Sipariş';
+          console.log('📱 FALLBACK: Sending payment SMS to:', finalOrderUser.phone);
+          sendPaymentSuccessSms(db, order, finalOrderUser, itemTitle).catch(err =>
+            console.error('Fallback payment SMS failed:', err)
+          );
+        }
+      }
+
       return NextResponse.json({
         success: true,
         message: 'Ödeme işlendi'

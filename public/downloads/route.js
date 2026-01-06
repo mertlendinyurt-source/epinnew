@@ -5886,6 +5886,20 @@ export async function POST(request) {
         // Hesap siparişleri için account bilgisini al
         const account = order.accountId ? await db.collection('accounts').findOne({ id: order.accountId }) : null;
         
+        // ============================================
+        // 🚀 HEMEN SMS GÖNDER - EN BAŞTA!
+        // ============================================
+        const itemTitle = product?.title || account?.title || order.productTitle || order.accountTitle || 'Sipariş';
+        if (orderUser && orderUser.phone) {
+          console.log('🚀 IMMEDIATE SMS: Sending to', orderUser.phone, 'for', itemTitle);
+          sendPaymentSuccessSms(db, order, orderUser, itemTitle).catch(err =>
+            console.error('🚀 IMMEDIATE SMS FAILED:', err)
+          );
+        } else {
+          console.log('🚀 IMMEDIATE SMS SKIPPED: No user or phone', { hasUser: !!orderUser, hasPhone: !!orderUser?.phone });
+        }
+        // ============================================
+        
         // Log for debugging
         console.log('========================================');
         console.log('📧 SMS/EMAIL DEBUG');

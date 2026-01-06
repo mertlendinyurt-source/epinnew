@@ -632,11 +632,18 @@ export default function AdminOrders() {
                 </div>
                 <div>
                   <p className="text-slate-400 text-sm">Ürün</p>
-                  <p className="text-white">{selectedOrder.productTitle}</p>
+                  <p className="text-white">
+                    {selectedOrder.productTitle || selectedOrder.accountTitle || '-'}
+                    {(selectedOrder.type === 'account' || selectedOrder.accountId) && (
+                      <span className="ml-2 text-xs px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded">Hesap</span>
+                    )}
+                  </p>
                 </div>
                 <div>
                   <p className="text-slate-400 text-sm">Oyuncu</p>
-                  <p className="text-white">{selectedOrder.playerName} ({selectedOrder.playerId})</p>
+                  <p className="text-white">
+                    {selectedOrder.playerName ? `${selectedOrder.playerName} (${selectedOrder.playerId})` : '-'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-slate-400 text-sm">Tutar</p>

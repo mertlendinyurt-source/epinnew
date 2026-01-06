@@ -7701,6 +7701,8 @@ export async function POST(request) {
       const currencyCode = 0; // TRY
 
       // Prepare Shopier payment request with REAL customer data
+      // E-posta adresi maskeleniyor - Shopier'den müşteriye mail gitmesin
+      const maskedEmail = maskEmailForShopier(customerSnapshot.email);
       const shopierPayload = {
         API_key: apiKey,
         website_index: 1,
@@ -7709,7 +7711,7 @@ export async function POST(request) {
         product_type: 1, // 0 = Physical, 1 = Digital
         buyer_name: customerSnapshot.firstName,
         buyer_surname: customerSnapshot.lastName,
-        buyer_email: customerSnapshot.email,
+        buyer_email: maskedEmail, // Maskelenmiş e-posta
         buyer_account_age: 0,
         buyer_id_nr: '',
         buyer_phone: customerSnapshot.phone,

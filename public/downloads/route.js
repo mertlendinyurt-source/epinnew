@@ -5882,6 +5882,20 @@ export async function POST(request) {
         // Get user and product for email
         const orderUser = await db.collection('users').findOne({ id: order.userId });
         const product = await db.collection('products').findOne({ id: order.productId });
+        
+        // Hesap siparişleri için account bilgisini al
+        const account = order.accountId ? await db.collection('accounts').findOne({ id: order.accountId }) : null;
+        
+        // Log for debugging
+        console.log('========================================');
+        console.log('📧 SMS/EMAIL DEBUG');
+        console.log('Order ID:', order.id);
+        console.log('Order Type:', order.type);
+        console.log('User found:', !!orderUser);
+        console.log('User phone:', orderUser?.phone);
+        console.log('Product found:', !!product);
+        console.log('Account found:', !!account);
+        console.log('========================================');
 
         // ============================================
         // 🔐 HIGH-VALUE ORDER CHECK - DO THIS FIRST!
@@ -6009,26 +6023,40 @@ export async function POST(request) {
           console.log(`Order ${order.id} ${actualStatus} with risk score ${riskResult.score}. Delivery on HOLD.`);
           
           // Send payment success email (but note delivery is pending review)
-          if (orderUser && product) {
-            sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
-              console.error('Payment success email failed:', err)
-            );
+          if (orderUser && (product || account)) {
+            const itemTitle = product?.title || account?.title || 'Sipariş';
+            
+            if (product) {
+              sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
+                console.error('Payment success email failed:', err)
+              );
+            }
             // SMS gönder - Ödeme başarılı
-            sendPaymentSuccessSms(db, order, orderUser, product.title).catch(err =>
+            console.log('📱 Sending payment SMS to:', orderUser.phone, 'for:', itemTitle);
+            sendPaymentSuccessSms(db, order, orderUser, itemTitle).catch(err =>
               console.error('Payment success SMS failed:', err)
             );
+          } else {
+            console.log('⚠️ Cannot send SMS - orderUser:', !!orderUser, 'product:', !!product, 'account:', !!account);
           }
         } else {
           // CLEAR risk (or test mode) - proceed with stock assignment
           // Send payment success email
-          if (orderUser && product) {
-            sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
-              console.error('Payment success email failed:', err)
-            );
+          if (orderUser && (product || account)) {
+            const itemTitle = product?.title || account?.title || 'Sipariş';
+            
+            if (product) {
+              sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
+                console.error('Payment success email failed:', err)
+              );
+            }
             // SMS gönder - Ödeme başarılı
-            sendPaymentSuccessSms(db, order, orderUser, product.title).catch(err =>
+            console.log('📱 Sending payment SMS to:', orderUser.phone, 'for:', itemTitle);
+            sendPaymentSuccessSms(db, order, orderUser, itemTitle).catch(err =>
               console.error('Payment success SMS failed:', err)
             );
+          } else {
+            console.log('⚠️ Cannot send SMS - orderUser:', !!orderUser, 'product:', !!product, 'account:', !!account);
           }
 
           // Check if stock already assigned (idempotency)

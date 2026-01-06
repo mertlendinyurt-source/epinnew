@@ -2427,6 +2427,71 @@ export async function GET(request) {
       });
     }
 
+    // Admin: Get SMS settings
+    if (pathname === '/api/admin/settings/sms') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const settings = await db.collection('sms_settings').findOne({ id: 'main' });
+      
+      return NextResponse.json({
+        success: true,
+        data: settings ? {
+          ...settings,
+          password: settings.password ? '********' : '' // Şifreyi maskele
+        } : {
+          id: 'main',
+          enabled: false,
+          usercode: '',
+          password: '',
+          msgheader: 'PINLY',
+          sendOnPayment: true,
+          sendOnDelivery: true
+        }
+      });
+    }
+
+    // Admin: Get SMS logs
+    if (pathname === '/api/admin/settings/sms/logs') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { searchParams } = new URL(request.url);
+      const page = parseInt(searchParams.get('page')) || 1;
+      const limit = parseInt(searchParams.get('limit')) || 20;
+      const skip = (page - 1) * limit;
+
+      const logs = await db.collection('sms_logs')
+        .find({})
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+
+      const total = await db.collection('sms_logs').countDocuments();
+
+      return NextResponse.json({
+        success: true,
+        data: logs,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
+    }
+
     // Admin: Get site settings
     if (pathname === '/api/admin/settings/site') {
       const user = verifyAdminToken(request);

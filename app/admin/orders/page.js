@@ -484,6 +484,68 @@ export default function AdminOrders() {
                 </Select>
               </div>
             </div>
+            
+            {/* Arama Filtreleri */}
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Input
+                  placeholder="E-posta ile ara..."
+                  value={emailSearch}
+                  onChange={(e) => setEmailSearch(e.target.value)}
+                  className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+                />
+              </div>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Input
+                  placeholder="Telefon ile ara..."
+                  value={phoneSearch}
+                  onChange={(e) => setPhoneSearch(e.target.value)}
+                  className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+                />
+              </div>
+              <div className="relative">
+                <Package className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Input
+                  placeholder="Sipariş ID ile ara..."
+                  value={orderIdSearch}
+                  onChange={(e) => setOrderIdSearch(e.target.value)}
+                  className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+                />
+              </div>
+            </div>
+            
+            {/* Aktif Filtre Göstergesi */}
+            {(emailSearch || phoneSearch || orderIdSearch) && (
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-slate-400 text-sm">Aktif filtreler:</span>
+                {emailSearch && (
+                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-400">
+                    E-posta: {emailSearch}
+                    <button onClick={() => setEmailSearch('')} className="ml-1 hover:text-blue-200">×</button>
+                  </Badge>
+                )}
+                {phoneSearch && (
+                  <Badge variant="secondary" className="bg-green-500/20 text-green-400">
+                    Telefon: {phoneSearch}
+                    <button onClick={() => setPhoneSearch('')} className="ml-1 hover:text-green-200">×</button>
+                  </Badge>
+                )}
+                {orderIdSearch && (
+                  <Badge variant="secondary" className="bg-purple-500/20 text-purple-400">
+                    Sipariş ID: {orderIdSearch}
+                    <button onClick={() => setOrderIdSearch('')} className="ml-1 hover:text-purple-200">×</button>
+                  </Badge>
+                )}
+                <button 
+                  onClick={() => { setEmailSearch(''); setPhoneSearch(''); setOrderIdSearch(''); }}
+                  className="text-slate-500 hover:text-slate-300 text-sm ml-2"
+                >
+                  Tümünü temizle
+                </button>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             {filteredOrders.length === 0 ? (

@@ -849,6 +849,152 @@ function maskEmailForShopier(email) {
 }
 
 // ============================================
+// NETGSM SMS SERVICE
+// ============================================
+
+async function getSmsSettings(db) {
+  const settings = await db.collection('sms_settings').findOne({ id: 'main' });
+  if (!settings || !settings.enabled) return null;
+  
+  // Decrypt password
+  if (settings.password) {
+    try {
+      settings.password = decrypt(settings.password);
+    } catch (error) {
+      console.error('Failed to decrypt SMS password');
+      return null;
+    }
+  }
+  
+  return settings;
+}
+
+// Telefon numarasını NetGSM formatına çevir (905xxxxxxxxx)
+function formatPhoneForNetgsm(phone) {
+  if (!phone) return null;
+  
+  // Tüm boşluk, tire, parantez temizle
+  let cleaned = phone.replace(/[\s\-\(\)\+]/g, '');
+  
+  // Başındaki 0'ı kaldır ve 90 ekle
+  if (cleaned.startsWith('0')) {
+    cleaned = '90' + cleaned.substring(1);
+  }
+  // Eğer 5 ile başlıyorsa 90 ekle
+  else if (cleaned.startsWith('5')) {
+    cleaned = '90' + cleaned;
+  }
+  // Eğer 90 ile başlamıyorsa 90 ekle
+  else if (!cleaned.startsWith('90')) {
+    cleaned = '90' + cleaned;
+  }
+  
+  return cleaned;
+}
+
+// NetGSM SMS Gönder
+async function sendSms(db, phone, message, type = 'general', orderId = null) {
+  const settings = await getSmsSettings(db);
+  
+  if (!settings) {
+    console.log('SMS disabled or not configured');
+    return { success: false, reason: 'disabled' };
+  }
+  
+  const formattedPhone = formatPhoneForNetgsm(phone);
+  if (!formattedPhone || formattedPhone.length < 12) {
+    console.log('Invalid phone number for SMS:', phone);
+    return { success: false, reason: 'invalid_phone' };
+  }
+  
+  try {
+    // NetGSM API URL
+    const apiUrl = 'https://api.netgsm.com.tr/sms/send/get';
+    
+    // URL parametreleri
+    const params = new URLSearchParams({
+      usercode: settings.usercode,
+      password: settings.password,
+      gsmno: formattedPhone,
+      message: message,
+      msgheader: settings.msgheader || 'PINLY',
+      filter: '0',
+      encoding: 'TR'
+    });
+    
+    console.log(`Sending SMS to ${formattedPhone}: ${message.substring(0, 50)}...`);
+    
+    const response = await fetch(`${apiUrl}?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+    
+    const result = await response.text();
+    console.log('NetGSM response:', result);
+    
+    // NetGSM başarılı yanıt kodları: 00, 01, 02
+    const isSuccess = result.startsWith('00') || result.startsWith('01') || result.startsWith('02');
+    
+    // SMS log kaydet
+    await db.collection('sms_logs').insertOne({
+      id: uuidv4(),
+      phone: formattedPhone,
+      message: message,
+      type: type,
+      orderId: orderId,
+      status: isSuccess ? 'sent' : 'failed',
+      response: result,
+      createdAt: new Date()
+    });
+    
+    if (isSuccess) {
+      console.log(`SMS sent successfully to ${formattedPhone}`);
+      return { success: true, response: result };
+    } else {
+      console.error(`SMS failed: ${result}`);
+      return { success: false, reason: 'api_error', response: result };
+    }
+    
+  } catch (error) {
+    console.error('SMS send error:', error);
+    
+    // Hata log kaydet
+    await db.collection('sms_logs').insertOne({
+      id: uuidv4(),
+      phone: formattedPhone,
+      message: message,
+      type: type,
+      orderId: orderId,
+      status: 'error',
+      error: error.message,
+      createdAt: new Date()
+    });
+    
+    return { success: false, reason: 'error', error: error.message };
+  }
+}
+
+// Ödeme Başarılı SMS
+async function sendPaymentSuccessSms(db, order, user, productTitle) {
+  const message = `Merhaba ${user.firstName}, ${productTitle} siparisinin odemesi basariyla alindi. Siparis No: ${order.id.slice(-8)} - PINLY`;
+  return sendSms(db, user.phone, message, 'payment_success', order.id);
+}
+
+// Teslimat SMS
+async function sendDeliverySms(db, order, user, productTitle) {
+  const message = `Merhaba ${user.firstName}, ${productTitle} siparisin teslim edildi! Kodlarini gormek icin: pinly.com.tr/account/orders/${order.id.slice(0, 8)} - PINLY`;
+  return sendSms(db, user.phone, message, 'delivery', order.id);
+}
+
+// Hesap Teslimat SMS
+async function sendAccountDeliverySms(db, order, user, accountTitle) {
+  const message = `Merhaba ${user.firstName}, ${accountTitle} hesabin teslim edildi! Bilgilerini gormek icin: pinly.com.tr/account/orders - PINLY`;
+  return sendSms(db, user.phone, message, 'account_delivery', order.id);
+}
+
+// ============================================
 // EMAIL SERVICE
 // ============================================
 

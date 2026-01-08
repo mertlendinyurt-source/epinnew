@@ -1000,7 +1000,7 @@ async function sendPaymentSuccessSms(db, order, user, productTitle) {
   }
   
   const customerName = user.firstName || user.name || 'Müşteri';
-  const message = `${customerName} Merhaba siparisin onaylandi lutfen siparislerim kismindaki kodunu aktif et daha detayli bilgi icin destek talebi olusturabilirsin - PINLY`;
+  const message = `${customerName} Merhaba siparisin onaylandi lutfen siparislerim kismindaki kodunu aktif et whatsapp destek: 0850 346 9671 - PINLY`;
   return sendSms(db, user.phone, message, 'payment_success', order.id);
 }
 

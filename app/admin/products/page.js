@@ -858,16 +858,16 @@ export default function AdminProducts() {
 
       {/* Edit Dialog - Premium UI */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-3xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto p-0">
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between">
+          <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
             <div>
-              <DialogTitle className="text-xl font-bold text-white">Ürün Düzenle</DialogTitle>
-              <p className="text-sm text-slate-400 mt-1">Ürün bilgilerini güncelleyin</p>
+              <DialogTitle className="text-lg md:text-xl font-bold text-white">Ürün Düzenle</DialogTitle>
+              <p className="text-xs md:text-sm text-slate-400 mt-1">Ürün bilgilerini güncelleyin</p>
             </div>
             <div className="flex items-center gap-3">
               {editingProduct && (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 rounded-lg">
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-800 rounded-lg">
                   <span className="text-xs text-slate-500">ID:</span>
                   <code className="text-xs text-slate-400 font-mono">{editingProduct.id.slice(0, 8)}...</code>
                   <button
@@ -884,15 +884,15 @@ export default function AdminProducts() {
             </div>
           </div>
           
-          <div className="p-6 space-y-6">
+          <div className="p-4 md:p-6 space-y-4 md:space-y-6">
             {/* Section 1: Product Info */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+            <div className="space-y-3 md:space-y-4">
+              <h3 className="text-xs md:text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                 <Package className="w-4 h-4 text-blue-400" />
                 Ürün Bilgileri
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div className="space-y-2">
                   <Label className="text-slate-300 text-sm">Ürün Adı</Label>
                   <Input

@@ -109,7 +109,6 @@ export default function AdminAccountsPage() {
     setModalOpen(true)
   }
 
-  // Resim yükleme fonksiyonu
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -300,7 +299,7 @@ export default function AdminAccountsPage() {
         toast.success(data.message || `${items.length} adet hesap bilgisi eklendi`)
         setStockData({ items: '', summary: null })
         await fetchStock(selectedAccountForStock.id)
-        fetchAccounts() // Refresh accounts to update stock count
+        fetchAccounts()
       } else {
         toast.error(data.error || 'Stok eklenemedi')
       }
@@ -329,17 +328,17 @@ export default function AdminAccountsPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <ShoppingCart className="w-7 h-7 text-purple-400" />
+          <h1 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3">
+            <ShoppingCart className="w-6 h-6 md:w-7 md:h-7 text-purple-400" />
             Hesap Listesi
           </h1>
-          <p className="text-slate-400 mt-1">PUBG Mobile hesaplarını yönetin</p>
+          <p className="text-slate-400 mt-1 text-sm">PUBG Mobile hesaplarını yönetin</p>
         </div>
-        <Button onClick={() => handleOpenModal()} className="bg-purple-600 hover:bg-purple-500">
+        <Button onClick={() => handleOpenModal()} className="bg-purple-600 hover:bg-purple-500 w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Yeni Hesap Ekle
         </Button>
@@ -358,33 +357,33 @@ export default function AdminAccountsPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-          <div className="text-slate-400 text-sm">Toplam Hesap</div>
-          <div className="text-2xl font-bold text-white mt-1">{accounts.length}</div>
+      {/* Stats Cards - Mobile: 2x2, Desktop: 4 columns */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+        <div className="bg-slate-800 rounded-xl p-3 md:p-4 border border-slate-700">
+          <div className="text-slate-400 text-xs md:text-sm">Toplam Hesap</div>
+          <div className="text-xl md:text-2xl font-bold text-white mt-1">{accounts.length}</div>
         </div>
-        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-          <div className="text-slate-400 text-sm">Satışta</div>
-          <div className="text-2xl font-bold text-green-400 mt-1">
+        <div className="bg-slate-800 rounded-xl p-3 md:p-4 border border-slate-700">
+          <div className="text-slate-400 text-xs md:text-sm">Satışta</div>
+          <div className="text-xl md:text-2xl font-bold text-green-400 mt-1">
             {accounts.filter(a => a.active && a.status !== 'sold').length}
           </div>
         </div>
-        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-          <div className="text-slate-400 text-sm">Toplam Stok</div>
-          <div className="text-2xl font-bold text-blue-400 mt-1">
+        <div className="bg-slate-800 rounded-xl p-3 md:p-4 border border-slate-700">
+          <div className="text-slate-400 text-xs md:text-sm">Toplam Stok</div>
+          <div className="text-xl md:text-2xl font-bold text-blue-400 mt-1">
             {accounts.reduce((sum, a) => sum + (a.stockCount || 0), 0)}
           </div>
         </div>
-        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-          <div className="text-slate-400 text-sm">Satılan</div>
-          <div className="text-2xl font-bold text-purple-400 mt-1">
+        <div className="bg-slate-800 rounded-xl p-3 md:p-4 border border-slate-700">
+          <div className="text-slate-400 text-xs md:text-sm">Satılan</div>
+          <div className="text-xl md:text-2xl font-bold text-purple-400 mt-1">
             {accounts.reduce((sum, a) => sum + (a.salesCount || 0), 0)}
           </div>
         </div>
       </div>
 
-      {/* Accounts Table */}
+      {/* Accounts Table/Cards */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
@@ -399,125 +398,218 @@ export default function AdminAccountsPage() {
           </Button>
         </div>
       ) : (
-        <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-700">
-                <th className="text-left p-4 text-slate-400 font-medium">Hesap</th>
-                <th className="text-left p-4 text-slate-400 font-medium">Destansı</th>
-                <th className="text-left p-4 text-slate-400 font-medium">Fiyat</th>
-                <th className="text-left p-4 text-slate-400 font-medium">Stok</th>
-                <th className="text-left p-4 text-slate-400 font-medium">Durum</th>
-                <th className="text-right p-4 text-slate-400 font-medium">İşlemler</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAccounts.map((account) => (
-                <tr key={account.id} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      {account.imageUrl ? (
-                        <img src={account.imageUrl} alt="" className="w-12 h-12 rounded-lg object-cover" />
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center">
-                          <Star className="w-5 h-5 text-slate-500" />
+        <>
+          {/* Desktop Table */}
+          <div className="hidden lg:block bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-700">
+                    <th className="text-left p-4 text-slate-400 font-medium">Hesap</th>
+                    <th className="text-left p-4 text-slate-400 font-medium">Destansı</th>
+                    <th className="text-left p-4 text-slate-400 font-medium">Fiyat</th>
+                    <th className="text-left p-4 text-slate-400 font-medium">Stok</th>
+                    <th className="text-left p-4 text-slate-400 font-medium">Durum</th>
+                    <th className="text-right p-4 text-slate-400 font-medium">İşlemler</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredAccounts.map((account) => (
+                    <tr key={account.id} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          {account.imageUrl ? (
+                            <img src={account.imageUrl} alt="" className="w-12 h-12 rounded-lg object-cover" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center">
+                              <Star className="w-5 h-5 text-slate-500" />
+                            </div>
+                          )}
+                          <div>
+                            <div className="text-white font-medium">{account.title}</div>
+                            <div className="text-slate-500 text-sm">{account.rank || '-'}</div>
+                          </div>
                         </div>
-                      )}
+                      </td>
+                      <td className="p-4">
+                        {account.legendaryMax > 0 ? (
+                          <span className="text-yellow-400 font-medium">
+                            {account.legendaryMin}-{account.legendaryMax}
+                          </span>
+                        ) : (
+                          <span className="text-slate-500">-</span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <div className="text-white font-medium">₺{account.discountPrice?.toFixed(2)}</div>
+                        {account.discountPrice < account.price && (
+                          <div className="text-slate-500 text-sm line-through">₺{account.price?.toFixed(2)}</div>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          {account.unlimited ? (
+                            <span className="flex items-center gap-1 text-purple-400 font-medium">
+                              <Infinity className="w-4 h-4" />
+                              {account.stockCount || 0}
+                            </span>
+                          ) : (
+                            <span className={`font-medium ${(account.stockCount || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {account.stockCount || 0}
+                            </span>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenStockDialog(account)}
+                            className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 h-7 px-2"
+                          >
+                            <Database className="w-3 h-3 mr-1" />
+                            Stok
+                          </Button>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[account.status] || statusColors.available}`}>
+                          {statusLabels[account.status] || 'Satışta'}
+                        </span>
+                        {!account.active && (
+                          <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium bg-slate-600/50 text-slate-400">
+                            Gizli
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleToggleActive(account)}
+                            className="text-slate-400 hover:text-white"
+                            title={account.active ? 'Gizle' : 'Yayınla'}
+                          >
+                            {account.active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenModal(account)}
+                            className="text-slate-400 hover:text-blue-400"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(account)}
+                            className="text-slate-400 hover:text-red-400"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="lg:hidden space-y-3">
+            {filteredAccounts.map((account) => (
+              <div key={account.id} className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+                <div className="flex items-start gap-3 mb-3">
+                  {account.imageUrl ? (
+                    <img src={account.imageUrl} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
+                      <Star className="w-6 h-6 text-slate-500" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
                       <div>
-                        <div className="text-white font-medium">{account.title}</div>
-                        <div className="text-slate-500 text-sm">{account.rank || '-'}</div>
+                        <h3 className="text-white font-medium truncate">{account.title}</h3>
+                        <p className="text-slate-500 text-sm">{account.rank || '-'}</p>
+                      </div>
+                      <div className="flex gap-1">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[account.status] || statusColors.available}`}>
+                          {statusLabels[account.status] || 'Satışta'}
+                        </span>
                       </div>
                     </div>
-                  </td>
-                  <td className="p-4">
-                    {account.legendaryMax > 0 ? (
-                      <span className="text-yellow-400 font-medium">
-                        {account.legendaryMin}-{account.legendaryMax}
-                      </span>
-                    ) : (
-                      <span className="text-slate-500">-</span>
-                    )}
-                  </td>
-                  <td className="p-4">
-                    <div className="text-white font-medium">₺{account.discountPrice?.toFixed(2)}</div>
-                    {account.discountPrice < account.price && (
-                      <div className="text-slate-500 text-sm line-through">₺{account.price?.toFixed(2)}</div>
-                    )}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      {account.unlimited ? (
-                        <span className="flex items-center gap-1 text-purple-400 font-medium">
-                          <Infinity className="w-4 h-4" />
-                          {account.stockCount || 0}
-                        </span>
-                      ) : (
-                        <span className={`font-medium ${(account.stockCount || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {account.stockCount || 0}
-                        </span>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenStockDialog(account)}
-                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 h-7 px-2"
-                      >
-                        <Database className="w-3 h-3 mr-1" />
-                        Stok
-                      </Button>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[account.status] || statusColors.available}`}>
-                      {statusLabels[account.status] || 'Satışta'}
-                    </span>
-                    {!account.active && (
-                      <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium bg-slate-600/50 text-slate-400">
-                        Gizli
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleToggleActive(account)}
-                        className="text-slate-400 hover:text-white"
-                        title={account.active ? 'Gizle' : 'Yayınla'}
-                      >
-                        {account.active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleOpenModal(account)}
-                        className="text-slate-400 hover:text-blue-400"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(account)}
-                        className="text-slate-400 hover:text-red-400"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 mb-3 text-sm">
+                  <div>
+                    <p className="text-slate-400 text-xs">Fiyat</p>
+                    <p className="text-white font-medium">₺{account.discountPrice?.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-xs">Destansı</p>
+                    <p className="text-yellow-400 font-medium">
+                      {account.legendaryMax > 0 ? `${account.legendaryMin}-${account.legendaryMax}` : '-'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-xs">Stok</p>
+                    <p className={`font-medium ${account.unlimited ? 'text-purple-400' : ((account.stockCount || 0) > 0 ? 'text-green-400' : 'text-red-400')}`}>
+                      {account.unlimited && <Infinity className="w-3 h-3 inline mr-1" />}
+                      {account.stockCount || 0}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-slate-700">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleOpenStockDialog(account)}
+                    className="border-slate-600 text-blue-400 hover:bg-blue-500/10 h-8"
+                  >
+                    <Database className="w-3 h-3 mr-1" />
+                    Stok
+                  </Button>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleToggleActive(account)}
+                      className="text-slate-400 hover:text-white h-8 w-8"
+                    >
+                      {account.active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleOpenModal(account)}
+                      className="text-slate-400 hover:text-blue-400 h-8 w-8"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(account)}
+                      className="text-slate-400 hover:text-red-400 h-8 w-8"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Stock Management Dialog */}
       <Dialog open={stockDialogOpen} onOpenChange={setStockDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-2xl">
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-[95vw] sm:max-w-2xl mx-auto max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">Stok Yönetimi</DialogTitle>
+            <DialogTitle className="text-xl md:text-2xl">Stok Yönetimi</DialogTitle>
             <DialogDescription className="text-slate-400">
               {selectedAccountForStock?.title} - Hesap bilgilerini yönetin
             </DialogDescription>
@@ -525,24 +617,24 @@ export default function AdminAccountsPage() {
 
           {/* Stock Summary */}
           {stockData.summary && (
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-                <div className="text-2xl font-bold text-white mb-1">
+            <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-6">
+              <div className="bg-slate-800 rounded-lg p-3 md:p-4 border border-slate-700">
+                <div className="text-xl md:text-2xl font-bold text-white mb-1">
                   {stockData.summary.total}
                 </div>
-                <div className="text-sm text-slate-400">Toplam</div>
+                <div className="text-xs md:text-sm text-slate-400">Toplam</div>
               </div>
-              <div className="bg-green-900/20 rounded-lg p-4 border border-green-700/50">
-                <div className="text-2xl font-bold text-green-400 mb-1">
+              <div className="bg-green-900/20 rounded-lg p-3 md:p-4 border border-green-700/50">
+                <div className="text-xl md:text-2xl font-bold text-green-400 mb-1">
                   {stockData.summary.available}
                 </div>
-                <div className="text-sm text-green-300">Mevcut</div>
+                <div className="text-xs md:text-sm text-green-300">Mevcut</div>
               </div>
-              <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-700/50">
-                <div className="text-2xl font-bold text-blue-400 mb-1">
+              <div className="bg-blue-900/20 rounded-lg p-3 md:p-4 border border-blue-700/50">
+                <div className="text-xl md:text-2xl font-bold text-blue-400 mb-1">
                   {stockData.summary.assigned}
                 </div>
-                <div className="text-sm text-blue-300">Satılan</div>
+                <div className="text-xs md:text-sm text-blue-300">Satılan</div>
               </div>
             </div>
           )}
@@ -550,32 +642,32 @@ export default function AdminAccountsPage() {
           {/* Add Stock Section */}
           <div className="space-y-4">
             <div>
-              <Label className="text-slate-300 mb-2 block">
+              <Label className="text-slate-300 mb-2 block text-sm">
                 Hesap Bilgisi Ekle (Her satıra bir hesap bilgisi)
               </Label>
               <textarea
                 value={stockData.items}
                 onChange={(e) => setStockData({ ...stockData, items: e.target.value })}
-                placeholder="Örnek:&#10;Email: hesap1@mail.com | Şifre: sifre123&#10;Email: hesap2@mail.com | Şifre: sifre456&#10;Email: hesap3@mail.com | Şifre: sifre789"
-                className="w-full h-40 px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 font-mono text-sm resize-none"
+                placeholder="Örnek:&#10;Email: hesap1@mail.com | Şifre: sifre123&#10;Email: hesap2@mail.com | Şifre: sifre456"
+                className="w-full h-32 md:h-40 px-3 md:px-4 py-2 md:py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 font-mono text-xs md:text-sm resize-none"
               />
               <div className="text-xs text-slate-400 mt-2">
                 {stockData.items.split('\n').filter(l => l.trim()).length} satır girildi
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button
                 onClick={() => setStockDialogOpen(false)}
                 variant="outline"
-                className="border-slate-700 text-white"
+                className="border-slate-700 text-white w-full sm:w-auto"
               >
                 İptal
               </Button>
               <Button
                 onClick={handleAddStock}
                 disabled={stockLoading || !stockData.items.trim()}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
               >
                 {stockLoading ? 'Ekleniyor...' : 'Toplu Ekle'}
               </Button>
@@ -583,12 +675,12 @@ export default function AdminAccountsPage() {
           </div>
 
           {/* Stock Information */}
-          <div className="mt-4 p-4 bg-purple-900/20 rounded-lg border border-purple-700/50">
+          <div className="mt-4 p-3 md:p-4 bg-purple-900/20 rounded-lg border border-purple-700/50">
             <div className="flex items-start gap-3">
               <Package className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-purple-200">
+              <div className="text-xs md:text-sm text-purple-200">
                 <p className="font-semibold mb-1">Otomatik Teslimat:</p>
-                <p>Eklenen hesap bilgileri, ödeme onaylandığında otomatik olarak müşteriye atanır. Her satır bir hesap bilgisi olarak kabul edilir.</p>
+                <p>Eklenen hesap bilgileri, ödeme onaylandığında otomatik olarak müşteriye atanır.</p>
               </div>
             </div>
           </div>
@@ -597,7 +689,7 @@ export default function AdminAccountsPage() {
 
       {/* Create/Edit Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-[95vw] sm:max-w-2xl mx-auto max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingAccount ? 'Hesap Düzenle' : 'Yeni Hesap Ekle'}
@@ -607,7 +699,7 @@ export default function AdminAccountsPage() {
           <div className="space-y-4 py-4">
             {/* Title */}
             <div>
-              <Label className="text-slate-300">Başlık *</Label>
+              <Label className="text-slate-300 text-sm">Başlık *</Label>
               <Input
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
@@ -618,10 +710,10 @@ export default function AdminAccountsPage() {
 
             {/* Image Upload */}
             <div>
-              <Label className="text-slate-300">Hesap Görseli</Label>
+              <Label className="text-slate-300 text-sm">Hesap Görseli</Label>
               <div className="mt-2 space-y-3">
                 {formData.imageUrl && (
-                  <div className="relative w-32 h-32 rounded-lg overflow-hidden bg-slate-800">
+                  <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-lg overflow-hidden bg-slate-800">
                     <img 
                       src={formData.imageUrl} 
                       alt="Preview" 
@@ -649,7 +741,7 @@ export default function AdminAccountsPage() {
                     variant="outline"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                    className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700 text-sm"
                   >
                     {uploading ? (
                       <>
@@ -659,28 +751,25 @@ export default function AdminAccountsPage() {
                     ) : (
                       <>
                         <Upload className="w-4 h-4 mr-2" />
-                        Resim Yükle (PNG/JPG)
+                        Resim Yükle
                       </>
                     )}
                   </Button>
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 text-sm">veya URL girin:</span>
-                </div>
                 <Input
                   value={formData.imageUrl}
                   onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
-                  placeholder="https://..."
-                  className="bg-slate-800 border-slate-700 text-white"
+                  placeholder="veya URL girin: https://..."
+                  className="bg-slate-800 border-slate-700 text-white text-sm"
                 />
               </div>
             </div>
 
             {/* Price Row */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
               <div>
-                <Label className="text-slate-300">Fiyat (₺) *</Label>
+                <Label className="text-slate-300 text-sm">Fiyat (₺) *</Label>
                 <Input
                   type="number"
                   value={formData.price}
@@ -690,7 +779,7 @@ export default function AdminAccountsPage() {
                 />
               </div>
               <div>
-                <Label className="text-slate-300">İndirimli Fiyat (₺)</Label>
+                <Label className="text-slate-300 text-sm">İndirimli Fiyat (₺)</Label>
                 <Input
                   type="number"
                   value={formData.discountPrice}
@@ -701,9 +790,9 @@ export default function AdminAccountsPage() {
               </div>
             </div>
 
-            {/* Order / Sıralama */}
+            {/* Order */}
             <div>
-              <Label className="text-slate-300">Sıralama (Düşük numara üstte görünür)</Label>
+              <Label className="text-slate-300 text-sm">Sıralama</Label>
               <Input
                 type="number"
                 value={formData.order}
@@ -711,16 +800,16 @@ export default function AdminAccountsPage() {
                 placeholder="0"
                 className="mt-1 bg-slate-800 border-slate-700 text-white"
               />
-              <p className="text-xs text-slate-400 mt-1">Örn: 1, 2, 3... (Boş bırakılırsa otomatik sıralanır)</p>
+              <p className="text-xs text-slate-400 mt-1">Düşük numara üstte görünür</p>
             </div>
 
             {/* Unlimited Toggle */}
-            <div className="flex items-center justify-between p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+            <div className="flex items-center justify-between p-3 md:p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
               <div className="flex items-center gap-3">
                 <Infinity className="w-5 h-5 text-purple-400" />
                 <div>
-                  <Label className="text-white font-medium">Sınırsız Satış</Label>
-                  <p className="text-slate-400 text-sm">Stok bitene kadar satılabilir</p>
+                  <Label className="text-white font-medium text-sm">Sınırsız Satış</Label>
+                  <p className="text-slate-400 text-xs">Stok bitene kadar satılabilir</p>
                 </div>
               </div>
               <Switch
@@ -730,9 +819,9 @@ export default function AdminAccountsPage() {
             </div>
 
             {/* Legendary Range */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
               <div>
-                <Label className="text-slate-300">Min Destansı Sayısı</Label>
+                <Label className="text-slate-300 text-sm">Min Destansı</Label>
                 <Input
                   type="number"
                   value={formData.legendaryMin}
@@ -742,7 +831,7 @@ export default function AdminAccountsPage() {
                 />
               </div>
               <div>
-                <Label className="text-slate-300">Max Destansı Sayısı</Label>
+                <Label className="text-slate-300 text-sm">Max Destansı</Label>
                 <Input
                   type="number"
                   value={formData.legendaryMax}
@@ -754,9 +843,9 @@ export default function AdminAccountsPage() {
             </div>
 
             {/* Level & Rank */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
               <div>
-                <Label className="text-slate-300">Level</Label>
+                <Label className="text-slate-300 text-sm">Level</Label>
                 <Input
                   type="number"
                   value={formData.level}
@@ -766,7 +855,7 @@ export default function AdminAccountsPage() {
                 />
               </div>
               <div>
-                <Label className="text-slate-300">Rank</Label>
+                <Label className="text-slate-300 text-sm">Rank</Label>
                 <Input
                   value={formData.rank}
                   onChange={(e) => setFormData(prev => ({ ...prev, rank: e.target.value }))}
@@ -778,52 +867,52 @@ export default function AdminAccountsPage() {
 
             {/* Features */}
             <div>
-              <Label className="text-slate-300">Özellikler (her satıra bir tane)</Label>
+              <Label className="text-slate-300 text-sm">Özellikler (her satıra bir tane)</Label>
               <Textarea
                 value={formData.features}
                 onChange={(e) => setFormData(prev => ({ ...prev, features: e.target.value }))}
                 placeholder="Glacier M416&#10;Pharaoh X-Suit&#10;Maxed RP"
                 rows={3}
-                className="mt-1 bg-slate-800 border-slate-700 text-white"
+                className="mt-1 bg-slate-800 border-slate-700 text-white text-sm"
               />
             </div>
 
             {/* Description */}
             <div>
-              <Label className="text-slate-300">Açıklama</Label>
+              <Label className="text-slate-300 text-sm">Açıklama</Label>
               <Textarea
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="Hesap hakkında detaylı açıklama..."
-                rows={4}
-                className="mt-1 bg-slate-800 border-slate-700 text-white"
+                rows={3}
+                className="mt-1 bg-slate-800 border-slate-700 text-white text-sm"
               />
             </div>
 
-            {/* Default Credentials (for non-stock sales) */}
-            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
-              <Label className="text-amber-400 flex items-center gap-2">
+            {/* Default Credentials */}
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 md:p-4">
+              <Label className="text-amber-400 flex items-center gap-2 text-sm">
                 <EyeOff className="w-4 h-4" />
-                Varsayılan Hesap Bilgisi (Stok yoksa kullanılır)
+                Varsayılan Hesap Bilgisi
               </Label>
               <Textarea
                 value={formData.credentials}
                 onChange={(e) => setFormData(prev => ({ ...prev, credentials: e.target.value }))}
-                placeholder="E-posta: xxx@xxx.com&#10;Şifre: xxxxxx&#10;..."
+                placeholder="E-posta: xxx@xxx.com&#10;Şifre: xxxxxx"
                 rows={3}
-                className="mt-2 bg-slate-800 border-slate-700 text-white font-mono text-sm"
+                className="mt-2 bg-slate-800 border-slate-700 text-white font-mono text-xs md:text-sm"
               />
               <p className="text-amber-400/60 text-xs mt-2">
-                Not: Stok eklerseniz, stoktan otomatik atama yapılır. Bu alan sadece stok yoksa kullanılır.
+                Stok yoksa bu bilgi kullanılır
               </p>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
-            <Button variant="ghost" onClick={() => setModalOpen(false)} className="text-slate-400">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-slate-700">
+            <Button variant="ghost" onClick={() => setModalOpen(false)} className="text-slate-400 w-full sm:w-auto">
               İptal
             </Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-purple-600 hover:bg-purple-500">
+            <Button onClick={handleSave} disabled={saving} className="bg-purple-600 hover:bg-purple-500 w-full sm:w-auto">
               {saving ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

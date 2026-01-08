@@ -559,91 +559,185 @@ export default function AdminOrders() {
               </div>
             ) : (
               <>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-slate-800">
-                      <TableHead className="text-slate-400">Sipariş No</TableHead>
-                      <TableHead className="text-slate-400">Ürün</TableHead>
-                      <TableHead className="text-slate-400">Oyuncu</TableHead>
-                      <TableHead className="text-slate-400">Tutar</TableHead>
-                      <TableHead className="text-slate-400">Durum</TableHead>
-                      <TableHead className="text-slate-400">Risk</TableHead>
-                      <TableHead className="text-slate-400">Teslimat</TableHead>
-                      <TableHead className="text-slate-400">Tarih</TableHead>
-                      <TableHead className="text-slate-400">İşlemler</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentOrders.map((order) => (
-                      <TableRow 
-                        key={order.id} 
-                        className={`border-slate-800 hover:bg-slate-800/50 ${order.risk?.status === 'FLAGGED' ? 'bg-red-950/20' : ''}`}
-                      >
-                        <TableCell 
-                          className="font-mono text-slate-400 text-xs cursor-pointer hover:text-blue-400"
-                          onClick={() => openOrderDetail(order)}
+                {/* Desktop Table */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-slate-800">
+                        <TableHead className="text-slate-400">Sipariş No</TableHead>
+                        <TableHead className="text-slate-400">Ürün</TableHead>
+                        <TableHead className="text-slate-400">Oyuncu</TableHead>
+                        <TableHead className="text-slate-400">Tutar</TableHead>
+                        <TableHead className="text-slate-400">Durum</TableHead>
+                        <TableHead className="text-slate-400">Risk</TableHead>
+                        <TableHead className="text-slate-400">Teslimat</TableHead>
+                        <TableHead className="text-slate-400">Tarih</TableHead>
+                        <TableHead className="text-slate-400">İşlemler</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {currentOrders.map((order) => (
+                        <TableRow 
+                          key={order.id} 
+                          className={`border-slate-800 hover:bg-slate-800/50 ${order.risk?.status === 'FLAGGED' ? 'bg-red-950/20' : ''}`}
                         >
-                          {order.id.substring(0, 8)}...
-                        </TableCell>
-                        <TableCell className="text-white">
-                          {order.productTitle || order.accountTitle || '-'}
+                          <TableCell 
+                            className="font-mono text-slate-400 text-xs cursor-pointer hover:text-blue-400"
+                            onClick={() => openOrderDetail(order)}
+                          >
+                            {order.id.substring(0, 8)}...
+                          </TableCell>
+                          <TableCell className="text-white">
+                            {order.productTitle || order.accountTitle || '-'}
+                            {(order.type === 'account' || order.accountId) && (
+                              <span className="ml-2 text-xs px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded">Hesap</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-slate-400">
+                            <div className="text-xs">{order.playerName || '-'}</div>
+                            <div className="text-xs text-slate-500">{order.playerId || '-'}</div>
+                          </TableCell>
+                          <TableCell className="text-white font-semibold">
+                            ₺{(order.amount || order.totalAmount || order.price || 0).toFixed(2)}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(order.status)}</TableCell>
+                          <TableCell>{getRiskBadge(order)}</TableCell>
+                          <TableCell>{getDeliveryBadge(order)}</TableCell>
+                          <TableCell className="text-slate-400 text-sm">
+                            {new Date(order.createdAt).toLocaleDateString('tr-TR')}
+                          </TableCell>
+                          <TableCell>
+                            {order.delivery?.status === 'hold' && (
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleApproveOrder(order.id)}
+                                  disabled={processingOrder === order.id}
+                                  className="bg-green-600 hover:bg-green-700 text-xs"
+                                >
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  Onayla
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleRefundOrder(order.id)}
+                                  disabled={processingOrder === order.id}
+                                  className="text-xs"
+                                >
+                                  <XCircle className="w-3 h-3 mr-1" />
+                                  İade
+                                </Button>
+                              </div>
+                            )}
+                            {order.delivery?.status === 'pending' && order.status === 'paid' && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleAssignStock(order.id)}
+                                disabled={processingOrder === order.id}
+                                className="bg-blue-600 hover:bg-blue-700 text-xs"
+                              >
+                                <Package className="w-3 h-3 mr-1" />
+                                {processingOrder === order.id ? 'Atanıyor...' : 'Stok Ata'}
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="lg:hidden divide-y divide-slate-800">
+                  {currentOrders.map((order) => (
+                    <div 
+                      key={order.id} 
+                      className={`p-4 space-y-3 ${order.risk?.status === 'FLAGGED' ? 'bg-red-950/20' : ''}`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white font-medium text-sm truncate">
+                            {order.productTitle || order.accountTitle || '-'}
+                          </p>
+                          <p 
+                            className="text-slate-500 text-xs font-mono cursor-pointer hover:text-blue-400"
+                            onClick={() => openOrderDetail(order)}
+                          >
+                            #{order.id.substring(0, 8)}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          {getStatusBadge(order.status)}
                           {(order.type === 'account' || order.accountId) && (
-                            <span className="ml-2 text-xs px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded">Hesap</span>
+                            <span className="text-xs px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded">Hesap</span>
                           )}
-                        </TableCell>
-                        <TableCell className="text-slate-400">
-                          <div className="text-xs">{order.playerName || '-'}</div>
-                          <div className="text-xs text-slate-500">{order.playerId || '-'}</div>
-                        </TableCell>
-                        <TableCell className="text-white font-semibold">
-                          ₺{(order.amount || order.totalAmount || order.price || 0).toFixed(2)}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(order.status)}</TableCell>
-                        <TableCell>{getRiskBadge(order)}</TableCell>
-                        <TableCell>{getDeliveryBadge(order)}</TableCell>
-                        <TableCell className="text-slate-400 text-sm">
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-sm">
+                        <div>
+                          <p className="text-slate-300 text-xs">{order.playerName || '-'}</p>
+                          <p className="text-slate-500 text-xs">ID: {order.playerId || '-'}</p>
+                        </div>
+                        <p className="text-white font-bold">₺{(order.amount || order.totalAmount || order.price || 0).toFixed(2)}</p>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        {getRiskBadge(order)}
+                        {getDeliveryBadge(order)}
+                      </div>
+                      
+                      <div className="flex items-center justify-between pt-2">
+                        <span className="text-slate-500 text-xs">
                           {new Date(order.createdAt).toLocaleDateString('tr-TR')}
-                        </TableCell>
-                        <TableCell>
+                        </span>
+                        <div className="flex gap-2">
                           {order.delivery?.status === 'hold' && (
-                            <div className="flex gap-2">
+                            <>
                               <Button
                                 size="sm"
                                 onClick={() => handleApproveOrder(order.id)}
                                 disabled={processingOrder === order.id}
-                                className="bg-green-600 hover:bg-green-700 text-xs"
+                                className="bg-green-600 hover:bg-green-700 text-xs h-7 px-2"
                               >
-                                <CheckCircle className="w-3 h-3 mr-1" />
-                                Onayla
+                                <CheckCircle className="w-3 h-3" />
                               </Button>
                               <Button
                                 size="sm"
                                 variant="destructive"
                                 onClick={() => handleRefundOrder(order.id)}
                                 disabled={processingOrder === order.id}
-                                className="text-xs"
+                                className="text-xs h-7 px-2"
                               >
-                                <XCircle className="w-3 h-3 mr-1" />
-                                İade
+                                <XCircle className="w-3 h-3" />
                               </Button>
-                            </div>
+                            </>
                           )}
                           {order.delivery?.status === 'pending' && order.status === 'paid' && (
                             <Button
                               size="sm"
                               onClick={() => handleAssignStock(order.id)}
                               disabled={processingOrder === order.id}
-                              className="bg-blue-600 hover:bg-blue-700 text-xs"
+                              className="bg-blue-600 hover:bg-blue-700 text-xs h-7"
                             >
                               <Package className="w-3 h-3 mr-1" />
-                              {processingOrder === order.id ? 'Atanıyor...' : 'Stok Ata'}
+                              {processingOrder === order.id ? '...' : 'Stok'}
                             </Button>
                           )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openOrderDetail(order)}
+                            className="border-slate-700 text-slate-300 text-xs h-7"
+                          >
+                            Detay
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
                 {/* Pagination */}
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-800">

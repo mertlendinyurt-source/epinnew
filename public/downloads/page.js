@@ -968,12 +968,6 @@ export default function App() {
           
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6">
-            <a href="/" className="text-white transition-colors text-sm font-medium border-b-2 border-blue-500 pb-1">
-              UC Satış
-            </a>
-            <a href="/hesaplar" className="text-white/70 hover:text-white transition-colors text-sm font-medium">
-              Hesap Satış
-            </a>
             <a href="/blog" className="text-white/70 hover:text-white transition-colors text-sm font-medium">
               Blog
             </a>
@@ -995,12 +989,6 @@ export default function App() {
                 <div className="p-5">
                   {/* Mobile Navigation Links */}
                   <div className="mb-4 space-y-2">
-                    <a href="/" className="block px-3 py-2 text-white bg-blue-600/20 rounded-lg transition-colors">
-                      UC Satış
-                    </a>
-                    <a href="/hesaplar" className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-                      Hesap Satış
-                    </a>
                     <a href="/blog" className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
                       Blog / Haberler
                     </a>

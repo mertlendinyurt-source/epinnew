@@ -815,38 +815,38 @@ export default function AdminOrders() {
 
       {/* Order Detail Modal */}
       {showDetailModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 rounded-xl border border-slate-700 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">Sipariş Detayı</h2>
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-slate-900 rounded-xl border border-slate-700 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-4 md:p-6 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-900 z-10">
+              <h2 className="text-lg md:text-xl font-bold text-white">Sipariş Detayı</h2>
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-white p-2"
               >
                 ✕
               </button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-4 md:p-6 space-y-4">
               {/* Customer Info Section */}
-              <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-700/50">
+              <div className="bg-blue-900/20 rounded-lg p-3 md:p-4 border border-blue-700/50">
                 <div className="flex items-center gap-2 mb-3">
-                  <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 md:w-5 md:h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  <h3 className="text-white font-medium">Müşteri Bilgileri</h3>
+                  <h3 className="text-white font-medium text-sm md:text-base">Müşteri Bilgileri</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                   <div>
-                    <p className="text-slate-400 text-sm">İsim</p>
-                    <p className="text-white">{selectedOrder.userName || '-'}</p>
+                    <p className="text-slate-400 text-xs md:text-sm">İsim</p>
+                    <p className="text-white text-sm md:text-base truncate">{selectedOrder.userName || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-slate-400 text-sm">E-posta</p>
-                    <p className="text-white">{selectedOrder.userEmail || '-'}</p>
+                    <p className="text-slate-400 text-xs md:text-sm">E-posta</p>
+                    <p className="text-white text-sm md:text-base truncate">{selectedOrder.userEmail || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-slate-400 text-sm">Telefon</p>
-                    <p className="text-white">{selectedOrder.userPhone || '-'}</p>
+                    <p className="text-slate-400 text-xs md:text-sm">Telefon</p>
+                    <p className="text-white text-sm md:text-base">{selectedOrder.userPhone || '-'}</p>
                   </div>
                 </div>
               </div>

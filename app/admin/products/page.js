@@ -667,226 +667,194 @@ export default function AdminProducts() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="flex items-center justify-center p-8">
         <div className="text-white">Yükleniyor...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="p-4 md:p-8">
       <Toaster position="top-center" richColors />
       
-      {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full w-64 bg-slate-900 border-r border-slate-800 p-4">
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center font-bold text-white">
-            UC
-          </div>
-          <div>
-            <div className="text-white font-bold">PINLY</div>
-            <div className="text-slate-400 text-xs">Admin Panel</div>
-          </div>
-        </div>
-
-        <nav className="space-y-2">
-          <Button
-            onClick={() => router.push('/admin/dashboard')}
-            variant="ghost"
-            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
-          >
-            <LayoutDashboard className="w-4 h-4 mr-2" />
-            Dashboard
-          </Button>
-          <Button
-            onClick={() => router.push('/admin/orders')}
-            variant="ghost"
-            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
-          >
-            <ShoppingBag className="w-4 h-4 mr-2" />
-            Siparişler
-          </Button>
-          <Button
-            onClick={() => router.push('/admin/products')}
-            className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Package className="w-4 h-4 mr-2" />
+      {/* Header */}
+      <div className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-3">
+            <Package className="w-7 h-7 md:w-8 md:h-8 text-blue-500" />
             Ürünler
-          </Button>
-          <Button
-            onClick={() => router.push('/admin/settings/payments')}
-            variant="ghost"
-            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            Ödeme Ayarları
-          </Button>
-          <Button
-            onClick={() => router.push('/admin/settings/site')}
-            variant="ghost"
-            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            Site Ayarları
-          </Button>
-
-          {/* Güvenlik Bölümü */}
-          <div className="mt-4 pt-4 border-t border-slate-800">
-            <p className="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Güvenlik</p>
-          </div>
-          <Button
-            onClick={() => router.push('/admin/settings/risk')}
-            variant="ghost"
-            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
-          >
-            <svg className="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            Risk Ayarları
-          </Button>
-          <Button
-            onClick={() => router.push('/admin/blacklist')}
-            variant="ghost"
-            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
-          >
-            <svg className="w-4 h-4 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-            </svg>
-            Kara Liste
-          </Button>
-          <Button
-            onClick={() => router.push('/admin/risk-logs')}
-            variant="ghost"
-            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
-          >
-            <svg className="w-4 h-4 mr-2 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Risk Logları
-          </Button>
-        </nav>
-
-        <div className="absolute bottom-4 left-4 right-4">
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="w-full border-slate-700 text-slate-300 hover:text-white"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Çıkış Yap
-          </Button>
+          </h1>
+          <p className="text-slate-400 text-sm md:text-base">UC paketlerini görüntüle ve düzenle</p>
         </div>
+        <Button
+          onClick={handleOpenAddDialog}
+          className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Yeni Ürün Ekle
+        </Button>
       </div>
 
-      {/* Main Content */}
-      <div className="ml-64 p-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Ürünler</h1>
-            <p className="text-slate-400">UC paketlerini görüntüle ve düzenle</p>
-          </div>
-          <Button
-            onClick={handleOpenAddDialog}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Yeni Ürün Ekle
-          </Button>
-        </div>
-
-        {/* Products Table */}
-        <Card className="bg-slate-900 border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-white">Ürün Listesi</CardTitle>
-            <CardDescription className="text-slate-400">
-              Toplam {products.length} ürün
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {products.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
-                Ürün bulunamadı
+      {/* Products Table/Cards */}
+      <Card className="bg-slate-900 border-slate-800">
+        <CardHeader className="p-4 md:p-6">
+          <CardTitle className="text-white text-lg">Ürün Listesi</CardTitle>
+          <CardDescription className="text-slate-400 text-sm">
+            Toplam {products.length} ürün
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0 md:p-6 md:pt-0">
+          {products.length === 0 ? (
+            <div className="text-center py-8 text-slate-400">
+              Ürün bulunamadı
+            </div>
+          ) : (
+            <>
+              {/* Desktop Table */}
+              <div className="hidden lg:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-slate-800">
+                      <TableHead className="text-slate-400">Ürün</TableHead>
+                      <TableHead className="text-slate-400">UC</TableHead>
+                      <TableHead className="text-slate-400">Fiyat</TableHead>
+                      <TableHead className="text-slate-400">İnd. Fiyat</TableHead>
+                      <TableHead className="text-slate-400">%</TableHead>
+                      <TableHead className="text-slate-400">DijiPin</TableHead>
+                      <TableHead className="text-slate-400">Durum</TableHead>
+                      <TableHead className="text-slate-400">İşlemler</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {products.map((product) => (
+                      <TableRow key={product.id} className="border-slate-800 hover:bg-slate-800/50">
+                        <TableCell className="text-white font-medium">{product.title}</TableCell>
+                        <TableCell className="text-slate-400">{product.ucAmount}</TableCell>
+                        <TableCell className="text-white">{product.price.toFixed(2)} ₺</TableCell>
+                        <TableCell className="text-green-400 font-semibold">
+                          {product.discountPrice.toFixed(2)} ₺
+                        </TableCell>
+                        <TableCell className="text-slate-400">{product.discountPercent}%</TableCell>
+                        <TableCell>
+                          <Switch
+                            checked={product.dijipinEnabled || false}
+                            onCheckedChange={(checked) => handleDijipinToggle(product.id, checked)}
+                            className="data-[state=checked]:bg-yellow-500"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={product.active ? 'default' : 'secondary'}>
+                            {product.active ? 'Aktif' : 'Pasif'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleOpenStockDialog(product)}
+                              className="border-blue-700 text-blue-400 hover:bg-blue-900/20"
+                            >
+                              <Package className="w-3 h-3 mr-1" />
+                              Stok
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEdit(product)}
+                              className="border-slate-700 text-white hover:bg-slate-800"
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDelete(product.id)}
+                              className="border-red-700 text-red-400 hover:bg-red-900/20"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-slate-800">
-                    <TableHead className="text-slate-400">Ürün</TableHead>
-                    <TableHead className="text-slate-400">UC Miktarı</TableHead>
-                    <TableHead className="text-slate-400">Fiyat</TableHead>
-                    <TableHead className="text-slate-400">İndirimli Fiyat</TableHead>
-                    <TableHead className="text-slate-400">İndirim %</TableHead>
-                    <TableHead className="text-slate-400">DijiPin Oto</TableHead>
-                    <TableHead className="text-slate-400">Durum</TableHead>
-                    <TableHead className="text-slate-400">İşlemler</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products.map((product) => (
-                    <TableRow key={product.id} className="border-slate-800 hover:bg-slate-800/50">
-                      <TableCell className="text-white font-medium">{product.title}</TableCell>
-                      <TableCell className="text-slate-400">{product.ucAmount} UC</TableCell>
-                      <TableCell className="text-white">{product.price.toFixed(2)} ₺</TableCell>
-                      <TableCell className="text-green-400 font-semibold">
-                        {product.discountPrice.toFixed(2)} ₺
-                      </TableCell>
-                      <TableCell className="text-slate-400">{product.discountPercent}%</TableCell>
-                      <TableCell>
+
+              {/* Mobile Card View */}
+              <div className="lg:hidden divide-y divide-slate-800">
+                {products.map((product) => (
+                  <div key={product.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-white font-medium">{product.title}</h3>
+                        <p className="text-slate-500 text-sm">{product.ucAmount} UC</p>
+                      </div>
+                      <Badge variant={product.active ? 'default' : 'secondary'}>
+                        {product.active ? 'Aktif' : 'Pasif'}
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-3 text-sm">
+                      <div>
+                        <p className="text-slate-400 text-xs">Fiyat</p>
+                        <p className="text-white">{product.price.toFixed(2)} ₺</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-400 text-xs">İnd. Fiyat</p>
+                        <p className="text-green-400 font-semibold">{product.discountPrice.toFixed(2)} ₺</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-400 text-xs">İndirim</p>
+                        <p className="text-yellow-400">{product.discountPercent}%</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-400 text-xs">DijiPin:</span>
                         <Switch
                           checked={product.dijipinEnabled || false}
                           onCheckedChange={(checked) => handleDijipinToggle(product.id, checked)}
-                          className="data-[state=checked]:bg-yellow-500"
+                          className="data-[state=checked]:bg-yellow-500 scale-75"
                         />
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={product.active ? 'default' : 'secondary'}>
-                          {product.active ? 'Aktif' : 'Pasif'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleOpenStockDialog(product)}
-                            className="border-blue-700 text-blue-400 hover:bg-blue-900/20"
-                          >
-                            <Package className="w-3 h-3 mr-1" />
-                            Stok
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(product)}
-                            className="border-slate-700 text-white hover:bg-slate-800"
-                          >
-                            <Pencil className="w-3 h-3 mr-1" />
-                            Düzenle
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDelete(product.id)}
-                            className="border-red-700 text-red-400 hover:bg-red-900/20"
-                          >
-                            <Trash2 className="w-3 h-3 mr-1" />
-                            Sil
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleOpenStockDialog(product)}
+                          className="border-blue-700 text-blue-400 hover:bg-blue-900/20 h-8 text-xs"
+                        >
+                          <Package className="w-3 h-3 mr-1" />
+                          Stok
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(product)}
+                          className="border-slate-700 text-white hover:bg-slate-800 h-8 w-8 p-0"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDelete(product.id)}
+                          className="border-red-700 text-red-400 hover:bg-red-900/20 h-8 w-8 p-0"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Edit Dialog - Premium UI */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>

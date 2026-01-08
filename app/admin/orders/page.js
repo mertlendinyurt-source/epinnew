@@ -457,15 +457,15 @@ export default function AdminOrders() {
         )}
 
         <Card className="bg-slate-900 border-slate-800">
-          <CardHeader>
-            <div className="flex items-center justify-between">
+          <CardHeader className="p-4 md:p-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div>
-                <CardTitle className="text-white">Sipariş Listesi</CardTitle>
-                <CardDescription className="text-slate-400">Tüm sipariş geçmişi</CardDescription>
+                <CardTitle className="text-white text-lg">Sipariş Listesi</CardTitle>
+                <CardDescription className="text-slate-400 text-sm">Tüm sipariş geçmişi</CardDescription>
               </div>
-              <div className="flex gap-3">
+              <div className="grid grid-cols-2 lg:flex gap-2 lg:gap-3">
                 <Select value={riskFilter} onValueChange={setRiskFilter}>
-                  <SelectTrigger className="w-[180px] bg-slate-800 border-slate-700 text-white">
+                  <SelectTrigger className="w-full lg:w-[150px] bg-slate-800 border-slate-700 text-white text-sm">
                     <SelectValue placeholder="Risk filtrele" />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-800 border-slate-700">
@@ -475,7 +475,7 @@ export default function AdminOrders() {
                   </SelectContent>
                 </Select>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[180px] bg-slate-800 border-slate-700 text-white">
+                  <SelectTrigger className="w-full lg:w-[150px] bg-slate-800 border-slate-700 text-white text-sm">
                     <SelectValue placeholder="Durum filtrele" />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-800 border-slate-700">

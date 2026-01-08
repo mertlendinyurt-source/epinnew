@@ -32,6 +32,8 @@ export default function SmsSettingsPage() {
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
   const [testPhone, setTestPhone] = useState('')
+  const [customMessage, setCustomMessage] = useState('')
+  const [sendingCustom, setSendingCustom] = useState(false)
   const [logs, setLogs] = useState([])
   const [logsLoading, setLogsLoading] = useState(false)
   const [logsPagination, setLogsPagination] = useState({ page: 1, totalPages: 1 })

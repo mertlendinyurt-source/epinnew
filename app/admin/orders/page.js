@@ -522,36 +522,36 @@ export default function AdminOrders() {
             
             {/* Aktif Filtre Göstergesi */}
             {(emailSearch || phoneSearch || orderIdSearch) && (
-              <div className="mt-3 flex items-center gap-2">
-                <span className="text-slate-400 text-sm">Aktif filtreler:</span>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="text-slate-400 text-xs md:text-sm">Aktif filtreler:</span>
                 {emailSearch && (
-                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-400">
-                    E-posta: {emailSearch}
+                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 text-xs">
+                    E-posta: {emailSearch.length > 15 ? emailSearch.slice(0, 15) + '...' : emailSearch}
                     <button onClick={() => setEmailSearch('')} className="ml-1 hover:text-blue-200">×</button>
                   </Badge>
                 )}
                 {phoneSearch && (
-                  <Badge variant="secondary" className="bg-green-500/20 text-green-400">
-                    Telefon: {phoneSearch}
+                  <Badge variant="secondary" className="bg-green-500/20 text-green-400 text-xs">
+                    Tel: {phoneSearch}
                     <button onClick={() => setPhoneSearch('')} className="ml-1 hover:text-green-200">×</button>
                   </Badge>
                 )}
                 {orderIdSearch && (
-                  <Badge variant="secondary" className="bg-purple-500/20 text-purple-400">
-                    Sipariş ID: {orderIdSearch}
+                  <Badge variant="secondary" className="bg-purple-500/20 text-purple-400 text-xs">
+                    ID: {orderIdSearch}
                     <button onClick={() => setOrderIdSearch('')} className="ml-1 hover:text-purple-200">×</button>
                   </Badge>
                 )}
                 <button 
                   onClick={() => { setEmailSearch(''); setPhoneSearch(''); setOrderIdSearch(''); }}
-                  className="text-slate-500 hover:text-slate-300 text-sm ml-2"
+                  className="text-slate-500 hover:text-slate-300 text-xs ml-2"
                 >
-                  Tümünü temizle
+                  Temizle
                 </button>
               </div>
             )}
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 md:p-6 md:pt-0">
             {filteredOrders.length === 0 ? (
               <div className="text-center py-12">
                 <ShoppingBag className="w-16 h-16 mx-auto text-slate-700 mb-4" />

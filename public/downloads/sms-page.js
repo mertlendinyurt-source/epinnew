@@ -32,6 +32,8 @@ export default function SmsSettingsPage() {
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
   const [testPhone, setTestPhone] = useState('')
+  const [customMessage, setCustomMessage] = useState('')
+  const [sendingCustom, setSendingCustom] = useState(false)
   const [logs, setLogs] = useState([])
   const [logsLoading, setLogsLoading] = useState(false)
   const [logsPagination, setLogsPagination] = useState({ page: 1, totalPages: 1 })
@@ -158,6 +160,49 @@ export default function SmsSettingsPage() {
       toast.error('Test SMS\'i gönderilemedi')
     } finally {
       setTesting(false)
+    }
+  }
+
+  // Özel SMS Gönder
+  const handleSendCustomSms = async () => {
+    if (!testPhone) {
+      toast.error('Telefon numarası girin')
+      return
+    }
+    if (!customMessage.trim()) {
+      toast.error('Mesaj içeriği girin')
+      return
+    }
+    
+    setSendingCustom(true)
+    try {
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch('/api/admin/settings/sms/custom', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          phone: testPhone,
+          message: customMessage 
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        toast.success('SMS gönderildi!')
+        setCustomMessage('')
+        fetchLogs()
+      } else {
+        toast.error(data.error || 'SMS gönderilemedi')
+      }
+    } catch (error) {
+      console.error('Custom SMS error:', error)
+      toast.error('SMS gönderilemedi')
+    } finally {
+      setSendingCustom(false)
     }
   }
 
@@ -379,41 +424,68 @@ export default function SmsSettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Test ve Kaydet */}
+          {/* Özel SMS Gönder */}
           <Card className="bg-slate-900/50 border-slate-800">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
-                <TestTube className="w-5 h-5 text-yellow-500" />
-                Test SMS Gönder
+                <Send className="w-5 h-5 text-purple-500" />
+                Özel SMS Gönder
               </CardTitle>
               <CardDescription className="text-slate-400">
-                Ayarlarınızı test etmek için bir SMS gönderin
+                İstediğiniz numaraya istediğiniz mesajı gönderin
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="flex gap-4">
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-slate-300">Telefon Numarası</Label>
                 <Input
                   value={testPhone}
                   onChange={(e) => setTestPhone(e.target.value)}
                   placeholder="05xxxxxxxxx"
-                  className="bg-slate-800 border-slate-700 text-white flex-1"
+                  className="bg-slate-800 border-slate-700 text-white"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-300">Mesaj İçeriği</Label>
+                <textarea
+                  value={customMessage}
+                  onChange={(e) => setCustomMessage(e.target.value)}
+                  placeholder="SMS mesajınızı buraya yazın..."
+                  rows={4}
+                  maxLength={160}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-md px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+                <p className="text-xs text-slate-500">{customMessage.length}/160 karakter</p>
+              </div>
+              <div className="flex gap-3">
+                <Button 
+                  onClick={handleSendCustomSms} 
+                  disabled={sendingCustom || !settings.enabled || !testPhone || !customMessage.trim()}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700"
+                >
+                  {sendingCustom ? (
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4 mr-2" />
+                  )}
+                  SMS Gönder
+                </Button>
                 <Button 
                   onClick={handleTest} 
-                  disabled={testing || !settings.enabled}
+                  disabled={testing || !settings.enabled || !testPhone}
                   variant="outline"
                   className="border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10"
                 >
                   {testing ? (
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
-                    <Send className="w-4 h-4 mr-2" />
+                    <TestTube className="w-4 h-4 mr-2" />
                   )}
-                  Test Gönder
+                  Test
                 </Button>
               </div>
               {!settings.enabled && (
-                <p className="text-sm text-orange-400 mt-2">⚠️ SMS sistemini aktif edin ve önce kaydedin</p>
+                <p className="text-sm text-orange-400">⚠️ SMS sistemini aktif edin ve önce kaydedin</p>
               )}
             </CardContent>
           </Card>

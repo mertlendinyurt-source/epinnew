@@ -7293,6 +7293,49 @@ export async function POST(request) {
       }
     }
 
+    // Admin: Özel SMS Gönder
+    if (pathname === '/api/admin/settings/sms/custom') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { phone, message } = body;
+
+      if (!phone) {
+        return NextResponse.json(
+          { success: false, error: 'Telefon numarası gereklidir' },
+          { status: 400 }
+        );
+      }
+
+      if (!message || !message.trim()) {
+        return NextResponse.json(
+          { success: false, error: 'Mesaj içeriği gereklidir' },
+          { status: 400 }
+        );
+      }
+
+      const result = await sendSms(db, phone, message.trim(), 'custom');
+
+      if (result.success) {
+        return NextResponse.json({
+          success: true,
+          message: 'SMS gönderildi',
+          data: result
+        });
+      } else {
+        return NextResponse.json({
+          success: false,
+          error: `SMS gönderilemedi: ${result.reason || result.response || 'Bilinmeyen hata'}`,
+          data: result
+        });
+      }
+    }
+
     // Admin: Update site settings
     if (pathname === '/api/admin/settings/site') {
       const user = verifyAdminToken(request);

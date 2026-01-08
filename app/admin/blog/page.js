@@ -245,52 +245,52 @@ export default function AdminBlogPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Main Content */}
       <div>
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
           <div>
             <div className="flex items-center gap-2 text-sm text-slate-400 mb-2">
               <Link href="/admin" className="hover:text-white">Dashboard</Link>
               <ChevronRight className="w-4 h-4" />
               <span className="text-white">Blog / Haberler</span>
             </div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-              <FileText className="w-8 h-8 text-purple-500" />
+            <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+              <FileText className="w-7 h-7 md:w-8 md:h-8 text-purple-500" />
               Blog Yönetimi
             </h1>
-            <p className="text-slate-400 mt-1">PUBG haberleri, güncellemeler ve duyurular</p>
+            <p className="text-slate-400 mt-1 text-sm md:text-base">PUBG haberleri, güncellemeler ve duyurular</p>
           </div>
           <Button 
             onClick={handleOpenCreate}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" />
             Yeni Yazı
           </Button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        {/* Stats - Mobile: 2x2 grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
           <Card className="bg-slate-900 border-slate-800">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <FileText className="w-8 h-8 text-blue-400" />
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-2 md:gap-3">
+                <FileText className="w-6 h-6 md:w-8 md:h-8 text-blue-400" />
                 <div>
-                  <p className="text-slate-400 text-sm">Toplam Yazı</p>
-                  <p className="text-2xl font-bold text-white">{total}</p>
+                  <p className="text-slate-400 text-xs md:text-sm">Toplam Yazı</p>
+                  <p className="text-xl md:text-2xl font-bold text-white">{total}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card className="bg-slate-900 border-slate-800">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Send className="w-8 h-8 text-green-400" />
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-2 md:gap-3">
+                <Send className="w-6 h-6 md:w-8 md:h-8 text-green-400" />
                 <div>
-                  <p className="text-slate-400 text-sm">Yayında</p>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-slate-400 text-xs md:text-sm">Yayında</p>
+                  <p className="text-xl md:text-2xl font-bold text-white">
                     {posts.filter(p => p.status === 'published').length}
                   </p>
                 </div>
@@ -298,12 +298,12 @@ export default function AdminBlogPage() {
             </CardContent>
           </Card>
           <Card className="bg-slate-900 border-slate-800">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Edit className="w-8 h-8 text-yellow-400" />
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-2 md:gap-3">
+                <Edit className="w-6 h-6 md:w-8 md:h-8 text-yellow-400" />
                 <div>
-                  <p className="text-slate-400 text-sm">Taslak</p>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-slate-400 text-xs md:text-sm">Taslak</p>
+                  <p className="text-xl md:text-2xl font-bold text-white">
                     {posts.filter(p => p.status === 'draft').length}
                   </p>
                 </div>
@@ -311,12 +311,12 @@ export default function AdminBlogPage() {
             </CardContent>
           </Card>
           <Card className="bg-slate-900 border-slate-800">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <BarChart3 className="w-8 h-8 text-purple-400" />
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-2 md:gap-3">
+                <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-purple-400" />
                 <div>
-                  <p className="text-slate-400 text-sm">Toplam Görüntülenme</p>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-slate-400 text-xs md:text-sm">Görüntülenme</p>
+                  <p className="text-xl md:text-2xl font-bold text-white">
                     {posts.reduce((acc, p) => acc + (p.views || 0), 0)}
                   </p>
                 </div>
@@ -327,10 +327,10 @@ export default function AdminBlogPage() {
 
         {/* Filters */}
         <Card className="bg-slate-900 border-slate-800 mb-6">
-          <CardContent className="p-4">
-            <div className="flex gap-4">
+          <CardContent className="p-3 md:p-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40 bg-slate-800 border-slate-700 text-white">
+                <SelectTrigger className="w-full sm:w-40 bg-slate-800 border-slate-700 text-white">
                   <SelectValue placeholder="Tüm durumlar" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-700">
@@ -339,14 +339,15 @@ export default function AdminBlogPage() {
                   <SelectItem value="draft">Taslak</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" onClick={() => { setStatusFilter(''); fetchPosts(); }}>
-                <RefreshCw className="w-4 h-4" />
+              <Button variant="outline" onClick={() => { setStatusFilter(''); fetchPosts(); }} className="w-full sm:w-auto">
+                <RefreshCw className="w-4 h-4 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Yenile</span>
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Table */}
+        {/* Table/Cards */}
         <Card className="bg-slate-900 border-slate-800">
           <CardContent className="p-0">
             {loading ? (
@@ -354,7 +355,7 @@ export default function AdminBlogPage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
               </div>
             ) : posts.length === 0 ? (
-              <div className="text-center py-12">
+              <div className="text-center py-12 px-4">
                 <FileText className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                 <p className="text-slate-400">Henüz blog yazısı yok</p>
                 <Button onClick={handleOpenCreate} className="mt-4 bg-purple-600 hover:bg-purple-700">
@@ -363,64 +364,137 @@ export default function AdminBlogPage() {
                 </Button>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-slate-800 hover:bg-transparent">
-                    <TableHead className="text-slate-400">Başlık</TableHead>
-                    <TableHead className="text-slate-400">Kategori</TableHead>
-                    <TableHead className="text-slate-400">Durum</TableHead>
-                    <TableHead className="text-slate-400">Görüntülenme</TableHead>
-                    <TableHead className="text-slate-400">Tarih</TableHead>
-                    <TableHead className="text-slate-400 text-right">İşlemler</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {posts.map((post) => (
-                    <TableRow key={post.id} className="border-slate-800">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          {post.coverImage ? (
-                            <img src={post.coverImage} alt="" className="w-12 h-12 rounded object-cover" />
-                          ) : (
-                            <div className="w-12 h-12 rounded bg-slate-800 flex items-center justify-center">
-                              <ImageIcon className="w-6 h-6 text-slate-600" />
+              <>
+                {/* Desktop Table */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-slate-800 hover:bg-transparent">
+                        <TableHead className="text-slate-400">Başlık</TableHead>
+                        <TableHead className="text-slate-400">Kategori</TableHead>
+                        <TableHead className="text-slate-400">Durum</TableHead>
+                        <TableHead className="text-slate-400">Görüntülenme</TableHead>
+                        <TableHead className="text-slate-400">Tarih</TableHead>
+                        <TableHead className="text-slate-400 text-right">İşlemler</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {posts.map((post) => (
+                        <TableRow key={post.id} className="border-slate-800">
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              {post.coverImage ? (
+                                <img src={post.coverImage} alt="" className="w-12 h-12 rounded object-cover" />
+                              ) : (
+                                <div className="w-12 h-12 rounded bg-slate-800 flex items-center justify-center">
+                                  <ImageIcon className="w-6 h-6 text-slate-600" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="text-white font-medium">{post.title}</p>
+                                <p className="text-slate-500 text-sm">{post.slug}</p>
+                              </div>
                             </div>
-                          )}
-                          <div>
-                            <p className="text-white font-medium">{post.title}</p>
-                            <p className="text-slate-500 text-sm">{post.slug}</p>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="border-slate-700 text-slate-300">
+                              {CATEGORIES.find(c => c.value === post.category)?.label || post.category}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {post.status === 'published' ? (
+                              <Badge className="bg-green-600">Yayında</Badge>
+                            ) : (
+                              <Badge className="bg-yellow-600">Taslak</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-slate-400">
+                            <div className="flex items-center gap-1">
+                              <Eye className="w-4 h-4" />
+                              {post.views || 0}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-slate-400 text-sm">
+                            {formatDate(post.publishedAt || post.createdAt)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {post.status === 'published' && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => window.open(`/blog/${post.slug}`, '_blank')}
+                                  className="text-slate-400 hover:text-white"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleOpenEdit(post)}
+                                className="text-slate-400 hover:text-white"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => { setPostToDelete(post); setDeleteDialogOpen(true); }}
+                                className="text-red-400 hover:text-red-300"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="lg:hidden divide-y divide-slate-800">
+                  {posts.map((post) => (
+                    <div key={post.id} className="p-4 space-y-3">
+                      <div className="flex items-start gap-3">
+                        {post.coverImage ? (
+                          <img src={post.coverImage} alt="" className="w-16 h-16 rounded object-cover flex-shrink-0" />
+                        ) : (
+                          <div className="w-16 h-16 rounded bg-slate-800 flex items-center justify-center flex-shrink-0">
+                            <ImageIcon className="w-6 h-6 text-slate-600" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white font-medium truncate">{post.title}</p>
+                          <p className="text-slate-500 text-xs truncate">{post.slug}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            {post.status === 'published' ? (
+                              <Badge className="bg-green-600 text-xs">Yayında</Badge>
+                            ) : (
+                              <Badge className="bg-yellow-600 text-xs">Taslak</Badge>
+                            )}
+                            <Badge variant="outline" className="border-slate-700 text-slate-300 text-xs">
+                              {CATEGORIES.find(c => c.value === post.category)?.label || post.category}
+                            </Badge>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="border-slate-700 text-slate-300">
-                          {CATEGORIES.find(c => c.value === post.category)?.label || post.category}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {post.status === 'published' ? (
-                          <Badge className="bg-green-600">Yayında</Badge>
-                        ) : (
-                          <Badge className="bg-yellow-600">Taslak</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-slate-400">
-                        <div className="flex items-center gap-1">
-                          <Eye className="w-4 h-4" />
-                          {post.views || 0}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 text-xs text-slate-400">
+                          <span className="flex items-center gap-1">
+                            <Eye className="w-3 h-3" />
+                            {post.views || 0}
+                          </span>
+                          <span>{formatDate(post.publishedAt || post.createdAt)}</span>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-slate-400 text-sm">
-                        {formatDate(post.publishedAt || post.createdAt)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex gap-1">
                           {post.status === 'published' && (
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => window.open(`/blog/${post.slug}`, '_blank')}
-                              className="text-slate-400 hover:text-white"
+                              className="text-slate-400 hover:text-white h-8 w-8 p-0"
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
@@ -429,7 +503,7 @@ export default function AdminBlogPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleOpenEdit(post)}
-                            className="text-slate-400 hover:text-white"
+                            className="text-slate-400 hover:text-white h-8 w-8 p-0"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -437,16 +511,16 @@ export default function AdminBlogPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => { setPostToDelete(post); setDeleteDialogOpen(true); }}
-                            className="text-red-400 hover:text-red-300"
+                            className="text-red-400 hover:text-red-300 h-8 w-8 p-0"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

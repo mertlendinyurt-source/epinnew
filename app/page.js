@@ -968,12 +968,6 @@ export default function App() {
           
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6">
-            <a href="/" className="text-white transition-colors text-sm font-medium border-b-2 border-blue-500 pb-1">
-              UC Satış
-            </a>
-            <a href="/hesaplar" className="text-white/70 hover:text-white transition-colors text-sm font-medium">
-              Hesap Satış
-            </a>
             <a href="/blog" className="text-white/70 hover:text-white transition-colors text-sm font-medium">
               Blog
             </a>

@@ -740,28 +740,30 @@ export default function AdminOrders() {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-800">
-                  <div className="flex items-center gap-4">
-                    <span className="text-slate-400 text-sm">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-slate-800 px-4 md:px-0">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-4">
+                    <span className="text-slate-400 text-xs sm:text-sm">
                       Toplam {filteredOrders.length} sipariş
                     </span>
-                    <Select value={itemsPerPage.toString()} onValueChange={(val) => { setItemsPerPage(Number(val)); setCurrentPage(1); }}>
-                      <SelectTrigger className="w-[100px] bg-slate-800 border-slate-700 text-white text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
-                        <SelectItem value="10" className="text-white">10</SelectItem>
-                        <SelectItem value="20" className="text-white">20</SelectItem>
-                        <SelectItem value="50" className="text-white">50</SelectItem>
-                        <SelectItem value="100" className="text-white">100</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <span className="text-slate-400 text-sm">sipariş/sayfa</span>
+                    <div className="flex items-center gap-2">
+                      <Select value={itemsPerPage.toString()} onValueChange={(val) => { setItemsPerPage(Number(val)); setCurrentPage(1); }}>
+                        <SelectTrigger className="w-[70px] sm:w-[80px] bg-slate-800 border-slate-700 text-white text-xs sm:text-sm h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-800 border-slate-700">
+                          <SelectItem value="10" className="text-white">10</SelectItem>
+                          <SelectItem value="20" className="text-white">20</SelectItem>
+                          <SelectItem value="50" className="text-white">50</SelectItem>
+                          <SelectItem value="100" className="text-white">100</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span className="text-slate-400 text-xs sm:text-sm">/sayfa</span>
+                    </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-400 text-sm mr-4">
-                      Sayfa {currentPage} / {totalPages}
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <span className="text-slate-400 text-xs sm:text-sm mr-2 sm:mr-4">
+                      {currentPage}/{totalPages}
                     </span>
                     
                     <Button
@@ -769,35 +771,37 @@ export default function AdminOrders() {
                       size="sm"
                       onClick={() => goToPage(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className="border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800"
+                      className="border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8 p-0"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
                     
-                    {getPageNumbers().map((page, index) => (
-                      page === '...' ? (
-                        <span key={`ellipsis-${index}`} className="text-slate-500 px-2">...</span>
-                      ) : (
-                        <Button
-                          key={page}
-                          variant={currentPage === page ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => goToPage(page)}
-                          className={currentPage === page 
-                            ? "bg-blue-600 hover:bg-blue-700 text-white" 
-                            : "border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800"}
-                        >
-                          {page}
-                        </Button>
-                      )
-                    ))}
+                    <div className="hidden sm:flex items-center gap-1">
+                      {getPageNumbers().map((page, index) => (
+                        page === '...' ? (
+                          <span key={`ellipsis-${index}`} className="text-slate-500 px-1">...</span>
+                        ) : (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => goToPage(page)}
+                            className={`h-8 w-8 p-0 ${currentPage === page 
+                              ? "bg-blue-600 hover:bg-blue-700 text-white" 
+                              : "border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800"}`}
+                          >
+                            {page}
+                          </Button>
+                        )
+                      ))}
+                    </div>
                     
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => goToPage(currentPage + 1)}
                       disabled={currentPage === totalPages}
-                      className="border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800"
+                      className="border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8 p-0"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </Button>

@@ -326,10 +326,10 @@ export default function AdminVerification() {
 
       {/* Detail Modal */}
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl flex items-center gap-2">
-              <Shield className="w-6 h-6 text-amber-500" />
+            <DialogTitle className="text-xl md:text-2xl flex items-center gap-2">
+              <Shield className="w-5 h-5 md:w-6 md:h-6 text-amber-500" />
               Doğrulama Detayları
             </DialogTitle>
             <DialogDescription className="text-slate-400">
@@ -338,23 +338,23 @@ export default function AdminVerification() {
           </DialogHeader>
 
           {selectedOrder && (
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {/* Customer Info */}
               <Card className="bg-slate-800/50 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-white text-lg flex items-center gap-2">
-                    <User className="w-5 h-5" />
+                <CardHeader className="p-3 md:p-6">
+                  <CardTitle className="text-white text-base md:text-lg flex items-center gap-2">
+                    <User className="w-4 h-4 md:w-5 md:h-5" />
                     Müşteri Bilgileri
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2 text-sm">
+                <CardContent className="p-3 md:p-6 pt-0 space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-slate-400">Ad Soyad:</span>
                     <span className="text-white font-semibold">{selectedOrder.userName}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">E-posta:</span>
-                    <span className="text-white">{selectedOrder.userEmail}</span>
+                    <span className="text-white text-xs sm:text-sm truncate ml-2">{selectedOrder.userEmail}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Telefon:</span>
@@ -365,16 +365,16 @@ export default function AdminVerification() {
 
               {/* Order Info */}
               <Card className="bg-slate-800/50 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-white text-lg flex items-center gap-2">
-                    <CreditCard className="w-5 h-5" />
+                <CardHeader className="p-3 md:p-6">
+                  <CardTitle className="text-white text-base md:text-lg flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 md:w-5 md:h-5" />
                     Sipariş Bilgileri
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2 text-sm">
+                <CardContent className="p-3 md:p-6 pt-0 space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Sipariş Tutarı:</span>
-                    <span className="text-white font-bold text-lg">{selectedOrder.totalAmount?.toFixed(2)} TL</span>
+                    <span className="text-slate-400">Tutar:</span>
+                    <span className="text-white font-bold text-base md:text-lg">{selectedOrder.totalAmount?.toFixed(2)} TL</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Ürün:</span>
@@ -382,27 +382,27 @@ export default function AdminVerification() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Player ID:</span>
-                    <span className="text-white font-mono">{selectedOrder.playerId}</span>
+                    <span className="text-white font-mono text-xs">{selectedOrder.playerId}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Sipariş Tarihi:</span>
-                    <span className="text-white">{formatDate(selectedOrder.createdAt)}</span>
+                    <span className="text-slate-400">Sipariş:</span>
+                    <span className="text-white text-xs">{formatDate(selectedOrder.createdAt)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Belge Gönderilme:</span>
-                    <span className="text-white">{formatDate(selectedOrder.verification.submittedAt)}</span>
+                    <span className="text-white text-xs">{formatDate(selectedOrder.verification.submittedAt)}</span>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Documents */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 {/* Identity Photo */}
                 <Card className="bg-slate-800/50 border-slate-700">
-                  <CardHeader>
+                  <CardHeader className="p-3 md:p-6 pb-2">
                     <CardTitle className="text-white text-sm">Kimlik Fotoğrafı</CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-3 md:p-6 pt-0">
                     {selectedOrder.verification.identityPhoto ? (
                       <a 
                         href={selectedOrder.verification.identityPhoto} 
@@ -427,10 +427,10 @@ export default function AdminVerification() {
 
                 {/* Payment Receipt */}
                 <Card className="bg-slate-800/50 border-slate-700">
-                  <CardHeader>
+                  <CardHeader className="p-3 md:p-6 pb-2">
                     <CardTitle className="text-white text-sm">Ödeme Dekontu</CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-3 md:p-6 pt-0">
                     {selectedOrder.verification.paymentReceipt ? (
                       <a 
                         href={selectedOrder.verification.paymentReceipt} 
@@ -456,20 +456,20 @@ export default function AdminVerification() {
 
               {/* Action Section */}
               {!actionType && (
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Button
                     onClick={() => setActionType('approve')}
-                    className="flex-1 bg-green-600 hover:bg-green-700 h-12 text-base"
+                    className="flex-1 bg-green-600 hover:bg-green-700 h-10 md:h-12 text-sm md:text-base"
                   >
-                    <CheckCircle className="w-5 h-5 mr-2" />
+                    <CheckCircle className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                     Onayla ve Stok Ata
                   </Button>
                   <Button
                     onClick={() => setActionType('reject')}
                     variant="destructive"
-                    className="flex-1 h-12 text-base"
+                    className="flex-1 h-10 md:h-12 text-sm md:text-base"
                   >
-                    <XCircle className="w-5 h-5 mr-2" />
+                    <XCircle className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                     Reddet
                   </Button>
                 </div>
@@ -478,17 +478,17 @@ export default function AdminVerification() {
               {/* Rejection Form */}
               {actionType === 'reject' && (
                 <Card className="bg-red-900/20 border-red-800">
-                  <CardHeader>
-                    <CardTitle className="text-white text-lg">Reddetme Sebebi</CardTitle>
+                  <CardHeader className="p-3 md:p-6">
+                    <CardTitle className="text-white text-base md:text-lg">Reddetme Sebebi</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="p-3 md:p-6 pt-0 space-y-4">
                     <Textarea
                       placeholder="Neden reddedildiğini açıklayın (müşteriye gönderilecek)..."
                       value={rejectionReason}
                       onChange={(e) => setRejectionReason(e.target.value)}
-                      className="bg-slate-800 border-slate-700 text-white min-h-[100px]"
+                      className="bg-slate-800 border-slate-700 text-white min-h-[80px] md:min-h-[100px]"
                     />
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <Button
                         onClick={handleAction}
                         disabled={processing || !rejectionReason.trim()}
@@ -501,6 +501,7 @@ export default function AdminVerification() {
                         onClick={() => setActionType(null)}
                         variant="outline"
                         disabled={processing}
+                        className="w-full sm:w-auto"
                       >
                         İptal
                       </Button>
@@ -512,23 +513,20 @@ export default function AdminVerification() {
               {/* Approval Confirmation */}
               {actionType === 'approve' && (
                 <Card className="bg-green-900/20 border-green-800">
-                  <CardHeader>
-                    <CardTitle className="text-white text-lg">Onay Onayı</CardTitle>
+                  <CardHeader className="p-3 md:p-6">
+                    <CardTitle className="text-white text-base md:text-lg">Onay Onayı</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="p-3 md:p-6 pt-0 space-y-4">
                     <p className="text-slate-300 text-sm">
                       Bu doğrulamayı onaylamak istediğinizden emin misiniz? 
-                      <br />
-                      <br />
-                      <strong className="text-white">Yapılacak işlemler:</strong>
                     </p>
-                    <ul className="text-sm text-slate-300 space-y-1 list-disc list-inside">
+                    <ul className="text-xs md:text-sm text-slate-300 space-y-1 list-disc list-inside">
                       <li>Doğrulama onaylanacak</li>
                       <li>Otomatik stok atanacak</li>
                       <li>Müşteriye email gönderilecek</li>
                       <li>Belgeler silinecek (güvenlik)</li>
                     </ul>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <Button
                         onClick={handleAction}
                         disabled={processing}
@@ -540,6 +538,7 @@ export default function AdminVerification() {
                         onClick={() => setActionType(null)}
                         variant="outline"
                         disabled={processing}
+                        className="w-full sm:w-auto"
                       >
                         İptal
                       </Button>

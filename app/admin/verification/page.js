@@ -126,95 +126,89 @@ export default function AdminVerification() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center">
+      <div className="flex items-center justify-center p-8">
         <div className="text-white">Yükleniyor...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 py-8 px-4">
+    <div className="p-4 md:p-8">
       <Toaster position="top-right" />
       
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                <Shield className="w-8 h-8 text-amber-500" />
-                Doğrulama Bekleyen Siparişler
-              </h1>
-              <p className="text-slate-400 mt-2">Yüksek tutarlı siparişler için kimlik ve ödeme doğrulaması</p>
-            </div>
-            <Button onClick={() => router.push('/admin')} variant="outline">
-              ← Admin Panele Dön
-            </Button>
-          </div>
-        </div>
+      {/* Header */}
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+          <Shield className="w-7 h-7 md:w-8 md:h-8 text-amber-500" />
+          Doğrulama Bekleyen
+        </h1>
+        <p className="text-slate-400 mt-2 text-sm md:text-base">Yüksek tutarlı siparişler için kimlik ve ödeme doğrulaması</p>
+      </div>
 
-        {/* Stats Card */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="bg-slate-900/50 border-slate-800">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm">Bekleyen Doğrulama</p>
-                  <p className="text-3xl font-bold text-white">{orders.length}</p>
-                </div>
-                <Clock className="w-12 h-12 text-amber-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-900/50 border-slate-800">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm">Toplam Tutar</p>
-                  <p className="text-3xl font-bold text-white">
-                    {orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0).toFixed(0)} TL
-                  </p>
-                </div>
-                <CreditCard className="w-12 h-12 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-900/50 border-slate-800">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm">Ortalama Bekleme</p>
-                  <p className="text-3xl font-bold text-white">
-                    {orders.length > 0 
-                      ? Math.floor((Date.now() - Math.min(...orders.map(o => new Date(o.verification.submittedAt).getTime()))) / (1000 * 60))
-                      : 0} dk
-                  </p>
-                </div>
-                <Clock className="w-12 h-12 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Orders Table */}
+      {/* Stats Card - Mobile: 3 columns compact */}
+      <div className="grid grid-cols-3 gap-2 md:gap-4 mb-6">
         <Card className="bg-slate-900/50 border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-white">Doğrulama Listesi</CardTitle>
-            <CardDescription className="text-slate-400">
-              3000 TL ve üzeri siparişler için güvenlik kontrolü
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {orders.length === 0 ? (
-              <div className="text-center py-12">
-                <Shield className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-400 text-lg">Doğrulama bekleyen sipariş yok</p>
-                <p className="text-slate-500 text-sm mt-2">Tüm siparişler işlenmiş durumda</p>
+          <CardContent className="p-3 md:pt-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-slate-400 text-xs md:text-sm">Bekleyen</p>
+                <p className="text-xl md:text-3xl font-bold text-white">{orders.length}</p>
               </div>
-            ) : (
-              <div className="overflow-x-auto">
+              <Clock className="w-8 h-8 md:w-12 md:h-12 text-amber-500 hidden md:block" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-slate-900/50 border-slate-800">
+          <CardContent className="p-3 md:pt-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-slate-400 text-xs md:text-sm">Tutar</p>
+                <p className="text-xl md:text-3xl font-bold text-white">
+                  {orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0).toFixed(0)} TL
+                </p>
+              </div>
+              <CreditCard className="w-8 h-8 md:w-12 md:h-12 text-green-500 hidden md:block" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-slate-900/50 border-slate-800">
+          <CardContent className="p-3 md:pt-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-slate-400 text-xs md:text-sm">Ort. Bekleme</p>
+                <p className="text-xl md:text-3xl font-bold text-white">
+                  {orders.length > 0 
+                    ? Math.floor((Date.now() - Math.min(...orders.map(o => new Date(o.verification.submittedAt).getTime()))) / (1000 * 60))
+                    : 0} dk
+                </p>
+              </div>
+              <Clock className="w-8 h-8 md:w-12 md:h-12 text-blue-500 hidden md:block" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Orders Table/Cards */}
+      <Card className="bg-slate-900/50 border-slate-800">
+        <CardHeader className="p-4 md:p-6">
+          <CardTitle className="text-white text-lg">Doğrulama Listesi</CardTitle>
+          <CardDescription className="text-slate-400 text-sm">
+            3000 TL ve üzeri siparişler için güvenlik kontrolü
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0 md:p-6 md:pt-0">
+          {orders.length === 0 ? (
+            <div className="text-center py-12 px-4">
+              <Shield className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+              <p className="text-slate-400 text-lg">Doğrulama bekleyen sipariş yok</p>
+              <p className="text-slate-500 text-sm mt-2">Tüm siparişler işlenmiş durumda</p>
+            </div>
+          ) : (
+            <>
+              {/* Desktop Table */}
+              <div className="hidden lg:block overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -222,7 +216,7 @@ export default function AdminVerification() {
                       <TableHead className="text-slate-400">Müşteri</TableHead>
                       <TableHead className="text-slate-400">Tutar</TableHead>
                       <TableHead className="text-slate-400">Gönderilme</TableHead>
-                      <TableHead className="text-slate-400">Bekleme Süresi</TableHead>
+                      <TableHead className="text-slate-400">Bekleme</TableHead>
                       <TableHead className="text-slate-400 text-right">İşlemler</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -258,7 +252,7 @@ export default function AdminVerification() {
                                   : "bg-blue-900/20 text-blue-400 border-blue-800"
                               }
                             >
-                              {waitingTime} dakika
+                              {waitingTime} dk
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
@@ -277,10 +271,58 @@ export default function AdminVerification() {
                   </TableBody>
                 </Table>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+
+              {/* Mobile Card View */}
+              <div className="lg:hidden divide-y divide-slate-800">
+                {orders.map((order) => {
+                  const waitingTime = Math.floor((Date.now() - new Date(order.verification.submittedAt).getTime()) / (1000 * 60))
+                  
+                  return (
+                    <div key={order.id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-white font-medium">{order.userName || 'N/A'}</p>
+                          <p className="text-slate-400 text-xs">{order.userEmail}</p>
+                          <p className="text-slate-500 text-xs font-mono mt-1">#{order.id.slice(-8).toUpperCase()}</p>
+                        </div>
+                        <Badge variant="outline" className="bg-green-900/20 text-green-400 border-green-800">
+                          {order.totalAmount?.toFixed(0)} TL
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500 text-xs">{formatDate(order.verification.submittedAt)}</span>
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs ${
+                              waitingTime > 60 
+                                ? "bg-red-900/20 text-red-400 border-red-800"
+                                : waitingTime > 30
+                                ? "bg-amber-900/20 text-amber-400 border-amber-800"
+                                : "bg-blue-900/20 text-blue-400 border-blue-800"
+                            }`}
+                          >
+                            {waitingTime} dk
+                          </Badge>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => handleViewDetails(order)}
+                          className="bg-blue-600 hover:bg-blue-700 h-8 text-xs"
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          İncele
+                        </Button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Detail Modal */}
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>

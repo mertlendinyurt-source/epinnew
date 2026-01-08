@@ -528,7 +528,7 @@ export default function AdminBlogPage() {
 
       {/* Edit/Create Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {editingPost ? <Edit className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
@@ -538,7 +538,7 @@ export default function AdminBlogPage() {
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-slate-300">Başlık *</Label>
+              <Label className="text-slate-300 text-sm">Başlık *</Label>
               <Input
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -547,9 +547,9 @@ export default function AdminBlogPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-slate-300">Kategori</Label>
+                <Label className="text-slate-300 text-sm">Kategori</Label>
                 <Select 
                   value={formData.category} 
                   onValueChange={(v) => setFormData({ ...formData, category: v })}
@@ -566,7 +566,7 @@ export default function AdminBlogPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-slate-300">Durum</Label>
+                <Label className="text-slate-300 text-sm">Durum</Label>
                 <Select 
                   value={formData.status} 
                   onValueChange={(v) => setFormData({ ...formData, status: v })}
@@ -583,7 +583,7 @@ export default function AdminBlogPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300">Kapak Görseli URL</Label>
+              <Label className="text-slate-300 text-sm">Kapak Görseli URL</Label>
               <Input
                 value={formData.coverImage}
                 onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
@@ -591,12 +591,12 @@ export default function AdminBlogPage() {
                 className="bg-slate-800 border-slate-700 text-white"
               />
               {formData.coverImage && (
-                <img src={formData.coverImage} alt="Preview" className="w-full h-40 object-cover rounded mt-2" />
+                <img src={formData.coverImage} alt="Preview" className="w-full h-32 md:h-40 object-cover rounded mt-2" />
               )}
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300">Özet</Label>
+              <Label className="text-slate-300 text-sm">Özet</Label>
               <Textarea
                 value={formData.excerpt}
                 onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
@@ -606,17 +606,17 @@ export default function AdminBlogPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300">İçerik * (HTML destekler)</Label>
+              <Label className="text-slate-300 text-sm">İçerik * (HTML destekler)</Label>
               <Textarea
                 value={formData.content}
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                placeholder="Yazı içeriği... HTML etiketleri kullanabilirsiniz (<p>, <h2>, <ul>, <li>, <strong>, <a> vb.)"
-                className="bg-slate-800 border-slate-700 text-white h-60 font-mono text-sm"
+                placeholder="Yazı içeriği... HTML etiketleri kullanabilirsiniz"
+                className="bg-slate-800 border-slate-700 text-white h-40 md:h-60 font-mono text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300">Etiketler (virgülle ayırın)</Label>
+              <Label className="text-slate-300 text-sm">Etiketler (virgülle ayırın)</Label>
               <Input
                 value={formData.tags}
                 onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
@@ -626,14 +626,14 @@ export default function AdminBlogPage() {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setEditDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="ghost" onClick={() => setEditDialogOpen(false)} className="w-full sm:w-auto">
               İptal
             </Button>
             <Button 
               onClick={handleSave} 
               disabled={saving}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
             >
               {saving ? (
                 <>

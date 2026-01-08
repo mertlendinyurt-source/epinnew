@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://pinly-pubg.preview.emergentagent.com"
+BASE_URL = "https://uc-marketplace-6.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test data for new user to avoid rate limiting

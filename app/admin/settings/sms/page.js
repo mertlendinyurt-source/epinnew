@@ -163,6 +163,49 @@ export default function SmsSettingsPage() {
     }
   }
 
+  // Özel SMS Gönder
+  const handleSendCustomSms = async () => {
+    if (!testPhone) {
+      toast.error('Telefon numarası girin')
+      return
+    }
+    if (!customMessage.trim()) {
+      toast.error('Mesaj içeriği girin')
+      return
+    }
+    
+    setSendingCustom(true)
+    try {
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch('/api/admin/settings/sms/custom', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          phone: testPhone,
+          message: customMessage 
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        toast.success('SMS gönderildi!')
+        setCustomMessage('')
+        fetchLogs()
+      } else {
+        toast.error(data.error || 'SMS gönderilemedi')
+      }
+    } catch (error) {
+      console.error('Custom SMS error:', error)
+      toast.error('SMS gönderilemedi')
+    } finally {
+      setSendingCustom(false)
+    }
+  }
+
   // NetGSM'den mevcut başlıkları sorgula
   const fetchHeaders = async () => {
     setHeadersLoading(true)

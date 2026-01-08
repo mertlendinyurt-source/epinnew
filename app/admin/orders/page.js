@@ -425,27 +425,31 @@ export default function AdminOrders() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <Toaster position="top-center" richColors />
       
       {/* Main Content */}
       <div>
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Siparişler</h1>
-          <p className="text-slate-400">Tüm siparişleri görüntüleyin ve yönetin</p>
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-3">
+            <ShoppingBag className="w-7 h-7 md:w-8 md:h-8 text-blue-500" />
+            Siparişler
+          </h1>
+          <p className="text-slate-400 text-sm md:text-base">Tüm siparişleri görüntüleyin ve yönetin</p>
         </div>
 
         {/* Risk Alert */}
         {flaggedCount > 0 && (
-          <div className="bg-red-900/30 border border-red-700 rounded-lg p-4 mb-6 flex items-center gap-3">
-            <AlertTriangle className="w-6 h-6 text-red-400" />
-            <div>
-              <p className="text-red-200 font-medium">{flaggedCount} riskli sipariş onay bekliyor</p>
-              <p className="text-red-300/70 text-sm">Bu siparişlerin teslimatı durduruldu. Manuel onay veya iade gerekiyor.</p>
+          <div className="bg-red-900/30 border border-red-700 rounded-lg p-3 md:p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <AlertTriangle className="w-5 h-5 md:w-6 md:h-6 text-red-400 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-red-200 font-medium text-sm md:text-base">{flaggedCount} riskli sipariş onay bekliyor</p>
+              <p className="text-red-300/70 text-xs md:text-sm">Bu siparişlerin teslimatı durduruldu. Manuel onay veya iade gerekiyor.</p>
             </div>
             <Button 
               onClick={() => setRiskFilter('hold')}
-              className="ml-auto bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 w-full sm:w-auto text-sm"
+              size="sm"
             >
               Görüntüle
             </Button>

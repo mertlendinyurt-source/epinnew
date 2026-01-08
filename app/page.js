@@ -989,12 +989,6 @@ export default function App() {
                 <div className="p-5">
                   {/* Mobile Navigation Links */}
                   <div className="mb-4 space-y-2">
-                    <a href="/" className="block px-3 py-2 text-white bg-blue-600/20 rounded-lg transition-colors">
-                      UC Satış
-                    </a>
-                    <a href="/hesaplar" className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-                      Hesap Satış
-                    </a>
                     <a href="/blog" className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
                       Blog / Haberler
                     </a>

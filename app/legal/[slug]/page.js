@@ -242,7 +242,7 @@ export default function LegalPage() {
               ← Ana Sayfaya Dön
             </Link>
             <p className="text-white/30 text-sm">
-              © 2026 PUBG UC Store. Tüm hakları saklıdır.
+              © 2026 PİNLY. Tüm hakları saklıdır.
             </p>
           </div>
         </div>

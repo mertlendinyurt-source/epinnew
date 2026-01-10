@@ -1440,12 +1440,43 @@ async function sendVerificationRequiredEmail(db, order, user, product) {
 }
 
 let cachedClient = null;
+let cachedDb = null;
 
 async function getDb() {
-  if (!cachedClient) {
-    cachedClient = await MongoClient.connect(MONGO_URL);
+  if (cachedDb && cachedClient) {
+    return cachedDb;
   }
-  return cachedClient.db(DB_NAME);
+  
+  if (!cachedClient) {
+    const options = {
+      maxPoolSize: 10,
+      minPoolSize: 2,
+      maxIdleTimeMS: 30000,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 10000,
+      retryWrites: true,
+      w: 'majority'
+    };
+    
+    cachedClient = await MongoClient.connect(MONGO_URL, options);
+    
+    // Handle connection errors
+    cachedClient.on('error', (err) => {
+      console.error('MongoDB connection error:', err);
+      cachedClient = null;
+      cachedDb = null;
+    });
+    
+    cachedClient.on('close', () => {
+      console.log('MongoDB connection closed');
+      cachedClient = null;
+      cachedDb = null;
+    });
+  }
+  
+  cachedDb = cachedClient.db(DB_NAME);
+  return cachedDb;
 }
 
 // Mock Player Resolver

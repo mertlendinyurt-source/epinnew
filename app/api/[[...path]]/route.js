@@ -2377,15 +2377,19 @@ export async function GET(request) {
 
     // Public: Get SEO Settings for frontend (limited data)
     if (pathname === '/api/seo/settings') {
-      const seoSettings = await db.collection('seo_settings').findOne({ active: true });
-
-      return NextResponse.json({
-        success: true,
-        data: {
+      const cacheKey = 'seo_settings';
+      let data = getCached(cacheKey);
+      
+      if (!data) {
+        const seoSettings = await db.collection('seo_settings').findOne({ active: true });
+        data = {
           ga4MeasurementId: seoSettings?.enableAnalytics ? seoSettings.ga4MeasurementId : null,
           gscVerificationCode: seoSettings?.enableSearchConsole ? seoSettings.gscVerificationCode : null
-        }
-      });
+        };
+        setCache(cacheKey, data, 300000); // 5 dakika cache
+      }
+
+      return NextResponse.json({ success: true, data });
     }
 
     // User: Get single order by ID

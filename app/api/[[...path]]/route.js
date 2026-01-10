@@ -2721,13 +2721,14 @@ export async function GET(request) {
       });
     }
 
-    // Public: Get site settings (for frontend)
+    // Public: Get site settings (for frontend) - WITH CACHE
     if (pathname === '/api/site/settings') {
-      const settings = await db.collection('site_settings').findOne({ active: true });
+      const cacheKey = 'site_settings';
+      let data = getCached(cacheKey);
       
-      return NextResponse.json({
-        success: true,
-        data: {
+      if (!data) {
+        const settings = await db.collection('site_settings').findOne({ active: true });
+        data = {
           logo: settings?.logo || null,
           favicon: settings?.favicon || null,
           heroImage: settings?.heroImage || null,
@@ -2743,25 +2744,32 @@ export async function GET(request) {
           dailyBannerIcon: settings?.dailyBannerIcon || 'fire',
           dailyCountdownEnabled: settings?.dailyCountdownEnabled !== false,
           dailyCountdownLabel: settings?.dailyCountdownLabel || 'Kampanya bitimine'
-        }
-      });
+        };
+        setCache(cacheKey, data, 300000); // 5 dakika cache
+      }
+      
+      return NextResponse.json({ success: true, data });
     }
 
-    // Public: Get daily banner settings
+    // Public: Get daily banner settings - WITH CACHE
     if (pathname === '/api/site/banner') {
-      const settings = await db.collection('site_settings').findOne({ active: true });
+      const cacheKey = 'site_banner';
+      let data = getCached(cacheKey);
       
-      return NextResponse.json({
-        success: true,
-        data: {
+      if (!data) {
+        const settings = await db.collection('site_settings').findOne({ active: true });
+        data = {
           enabled: settings?.dailyBannerEnabled !== false,
           title: settings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar',
           subtitle: settings?.dailyBannerSubtitle || '',
           icon: settings?.dailyBannerIcon || 'fire',
           countdownEnabled: settings?.dailyCountdownEnabled !== false,
           countdownLabel: settings?.dailyCountdownLabel || 'Kampanya bitimine'
-        }
-      });
+        };
+        setCache(cacheKey, data, 300000); // 5 dakika cache
+      }
+      
+      return NextResponse.json({ success: true, data });
     }
 
     // Public: Get order summary for payment success page (limited data - no sensitive info)

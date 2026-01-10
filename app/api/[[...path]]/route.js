@@ -19,6 +19,41 @@ const DIJIPIN_API_TOKEN = process.env.DIJIPIN_API_TOKEN;
 const DIJIPIN_API_KEY = process.env.DIJIPIN_API_KEY;
 
 // ============================================
+// SIMPLE IN-MEMORY CACHE (60 saniye TTL)
+// ============================================
+const cache = new Map();
+const CACHE_TTL = 60000; // 60 saniye
+
+function getCached(key) {
+  const item = cache.get(key);
+  if (!item) return null;
+  if (Date.now() > item.expiry) {
+    cache.delete(key);
+    return null;
+  }
+  return item.data;
+}
+
+function setCache(key, data, ttl = CACHE_TTL) {
+  cache.set(key, {
+    data,
+    expiry: Date.now() + ttl
+  });
+}
+
+function clearCache(prefix = null) {
+  if (prefix) {
+    for (const key of cache.keys()) {
+      if (key.startsWith(prefix)) {
+        cache.delete(key);
+      }
+    }
+  } else {
+    cache.clear();
+  }
+}
+
+// ============================================
 // DISPOSABLE EMAIL DOMAINS LIST
 // ============================================
 const DISPOSABLE_EMAIL_DOMAINS = [

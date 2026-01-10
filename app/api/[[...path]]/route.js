@@ -2858,59 +2858,44 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: regions });
     }
 
-    // Public: Get game content (description, etc.)
+    // Public: Get game content (description, etc.) - WITH CACHE
     if (pathname === '/api/content/pubg') {
-      let content = await db.collection('game_content').findOne({ game: 'pubg' });
+      const cacheKey = 'content_pubg';
+      let content = getCached(cacheKey);
       
-      // Default content if not exists
       if (!content) {
-        content = {
-          game: 'pubg',
-          title: 'PUBG Mobile',
-          description: `# PUBG Mobile UC Satın Al
-
-PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown Cash (UC), oyun içi para birimidir ve çeşitli kozmetik eşyalar, silah skinleri ve Royale Pass satın almak için kullanılır.
-
-## UC ile Neler Yapabilirsiniz?
-
-- **Royale Pass**: Her sezon yeni Royale Pass satın alarak özel ödüller kazanın
-- **Silah Skinleri**: Nadir ve efsanevi silah görünümleri
-- **Karakter Kıyafetleri**: Karakterinizi özelleştirin
-- **Araç Skinleri**: Benzersiz araç görünümleri
-- **Emote ve Danslar**: Eğlenceli hareketler
-
-## Neden Bizi Tercih Etmelisiniz?
-
-✓ **Anında Teslimat**: Ödeme onaylandıktan sonra kodunuz anında teslim edilir
-✓ **Güvenli Ödeme**: SSL şifrelemeli güvenli ödeme altyapısı
-✓ **7/24 Destek**: Her zaman yanınızdayız
-✓ **En Uygun Fiyat**: Piyasadaki en rekabetçi fiyatlar
-
-## Nasıl Kullanılır?
-
-1. Satın almak istediğiniz UC paketini seçin
-2. PUBG Mobile oyuncu ID'nizi girin
-3. Ödemenizi tamamlayın
-4. Kodunuz anında hesabınıza tanımlanır
-
----
-
-*Not: Bu site PUBG Mobile veya Tencent Games ile resmi bir bağlantısı yoktur.*`,
-          defaultRating: 5.0,
-          defaultReviewCount: 2008,
-          updatedAt: new Date()
-        };
+        content = await db.collection('game_content').findOne({ game: 'pubg' });
+        
+        // Default content if not exists
+        if (!content) {
+          content = {
+            game: 'pubg',
+            title: 'PUBG Mobile',
+            description: `PUBG Mobile UC satın alarak oyun içi avantajlar elde edin.`,
+            defaultRating: 5.0,
+            defaultReviewCount: 2008,
+            updatedAt: new Date()
+          };
+        }
+        setCache(cacheKey, content, 300000); // 5 dakika cache
       }
       
       return NextResponse.json({ success: true, data: content });
     }
 
-    // Public: Get reviews with pagination
+    // Public: Get reviews with pagination - WITH CACHE
     if (pathname === '/api/reviews') {
       const game = searchParams.get('game') || 'pubg';
       const page = parseInt(searchParams.get('page') || '1');
       const limit = parseInt(searchParams.get('limit') || '5');
       const skip = (page - 1) * limit;
+      
+      const cacheKey = `reviews_${game}_${page}_${limit}`;
+      let cachedData = getCached(cacheKey);
+      
+      if (cachedData) {
+        return NextResponse.json({ success: true, data: cachedData });
+      }
 
       const reviews = await db.collection('reviews')
         .find({ game, approved: true })
@@ -2942,12 +2927,45 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
         }
       }
 
-      return NextResponse.json({
-        success: true,
-        data: {
-          reviews,
-          pagination: {
-            page,
+      const data = {
+        reviews,
+        pagination: {
+          page,
+          limit,
+          total: totalReviews,
+          pages: Math.ceil(totalReviews / limit)
+        },
+        stats: {
+          avgRating,
+          reviewCount
+        }
+      };
+      
+      setCache(cacheKey, data, 120000); // 2 dakika cache
+
+      return NextResponse.json({ success: true, data });
+    }
+
+    // Public: Get footer settings - WITH CACHE
+    if (pathname === '/api/footer-settings') {
+      const cacheKey = 'footer_settings';
+      let data = getCached(cacheKey);
+      
+      if (!data) {
+        const settings = await db.collection('footer_settings').findOne({ active: true });
+        data = settings || {
+          companyName: 'PINLY',
+          companyDescription: 'Güvenilir oyun kodu ve dijital ürün satış platformu',
+          socialLinks: {},
+          quickLinks: [],
+          supportLinks: [],
+          copyrightText: '© 2025 PINLY. Tüm hakları saklıdır.'
+        };
+        setCache(cacheKey, data, 300000); // 5 dakika cache
+      }
+      
+      return NextResponse.json({ success: true, data });
+    }
             limit,
             total: totalReviews,
             totalPages: Math.ceil(totalReviews / limit),

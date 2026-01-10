@@ -1709,12 +1709,19 @@ export async function GET(request) {
       );
     }
 
-    // Get all products
+    // Get all products - WITH CACHE
     if (pathname === '/api/products') {
-      const products = await db.collection('products')
-        .find({ active: true })
-        .sort({ sortOrder: 1 })
-        .toArray();
+      const cacheKey = 'products_active';
+      let products = getCached(cacheKey);
+      
+      if (!products) {
+        products = await db.collection('products')
+          .find({ active: true })
+          .sort({ sortOrder: 1 })
+          .toArray();
+        setCache(cacheKey, products, 120000); // 2 dakika cache
+      }
+      
       return NextResponse.json({ success: true, data: products });
     }
 
@@ -1722,30 +1729,37 @@ export async function GET(request) {
     // 🎮 PUBG HESAP SATIŞ API - PUBLIC GET ENDPOINTS
     // ============================================
 
-    // Public: Get all active accounts
+    // Public: Get all active accounts - WITH CACHE
     if (pathname === '/api/accounts') {
-      const accounts = await db.collection('accounts')
-        .find({ active: true, status: 'available' })
-        .sort({ order: 1, createdAt: -1 })
-        .toArray();
+      const cacheKey = 'accounts_active';
+      let publicAccounts = getCached(cacheKey);
+      
+      if (!publicAccounts) {
+        const accounts = await db.collection('accounts')
+          .find({ active: true, status: 'available' })
+          .sort({ order: 1, createdAt: -1 })
+          .toArray();
 
-      // Hide sensitive info
-      const publicAccounts = accounts.map(acc => ({
-        id: acc.id,
-        title: acc.title,
-        description: acc.description,
-        price: acc.price,
-        discountPrice: acc.discountPrice,
-        discountPercent: acc.discountPercent,
-        imageUrl: acc.imageUrl,
-        legendaryMin: acc.legendaryMin,
-        legendaryMax: acc.legendaryMax,
-        level: acc.level,
-        rank: acc.rank,
-        features: acc.features,
-        order: acc.order || 0,
-        createdAt: acc.createdAt
-      }));
+        // Hide sensitive info
+        publicAccounts = accounts.map(acc => ({
+          id: acc.id,
+          title: acc.title,
+          description: acc.description,
+          price: acc.price,
+          discountPrice: acc.discountPrice,
+          discountPercent: acc.discountPercent,
+          imageUrl: acc.imageUrl,
+          legendaryMin: acc.legendaryMin,
+          legendaryMax: acc.legendaryMax,
+          level: acc.level,
+          rank: acc.rank,
+          features: acc.features,
+          order: acc.order || 0,
+          createdAt: acc.createdAt
+        }));
+        
+        setCache(cacheKey, publicAccounts, 120000); // 2 dakika cache
+      }
 
       return NextResponse.json({ success: true, data: publicAccounts });
     }

@@ -1709,6 +1709,139 @@ export async function GET(request) {
       );
     }
 
+    // ============================================
+    // 🚀 HOMEPAGE - TÜM VERİLER TEK SEFERDE
+    // ============================================
+    if (pathname === '/api/homepage') {
+      const cacheKey = 'homepage_all';
+      let data = getCached(cacheKey);
+      
+      if (!data) {
+        // Tüm verileri paralel olarak çek
+        const [
+          products,
+          accounts,
+          siteSettings,
+          footerSettings,
+          seoSettings,
+          regions,
+          gameContent,
+          reviewsData
+        ] = await Promise.all([
+          // Products
+          db.collection('products').find({ active: true }).sort({ sortOrder: 1 }).toArray(),
+          
+          // Accounts
+          db.collection('accounts').find({ active: true, status: 'available' }).sort({ order: 1 }).toArray(),
+          
+          // Site Settings
+          db.collection('site_settings').findOne({ active: true }),
+          
+          // Footer Settings
+          db.collection('footer_settings').findOne({ active: true }),
+          
+          // SEO Settings
+          db.collection('seo_settings').findOne({ active: true }),
+          
+          // Regions
+          db.collection('regions').find({ enabled: true }).sort({ sortOrder: 1 }).toArray(),
+          
+          // Game Content
+          db.collection('game_content').findOne({ game: 'pubg' }),
+          
+          // Reviews with stats
+          (async () => {
+            const reviews = await db.collection('reviews')
+              .find({ game: 'pubg', approved: true })
+              .sort({ createdAt: -1 })
+              .limit(5)
+              .toArray();
+            
+            const ratingAgg = await db.collection('reviews').aggregate([
+              { $match: { game: 'pubg', approved: true } },
+              { $group: { _id: null, avgRating: { $avg: '$rating' }, count: { $sum: 1 } } }
+            ]).toArray();
+            
+            return { reviews, ratingAgg };
+          })()
+        ]);
+
+        // Process accounts (hide sensitive info)
+        const publicAccounts = accounts.map(acc => ({
+          id: acc.id,
+          title: acc.title,
+          description: acc.description,
+          price: acc.price,
+          discountPrice: acc.discountPrice,
+          imageUrl: acc.imageUrl,
+          legendaryMin: acc.legendaryMin,
+          legendaryMax: acc.legendaryMax,
+          level: acc.level,
+          rank: acc.rank,
+          features: acc.features,
+          order: acc.order || 0
+        }));
+
+        // Process regions
+        const processedRegions = regions.length > 0 ? regions : [
+          { id: 'tr', code: 'TR', name: 'Türkiye', enabled: true, sortOrder: 1 },
+          { id: 'global', code: 'GLOBAL', name: 'Küresel', enabled: true, sortOrder: 2 }
+        ];
+
+        // Process reviews stats
+        let avgRating = 5.0, reviewCount = 0;
+        if (reviewsData.ratingAgg.length > 0 && reviewsData.ratingAgg[0].count > 0) {
+          avgRating = Math.round(reviewsData.ratingAgg[0].avgRating * 10) / 10;
+          reviewCount = reviewsData.ratingAgg[0].count;
+        } else if (gameContent) {
+          avgRating = gameContent.defaultRating || 5.0;
+          reviewCount = gameContent.defaultReviewCount || 0;
+        }
+
+        data = {
+          products,
+          accounts: publicAccounts,
+          siteSettings: {
+            logo: siteSettings?.logo || null,
+            favicon: siteSettings?.favicon || null,
+            heroImage: siteSettings?.heroImage || null,
+            categoryIcon: siteSettings?.categoryIcon || null,
+            siteName: siteSettings?.siteName || 'PINLY',
+            metaTitle: siteSettings?.metaTitle || 'PINLY – Dijital Kod ve Oyun Satış Platformu',
+            metaDescription: siteSettings?.metaDescription || 'PUBG Mobile UC satın al.',
+            contactEmail: siteSettings?.contactEmail || '',
+            contactPhone: siteSettings?.contactPhone || '',
+            dailyBannerEnabled: siteSettings?.dailyBannerEnabled !== false,
+            dailyBannerTitle: siteSettings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar',
+            dailyBannerSubtitle: siteSettings?.dailyBannerSubtitle || '',
+            dailyBannerIcon: siteSettings?.dailyBannerIcon || 'fire',
+            dailyCountdownEnabled: siteSettings?.dailyCountdownEnabled !== false,
+            dailyCountdownLabel: siteSettings?.dailyCountdownLabel || 'Kampanya bitimine'
+          },
+          footerSettings: footerSettings || {
+            companyName: 'PINLY',
+            companyDescription: 'Güvenilir oyun kodu satış platformu',
+            quickLinks: [],
+            copyrightText: '© 2025 PINLY'
+          },
+          seoSettings: {
+            ga4MeasurementId: seoSettings?.enableAnalytics ? seoSettings.ga4MeasurementId : null,
+            gscVerificationCode: seoSettings?.enableSearchConsole ? seoSettings.gscVerificationCode : null
+          },
+          regions: processedRegions,
+          gameContent: gameContent || { title: 'PUBG Mobile', description: '' },
+          reviews: {
+            items: reviewsData.reviews,
+            stats: { avgRating, reviewCount }
+          }
+        };
+        
+        setCache(cacheKey, data, 60000); // 1 dakika cache
+      }
+      
+      return NextResponse.json({ success: true, data });
+    }
+
     // Get all products - WITH CACHE
     if (pathname === '/api/products') {
       const cacheKey = 'products_active';

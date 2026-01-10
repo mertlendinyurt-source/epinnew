@@ -2812,19 +2812,25 @@ export async function GET(request) {
       });
     }
 
-    // Public: Get enabled regions (for frontend filter)
+    // Public: Get enabled regions (for frontend filter) - WITH CACHE
     if (pathname === '/api/regions') {
-      let regions = await db.collection('regions').find({ enabled: true }).sort({ sortOrder: 1 }).toArray();
+      const cacheKey = 'regions_enabled';
+      let regions = getCached(cacheKey);
       
-      // If no regions exist, return default regions
-      if (regions.length === 0) {
-        regions = [
-          { id: 'tr', code: 'TR', name: 'Türkiye', enabled: true, flagImageUrl: null, sortOrder: 1 },
-          { id: 'global', code: 'GLOBAL', name: 'Küresel', enabled: true, flagImageUrl: null, sortOrder: 2 },
-          { id: 'de', code: 'DE', name: 'Almanya', enabled: true, flagImageUrl: null, sortOrder: 3 },
-          { id: 'fr', code: 'FR', name: 'Fransa', enabled: true, flagImageUrl: null, sortOrder: 4 },
-          { id: 'jp', code: 'JP', name: 'Japonya', enabled: true, flagImageUrl: null, sortOrder: 5 }
-        ];
+      if (!regions) {
+        regions = await db.collection('regions').find({ enabled: true }).sort({ sortOrder: 1 }).toArray();
+        
+        // If no regions exist, return default regions
+        if (regions.length === 0) {
+          regions = [
+            { id: 'tr', code: 'TR', name: 'Türkiye', enabled: true, flagImageUrl: null, sortOrder: 1 },
+            { id: 'global', code: 'GLOBAL', name: 'Küresel', enabled: true, flagImageUrl: null, sortOrder: 2 },
+            { id: 'de', code: 'DE', name: 'Almanya', enabled: true, flagImageUrl: null, sortOrder: 3 },
+            { id: 'fr', code: 'FR', name: 'Fransa', enabled: true, flagImageUrl: null, sortOrder: 4 },
+            { id: 'jp', code: 'JP', name: 'Japonya', enabled: true, flagImageUrl: null, sortOrder: 5 }
+          ];
+        }
+        setCache(cacheKey, regions, 300000); // 5 dakika cache
       }
       
       return NextResponse.json({ success: true, data: regions });

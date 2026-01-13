@@ -5532,11 +5532,8 @@ export async function POST(request) {
       const code = searchParams.get('code');
       const error = searchParams.get('error');
       
-      // Get base URL from request headers (for correct domain)
-      const host = request.headers.get('host');
-      const protoHeader = request.headers.get('x-forwarded-proto') || 'https';
-      const protocol = protoHeader.split(',')[0].trim();
-      const baseUrl = `${protocol}://${host}`;
+      // Use hardcoded base URL for pinly.com.tr
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://pinly.com.tr';
       
       if (error) {
         return NextResponse.redirect(new URL(`/?google_auth=error&reason=google_auth_denied`, baseUrl));
@@ -5547,21 +5544,23 @@ export async function POST(request) {
       }
       
       try {
-        // Get OAuth settings
-        const oauthSettings = await db.collection('oauth_settings').findOne({ provider: 'google' });
-        
+        // PRIORITY: Use .env credentials first
         let clientId, clientSecret, redirectUri;
         
-        if (oauthSettings?.clientId && oauthSettings?.clientSecret) {
-          clientId = decrypt(oauthSettings.clientId);
-          clientSecret = decrypt(oauthSettings.clientSecret);
-          redirectUri = `${baseUrl}/api/auth/google/callback`;
-        } else if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+        if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           clientId = process.env.GOOGLE_CLIENT_ID;
           clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-          redirectUri = process.env.GOOGLE_REDIRECT_URI || `${baseUrl}/api/auth/google/callback`;
+          redirectUri = process.env.GOOGLE_REDIRECT_URI || 'https://pinly.com.tr/api/auth/google/callback';
         } else {
-          return NextResponse.redirect(new URL(`/?google_auth=error&reason=oauth_config_error`, baseUrl));
+          // Fallback to database
+          const oauthSettings = await db.collection('oauth_settings').findOne({ provider: 'google' });
+          if (oauthSettings?.clientId && oauthSettings?.clientSecret) {
+            clientId = decrypt(oauthSettings.clientId);
+            clientSecret = decrypt(oauthSettings.clientSecret);
+            redirectUri = `${baseUrl}/api/auth/google/callback`;
+          } else {
+            return NextResponse.redirect(new URL(`/?google_auth=error&reason=oauth_config_error`, baseUrl));
+          }
         }
         
         // Exchange code for tokens

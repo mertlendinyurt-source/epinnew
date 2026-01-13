@@ -867,17 +867,27 @@ export default function App() {
 
   // Region display component
   const RegionDisplay = ({ regionCode, size = 'sm', showWhiteText = false }) => {
-    const region = regions.find(r => r.code === regionCode) || { code: regionCode, name: regionCode, flag: '🌍' }
+    const region = regions.find(r => r.code === regionCode) || { code: regionCode, name: regionCode, flag: '🌍', flagImageUrl: null }
     
     const sizeClasses = {
       sm: 'text-[9px] md:text-[10px]',
       md: 'text-[10px] md:text-xs',
       lg: 'text-xs md:text-sm'
     }
+
+    const imgSizeClasses = {
+      sm: 'w-4 h-3',
+      md: 'w-5 h-4',
+      lg: 'w-6 h-4'
+    }
     
     return (
       <span className={`flex items-center gap-1 ${sizeClasses[size]} ${showWhiteText ? 'text-white' : 'text-white/70'} font-medium`}>
-        <span>{region.flag}</span>
+        {region.flagImageUrl ? (
+          <img src={region.flagImageUrl} alt={region.name} className={`${imgSizeClasses[size]} object-cover rounded-sm`} />
+        ) : (
+          <span>{region.flag || '🌍'}</span>
+        )}
         <span>{region.name}</span>
       </span>
     )
@@ -902,8 +912,13 @@ export default function App() {
           {regions.map(region => (
             <label key={region.code} className="flex items-center gap-2 cursor-pointer group">
               <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
-              <span className="text-sm text-white/70 group-hover:text-white transition-colors">
-                {region.flag} {region.name}
+              <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
+                {region.flagImageUrl ? (
+                  <img src={region.flagImageUrl} alt={region.name} className="w-5 h-4 object-cover rounded-sm" />
+                ) : (
+                  <span>{region.flag || '🌍'}</span>
+                )}
+                {region.name}
               </span>
             </label>
           ))}

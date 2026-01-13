@@ -5555,7 +5555,6 @@ export async function POST(request) {
 
     // Reset Password - Validate token and update password
     if (pathname === '/api/auth/reset-password') {
-      const body = await request.json();
       const { token, password } = body;
 
       if (!token || !password) {

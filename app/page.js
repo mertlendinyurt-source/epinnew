@@ -525,7 +525,9 @@ export default function App() {
           setReviews(data.data.reviews)
         }
         setReviewStats(data.data.stats)
-        setReviewsHasMore(data.data.pagination.hasMore)
+        // Calculate hasMore from pagination (page < pages)
+        const pagination = data.data.pagination
+        setReviewsHasMore(pagination.page < pagination.pages)
         setReviewsPage(page)
       }
     } catch (error) {

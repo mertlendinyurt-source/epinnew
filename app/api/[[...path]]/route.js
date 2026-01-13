@@ -5494,7 +5494,6 @@ export async function POST(request) {
 
     // Forgot Password - Send reset email
     if (pathname === '/api/auth/forgot-password') {
-      const body = await request.json();
       const { email } = body;
 
       if (!email) {

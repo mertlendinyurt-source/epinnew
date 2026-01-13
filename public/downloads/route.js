@@ -2018,6 +2018,29 @@ export async function GET(request) {
       });
     }
 
+    // Validate Reset Token (check if token is valid before showing form)
+    if (pathname === '/api/auth/validate-reset-token') {
+      const token = searchParams.get('token');
+
+      if (!token) {
+        return NextResponse.json(
+          { success: false, error: 'Token gereklidir', valid: false },
+          { status: 400 }
+        );
+      }
+
+      const resetRecord = await db.collection('password_resets').findOne({
+        token: token,
+        used: false,
+        expiresAt: { $gt: new Date() }
+      });
+
+      return NextResponse.json({
+        success: !!resetRecord,
+        valid: !!resetRecord
+      });
+    }
+
     // Resolve player name (Real PUBG Mobile API via RapidAPI - ID Game Checker)
     if (pathname === '/api/player/resolve') {
       // Accept both 'id' and 'playerId' parameters
@@ -5629,29 +5652,6 @@ export async function POST(request) {
       return NextResponse.json({
         success: true,
         message: 'Şifreniz başarıyla güncellendi. Artık yeni şifrenizle giriş yapabilirsiniz.'
-      });
-    }
-
-    // Validate Reset Token (check if token is valid before showing form)
-    if (pathname === '/api/auth/validate-reset-token') {
-      const token = searchParams.get('token');
-
-      if (!token) {
-        return NextResponse.json(
-          { success: false, error: 'Token gereklidir' },
-          { status: 400 }
-        );
-      }
-
-      const resetRecord = await db.collection('password_resets').findOne({
-        token: token,
-        used: false,
-        expiresAt: { $gt: new Date() }
-      });
-
-      return NextResponse.json({
-        success: !!resetRecord,
-        valid: !!resetRecord
       });
     }
 

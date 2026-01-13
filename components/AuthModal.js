@@ -62,6 +62,39 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
     window.location.href = '/api/auth/google';
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    
+    if (!forgotPasswordEmail) {
+      toast.error('E-posta adresi gereklidir');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotPasswordEmail })
+      });
+
+      const data = await response.json();
+
+      if (data.code === 'GOOGLE_ACCOUNT') {
+        toast.error(data.error);
+      } else {
+        setForgotPasswordSent(true);
+        toast.success('Şifre sıfırlama linki e-posta adresinize gönderildi!');
+      }
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      toast.error('Bağlantı hatası');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
     

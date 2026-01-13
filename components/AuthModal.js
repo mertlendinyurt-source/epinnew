@@ -419,47 +419,133 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
           {/* Login Form */}
           {tab === 'login' && (
             <div className="space-y-4">
-              {/* Google Login Button - Always visible */}
-              <GoogleLoginButton />
-              <OrDivider />
+              {/* Forgot Password Mode */}
+              {forgotPasswordMode ? (
+                <div className="space-y-4">
+                  {forgotPasswordSent ? (
+                    <div className="text-center py-6">
+                      <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-semibold text-white mb-2">E-posta Gönderildi!</h3>
+                      <p className="text-sm text-gray-400 mb-4">
+                        Şifre sıfırlama linki <span className="text-blue-400">{forgotPasswordEmail}</span> adresine gönderildi.
+                      </p>
+                      <p className="text-xs text-gray-500 mb-4">
+                        E-postanızı kontrol edin. Spam klasörünü de kontrol etmeyi unutmayın.
+                      </p>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setForgotPasswordMode(false);
+                          setForgotPasswordSent(false);
+                          setForgotPasswordEmail('');
+                        }}
+                        className="w-full bg-gray-700 hover:bg-gray-600"
+                      >
+                        Giriş Yap Sayfasına Dön
+                      </Button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleForgotPassword} className="space-y-4">
+                      <div className="text-center mb-4">
+                        <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-semibold text-white">Şifremi Unuttum</h3>
+                        <p className="text-sm text-gray-400 mt-1">
+                          E-posta adresinizi girin, size şifre sıfırlama linki gönderelim.
+                        </p>
+                      </div>
 
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                  <Label className="text-gray-300">E-posta</Label>
-                  <Input
-                    type="email"
-                    value={loginForm.email}
-                    onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                    className="bg-gray-800 border-gray-700 text-white"
-                    placeholder="ornek@email.com"
-                    required
-                  />
+                      <div>
+                        <Label className="text-gray-300">E-posta Adresi</Label>
+                        <Input
+                          type="email"
+                          value={forgotPasswordEmail}
+                          onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                          className="bg-gray-800 border-gray-700 text-white"
+                          placeholder="ornek@email.com"
+                          required
+                        />
+                      </div>
+
+                      <Button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                      >
+                        {loading ? 'Gönderiliyor...' : 'Şifre Sıfırlama Linki Gönder'}
+                      </Button>
+
+                      <button
+                        type="button"
+                        onClick={() => setForgotPasswordMode(false)}
+                        className="w-full text-sm text-gray-400 hover:text-white transition-colors"
+                      >
+                        ← Giriş yap sayfasına dön
+                      </button>
+                    </form>
+                  )}
                 </div>
+              ) : (
+                <>
+                  {/* Google Login Button - Always visible */}
+                  <GoogleLoginButton />
+                  <OrDivider />
 
-                <div>
-                  <Label className="text-gray-300">Şifre</Label>
-                  <Input
-                    type="password"
-                    value={loginForm.password}
-                    onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                    className="bg-gray-800 border-gray-700 text-white"
-                    placeholder="Şifreniz"
-                    required
-                  />
-                </div>
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div>
+                      <Label className="text-gray-300">E-posta</Label>
+                      <Input
+                        type="email"
+                        value={loginForm.email}
+                        onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                        className="bg-gray-800 border-gray-700 text-white"
+                        placeholder="ornek@email.com"
+                        required
+                      />
+                    </div>
 
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                >
-                  {loading ? 'Giriş yapılıyor...' : 'Giriş Yap ve Devam Et'}
-                </Button>
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <Label className="text-gray-300">Şifre</Label>
+                        <button
+                          type="button"
+                          onClick={() => setForgotPasswordMode(true)}
+                          className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                        >
+                          Şifremi Unuttum
+                        </button>
+                      </div>
+                      <Input
+                        type="password"
+                        value={loginForm.password}
+                        onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                        className="bg-gray-800 border-gray-700 text-white"
+                        placeholder="Şifreniz"
+                        required
+                      />
+                    </div>
 
-                <p className="text-xs text-gray-400 text-center">
-                  Hesabınız yok mu? <button type="button" onClick={() => setTab('register')} className="text-blue-500">Kayıt Ol</button>
-                </p>
-              </form>
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    >
+                      {loading ? 'Giriş yapılıyor...' : 'Giriş Yap ve Devam Et'}
+                    </Button>
+
+                    <p className="text-xs text-gray-400 text-center">
+                      Hesabınız yok mu? <button type="button" onClick={() => setTab('register')} className="text-blue-500">Kayıt Ol</button>
+                    </p>
+                  </form>
+                </>
+              )}
             </div>
           )}
         </div>

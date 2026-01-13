@@ -867,17 +867,27 @@ export default function App() {
 
   // Region display component
   const RegionDisplay = ({ regionCode, size = 'sm', showWhiteText = false }) => {
-    const region = regions.find(r => r.code === regionCode) || { code: regionCode, name: regionCode, flag: '🌍' }
+    const region = regions.find(r => r.code === regionCode) || { code: regionCode, name: regionCode, flag: '🌍', flagImageUrl: null }
     
     const sizeClasses = {
       sm: 'text-[9px] md:text-[10px]',
       md: 'text-[10px] md:text-xs',
       lg: 'text-xs md:text-sm'
     }
+
+    const imgSizeClasses = {
+      sm: 'w-4 h-3',
+      md: 'w-5 h-4',
+      lg: 'w-6 h-4'
+    }
     
     return (
       <span className={`flex items-center gap-1 ${sizeClasses[size]} ${showWhiteText ? 'text-white' : 'text-white/70'} font-medium`}>
-        <span>{region.flag}</span>
+        {region.flagImageUrl ? (
+          <img src={region.flagImageUrl} alt={region.name} className={`${imgSizeClasses[size]} object-cover rounded-sm`} />
+        ) : (
+          <span>{region.flag || '🌍'}</span>
+        )}
         <span>{region.name}</span>
       </span>
     )

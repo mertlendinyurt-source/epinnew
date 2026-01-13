@@ -1081,7 +1081,7 @@ export default function App() {
             {siteSettings?.categoryIcon ? (
               <div className="w-14 h-14 md:w-20 md:h-20 rounded-lg overflow-hidden shadow-lg">
                 <img 
-                  src={`${siteSettings.categoryIcon}?v=${Date.now()}`}
+                  src={siteSettings.categoryIcon}
                   alt="Category"
                   className="w-full h-full object-cover"
                 />

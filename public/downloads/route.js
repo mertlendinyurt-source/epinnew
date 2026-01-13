@@ -19,6 +19,41 @@ const DIJIPIN_API_TOKEN = process.env.DIJIPIN_API_TOKEN;
 const DIJIPIN_API_KEY = process.env.DIJIPIN_API_KEY;
 
 // ============================================
+// SIMPLE IN-MEMORY CACHE (60 saniye TTL)
+// ============================================
+const cache = new Map();
+const CACHE_TTL = 60000; // 60 saniye
+
+function getCached(key) {
+  const item = cache.get(key);
+  if (!item) return null;
+  if (Date.now() > item.expiry) {
+    cache.delete(key);
+    return null;
+  }
+  return item.data;
+}
+
+function setCache(key, data, ttl = CACHE_TTL) {
+  cache.set(key, {
+    data,
+    expiry: Date.now() + ttl
+  });
+}
+
+function clearCache(prefix = null) {
+  if (prefix) {
+    for (const key of cache.keys()) {
+      if (key.startsWith(prefix)) {
+        cache.delete(key);
+      }
+    }
+  } else {
+    cache.clear();
+  }
+}
+
+// ============================================
 // DISPOSABLE EMAIL DOMAINS LIST
 // ============================================
 const DISPOSABLE_EMAIL_DOMAINS = [
@@ -1440,12 +1475,43 @@ async function sendVerificationRequiredEmail(db, order, user, product) {
 }
 
 let cachedClient = null;
+let cachedDb = null;
 
 async function getDb() {
-  if (!cachedClient) {
-    cachedClient = await MongoClient.connect(MONGO_URL);
+  if (cachedDb && cachedClient) {
+    return cachedDb;
   }
-  return cachedClient.db(DB_NAME);
+  
+  if (!cachedClient) {
+    const options = {
+      maxPoolSize: 10,
+      minPoolSize: 2,
+      maxIdleTimeMS: 30000,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 10000,
+      retryWrites: true,
+      w: 'majority'
+    };
+    
+    cachedClient = await MongoClient.connect(MONGO_URL, options);
+    
+    // Handle connection errors
+    cachedClient.on('error', (err) => {
+      console.error('MongoDB connection error:', err);
+      cachedClient = null;
+      cachedDb = null;
+    });
+    
+    cachedClient.on('close', () => {
+      console.log('MongoDB connection closed');
+      cachedClient = null;
+      cachedDb = null;
+    });
+  }
+  
+  cachedDb = cachedClient.db(DB_NAME);
+  return cachedDb;
 }
 
 // Mock Player Resolver
@@ -1643,12 +1709,152 @@ export async function GET(request) {
       );
     }
 
-    // Get all products
+    // ============================================
+    // 🚀 HOMEPAGE - TÜM VERİLER TEK SEFERDE
+    // ============================================
+    if (pathname === '/api/homepage') {
+      const cacheKey = 'homepage_all';
+      let data = getCached(cacheKey);
+      
+      if (!data) {
+        // Tüm verileri paralel olarak çek
+        const [
+          products,
+          accounts,
+          siteSettings,
+          footerSettings,
+          seoSettings,
+          regions,
+          gameContent,
+          reviewsData
+        ] = await Promise.all([
+          // Products
+          db.collection('products').find({ active: true }).sort({ sortOrder: 1 }).toArray(),
+          
+          // Accounts
+          db.collection('accounts').find({ active: true, status: 'available' }).sort({ order: 1 }).toArray(),
+          
+          // Site Settings
+          db.collection('site_settings').findOne({ active: true }),
+          
+          // Footer Settings
+          db.collection('footer_settings').findOne({ active: true }),
+          
+          // SEO Settings
+          db.collection('seo_settings').findOne({ active: true }),
+          
+          // Regions
+          db.collection('regions').find({ enabled: true }).sort({ sortOrder: 1 }).toArray(),
+          
+          // Game Content
+          db.collection('game_content').findOne({ game: 'pubg' }),
+          
+          // Reviews with stats
+          (async () => {
+            const reviews = await db.collection('reviews')
+              .find({ game: 'pubg', approved: true })
+              .sort({ createdAt: -1 })
+              .limit(5)
+              .toArray();
+            
+            const ratingAgg = await db.collection('reviews').aggregate([
+              { $match: { game: 'pubg', approved: true } },
+              { $group: { _id: null, avgRating: { $avg: '$rating' }, count: { $sum: 1 } } }
+            ]).toArray();
+            
+            return { reviews, ratingAgg };
+          })()
+        ]);
+
+        // Process accounts (hide sensitive info)
+        const publicAccounts = accounts.map(acc => ({
+          id: acc.id,
+          title: acc.title,
+          description: acc.description,
+          price: acc.price,
+          discountPrice: acc.discountPrice,
+          imageUrl: acc.imageUrl,
+          legendaryMin: acc.legendaryMin,
+          legendaryMax: acc.legendaryMax,
+          level: acc.level,
+          rank: acc.rank,
+          features: acc.features,
+          order: acc.order || 0
+        }));
+
+        // Process regions
+        const processedRegions = regions.length > 0 ? regions : [
+          { id: 'tr', code: 'TR', name: 'Türkiye', enabled: true, sortOrder: 1 },
+          { id: 'global', code: 'GLOBAL', name: 'Küresel', enabled: true, sortOrder: 2 }
+        ];
+
+        // Process reviews stats
+        let avgRating = 5.0, reviewCount = 0;
+        if (reviewsData.ratingAgg.length > 0 && reviewsData.ratingAgg[0].count > 0) {
+          avgRating = Math.round(reviewsData.ratingAgg[0].avgRating * 10) / 10;
+          reviewCount = reviewsData.ratingAgg[0].count;
+        } else if (gameContent) {
+          avgRating = gameContent.defaultRating || 5.0;
+          reviewCount = gameContent.defaultReviewCount || 0;
+        }
+
+        data = {
+          products,
+          accounts: publicAccounts,
+          siteSettings: {
+            logo: siteSettings?.logo || null,
+            favicon: siteSettings?.favicon || null,
+            heroImage: siteSettings?.heroImage || null,
+            categoryIcon: siteSettings?.categoryIcon || null,
+            siteName: siteSettings?.siteName || 'PINLY',
+            metaTitle: siteSettings?.metaTitle || 'PINLY – Dijital Kod ve Oyun Satış Platformu',
+            metaDescription: siteSettings?.metaDescription || 'PUBG Mobile UC satın al.',
+            contactEmail: siteSettings?.contactEmail || '',
+            contactPhone: siteSettings?.contactPhone || '',
+            dailyBannerEnabled: siteSettings?.dailyBannerEnabled !== false,
+            dailyBannerTitle: siteSettings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar',
+            dailyBannerSubtitle: siteSettings?.dailyBannerSubtitle || '',
+            dailyBannerIcon: siteSettings?.dailyBannerIcon || 'fire',
+            dailyCountdownEnabled: siteSettings?.dailyCountdownEnabled !== false,
+            dailyCountdownLabel: siteSettings?.dailyCountdownLabel || 'Kampanya bitimine'
+          },
+          footerSettings: footerSettings || {
+            companyName: 'PINLY',
+            companyDescription: 'Güvenilir oyun kodu satış platformu',
+            quickLinks: [],
+            copyrightText: '© 2025 PINLY'
+          },
+          seoSettings: {
+            ga4MeasurementId: seoSettings?.enableAnalytics ? seoSettings.ga4MeasurementId : null,
+            gscVerificationCode: seoSettings?.enableSearchConsole ? seoSettings.gscVerificationCode : null
+          },
+          regions: processedRegions,
+          gameContent: gameContent || { title: 'PUBG Mobile', description: '' },
+          reviews: {
+            items: reviewsData.reviews,
+            stats: { avgRating, reviewCount }
+          }
+        };
+        
+        setCache(cacheKey, data, 60000); // 1 dakika cache
+      }
+      
+      return NextResponse.json({ success: true, data });
+    }
+
+    // Get all products - WITH CACHE
     if (pathname === '/api/products') {
-      const products = await db.collection('products')
-        .find({ active: true })
-        .sort({ sortOrder: 1 })
-        .toArray();
+      const cacheKey = 'products_active';
+      let products = getCached(cacheKey);
+      
+      if (!products) {
+        products = await db.collection('products')
+          .find({ active: true })
+          .sort({ sortOrder: 1 })
+          .toArray();
+        setCache(cacheKey, products, 120000); // 2 dakika cache
+      }
+      
       return NextResponse.json({ success: true, data: products });
     }
 
@@ -1656,30 +1862,37 @@ export async function GET(request) {
     // 🎮 PUBG HESAP SATIŞ API - PUBLIC GET ENDPOINTS
     // ============================================
 
-    // Public: Get all active accounts
+    // Public: Get all active accounts - WITH CACHE
     if (pathname === '/api/accounts') {
-      const accounts = await db.collection('accounts')
-        .find({ active: true, status: 'available' })
-        .sort({ order: 1, createdAt: -1 })
-        .toArray();
+      const cacheKey = 'accounts_active';
+      let publicAccounts = getCached(cacheKey);
+      
+      if (!publicAccounts) {
+        const accounts = await db.collection('accounts')
+          .find({ active: true, status: 'available' })
+          .sort({ order: 1, createdAt: -1 })
+          .toArray();
 
-      // Hide sensitive info
-      const publicAccounts = accounts.map(acc => ({
-        id: acc.id,
-        title: acc.title,
-        description: acc.description,
-        price: acc.price,
-        discountPrice: acc.discountPrice,
-        discountPercent: acc.discountPercent,
-        imageUrl: acc.imageUrl,
-        legendaryMin: acc.legendaryMin,
-        legendaryMax: acc.legendaryMax,
-        level: acc.level,
-        rank: acc.rank,
-        features: acc.features,
-        order: acc.order || 0,
-        createdAt: acc.createdAt
-      }));
+        // Hide sensitive info
+        publicAccounts = accounts.map(acc => ({
+          id: acc.id,
+          title: acc.title,
+          description: acc.description,
+          price: acc.price,
+          discountPrice: acc.discountPrice,
+          discountPercent: acc.discountPercent,
+          imageUrl: acc.imageUrl,
+          legendaryMin: acc.legendaryMin,
+          legendaryMax: acc.legendaryMax,
+          level: acc.level,
+          rank: acc.rank,
+          features: acc.features,
+          order: acc.order || 0,
+          createdAt: acc.createdAt
+        }));
+        
+        setCache(cacheKey, publicAccounts, 120000); // 2 dakika cache
+      }
 
       return NextResponse.json({ success: true, data: publicAccounts });
     }
@@ -2249,9 +2462,14 @@ export async function GET(request) {
 
       const oauthSettings = await db.collection('oauth_settings').findOne({ provider: 'google' });
       
-      // Get site base URL for display
+      // Get base URL from request headers (for correct domain)
+      const host = request.headers.get('host');
+      const protocol = request.headers.get('x-forwarded-proto') || 'https';
+      const requestBaseUrl = `${protocol}://${host}`;
+      
+      // Fallback to site settings or env
       const siteSettings = await db.collection('site_settings').findOne({ active: true });
-      const baseUrl = siteSettings?.baseUrl || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const baseUrl = requestBaseUrl || siteSettings?.baseUrl || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
       return NextResponse.json({
         success: true,
@@ -2297,15 +2515,19 @@ export async function GET(request) {
 
     // Public: Get SEO Settings for frontend (limited data)
     if (pathname === '/api/seo/settings') {
-      const seoSettings = await db.collection('seo_settings').findOne({ active: true });
-
-      return NextResponse.json({
-        success: true,
-        data: {
+      const cacheKey = 'seo_settings';
+      let data = getCached(cacheKey);
+      
+      if (!data) {
+        const seoSettings = await db.collection('seo_settings').findOne({ active: true });
+        data = {
           ga4MeasurementId: seoSettings?.enableAnalytics ? seoSettings.ga4MeasurementId : null,
           gscVerificationCode: seoSettings?.enableSearchConsole ? seoSettings.gscVerificationCode : null
-        }
-      });
+        };
+        setCache(cacheKey, data, 300000); // 5 dakika cache
+      }
+
+      return NextResponse.json({ success: true, data });
     }
 
     // User: Get single order by ID
@@ -2637,13 +2859,14 @@ export async function GET(request) {
       });
     }
 
-    // Public: Get site settings (for frontend)
+    // Public: Get site settings (for frontend) - WITH CACHE
     if (pathname === '/api/site/settings') {
-      const settings = await db.collection('site_settings').findOne({ active: true });
+      const cacheKey = 'site_settings';
+      let data = getCached(cacheKey);
       
-      return NextResponse.json({
-        success: true,
-        data: {
+      if (!data) {
+        const settings = await db.collection('site_settings').findOne({ active: true });
+        data = {
           logo: settings?.logo || null,
           favicon: settings?.favicon || null,
           heroImage: settings?.heroImage || null,
@@ -2659,25 +2882,32 @@ export async function GET(request) {
           dailyBannerIcon: settings?.dailyBannerIcon || 'fire',
           dailyCountdownEnabled: settings?.dailyCountdownEnabled !== false,
           dailyCountdownLabel: settings?.dailyCountdownLabel || 'Kampanya bitimine'
-        }
-      });
+        };
+        setCache(cacheKey, data, 300000); // 5 dakika cache
+      }
+      
+      return NextResponse.json({ success: true, data });
     }
 
-    // Public: Get daily banner settings
+    // Public: Get daily banner settings - WITH CACHE
     if (pathname === '/api/site/banner') {
-      const settings = await db.collection('site_settings').findOne({ active: true });
+      const cacheKey = 'site_banner';
+      let data = getCached(cacheKey);
       
-      return NextResponse.json({
-        success: true,
-        data: {
+      if (!data) {
+        const settings = await db.collection('site_settings').findOne({ active: true });
+        data = {
           enabled: settings?.dailyBannerEnabled !== false,
           title: settings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar',
           subtitle: settings?.dailyBannerSubtitle || '',
           icon: settings?.dailyBannerIcon || 'fire',
           countdownEnabled: settings?.dailyCountdownEnabled !== false,
           countdownLabel: settings?.dailyCountdownLabel || 'Kampanya bitimine'
-        }
-      });
+        };
+        setCache(cacheKey, data, 300000); // 5 dakika cache
+      }
+      
+      return NextResponse.json({ success: true, data });
     }
 
     // Public: Get order summary for payment success page (limited data - no sensitive info)
@@ -2720,19 +2950,25 @@ export async function GET(request) {
       });
     }
 
-    // Public: Get enabled regions (for frontend filter)
+    // Public: Get enabled regions (for frontend filter) - WITH CACHE
     if (pathname === '/api/regions') {
-      let regions = await db.collection('regions').find({ enabled: true }).sort({ sortOrder: 1 }).toArray();
+      const cacheKey = 'regions_enabled';
+      let regions = getCached(cacheKey);
       
-      // If no regions exist, return default regions
-      if (regions.length === 0) {
-        regions = [
-          { id: 'tr', code: 'TR', name: 'Türkiye', enabled: true, flagImageUrl: null, sortOrder: 1 },
-          { id: 'global', code: 'GLOBAL', name: 'Küresel', enabled: true, flagImageUrl: null, sortOrder: 2 },
-          { id: 'de', code: 'DE', name: 'Almanya', enabled: true, flagImageUrl: null, sortOrder: 3 },
-          { id: 'fr', code: 'FR', name: 'Fransa', enabled: true, flagImageUrl: null, sortOrder: 4 },
-          { id: 'jp', code: 'JP', name: 'Japonya', enabled: true, flagImageUrl: null, sortOrder: 5 }
-        ];
+      if (!regions) {
+        regions = await db.collection('regions').find({ enabled: true }).sort({ sortOrder: 1 }).toArray();
+        
+        // If no regions exist, return default regions
+        if (regions.length === 0) {
+          regions = [
+            { id: 'tr', code: 'TR', name: 'Türkiye', enabled: true, flagImageUrl: null, sortOrder: 1 },
+            { id: 'global', code: 'GLOBAL', name: 'Küresel', enabled: true, flagImageUrl: null, sortOrder: 2 },
+            { id: 'de', code: 'DE', name: 'Almanya', enabled: true, flagImageUrl: null, sortOrder: 3 },
+            { id: 'fr', code: 'FR', name: 'Fransa', enabled: true, flagImageUrl: null, sortOrder: 4 },
+            { id: 'jp', code: 'JP', name: 'Japonya', enabled: true, flagImageUrl: null, sortOrder: 5 }
+          ];
+        }
+        setCache(cacheKey, regions, 300000); // 5 dakika cache
       }
       
       return NextResponse.json({ success: true, data: regions });
@@ -2766,59 +3002,44 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: regions });
     }
 
-    // Public: Get game content (description, etc.)
+    // Public: Get game content (description, etc.) - WITH CACHE
     if (pathname === '/api/content/pubg') {
-      let content = await db.collection('game_content').findOne({ game: 'pubg' });
+      const cacheKey = 'content_pubg';
+      let content = getCached(cacheKey);
       
-      // Default content if not exists
       if (!content) {
-        content = {
-          game: 'pubg',
-          title: 'PUBG Mobile',
-          description: `# PUBG Mobile UC Satın Al
-
-PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown Cash (UC), oyun içi para birimidir ve çeşitli kozmetik eşyalar, silah skinleri ve Royale Pass satın almak için kullanılır.
-
-## UC ile Neler Yapabilirsiniz?
-
-- **Royale Pass**: Her sezon yeni Royale Pass satın alarak özel ödüller kazanın
-- **Silah Skinleri**: Nadir ve efsanevi silah görünümleri
-- **Karakter Kıyafetleri**: Karakterinizi özelleştirin
-- **Araç Skinleri**: Benzersiz araç görünümleri
-- **Emote ve Danslar**: Eğlenceli hareketler
-
-## Neden Bizi Tercih Etmelisiniz?
-
-✓ **Anında Teslimat**: Ödeme onaylandıktan sonra kodunuz anında teslim edilir
-✓ **Güvenli Ödeme**: SSL şifrelemeli güvenli ödeme altyapısı
-✓ **7/24 Destek**: Her zaman yanınızdayız
-✓ **En Uygun Fiyat**: Piyasadaki en rekabetçi fiyatlar
-
-## Nasıl Kullanılır?
-
-1. Satın almak istediğiniz UC paketini seçin
-2. PUBG Mobile oyuncu ID'nizi girin
-3. Ödemenizi tamamlayın
-4. Kodunuz anında hesabınıza tanımlanır
-
----
-
-*Not: Bu site PUBG Mobile veya Tencent Games ile resmi bir bağlantısı yoktur.*`,
-          defaultRating: 5.0,
-          defaultReviewCount: 2008,
-          updatedAt: new Date()
-        };
+        content = await db.collection('game_content').findOne({ game: 'pubg' });
+        
+        // Default content if not exists
+        if (!content) {
+          content = {
+            game: 'pubg',
+            title: 'PUBG Mobile',
+            description: `PUBG Mobile UC satın alarak oyun içi avantajlar elde edin.`,
+            defaultRating: 5.0,
+            defaultReviewCount: 2008,
+            updatedAt: new Date()
+          };
+        }
+        setCache(cacheKey, content, 300000); // 5 dakika cache
       }
       
       return NextResponse.json({ success: true, data: content });
     }
 
-    // Public: Get reviews with pagination
+    // Public: Get reviews with pagination - WITH CACHE
     if (pathname === '/api/reviews') {
       const game = searchParams.get('game') || 'pubg';
       const page = parseInt(searchParams.get('page') || '1');
       const limit = parseInt(searchParams.get('limit') || '5');
       const skip = (page - 1) * limit;
+      
+      const cacheKey = `reviews_${game}_${page}_${limit}`;
+      let cachedData = getCached(cacheKey);
+      
+      if (cachedData) {
+        return NextResponse.json({ success: true, data: cachedData });
+      }
 
       const reviews = await db.collection('reviews')
         .find({ game, approved: true })
@@ -2850,23 +3071,44 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
         }
       }
 
-      return NextResponse.json({
-        success: true,
-        data: {
-          reviews,
-          pagination: {
-            page,
-            limit,
-            total: totalReviews,
-            totalPages: Math.ceil(totalReviews / limit),
-            hasMore: skip + reviews.length < totalReviews
-          },
-          stats: {
-            avgRating,
-            reviewCount: reviewCount || totalReviews
-          }
+      const data = {
+        reviews,
+        pagination: {
+          page,
+          limit,
+          total: totalReviews,
+          pages: Math.ceil(totalReviews / limit)
+        },
+        stats: {
+          avgRating,
+          reviewCount
         }
-      });
+      };
+      
+      setCache(cacheKey, data, 120000); // 2 dakika cache
+
+      return NextResponse.json({ success: true, data });
+    }
+
+    // Public: Get footer settings - WITH CACHE
+    if (pathname === '/api/footer-settings') {
+      const cacheKey = 'footer_settings';
+      let data = getCached(cacheKey);
+      
+      if (!data) {
+        const settings = await db.collection('footer_settings').findOne({ active: true });
+        data = settings || {
+          companyName: 'PINLY',
+          companyDescription: 'Güvenilir oyun kodu ve dijital ürün satış platformu',
+          socialLinks: {},
+          quickLinks: [],
+          supportLinks: [],
+          copyrightText: '© 2025 PINLY. Tüm hakları saklıdır.'
+        };
+        setCache(cacheKey, data, 300000); // 5 dakika cache
+      }
+      
+      return NextResponse.json({ success: true, data });
     }
 
     // Admin: Get all reviews (including unapproved)
@@ -2984,31 +3226,6 @@ PUBG Mobile, dünyanın en popüler battle royale oyunlarından biridir. Unknown
       }
       
       return NextResponse.json({ success: true, data: page });
-    }
-
-    // Public: Get footer settings
-    if (pathname === '/api/footer-settings') {
-      let settings = await db.collection('footer_settings').findOne({ active: true });
-      
-      // Return defaults if no settings exist
-      if (!settings) {
-        settings = {
-          quickLinks: [
-            { label: 'Giriş Yap', action: 'login' },
-            { label: 'Kayıt Ol', action: 'register' }
-          ],
-          categories: [
-            { label: 'PUBG Mobile', url: '/' }
-          ],
-          corporateLinks: []
-        };
-        
-        // Get active legal pages for corporate links
-        const legalPages = await db.collection('legal_pages').find({ isActive: true }).sort({ order: 1 }).toArray();
-        settings.corporateLinks = legalPages.map(p => ({ label: p.title, slug: p.slug }));
-      }
-      
-      return NextResponse.json({ success: true, data: settings });
     }
 
     // Admin: Get all legal pages
@@ -7738,9 +7955,14 @@ export async function POST(request) {
 
       const oauthSettings = await db.collection('oauth_settings').findOne({ provider: 'google' });
       
-      // Get site base URL for display
+      // Get base URL from request headers (for correct domain)
+      const host = request.headers.get('host');
+      const protocol = request.headers.get('x-forwarded-proto') || 'https';
+      const requestBaseUrl = `${protocol}://${host}`;
+      
+      // Fallback to site settings or env
       const siteSettings = await db.collection('site_settings').findOne({ active: true });
-      const baseUrl = siteSettings?.baseUrl || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const baseUrl = requestBaseUrl || siteSettings?.baseUrl || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
       return NextResponse.json({
         success: true,

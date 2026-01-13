@@ -1414,6 +1414,28 @@ async function sendPasswordChangedEmail(db, user) {
   return sendEmail(db, 'password_changed', user.email, content, user.id, null, null, true);
 }
 
+// Password Reset Email
+async function sendPasswordResetEmail(db, user, resetToken) {
+  const resetLink = `${BASE_URL}/reset-password?token=${resetToken}`;
+  
+  const content = {
+    subject: 'Şifre Sıfırlama Talebi',
+    title: 'Şifre Sıfırlama',
+    body: `
+      <p>Merhaba ${user.firstName || 'Değerli Müşterimiz'},</p>
+      <p>Hesabınız için şifre sıfırlama talebinde bulundunuz.</p>
+      <p>Yeni şifrenizi oluşturmak için aşağıdaki butona tıklayın:</p>
+    `,
+    warning: 'Bu link 1 saat içinde geçerliliğini yitirecektir. Bu talebi siz yapmadıysanız, bu e-postayı görmezden gelebilirsiniz.',
+    cta: {
+      text: 'Şifremi Sıfırla',
+      url: resetLink
+    }
+  };
+  
+  return sendEmail(db, 'password_reset', user.email, content, user.id, null, null, true);
+}
+
 async function sendVerificationRejectedEmail(db, order, user, rejectionReason) {
   const content = {
     subject: `Doğrulama reddedildi - ${order.id.slice(-8)}`,
@@ -5463,6 +5485,175 @@ export async function POST(request) {
             avatarUrl: user.avatarUrl || null
           }
         }
+      });
+    }
+
+    // ============================================
+    // PASSWORD RESET ENDPOINTS
+    // ============================================
+
+    // Forgot Password - Send reset email
+    if (pathname === '/api/auth/forgot-password') {
+      const body = await request.json();
+      const { email } = body;
+
+      if (!email) {
+        return NextResponse.json(
+          { success: false, error: 'E-posta adresi gereklidir' },
+          { status: 400 }
+        );
+      }
+
+      // Find user by email
+      const user = await db.collection('users').findOne({ 
+        email: email.toLowerCase().trim() 
+      });
+
+      // Always return success to prevent email enumeration
+      if (!user) {
+        return NextResponse.json({
+          success: true,
+          message: 'Eğer bu e-posta ile kayıtlı bir hesap varsa, şifre sıfırlama linki gönderildi.'
+        });
+      }
+
+      // Check if user registered with Google (no password)
+      if (user.authProvider === 'google' && !user.password) {
+        return NextResponse.json({
+          success: false,
+          error: 'Bu hesap Google ile oluşturulmuş. Lütfen Google ile giriş yapın.',
+          code: 'GOOGLE_ACCOUNT'
+        });
+      }
+
+      // Generate reset token
+      const resetToken = uuidv4();
+      const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      // Save reset token to database
+      await db.collection('password_resets').insertOne({
+        id: uuidv4(),
+        userId: user.id,
+        email: user.email,
+        token: resetToken,
+        expiresAt: resetExpires,
+        used: false,
+        createdAt: new Date()
+      });
+
+      // Send reset email
+      try {
+        await sendPasswordResetEmail(db, user, resetToken);
+      } catch (emailError) {
+        console.error('Failed to send reset email:', emailError);
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Eğer bu e-posta ile kayıtlı bir hesap varsa, şifre sıfırlama linki gönderildi.'
+      });
+    }
+
+    // Reset Password - Validate token and update password
+    if (pathname === '/api/auth/reset-password') {
+      const body = await request.json();
+      const { token, password } = body;
+
+      if (!token || !password) {
+        return NextResponse.json(
+          { success: false, error: 'Token ve yeni şifre gereklidir' },
+          { status: 400 }
+        );
+      }
+
+      if (password.length < 6) {
+        return NextResponse.json(
+          { success: false, error: 'Şifre en az 6 karakter olmalıdır' },
+          { status: 400 }
+        );
+      }
+
+      // Find valid reset token
+      const resetRecord = await db.collection('password_resets').findOne({
+        token: token,
+        used: false,
+        expiresAt: { $gt: new Date() }
+      });
+
+      if (!resetRecord) {
+        return NextResponse.json(
+          { success: false, error: 'Geçersiz veya süresi dolmuş link. Lütfen yeni bir şifre sıfırlama talebi oluşturun.' },
+          { status: 400 }
+        );
+      }
+
+      // Find user
+      const user = await db.collection('users').findOne({ id: resetRecord.userId });
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Kullanıcı bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Update user password
+      await db.collection('users').updateOne(
+        { id: user.id },
+        { 
+          $set: { 
+            password: hashedPassword,
+            updatedAt: new Date()
+          } 
+        }
+      );
+
+      // Mark token as used
+      await db.collection('password_resets').updateOne(
+        { id: resetRecord.id },
+        { 
+          $set: { 
+            used: true,
+            usedAt: new Date()
+          } 
+        }
+      );
+
+      // Send password changed confirmation email
+      try {
+        await sendPasswordChangedEmail(db, user);
+      } catch (emailError) {
+        console.error('Failed to send password changed email:', emailError);
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Şifreniz başarıyla güncellendi. Artık yeni şifrenizle giriş yapabilirsiniz.'
+      });
+    }
+
+    // Validate Reset Token (check if token is valid before showing form)
+    if (pathname === '/api/auth/validate-reset-token') {
+      const token = searchParams.get('token');
+
+      if (!token) {
+        return NextResponse.json(
+          { success: false, error: 'Token gereklidir' },
+          { status: 400 }
+        );
+      }
+
+      const resetRecord = await db.collection('password_resets').findOne({
+        token: token,
+        used: false,
+        expiresAt: { $gt: new Date() }
+      });
+
+      return NextResponse.json({
+        success: !!resetRecord,
+        valid: !!resetRecord
       });
     }
 

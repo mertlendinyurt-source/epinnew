@@ -12,11 +12,17 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleEnabled, setGoogleEnabled] = useState(false);
+  const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordSent, setForgotPasswordSent] = useState(false);
   
   // Reset tab when modal opens with a new defaultTab
   useEffect(() => {
     if (open) {
       setTab(defaultTab);
+      setForgotPasswordMode(false);
+      setForgotPasswordSent(false);
+      setForgotPasswordEmail('');
       checkGoogleOAuth();
     }
   }, [open, defaultTab]);

@@ -2464,7 +2464,9 @@ export async function GET(request) {
       
       // Get base URL from request headers (for correct domain)
       const host = request.headers.get('host');
-      const protocol = request.headers.get('x-forwarded-proto') || 'https';
+      // x-forwarded-proto can be "https, https" from multiple proxies, take first value
+      const protoHeader = request.headers.get('x-forwarded-proto') || 'https';
+      const protocol = protoHeader.split(',')[0].trim();
       const requestBaseUrl = `${protocol}://${host}`;
       
       // Fallback to site settings or env
@@ -5494,16 +5496,20 @@ export async function POST(request) {
       // Get OAuth settings from database or .env
       const oauthSettings = await db.collection('oauth_settings').findOne({ provider: 'google' });
       
+      // Get base URL from request headers (for correct domain)
+      const host = request.headers.get('host');
+      const protoHeader = request.headers.get('x-forwarded-proto') || 'https';
+      const protocol = protoHeader.split(',')[0].trim();
+      const requestBaseUrl = `${protocol}://${host}`;
+      
       let clientId, redirectUri;
       
       if (oauthSettings?.clientId) {
         clientId = decrypt(oauthSettings.clientId);
-        const siteSettings = await db.collection('site_settings').findOne({ active: true });
-        const baseUrl = siteSettings?.baseUrl || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-        redirectUri = `${baseUrl}/api/auth/google/callback`;
+        redirectUri = `${requestBaseUrl}/api/auth/google/callback`;
       } else if (process.env.GOOGLE_CLIENT_ID) {
         clientId = process.env.GOOGLE_CLIENT_ID;
-        redirectUri = process.env.GOOGLE_REDIRECT_URI || `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/google/callback`;
+        redirectUri = process.env.GOOGLE_REDIRECT_URI || `${requestBaseUrl}/api/auth/google/callback`;
       } else {
         return NextResponse.redirect(new URL('/?google_auth=error&reason=oauth_not_configured', request.url));
       }
@@ -5526,8 +5532,11 @@ export async function POST(request) {
       const code = searchParams.get('code');
       const error = searchParams.get('error');
       
-      const siteSettings = await db.collection('site_settings').findOne({ active: true });
-      const baseUrl = siteSettings?.baseUrl || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      // Get base URL from request headers (for correct domain)
+      const host = request.headers.get('host');
+      const protoHeader = request.headers.get('x-forwarded-proto') || 'https';
+      const protocol = protoHeader.split(',')[0].trim();
+      const baseUrl = `${protocol}://${host}`;
       
       if (error) {
         return NextResponse.redirect(new URL(`/?google_auth=error&reason=google_auth_denied`, baseUrl));
@@ -7957,7 +7966,9 @@ export async function POST(request) {
       
       // Get base URL from request headers (for correct domain)
       const host = request.headers.get('host');
-      const protocol = request.headers.get('x-forwarded-proto') || 'https';
+      // x-forwarded-proto can be "https, https" from multiple proxies, take first value
+      const protoHeader = request.headers.get('x-forwarded-proto') || 'https';
+      const protocol = protoHeader.split(',')[0].trim();
       const requestBaseUrl = `${protocol}://${host}`;
       
       // Fallback to site settings or env

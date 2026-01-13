@@ -5532,8 +5532,11 @@ export async function POST(request) {
       const code = searchParams.get('code');
       const error = searchParams.get('error');
       
-      const siteSettings = await db.collection('site_settings').findOne({ active: true });
-      const baseUrl = siteSettings?.baseUrl || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      // Get base URL from request headers (for correct domain)
+      const host = request.headers.get('host');
+      const protoHeader = request.headers.get('x-forwarded-proto') || 'https';
+      const protocol = protoHeader.split(',')[0].trim();
+      const baseUrl = `${protocol}://${host}`;
       
       if (error) {
         return NextResponse.redirect(new URL(`/?google_auth=error&reason=google_auth_denied`, baseUrl));

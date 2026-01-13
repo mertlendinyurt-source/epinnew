@@ -1998,7 +1998,8 @@ export async function GET(request) {
 
     // Resolve player name (Real PUBG Mobile API via RapidAPI - ID Game Checker)
     if (pathname === '/api/player/resolve') {
-      const playerId = searchParams.get('id');
+      // Accept both 'id' and 'playerId' parameters
+      const playerId = searchParams.get('playerId') || searchParams.get('id');
       if (!playerId || playerId.length < 6) {
         return NextResponse.json(
           { success: false, error: 'Geçersiz Oyuncu ID' },

@@ -153,6 +153,10 @@ export default function App() {
         if (reviews) {
           setReviews(reviews.items || [])
           setReviewStats(reviews.stats || { avgRating: 5.0, reviewCount: 0 })
+          // Set hasMore if total reviews > displayed reviews
+          const totalReviews = reviews.stats?.reviewCount || 0
+          const displayedReviews = reviews.items?.length || 0
+          setReviewsHasMore(totalReviews > displayedReviews)
         }
         
         // Site ayarlarını DOM'a uygula
@@ -525,7 +529,9 @@ export default function App() {
           setReviews(data.data.reviews)
         }
         setReviewStats(data.data.stats)
-        setReviewsHasMore(data.data.pagination.hasMore)
+        // Calculate hasMore from pagination (page < pages)
+        const pagination = data.data.pagination
+        setReviewsHasMore(pagination.page < pagination.pages)
         setReviewsPage(page)
       }
     } catch (error) {

@@ -5655,29 +5655,6 @@ export async function POST(request) {
       });
     }
 
-    // Validate Reset Token (check if token is valid before showing form)
-    if (pathname === '/api/auth/validate-reset-token') {
-      const token = searchParams.get('token');
-
-      if (!token) {
-        return NextResponse.json(
-          { success: false, error: 'Token gereklidir' },
-          { status: 400 }
-        );
-      }
-
-      const resetRecord = await db.collection('password_resets').findOne({
-        token: token,
-        used: false,
-        expiresAt: { $gt: new Date() }
-      });
-
-      return NextResponse.json({
-        success: !!resetRecord,
-        valid: !!resetRecord
-      });
-    }
-
     // ============================================
     // GOOGLE OAUTH ENDPOINTS
     // ============================================

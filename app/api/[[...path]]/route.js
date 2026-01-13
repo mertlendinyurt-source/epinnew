@@ -1414,6 +1414,28 @@ async function sendPasswordChangedEmail(db, user) {
   return sendEmail(db, 'password_changed', user.email, content, user.id, null, null, true);
 }
 
+// Password Reset Email
+async function sendPasswordResetEmail(db, user, resetToken) {
+  const resetLink = `${BASE_URL}/reset-password?token=${resetToken}`;
+  
+  const content = {
+    subject: 'Şifre Sıfırlama Talebi',
+    title: 'Şifre Sıfırlama',
+    body: `
+      <p>Merhaba ${user.firstName || 'Değerli Müşterimiz'},</p>
+      <p>Hesabınız için şifre sıfırlama talebinde bulundunuz.</p>
+      <p>Yeni şifrenizi oluşturmak için aşağıdaki butona tıklayın:</p>
+    `,
+    warning: 'Bu link 1 saat içinde geçerliliğini yitirecektir. Bu talebi siz yapmadıysanız, bu e-postayı görmezden gelebilirsiniz.',
+    cta: {
+      text: 'Şifremi Sıfırla',
+      url: resetLink
+    }
+  };
+  
+  return sendEmail(db, 'password_reset', user.email, content, user.id, null, null, true);
+}
+
 async function sendVerificationRejectedEmail(db, order, user, rejectionReason) {
   const content = {
     subject: `Doğrulama reddedildi - ${order.id.slice(-8)}`,

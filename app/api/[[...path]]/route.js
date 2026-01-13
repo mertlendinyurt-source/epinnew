@@ -2462,9 +2462,14 @@ export async function GET(request) {
 
       const oauthSettings = await db.collection('oauth_settings').findOne({ provider: 'google' });
       
-      // Get site base URL for display
+      // Get base URL from request headers (for correct domain)
+      const host = request.headers.get('host');
+      const protocol = request.headers.get('x-forwarded-proto') || 'https';
+      const requestBaseUrl = `${protocol}://${host}`;
+      
+      // Fallback to site settings or env
       const siteSettings = await db.collection('site_settings').findOne({ active: true });
-      const baseUrl = siteSettings?.baseUrl || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const baseUrl = requestBaseUrl || siteSettings?.baseUrl || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
       return NextResponse.json({
         success: true,
@@ -7950,9 +7955,14 @@ export async function POST(request) {
 
       const oauthSettings = await db.collection('oauth_settings').findOne({ provider: 'google' });
       
-      // Get site base URL for display
+      // Get base URL from request headers (for correct domain)
+      const host = request.headers.get('host');
+      const protocol = request.headers.get('x-forwarded-proto') || 'https';
+      const requestBaseUrl = `${protocol}://${host}`;
+      
+      // Fallback to site settings or env
       const siteSettings = await db.collection('site_settings').findOne({ active: true });
-      const baseUrl = siteSettings?.baseUrl || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const baseUrl = requestBaseUrl || siteSettings?.baseUrl || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
       return NextResponse.json({
         success: true,

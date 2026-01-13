@@ -153,6 +153,10 @@ export default function App() {
         if (reviews) {
           setReviews(reviews.items || [])
           setReviewStats(reviews.stats || { avgRating: 5.0, reviewCount: 0 })
+          // Set hasMore if total reviews > displayed reviews
+          const totalReviews = reviews.stats?.reviewCount || 0
+          const displayedReviews = reviews.items?.length || 0
+          setReviewsHasMore(totalReviews > displayedReviews)
         }
         
         // Site ayarlarını DOM'a uygula

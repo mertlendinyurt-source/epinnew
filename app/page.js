@@ -604,7 +604,7 @@ export default function App() {
       const link = document.querySelector("link[rel*='icon']") || document.createElement('link')
       link.type = 'image/x-icon'
       link.rel = 'icon'
-      link.href = `${settings.favicon}?v=${Date.now()}` // Cache busting
+      link.href = settings.favicon // Cache busting removed - caused flickering
       document.getElementsByTagName('head')[0].appendChild(link)
     }
   }

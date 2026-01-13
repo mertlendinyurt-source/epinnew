@@ -2464,7 +2464,9 @@ export async function GET(request) {
       
       // Get base URL from request headers (for correct domain)
       const host = request.headers.get('host');
-      const protocol = request.headers.get('x-forwarded-proto') || 'https';
+      // x-forwarded-proto can be "https, https" from multiple proxies, take first value
+      const protoHeader = request.headers.get('x-forwarded-proto') || 'https';
+      const protocol = protoHeader.split(',')[0].trim();
       const requestBaseUrl = `${protocol}://${host}`;
       
       // Fallback to site settings or env
@@ -7957,7 +7959,9 @@ export async function POST(request) {
       
       // Get base URL from request headers (for correct domain)
       const host = request.headers.get('host');
-      const protocol = request.headers.get('x-forwarded-proto') || 'https';
+      // x-forwarded-proto can be "https, https" from multiple proxies, take first value
+      const protoHeader = request.headers.get('x-forwarded-proto') || 'https';
+      const protocol = protoHeader.split(',')[0].trim();
       const requestBaseUrl = `${protocol}://${host}`;
       
       // Fallback to site settings or env

@@ -3105,18 +3105,6 @@ export async function GET(request) {
       
       return NextResponse.json({ success: true, data });
     }
-            limit,
-            total: totalReviews,
-            totalPages: Math.ceil(totalReviews / limit),
-            hasMore: skip + reviews.length < totalReviews
-          },
-          stats: {
-            avgRating,
-            reviewCount: reviewCount || totalReviews
-          }
-        }
-      });
-    }
 
     // Admin: Get all reviews (including unapproved)
     if (pathname === '/api/admin/reviews') {

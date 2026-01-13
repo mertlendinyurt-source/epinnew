@@ -945,7 +945,7 @@ export default function App() {
             <a href="/" className="flex items-center gap-2">
               {siteSettings?.logo ? (
                 <img 
-                  src={`${siteSettings.logo}?v=${Date.now()}`}
+                  src={siteSettings.logo}
                   alt={siteSettings?.siteName || 'Logo'} 
                   className="h-8 md:h-10 w-auto object-contain"
                 />

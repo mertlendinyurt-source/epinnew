@@ -8,7 +8,6 @@ export default function CrispChat() {
     window.$crisp = [];
     window.CRISP_WEBSITE_ID = "a12ff9e6-9855-45b3-8d75-227252b9c05d";
     
-    // Script zaten yüklü mü kontrol et
     if (!document.getElementById('crisp-script')) {
       const script = document.createElement('script');
       script.id = 'crisp-script';
@@ -53,42 +52,39 @@ export default function CrispChat() {
       document.body.appendChild(label);
     };
     
-    // Crisp butonu görünür mü kontrol et (DOM bazlı)
+    // Crisp butonu görünür mü
     const isCrispButtonVisible = () => {
-      // Tüm olası Crisp buton seçicilerini kontrol et
-      const selectors = [
-        '.crisp-client .cc-1brb6 .cc-1yy0g',
-        '.crisp-client .cc-kxkl',
-        '.crisp-client [data-id="crisp-chatbox"]',
-        '.crisp-client'
-      ];
+      const crispClient = document.querySelector('.crisp-client');
+      if (!crispClient) return false;
       
-      for (const selector of selectors) {
-        const element = document.querySelector(selector);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          const style = window.getComputedStyle(element);
-          
-          // Element görünür mü kontrol et
-          const isVisible = 
-            style.display !== 'none' && 
-            style.visibility !== 'hidden' && 
-            style.opacity !== '0' &&
-            rect.width > 0 && 
-            rect.height > 0;
-          
-          if (isVisible) {
-            return true;
-          }
+      // Crisp client'ın style'ını kontrol et
+      const style = window.getComputedStyle(crispClient);
+      if (style.display === 'none' || style.visibility === 'hidden') {
+        return false;
+      }
+      
+      // İç buton elementini kontrol et
+      const button = crispClient.querySelector('[class*="cc-"] > [class*="cc-"]');
+      if (button) {
+        const btnStyle = window.getComputedStyle(button);
+        if (btnStyle.display === 'none' || btnStyle.visibility === 'hidden') {
+          return false;
         }
       }
       
-      return false;
+      return true;
     };
     
     // Etiket görünürlüğünü güncelle
     const updateLabel = () => {
       const label = document.getElementById('crisp-support-label');
+      
+      // Etiket yoksa oluştur
+      if (!label && window.innerWidth < 768) {
+        createMobileLabel();
+        return setTimeout(updateLabel, 100);
+      }
+      
       if (!label) return;
       
       // Masaüstünde gizle
@@ -97,13 +93,14 @@ export default function CrispChat() {
         return;
       }
       
-      // Crisp butonu görünür değilse etiketi de gizle
-      if (!isCrispButtonVisible()) {
+      // Crisp görünür değilse gizle
+      const crispVisible = isCrispButtonVisible();
+      if (!crispVisible) {
         label.style.display = 'none';
         return;
       }
       
-      // Chat açık mı kontrol et
+      // Chat açık mı
       let isOpen = false;
       try {
         if (window.$crisp && window.$crisp.is) {
@@ -111,7 +108,47 @@ export default function CrispChat() {
         }
       } catch (e) {}
       
+      // Göster veya gizle
       label.style.display = isOpen ? 'none' : 'flex';
+    };
+    
+    // MutationObserver - Crisp DOM değişikliklerini izle
+    let observer = null;
+    const setupObserver = () => {
+      const crispClient = document.querySelector('.crisp-client');
+      if (!crispClient || observer) return;
+      
+      observer = new MutationObserver(() => {
+        setTimeout(updateLabel, 50);
+      });
+      
+      observer.observe(crispClient, {
+        attributes: true,
+        attributeFilter: ['style', 'class'],
+        childList: true,
+        subtree: true
+      });
+    };
+    
+    // Body'yi izle - Crisp eklendiğinde
+    let bodyObserver = null;
+    const setupBodyObserver = () => {
+      bodyObserver = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          if (mutation.addedNodes.length) {
+            const crisp = document.querySelector('.crisp-client');
+            if (crisp) {
+              setupObserver();
+              updateLabel();
+            }
+          }
+        }
+      });
+      
+      bodyObserver.observe(document.body, {
+        childList: true,
+        subtree: false
+      });
     };
     
     // Crisp event'leri
@@ -134,43 +171,42 @@ export default function CrispChat() {
     const init = () => {
       createMobileLabel();
       setupEvents();
+      setupBodyObserver();
+      setupObserver();
       updateLabel();
     };
     
-    // 2 saniye sonra başlat
-    const initTimer = setTimeout(init, 2000);
+    // 1.5 saniye sonra başlat
+    const initTimer = setTimeout(init, 1500);
     
-    // Her 2 saniyede kontrol (daha sık)
+    // Yedek: Her 1 saniyede kontrol
     const checkInterval = setInterval(() => {
       if (window.innerWidth < 768) {
-        if (!document.getElementById('crisp-support-label')) {
-          createMobileLabel();
-        }
         updateLabel();
+        setupObserver(); // Observer'ı tekrar kur (Crisp yeniden yüklendiyse)
       }
-    }, 2000);
+    }, 1000);
     
-    // Resize event
-    const handleResize = () => updateLabel();
-    window.addEventListener('resize', handleResize);
+    // Resize
+    window.addEventListener('resize', updateLabel);
     
     // Cleanup
     return () => {
       clearTimeout(initTimer);
       clearInterval(checkInterval);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', updateLabel);
+      if (observer) observer.disconnect();
+      if (bodyObserver) bodyObserver.disconnect();
     };
   }, []);
   
   return (
     <style jsx global>{`
-      /* Masaüstü */
       .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf {
         width: 54px !important;
         height: 54px !important;
       }
       
-      /* Mobil */
       @media (max-width: 768px) {
         .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf {
           width: 46px !important;

@@ -26,7 +26,7 @@ export default function CrispChat() {
       label.id = 'crisp-support-label';
       label.innerHTML = '💬 Destek';
       Object.assign(label.style, {
-        display: 'flex',
+        display: 'none', // Başlangıçta gizli
         position: 'fixed',
         bottom: '65px',
         right: '10px',
@@ -53,16 +53,50 @@ export default function CrispChat() {
       document.body.appendChild(label);
     };
     
+    // Crisp görünür mü kontrol et
+    const isCrispVisible = () => {
+      try {
+        // Crisp widget DOM'da var mı kontrol et
+        const crispWidget = document.querySelector('.crisp-client');
+        if (!crispWidget) return false;
+        
+        // Crisp gizli modda mı kontrol et
+        if (window.$crisp && window.$crisp.is) {
+          // chat:hidden true ise Crisp gizli modda
+          const isHidden = window.$crisp.is("chat:hidden");
+          if (isHidden) return false;
+        }
+        
+        // Widget görünür mü (display:none veya visibility:hidden değil)
+        const style = window.getComputedStyle(crispWidget);
+        if (style.display === 'none' || style.visibility === 'hidden') {
+          return false;
+        }
+        
+        return true;
+      } catch (e) {
+        return false;
+      }
+    };
+    
     // Etiket görünürlüğünü güncelle
     const updateLabel = () => {
       const label = document.getElementById('crisp-support-label');
       if (!label) return;
       
+      // Masaüstünde her zaman gizle
       if (window.innerWidth >= 768) {
         label.style.display = 'none';
         return;
       }
       
+      // Crisp görünür değilse etiketi de gizle
+      if (!isCrispVisible()) {
+        label.style.display = 'none';
+        return;
+      }
+      
+      // Chat açık mı kontrol et
       let isOpen = false;
       try {
         if (window.$crisp && window.$crisp.is) {
@@ -84,10 +118,18 @@ export default function CrispChat() {
         }]);
         
         window.$crisp.push(["on", "chat:closed", () => {
-          if (window.innerWidth < 768) {
-            const label = document.getElementById('crisp-support-label');
-            if (label) label.style.display = 'flex';
-          }
+          updateLabel(); // Crisp görünürlüğünü de kontrol et
+        }]);
+        
+        // Crisp gizlendiğinde
+        window.$crisp.push(["on", "chat:hidden", () => {
+          const label = document.getElementById('crisp-support-label');
+          if (label) label.style.display = 'none';
+        }]);
+        
+        // Crisp gösterildiğinde
+        window.$crisp.push(["on", "chat:shown", () => {
+          updateLabel();
         }]);
       } catch (e) {}
     };
@@ -102,7 +144,7 @@ export default function CrispChat() {
     // 2 saniye sonra başlat
     const initTimer = setTimeout(init, 2000);
     
-    // Her 3 saniyede kontrol
+    // Her 3 saniyede kontrol (Crisp gizli modunu da kontrol eder)
     const checkInterval = setInterval(() => {
       if (window.innerWidth < 768) {
         if (!document.getElementById('crisp-support-label')) {

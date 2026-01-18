@@ -120,6 +120,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         />
         {/* End Google Tag Manager */}
         
+        {/* Crisp Chat - Head'de yükle */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.$crisp=[];window.CRISP_WEBSITE_ID="a12ff9e6-9855-45b3-8d75-227252b9c05d";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();`
+          }}
+        />
+        
         {/* Schema.org JSON-LD */}
         <script
           type="application/ld+json"
@@ -156,110 +163,126 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         
         {children}
 
-        {/* Crisp Chat - Güvenilir yükleme */}
+        {/* Mobil destek etiketi - Sürekli kontrol */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              window.$crisp=[];
-              window.CRISP_WEBSITE_ID="a12ff9e6-9855-45b3-8d75-227252b9c05d";
-              
-              // Crisp yüklendiğinde çalışacak
-              window.CRISP_READY_TRIGGER = function() {
-                window.crispLoaded = true;
-                initMobileLabel();
-              };
-              
-              // Crisp'i yükle
-              (function(){
-                var d=document;
-                var s=d.createElement("script");
-                s.src="https://client.crisp.chat/l.js";
-                s.async=1;
-                s.onload = function() {
-                  // Script yüklendi, Crisp hazır olana kadar bekle
-                  checkCrispReady();
-                };
-                d.getElementsByTagName("head")[0].appendChild(s);
-              })();
-              
-              // Crisp'in hazır olup olmadığını kontrol et
-              function checkCrispReady() {
-                var attempts = 0;
-                var maxAttempts = 30; // 15 saniye max bekle
+              (function() {
+                // Mobil değilse çık
+                function isMobile() {
+                  return window.innerWidth < 768;
+                }
                 
-                var checker = setInterval(function() {
-                  attempts++;
+                // Etiket oluştur
+                function createLabel() {
+                  if (document.getElementById('mobile-support-label')) return;
                   
-                  // Crisp DOM'da var mı kontrol et
-                  var crispElement = document.querySelector('.crisp-client');
+                  var label = document.createElement('div');
+                  label.id = 'mobile-support-label';
+                  label.innerHTML = '💬 Destek';
+                  label.style.cssText = 'display:none;position:fixed;bottom:65px;right:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;box-shadow:0 2px 10px rgba(102,126,234,0.4);z-index:999998;cursor:pointer;align-items:center;gap:4px;font-family:system-ui,sans-serif;';
                   
-                  if (crispElement || window.crispLoaded || attempts >= maxAttempts) {
-                    clearInterval(checker);
-                    if (crispElement || window.crispLoaded) {
-                      initMobileLabel();
+                  label.onclick = function() {
+                    if (window.$crisp) {
+                      window.$crisp.push(["do", "chat:open"]);
                     }
-                  }
-                }, 500);
-              }
-              
-              // Mobil etiket oluştur
-              function initMobileLabel() {
-                // Sadece mobilde
-                if (window.innerWidth >= 768) return;
+                  };
+                  
+                  document.body.appendChild(label);
+                  return label;
+                }
                 
-                // Zaten varsa ekleme
-                if (document.getElementById('crisp-mobile-label')) return;
-                
-                // Küçük etiket oluştur
-                var label = document.createElement('div');
-                label.id = 'crisp-mobile-label';
-                label.innerHTML = '💬 Destek';
-                label.onclick = function() {
-                  if (window.$crisp && $crisp.push) {
-                    $crisp.push(["do", "chat:open"]);
+                // Görünürlük güncelle
+                function updateLabelVisibility() {
+                  var label = document.getElementById('mobile-support-label');
+                  if (!label) label = createLabel();
+                  if (!label) return;
+                  
+                  // Mobil değilse gizle
+                  if (!isMobile()) {
+                    label.style.display = 'none';
+                    return;
                   }
-                  label.style.display = 'none';
-                };
-                document.body.appendChild(label);
+                  
+                  // Chat açık mı kontrol et
+                  var chatOpen = false;
+                  try {
+                    if (window.$crisp && window.$crisp.is) {
+                      chatOpen = window.$crisp.is("chat:opened");
+                    }
+                  } catch(e) {}
+                  
+                  label.style.display = chatOpen ? 'none' : 'flex';
+                }
                 
                 // Crisp olaylarını dinle
-                if (window.$crisp && $crisp.push) {
-                  $crisp.push(["on", "chat:opened", function() {
-                    var lbl = document.getElementById('crisp-mobile-label');
-                    if (lbl) lbl.style.display = 'none';
-                  }]);
-                  $crisp.push(["on", "chat:closed", function() {
-                    var lbl = document.getElementById('crisp-mobile-label');
-                    if (lbl) lbl.style.display = 'flex';
-                  }]);
+                function setupCrispEvents() {
+                  if (!window.$crisp || !window.$crisp.push) return;
+                  
+                  try {
+                    window.$crisp.push(["on", "chat:opened", function() {
+                      var label = document.getElementById('mobile-support-label');
+                      if (label) label.style.display = 'none';
+                    }]);
+                    
+                    window.$crisp.push(["on", "chat:closed", function() {
+                      if (isMobile()) {
+                        var label = document.getElementById('mobile-support-label');
+                        if (label) label.style.display = 'flex';
+                      }
+                    }]);
+                  } catch(e) {}
                 }
-              }
-              
-              // Sayfa yüklendiğinde de kontrol et (yedek)
-              if (document.readyState === 'complete') {
-                setTimeout(checkCrispReady, 1000);
-              } else {
-                window.addEventListener('load', function() {
-                  setTimeout(checkCrispReady, 1000);
+                
+                // Başlat
+                function init() {
+                  createLabel();
+                  setupCrispEvents();
+                  updateLabelVisibility();
+                }
+                
+                // Sayfa yüklenince başlat
+                if (document.readyState === 'loading') {
+                  document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(init, 1500);
+                  });
+                } else {
+                  setTimeout(init, 1500);
+                }
+                
+                // Her 3 saniyede kontrol et (yedek)
+                setInterval(function() {
+                  if (isMobile()) {
+                    updateLabelVisibility();
+                  }
+                }, 3000);
+                
+                // Resize olduğunda güncelle
+                window.addEventListener('resize', updateLabelVisibility);
+                
+                // Sayfa görünür olduğunda güncelle
+                document.addEventListener('visibilitychange', function() {
+                  if (!document.hidden) {
+                    setTimeout(updateLabelVisibility, 500);
+                  }
                 });
-              }
+              })();
             `
           }}
         />
         
-        {/* Crisp ve etiket stilleri */}
+        {/* Crisp stilleri */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
-              /* Masaüstü - Normal Crisp */
+              /* Masaüstü */
               .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf {
                 width: 54px !important;
                 height: 54px !important;
               }
               
-              /* MOBİL */
+              /* Mobil */
               @media (max-width: 768px) {
-                /* Crisp butonunu küçült */
                 .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf {
                   width: 46px !important;
                   height: 46px !important;
@@ -267,7 +290,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                   right: 12px !important;
                 }
                 
-                /* Popup mesajını mobilde gizle */
+                /* Popup gizle */
                 .crisp-client .cc-1brb6 .cc-unoo,
                 .crisp-client .cc-1brb6 .cc-nsge {
                   display: none !important;
@@ -282,42 +305,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                   max-height: 60vh !important;
                   border-radius: 12px !important;
                 }
-              }
-              
-              /* Mobil "Destek" etiketi */
-              #crisp-mobile-label {
-                display: none;
-                position: fixed;
-                bottom: 65px;
-                right: 8px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 6px 12px;
-                border-radius: 20px;
-                font-size: 12px;
-                font-weight: 600;
-                box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
-                z-index: 999998;
-                cursor: pointer;
-                align-items: center;
-                gap: 4px;
-                animation: pulse-label 2s infinite;
-              }
-              
-              @media (max-width: 768px) {
-                #crisp-mobile-label {
-                  display: flex;
-                }
-              }
-              
-              @keyframes pulse-label {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.05); }
-              }
-              
-              /* Hover efekti */
-              .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf:hover {
-                transform: scale(1.05);
               }
             `
           }}

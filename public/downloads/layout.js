@@ -161,18 +161,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             __html: `
               window.$crisp=[];
               window.CRISP_WEBSITE_ID="a12ff9e6-9855-45b3-8d75-227252b9c05d";
-              
-              // Crisp ayarları - küçük ve mobil uyumlu
-              window.CRISP_READY_TRIGGER = function() {
-                // Chat kutusunu küçült
-                $crisp.push(["config", "container:index", [1]]);
-                
-                // Mobilde daha küçük göster
-                if (window.innerWidth < 768) {
-                  $crisp.push(["config", "position:reverse", [true]]);
-                }
-              };
-              
               (function(){
                 var d=document;
                 var s=d.createElement("script");
@@ -184,7 +172,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           }}
         />
         
-        {/* Crisp Chat Stilleri - Küçük ve şık */}
+        {/* Crisp Chat Stilleri - Küçük ve mobil uyumlu */}
         <style
           dangerouslySetInnerHTML={{
             __html: `

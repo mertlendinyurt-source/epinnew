@@ -154,6 +154,72 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {/* End Google Tag Manager (noscript) */}
         
         {children}
+
+        {/* Crisp Chat - Mobil uyumlu, küçük boyut */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.$crisp=[];
+              window.CRISP_WEBSITE_ID="a12ff9e6-9855-45b3-8d75-227252b9c05d";
+              
+              // Crisp ayarları - küçük ve mobil uyumlu
+              window.CRISP_READY_TRIGGER = function() {
+                // Chat kutusunu küçült
+                $crisp.push(["config", "container:index", [1]]);
+                
+                // Mobilde daha küçük göster
+                if (window.innerWidth < 768) {
+                  $crisp.push(["config", "position:reverse", [true]]);
+                }
+              };
+              
+              (function(){
+                var d=document;
+                var s=d.createElement("script");
+                s.src="https://client.crisp.chat/l.js";
+                s.async=1;
+                d.getElementsByTagName("head")[0].appendChild(s);
+              })();
+            `
+          }}
+        />
+        
+        {/* Crisp Chat Stilleri - Küçük ve şık */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              /* Crisp chat butonunu küçült */
+              .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf {
+                width: 54px !important;
+                height: 54px !important;
+              }
+              
+              /* Mobilde daha da küçük */
+              @media (max-width: 768px) {
+                .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf {
+                  width: 48px !important;
+                  height: 48px !important;
+                  bottom: 15px !important;
+                  right: 15px !important;
+                }
+                
+                /* Chat penceresi mobilde tam ekran olmasın */
+                .crisp-client .cc-1brb6[data-full-view="true"] .cc-1yy0g {
+                  bottom: 70px !important;
+                  right: 10px !important;
+                  left: 10px !important;
+                  width: auto !important;
+                  max-height: 70vh !important;
+                }
+              }
+              
+              /* Hover efekti */
+              .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf:hover {
+                transform: scale(1.05);
+              }
+            `
+          }}
+        />
       </body>
     </html>
   )

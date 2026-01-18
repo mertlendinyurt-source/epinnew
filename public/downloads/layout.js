@@ -155,22 +155,35 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         
         {children}
 
-        {/* Crisp Chat - Mobil uyumlu, küçük boyut + Karşılama mesajı */}
+        {/* Crisp Chat - Mobilde küçük, masaüstünde normal */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               window.$crisp=[];
               window.CRISP_WEBSITE_ID="a12ff9e6-9855-45b3-8d75-227252b9c05d";
               
-              // Crisp yüklendiğinde karşılama mesajı göster
+              // Crisp yüklendiğinde ayarları uygula
               window.CRISP_READY_TRIGGER = function() {
-                // 3 saniye sonra karşılama mesajı göster
-                setTimeout(function() {
-                  // Sadece chat açık değilse göster
-                  if (!$crisp.is("chat:opened")) {
-                    $crisp.push(["do", "message:show", ["text", "Merhaba! 👋 Yardım için buradayız. Size nasıl yardımcı olabiliriz?"]]);
-                  }
-                }, 3000);
+                var isMobile = window.innerWidth < 768;
+                
+                if (isMobile) {
+                  // MOBİL: Popup mesajı gösterme, sadece küçük buton + badge
+                  // Unread count ile bildirim göster (küçük kırmızı nokta)
+                  $crisp.push(["do", "chat:hide"]);
+                  $crisp.push(["config", "hide:on:mobile", false]);
+                  
+                  // 2 saniye sonra sadece badge göster
+                  setTimeout(function() {
+                    $crisp.push(["do", "chat:show"]);
+                  }, 2000);
+                } else {
+                  // MASAÜSTÜ: 3 saniye sonra karşılama mesajı göster
+                  setTimeout(function() {
+                    if (!$crisp.is("chat:opened")) {
+                      $crisp.push(["do", "message:show", ["text", "Merhaba! 👋 Yardım için buradayız."]]);
+                    }
+                  }, 3000);
+                }
               };
               
               (function(){
@@ -184,32 +197,48 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           }}
         />
         
-        {/* Crisp Chat Stilleri - Küçük ve mobil uyumlu */}
+        {/* Crisp Chat Stilleri - Mobilde çok küçük */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
-              /* Crisp chat butonunu küçült */
+              /* Masaüstü - Normal boyut */
               .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf {
                 width: 54px !important;
                 height: 54px !important;
               }
               
-              /* Mobilde daha da küçük */
+              /* MOBİL - Çok küçük buton */
               @media (max-width: 768px) {
+                /* Chat butonu çok küçük */
                 .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf {
-                  width: 48px !important;
-                  height: 48px !important;
-                  bottom: 15px !important;
-                  right: 15px !important;
+                  width: 44px !important;
+                  height: 44px !important;
+                  bottom: 12px !important;
+                  right: 12px !important;
                 }
                 
-                /* Chat penceresi mobilde tam ekran olmasın */
+                /* Popup mesajını gizle (mobilde) */
+                .crisp-client .cc-1brb6 .cc-unoo {
+                  display: none !important;
+                }
+                
+                /* Chat penceresi açıldığında */
                 .crisp-client .cc-1brb6[data-full-view="true"] .cc-1yy0g {
-                  bottom: 70px !important;
-                  right: 10px !important;
-                  left: 10px !important;
+                  bottom: 60px !important;
+                  right: 8px !important;
+                  left: 8px !important;
                   width: auto !important;
-                  max-height: 70vh !important;
+                  max-height: 65vh !important;
+                  border-radius: 12px !important;
+                }
+                
+                /* Unread badge - küçük kırmızı nokta */
+                .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf .cc-7doi {
+                  width: 12px !important;
+                  height: 12px !important;
+                  font-size: 0 !important;
+                  top: -2px !important;
+                  right: -2px !important;
                 }
               }
               

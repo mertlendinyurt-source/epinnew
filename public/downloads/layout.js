@@ -155,12 +155,24 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         
         {children}
 
-        {/* Crisp Chat - Mobil uyumlu, küçük boyut */}
+        {/* Crisp Chat - Mobil uyumlu, küçük boyut + Karşılama mesajı */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               window.$crisp=[];
               window.CRISP_WEBSITE_ID="a12ff9e6-9855-45b3-8d75-227252b9c05d";
+              
+              // Crisp yüklendiğinde karşılama mesajı göster
+              window.CRISP_READY_TRIGGER = function() {
+                // 3 saniye sonra karşılama mesajı göster
+                setTimeout(function() {
+                  // Sadece chat açık değilse göster
+                  if (!$crisp.is("chat:opened")) {
+                    $crisp.push(["do", "message:show", ["text", "Merhaba! 👋 Yardım için buradayız. Size nasıl yardımcı olabiliriz?"]]);
+                  }
+                }, 3000);
+              };
+              
               (function(){
                 var d=document;
                 var s=d.createElement("script");

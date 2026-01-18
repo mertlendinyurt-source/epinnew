@@ -137,6 +137,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {/* Preconnect for performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://client.crisp.chat" />
         
         {/* Canonical URL */}
         <link rel="canonical" href={BASE_URL} />
@@ -155,56 +156,93 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         
         {children}
 
-        {/* Crisp Chat - Basit entegrasyon */}
+        {/* Crisp Chat - Güvenilir yükleme */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               window.$crisp=[];
               window.CRISP_WEBSITE_ID="a12ff9e6-9855-45b3-8d75-227252b9c05d";
+              
+              // Crisp yüklendiğinde çalışacak
+              window.CRISP_READY_TRIGGER = function() {
+                window.crispLoaded = true;
+                initMobileLabel();
+              };
+              
+              // Crisp'i yükle
               (function(){
                 var d=document;
                 var s=d.createElement("script");
                 s.src="https://client.crisp.chat/l.js";
                 s.async=1;
+                s.onload = function() {
+                  // Script yüklendi, Crisp hazır olana kadar bekle
+                  checkCrispReady();
+                };
                 d.getElementsByTagName("head")[0].appendChild(s);
               })();
-            `
-          }}
-        />
-        
-        {/* Mobil için küçük "Canlı Destek" etiketi */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              // Sayfa yüklendiğinde küçük etiket ekle
-              document.addEventListener('DOMContentLoaded', function() {
-                setTimeout(function() {
-                  // Mobil kontrol
-                  if (window.innerWidth < 768) {
-                    // Küçük etiket oluştur
-                    var label = document.createElement('div');
-                    label.id = 'crisp-mobile-label';
-                    label.innerHTML = '💬 Destek';
-                    label.onclick = function() {
-                      if (window.$crisp) {
-                        $crisp.push(["do", "chat:open"]);
-                      }
-                      label.style.display = 'none';
-                    };
-                    document.body.appendChild(label);
-                    
-                    // Crisp açıldığında etiketi gizle
-                    if (window.$crisp) {
-                      $crisp.push(["on", "chat:opened", function() {
-                        label.style.display = 'none';
-                      }]);
-                      $crisp.push(["on", "chat:closed", function() {
-                        label.style.display = 'flex';
-                      }]);
+              
+              // Crisp'in hazır olup olmadığını kontrol et
+              function checkCrispReady() {
+                var attempts = 0;
+                var maxAttempts = 30; // 15 saniye max bekle
+                
+                var checker = setInterval(function() {
+                  attempts++;
+                  
+                  // Crisp DOM'da var mı kontrol et
+                  var crispElement = document.querySelector('.crisp-client');
+                  
+                  if (crispElement || window.crispLoaded || attempts >= maxAttempts) {
+                    clearInterval(checker);
+                    if (crispElement || window.crispLoaded) {
+                      initMobileLabel();
                     }
                   }
-                }, 2000);
-              });
+                }, 500);
+              }
+              
+              // Mobil etiket oluştur
+              function initMobileLabel() {
+                // Sadece mobilde
+                if (window.innerWidth >= 768) return;
+                
+                // Zaten varsa ekleme
+                if (document.getElementById('crisp-mobile-label')) return;
+                
+                // Küçük etiket oluştur
+                var label = document.createElement('div');
+                label.id = 'crisp-mobile-label';
+                label.innerHTML = '💬 Destek';
+                label.onclick = function() {
+                  if (window.$crisp && $crisp.push) {
+                    $crisp.push(["do", "chat:open"]);
+                  }
+                  label.style.display = 'none';
+                };
+                document.body.appendChild(label);
+                
+                // Crisp olaylarını dinle
+                if (window.$crisp && $crisp.push) {
+                  $crisp.push(["on", "chat:opened", function() {
+                    var lbl = document.getElementById('crisp-mobile-label');
+                    if (lbl) lbl.style.display = 'none';
+                  }]);
+                  $crisp.push(["on", "chat:closed", function() {
+                    var lbl = document.getElementById('crisp-mobile-label');
+                    if (lbl) lbl.style.display = 'flex';
+                  }]);
+                }
+              }
+              
+              // Sayfa yüklendiğinde de kontrol et (yedek)
+              if (document.readyState === 'complete') {
+                setTimeout(checkCrispReady, 1000);
+              } else {
+                window.addEventListener('load', function() {
+                  setTimeout(checkCrispReady, 1000);
+                });
+              }
             `
           }}
         />

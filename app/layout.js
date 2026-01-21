@@ -2,6 +2,10 @@ import './globals.css'
 
 const BASE_URL = 'https://pinly.com.tr';
 
+// Admin panelden yüklenen favicon yolu
+// Bu değer cPanel'de değiştirilebilir
+const FAVICON_PATH = '/uploads/favicon/2bbe8446-e4c4-47bd-9cf1-1d5eedea2b32.png';
+
 // Comprehensive SEO metadata
 export const metadata = {
   metadataBase: new URL(BASE_URL),
@@ -69,10 +73,44 @@ export const metadata = {
     google: '', // Will be injected dynamically
   },
   
-  // Icons
+  // Icons - Google Search için kapsamlı ayarlar
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    // Standard favicon
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: FAVICON_PATH, type: 'image/png', sizes: '32x32' },
+      { url: FAVICON_PATH, type: 'image/png', sizes: '16x16' },
+      { url: FAVICON_PATH, type: 'image/png', sizes: '192x192' },
+      { url: FAVICON_PATH, type: 'image/png', sizes: '512x512' },
+    ],
+    // Apple Touch Icon
+    apple: [
+      { url: FAVICON_PATH, sizes: '180x180', type: 'image/png' },
+    ],
+    // Other icons
+    other: [
+      {
+        rel: 'mask-icon',
+        url: FAVICON_PATH,
+        color: '#f97316',
+      },
+    ],
+  },
+  
+  // Web App Manifest
+  manifest: '/manifest.json',
+  
+  // Theme Color
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f97316' },
+    { media: '(prefers-color-scheme: dark)', color: '#f97316' },
+  ],
+  
+  // Apple Web App
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'PINLY',
   },
 }
 

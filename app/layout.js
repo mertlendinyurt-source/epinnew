@@ -2,9 +2,13 @@ import './globals.css'
 
 const BASE_URL = 'https://pinly.com.tr';
 
+// ============================================================================
+// FAVICON AYARLARI - CPANEL'DE BU DOSYAYI DEĞİŞTİRİN
+// ============================================================================
 // Admin panelden yüklenen favicon yolu
-// Bu değer cPanel'de değiştirilebilir
+// cPanel'de bu değeri güncelleyin: /uploads/favicon/DOSYA_ADI.png
 const FAVICON_PATH = '/uploads/favicon/2bbe8446-e4c4-47bd-9cf1-1d5eedea2b32.png';
+// ============================================================================
 
 // Comprehensive SEO metadata
 export const metadata = {
@@ -55,7 +59,7 @@ export const metadata = {
     images: [`${BASE_URL}/og-image.png`],
   },
   
-  // Robots
+  // Robots - Google için optimize edilmiş
   robots: {
     index: true,
     follow: true,
@@ -73,20 +77,26 @@ export const metadata = {
     google: '', // Will be injected dynamically
   },
   
-  // Icons - Google Search için kapsamlı ayarlar
+  // Icons - Google Search Console için kapsamlı ayarlar
   icons: {
-    // Standard favicon
+    // Standard favicon - Google bu sırayla kontrol eder
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
+      { url: FAVICON_PATH, type: 'image/png', sizes: '48x48' },
       { url: FAVICON_PATH, type: 'image/png', sizes: '32x32' },
       { url: FAVICON_PATH, type: 'image/png', sizes: '16x16' },
       { url: FAVICON_PATH, type: 'image/png', sizes: '192x192' },
       { url: FAVICON_PATH, type: 'image/png', sizes: '512x512' },
     ],
-    // Apple Touch Icon
+    // Apple Touch Icon - iOS için
     apple: [
       { url: FAVICON_PATH, sizes: '180x180', type: 'image/png' },
+      { url: FAVICON_PATH, sizes: '152x152', type: 'image/png' },
+      { url: FAVICON_PATH, sizes: '144x144', type: 'image/png' },
+      { url: FAVICON_PATH, sizes: '120x120', type: 'image/png' },
+      { url: FAVICON_PATH, sizes: '76x76', type: 'image/png' },
     ],
+    // Shortcut icon (eski tarayıcılar için)
+    shortcut: FAVICON_PATH,
     // Other icons
     other: [
       {
@@ -97,20 +107,26 @@ export const metadata = {
     ],
   },
   
-  // Web App Manifest
+  // Web App Manifest - PWA için
   manifest: '/manifest.json',
   
-  // Theme Color
+  // Theme Color - Tarayıcı UI rengi
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#f97316' },
     { media: '(prefers-color-scheme: dark)', color: '#f97316' },
   ],
   
-  // Apple Web App
+  // Apple Web App - iOS PWA için
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'PINLY',
+  },
+  
+  // Additional meta for Google
+  other: {
+    'msapplication-TileColor': '#f97316',
+    'msapplication-TileImage': FAVICON_PATH,
   },
 }
 

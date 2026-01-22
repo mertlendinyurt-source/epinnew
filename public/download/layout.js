@@ -1,12 +1,11 @@
 import './globals.css'
+import CrispChat from '@/components/CrispChat'
 
 const BASE_URL = 'https://pinly.com.tr';
 
 // ============================================================================
 // FAVICON AYARLARI - CPANEL'DE BU DOSYAYI DEĞİŞTİRİN
 // ============================================================================
-// Admin panelden yüklenen favicon yolu
-// cPanel'de bu değeri güncelleyin: /uploads/favicon/DOSYA_ADI.png
 const FAVICON_PATH = '/uploads/favicon/2bbe8446-e4c4-47bd-9cf1-1d5eedea2b32.png';
 // ============================================================================
 
@@ -72,14 +71,13 @@ export const metadata = {
     },
   },
   
-  // Verification (will be set from admin panel)
+  // Verification
   verification: {
-    google: '', // Will be injected dynamically
+    google: '',
   },
   
   // Icons - Google Search Console için kapsamlı ayarlar
   icons: {
-    // Standard favicon - Google bu sırayla kontrol eder
     icon: [
       { url: FAVICON_PATH, type: 'image/png', sizes: '48x48' },
       { url: FAVICON_PATH, type: 'image/png', sizes: '32x32' },
@@ -87,7 +85,6 @@ export const metadata = {
       { url: FAVICON_PATH, type: 'image/png', sizes: '192x192' },
       { url: FAVICON_PATH, type: 'image/png', sizes: '512x512' },
     ],
-    // Apple Touch Icon - iOS için
     apple: [
       { url: FAVICON_PATH, sizes: '180x180', type: 'image/png' },
       { url: FAVICON_PATH, sizes: '152x152', type: 'image/png' },
@@ -95,9 +92,7 @@ export const metadata = {
       { url: FAVICON_PATH, sizes: '120x120', type: 'image/png' },
       { url: FAVICON_PATH, sizes: '76x76', type: 'image/png' },
     ],
-    // Shortcut icon (eski tarayıcılar için)
     shortcut: FAVICON_PATH,
-    // Other icons
     other: [
       {
         rel: 'mask-icon',
@@ -107,21 +102,8 @@ export const metadata = {
     ],
   },
   
-  // Web App Manifest - PWA için
+  // Web App Manifest
   manifest: '/manifest.json',
-  
-  // Theme Color - Tarayıcı UI rengi
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f97316' },
-    { media: '(prefers-color-scheme: dark)', color: '#f97316' },
-  ],
-  
-  // Apple Web App - iOS PWA için
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'PINLY',
-  },
   
   // Additional meta for Google
   other: {
@@ -191,6 +173,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {/* Preconnect for performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://client.crisp.chat" />
         
         {/* Canonical URL */}
         <link rel="canonical" href={BASE_URL} />
@@ -208,72 +191,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {/* End Google Tag Manager (noscript) */}
         
         {children}
-
-        {/* Crisp Chat - Mobil uyumlu, küçük boyut */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.$crisp=[];
-              window.CRISP_WEBSITE_ID="a12ff9e6-9855-45b3-8d75-227252b9c05d";
-              
-              // Crisp ayarları - küçük ve mobil uyumlu
-              window.CRISP_READY_TRIGGER = function() {
-                // Chat kutusunu küçült
-                $crisp.push(["config", "container:index", [1]]);
-                
-                // Mobilde daha küçük göster
-                if (window.innerWidth < 768) {
-                  $crisp.push(["config", "position:reverse", [true]]);
-                }
-              };
-              
-              (function(){
-                var d=document;
-                var s=d.createElement("script");
-                s.src="https://client.crisp.chat/l.js";
-                s.async=1;
-                d.getElementsByTagName("head")[0].appendChild(s);
-              })();
-            `
-          }}
-        />
         
-        {/* Crisp Chat Stilleri - Küçük ve şık */}
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-              /* Crisp chat butonunu küçült */
-              .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf {
-                width: 54px !important;
-                height: 54px !important;
-              }
-              
-              /* Mobilde daha da küçük */
-              @media (max-width: 768px) {
-                .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf {
-                  width: 48px !important;
-                  height: 48px !important;
-                  bottom: 15px !important;
-                  right: 15px !important;
-                }
-                
-                /* Chat penceresi mobilde tam ekran olmasın */
-                .crisp-client .cc-1brb6[data-full-view="true"] .cc-1yy0g {
-                  bottom: 70px !important;
-                  right: 10px !important;
-                  left: 10px !important;
-                  width: auto !important;
-                  max-height: 70vh !important;
-                }
-              }
-              
-              /* Hover efekti */
-              .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf:hover {
-                transform: scale(1.05);
-              }
-            `
-          }}
-        />
+        {/* Crisp Chat Component - Mobil uyumlu */}
+        <CrispChat />
       </body>
     </html>
   )

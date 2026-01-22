@@ -120,17 +120,85 @@ export default function App() {
     return { hours, minutes, seconds }
   }
 
+  // 🚀 TÜM VERİLERİ TEK SEFERDE ÇEK - Performans Optimizasyonu
+  const fetchHomepageData = async () => {
+    try {
+      // İlk olarak localStorage'dan önbellek oku (flash sorununu önlemek için)
+      const cachedSettings = localStorage.getItem('siteSettingsCache')
+      if (cachedSettings) {
+        try {
+          const cached = JSON.parse(cachedSettings)
+          setSiteSettings(cached)
+          applySettings(cached)
+        } catch (e) {
+          localStorage.removeItem('siteSettingsCache')
+        }
+      }
+      
+      // TEK API ÇAĞRISI - Tüm veriler
+      const response = await fetch('/api/homepage')
+      const data = await response.json()
+      
+      if (data.success) {
+        const { products, accounts, siteSettings, footerSettings, seoSettings, regions, gameContent, reviews } = data.data
+        
+        // State'leri güncelle
+        setProducts(products || [])
+        setSiteSettings(siteSettings)
+        setRegions(regions || [])
+        setGameContent(gameContent)
+        setFooterSettings(footerSettings)
+        
+        // Reviews
+        if (reviews) {
+          setReviews(reviews.items || [])
+          setReviewStats(reviews.stats || { avgRating: 5.0, reviewCount: 0 })
+          // Set hasMore if total reviews > displayed reviews
+          const totalReviews = reviews.stats?.reviewCount || 0
+          const displayedReviews = reviews.items?.length || 0
+          setReviewsHasMore(totalReviews > displayedReviews)
+        }
+        
+        // Site ayarlarını DOM'a uygula
+        if (siteSettings) {
+          applySettings(siteSettings)
+          localStorage.setItem('siteSettingsCache', JSON.stringify(siteSettings))
+        }
+        
+        // SEO: GA4 ve GSC
+        if (seoSettings) {
+          if (seoSettings.ga4MeasurementId) {
+            injectGA4Script(seoSettings.ga4MeasurementId)
+          }
+          if (seoSettings.gscVerificationCode) {
+            injectGSCMetaTag(seoSettings.gscVerificationCode)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching homepage data:', error)
+      // Fallback: Ayrı ayrı çağır (network hatası durumunda)
+      fetchProducts()
+      fetchSiteSettings()
+      fetchRegions()
+      fetchGameContent()
+      fetchReviews(1)
+      fetchFooterSettings()
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    fetchProducts()
+    // 🚀 TEK ÇAĞRI - Tüm homepage verileri
+    fetchHomepageData()
+    
+    // Kullanıcı auth kontrolü (ayrı kalmalı - token gerektiriyor)
     checkAuth()
-    fetchSiteSettings()
-    fetchRegions()
-    fetchGameContent()
-    fetchReviews(1)
-    fetchFooterSettings()
-    handleGoogleAuthCallback() // Handle Google OAuth callback
-    handleLoginRedirect() // Handle login redirect from /admin/login
-    loadSEOSettings() // Load SEO settings for GA4 and GSC
+    
+    // OAuth callback ve redirect işlemleri
+    handleGoogleAuthCallback()
+    handleLoginRedirect()
     
     // Set today's date only on client-side to avoid hydration mismatch
     setTodayDate(new Date().toLocaleDateString('tr-TR', { 
@@ -177,6 +245,52 @@ export default function App() {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [])
+
+  // Handle product parameter from URL for Google Ads site links
+  useEffect(() => {
+    if (products.length === 0) return;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const productParam = urlParams.get('product');
+    
+    if (productParam) {
+      // Find product by slug (e.g., "60uc", "325uc", "660uc")
+      const slug = productParam.toLowerCase().replace('-', '');
+      
+      // Try to match by UC amount in title
+      const ucAmount = parseInt(slug.replace('uc', ''));
+      
+      let matchedProduct = null;
+      
+      if (!isNaN(ucAmount)) {
+        // Find product that contains the UC amount in title
+        matchedProduct = products.find(p => {
+          const title = p.title.toLowerCase();
+          // Match patterns like "60 UC", "325 UC", "660 UC Yükleme Şansı"
+          const matches = title.match(/(\d+)\s*uc/i);
+          if (matches) {
+            return parseInt(matches[1]) === ucAmount;
+          }
+          return false;
+        });
+      }
+      
+      // Also try to match by product ID
+      if (!matchedProduct) {
+        matchedProduct = products.find(p => p.id === productParam);
+      }
+      
+      if (matchedProduct) {
+        // Open checkout modal for this product
+        setSelectedProduct(matchedProduct);
+        setCheckoutOpen(true);
+        
+        // Clean URL (remove product parameter)
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, [products]);
 
   // Handle login redirect from /admin/login
   const handleLoginRedirect = () => {
@@ -415,7 +529,9 @@ export default function App() {
           setReviews(data.data.reviews)
         }
         setReviewStats(data.data.stats)
-        setReviewsHasMore(data.data.pagination.hasMore)
+        // Calculate hasMore from pagination (page < pages)
+        const pagination = data.data.pagination
+        setReviewsHasMore(pagination.page < pagination.pages)
         setReviewsPage(page)
       }
     } catch (error) {
@@ -494,7 +610,7 @@ export default function App() {
       const link = document.querySelector("link[rel*='icon']") || document.createElement('link')
       link.type = 'image/x-icon'
       link.rel = 'icon'
-      link.href = `${settings.favicon}?v=${Date.now()}` // Cache busting
+      link.href = settings.favicon // Cache busting removed - caused flickering
       document.getElementsByTagName('head')[0].appendChild(link)
     }
   }
@@ -547,6 +663,13 @@ export default function App() {
     setPlayerId('')
     setPlayerName('')
     setPlayerValid(null)
+    
+    // Update URL with product parameter for Google Ads tracking
+    const ucAmount = product.title.match(/(\d+)\s*UC/i);
+    if (ucAmount) {
+      const productSlug = ucAmount[1] + 'uc';
+      window.history.pushState({}, '', `?product=${productSlug}`);
+    }
     
     // Auto-select payment method based on balance
     if (isAuthenticated && userBalance >= product.discountPrice) {
@@ -677,394 +800,272 @@ export default function App() {
           document.body.appendChild(form)
           form.submit()
         } else {
-          toast.error('Ödeme formu oluşturulamadı')
+          toast.error('Ödeme sayfası oluşturulamadı')
         }
       } else {
-        if (data.code === 'AUTH_REQUIRED') {
-          setAuthModalTab('login')
-          setAuthModalOpen(true)
-        } else if (data.code === 'INCOMPLETE_PROFILE' || data.error?.includes('telefon') || data.error?.includes('Profil bilgileriniz eksik')) {
-          // Check if user is logged in - if yes, show phone modal
-          const token = localStorage.getItem('userToken')
-          if (token && isAuthenticated) {
-            // User is logged in but missing phone - open phone modal
-            setPhoneModalOpen(true)
-            return
-          } else {
-            // Not logged in - open register modal
-            setAuthModalTab('register')
-            setAuthModalOpen(true)
-          }
-        }
         toast.error(data.error || 'Sipariş oluşturulamadı')
       }
     } catch (error) {
-      console.error('Error creating order:', error)
-      toast.error('Sipariş oluşturulurken hata oluştu')
+      console.error('Order error:', error)
+      toast.error('Sipariş işlemi sırasında bir hata oluştu')
     } finally {
       setOrderProcessing(false)
     }
   }
 
-  const handleAuthSuccess = (authData) => {
-    setIsAuthenticated(true)
-    toast.success('Giriş başarılı! Şimdi ödemeye devam edebilirsiniz.')
-    // User can now click checkout again
-  }
-
   const handlePlayerIdConfirm = async () => {
     if (!playerId || playerId.length < 6) {
-      setPlayerIdError('Lütfen geçerli bir Oyuncu ID girin')
+      setPlayerIdError('Oyuncu ID en az 6 karakter olmalıdır')
       return
     }
-
+    
     setPlayerLoading(true)
     setPlayerIdError('')
     
     try {
-      const response = await fetch(`/api/player/resolve?id=${playerId}`)
+      const response = await fetch(`/api/player/resolve?playerId=${encodeURIComponent(playerId)}`)
       const data = await response.json()
       
       if (data.success) {
         setPlayerName(data.data.playerName)
         setPlayerValid(true)
         setPlayerIdModalOpen(false)
-        toast.success('Oyuncu bulundu!')
+        toast.success(`Oyuncu bulundu: ${data.data.playerName}`)
       } else {
         setPlayerIdError(data.error || 'Oyuncu bulunamadı')
-        setPlayerName('')
         setPlayerValid(false)
       }
     } catch (error) {
-      console.error('Error resolving player:', error)
-      setPlayerIdError('Oyuncu adı alınırken hata oluştu')
-      setPlayerName('')
+      setPlayerIdError('Bağlantı hatası. Lütfen tekrar deneyin.')
       setPlayerValid(false)
     } finally {
       setPlayerLoading(false)
     }
   }
 
-  // Flag badge component for regions without uploaded flag
-  const FlagBadge = ({ code, size = 'sm' }) => {
-    const colors = {
-      'TR': 'bg-red-600',
-      'GLOBAL': 'bg-blue-600',
-      'DE': 'bg-yellow-500 text-black',
-      'FR': 'bg-blue-500',
-      'JP': 'bg-red-500',
-    }
-    const sizeClasses = size === 'lg' ? 'w-[18px] h-[14px] text-[9px]' : 'w-5 h-4 text-[8px]'
-    return (
-      <div className={`${sizeClasses} rounded-sm flex items-center justify-center font-bold text-white ${colors[code] || 'bg-gray-600'}`}>
-        {code === 'GLOBAL' ? '🌐' : code?.substring(0, 2) || '?'}
-      </div>
-    )
+  const handleAuthSuccess = (userData, token) => {
+    setIsAuthenticated(true)
+    setUser(userData)
+    setAuthModalOpen(false)
+    toast.success('Giriş başarılı!')
+    
+    // Fetch user balance
+    fetch('/api/account/balance', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setUserBalance(data.data.balance || 0)
+        }
+      })
   }
 
-  // Region display component - shows flag + name from regions data
-  const RegionDisplay = ({ regionCode = 'TR', size = 'sm', showWhiteText = false }) => {
-    const region = regions.find(r => r.code === regionCode) || { code: regionCode, name: regionCode === 'TR' ? 'Türkiye' : regionCode, flagImageUrl: null }
-    const flagSize = size === 'lg' ? 'w-[18px] h-[14px]' : 'w-4 h-3'
-    const textColor = showWhiteText ? 'text-white' : ''
+  const handleLogout = () => {
+    localStorage.removeItem('userToken')
+    localStorage.removeItem('userData')
+    setIsAuthenticated(false)
+    setUser(null)
+    setUserBalance(0)
+    toast.success('Çıkış yapıldı')
+    window.location.reload()
+  }
+
+  // Region display component
+  const RegionDisplay = ({ regionCode, size = 'sm', showWhiteText = false }) => {
+    const region = regions.find(r => r.code === regionCode) || { code: regionCode, name: regionCode, flag: '🌍', flagImageUrl: null }
+    
+    const sizeClasses = {
+      sm: 'text-[9px] md:text-[10px]',
+      md: 'text-[10px] md:text-xs',
+      lg: 'text-xs md:text-sm'
+    }
+
+    const imgSizeClasses = {
+      sm: 'w-4 h-3',
+      md: 'w-5 h-4',
+      lg: 'w-6 h-4'
+    }
     
     return (
-      <div className="flex items-center gap-1.5">
+      <span className={`flex items-center gap-1 ${sizeClasses[size]} ${showWhiteText ? 'text-white' : 'text-white/70'} font-medium`}>
         {region.flagImageUrl ? (
-          <img 
-            src={region.flagImageUrl}
-            alt={region.name}
-            className={`${flagSize} object-cover rounded-sm`}
-            onError={(e) => {
-              e.target.style.display = 'none'
-              e.target.nextSibling && (e.target.nextSibling.style.display = 'flex')
-            }}
-          />
-        ) : null}
-        {!region.flagImageUrl && <FlagBadge code={region.code} size={size} />}
-        <span className={textColor}>{region.name?.toUpperCase()}</span>
-      </div>
+          <img src={region.flagImageUrl} alt={region.name} className={`${imgSizeClasses[size]} object-cover rounded-sm`} />
+        ) : (
+          <span>{region.flag || '🌍'}</span>
+        )}
+        <span>{region.name}</span>
+      </span>
     )
   }
 
+  // Filter Sidebar Component
   const FilterSidebar = () => (
-    <div className="w-full rounded-lg bg-[#1e2229] p-5">
-      <div className="flex items-center gap-2 mb-5">
-        <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
-        </svg>
-        <span className="text-white font-bold text-base uppercase">Filtrele</span>
+    <div className="w-full space-y-3">
+      <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
+        <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Oyun Türü</h3>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
+            <span className="text-sm text-white/70 group-hover:text-white transition-colors">PUBG Mobile</span>
+          </label>
+        </div>
       </div>
-
-      <div className="space-y-5">
-        <div>
-          <h3 className="text-white text-sm font-bold mb-3">Bölge</h3>
-          <div className="mb-2">
-            <input 
-              type="text" 
-              placeholder="Ara"
-              className="w-full px-3 py-1.5 text-sm bg-black/30 border border-white/10 rounded text-white placeholder:text-white/40"
-            />
-          </div>
-          <div className="space-y-2">
-            {regions.length > 0 ? (
-              regions.map((region, index) => (
-                <label key={region.id || index} className="flex items-center gap-2 text-sm text-white cursor-pointer hover:text-white/80">
-                  <input type="checkbox" className="w-3.5 h-3.5 rounded" defaultChecked={index === 0} />
-                  {region.flagImageUrl ? (
-                    <img 
-                      src={region.flagImageUrl}
-                      alt={region.name}
-                      className="w-5 h-4 object-cover rounded-sm"
-                      onError={(e) => {
-                        e.target.style.display = 'none'
-                        e.target.nextSibling.style.display = 'flex'
-                      }}
-                    />
-                  ) : null}
-                  {!region.flagImageUrl && <FlagBadge code={region.code} />}
-                  <span>{region.name}</span>
-                </label>
-              ))
-            ) : (
-              // Fallback if regions not loaded yet
-              <>
-                <label className="flex items-center gap-2 text-sm text-white cursor-pointer hover:text-white/80">
-                  <input type="checkbox" className="w-3.5 h-3.5 rounded" defaultChecked />
-                  <FlagBadge code="TR" />
-                  <span>Türkiye</span>
-                </label>
-                <label className="flex items-center gap-2 text-sm text-white cursor-pointer hover:text-white/80">
-                  <input type="checkbox" className="w-3.5 h-3.5 rounded" />
-                  <FlagBadge code="GLOBAL" />
-                  <span>Küresel</span>
-                </label>
-                <label className="flex items-center gap-2 text-sm text-white cursor-pointer hover:text-white/80">
-                  <input type="checkbox" className="w-3.5 h-3.5 rounded" />
-                  <FlagBadge code="DE" />
-                  <span>Almanya</span>
-                </label>
-                <label className="flex items-center gap-2 text-sm text-white cursor-pointer hover:text-white/80">
-                  <input type="checkbox" className="w-3.5 h-3.5 rounded" />
-                  <FlagBadge code="FR" />
-                  <span>Fransa</span>
-                </label>
-                <label className="flex items-center gap-2 text-sm text-white cursor-pointer hover:text-white/80">
-                  <input type="checkbox" className="w-3.5 h-3.5 rounded" />
-                  <FlagBadge code="JP" />
-                  <span>Japonya</span>
-                </label>
-              </>
-            )}
-          </div>
+      
+      <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
+        <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Bölge</h3>
+        <div className="space-y-2">
+          {regions.map(region => (
+            <label key={region.code} className="flex items-center gap-2 cursor-pointer group">
+              <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
+              <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
+                {region.flagImageUrl ? (
+                  <img src={region.flagImageUrl} alt={region.name} className="w-5 h-4 object-cover rounded-sm" />
+                ) : (
+                  <span>{region.flag || '🌍'}</span>
+                )}
+                {region.name}
+              </span>
+            </label>
+          ))}
         </div>
-
-        <div className="pt-3 border-t border-white/10">
-          <h3 className="text-white text-sm font-bold mb-3">Fiyat Aralığı</h3>
-          <div className="flex gap-2">
-            <input 
-              type="number" 
-              placeholder="En Az"
-              className="w-full px-2 py-1.5 text-xs bg-black/30 border border-white/10 rounded text-white placeholder:text-white/40"
-            />
-            <input 
-              type="number" 
-              placeholder="En Çok"
-              className="w-full px-2 py-1.5 text-xs bg-black/30 border border-white/10 rounded text-white placeholder:text-white/40"
-            />
-          </div>
-        </div>
-
-        <div className="pt-3 border-t border-white/10">
-          <h3 className="text-white text-sm font-bold mb-3">Kelime ile Filtrele</h3>
-          <input 
-            type="text" 
-            placeholder="Kelime"
-            className="w-full px-3 py-1.5 text-sm bg-black/30 border border-white/10 rounded text-white placeholder:text-white/40"
-          />
-        </div>
-
-        <Button className="w-full h-10 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-full">
-          Filtreleri Uygula
-        </Button>
       </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-[#1a1a1a]">
+    <div className="min-h-screen" style={{ backgroundColor: '#1a1a1a' }}>
       <Toaster position="top-center" richColors />
       
-      <header className="h-[60px] bg-[#1a1a1a] border-b border-white/5">
-        <div className="h-full max-w-[1920px] mx-auto px-4 md:px-6 flex items-center justify-between">
-          <div className="flex items-center gap-2 md:gap-3">
-            {siteSettings?.logo ? (
-              <img 
-                src={siteSettings.logo} 
-                alt={siteSettings?.siteName || 'Logo'} 
-                className="h-14 md:h-16 object-contain"
-              />
-            ) : siteSettings?.siteName ? (
-              <span className="text-white font-semibold text-xl md:text-2xl">
-                {siteSettings.siteName}
-              </span>
-            ) : (
-              <div className="h-14 md:h-16 w-32 bg-white/5 rounded animate-pulse"></div>
-            )}
-          </div>
-          
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6">
-            <a href="/" className="text-white/70 hover:text-white transition-colors text-sm font-medium">
-              Anasayfa
-            </a>
-            <a href="/blog" className="text-white/70 hover:text-white transition-colors text-sm font-medium">
-              Blog
-            </a>
-          </nav>
-            
-          <div className="flex items-center gap-2 md:gap-4">
-            {/* Mobile Menu */}
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-[#12151a]/95 backdrop-blur-sm border-b border-white/5">
+        <div className="max-w-[1920px] mx-auto">
+          <div className="flex items-center justify-between h-16 px-4 md:px-6">
+            {/* Mobile Menu Button */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="md:hidden text-white/60 hover:text-white hover:bg-white/10"
-                >
-                  <Menu className="w-5 h-5" />
+                <Button variant="ghost" size="icon" className="md:hidden text-white">
+                  <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[280px] bg-[#1e2229] border-white/10 p-0">
-                <div className="p-5">
-                  {/* Mobile Navigation Links */}
-                  <div className="mb-4 space-y-2">
-                    <a href="/" className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-                      Anasayfa
-                    </a>
-                    <a href="/blog" className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-                      Blog / Haberler
-                    </a>
-                  </div>
-                  <div className="border-t border-white/10 pt-4">
-                    <FilterSidebar />
-                  </div>
+                <div className="p-4 border-b border-white/5">
+                  {siteSettings?.logo ? (
+                    <img src={siteSettings.logo} alt={siteSettings?.siteName || 'Logo'} className="h-8 w-auto" />
+                  ) : (
+                    <span className="text-xl font-bold text-white">{siteSettings?.siteName || 'PINLY'}</span>
+                  )}
+                </div>
+                <div className="p-4">
+                  <FilterSidebar />
                 </div>
               </SheetContent>
             </Sheet>
-            
-            {/* Auth Buttons / User Menu */}
-            {!isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={() => {
-                    setAuthModalTab('login');
-                    setAuthModalOpen(true);
-                  }}
-                  variant="ghost"
-                  className="text-white/80 hover:text-white hover:bg-white/10 text-sm"
-                >
-                  Giriş Yap
-                </Button>
-                <Button
-                  onClick={() => {
-                    setAuthModalTab('register');
-                    setAuthModalOpen(true);
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
-                >
-                  Kayıt Ol
-                </Button>
-              </div>
-            ) : (
-              <div className="relative group">
-                <Button
-                  variant="ghost"
-                  className="text-white/80 hover:text-white hover:bg-white/10 flex items-center gap-2"
-                >
-                  <User className="w-5 h-5" />
-                  <span className="hidden md:inline">Hesabım</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </Button>
-                
-                {/* Dropdown Menu */}
-                <div className="absolute right-0 mt-2 w-56 bg-[#1e2229] rounded-xl shadow-xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
-                  <div className="p-2">
-                    <button
-                      onClick={() => window.location.href = '/account'}
-                      className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-3"
-                    >
-                      <User className="w-4 h-4 text-blue-400" />
-                      Hesabım
-                    </button>
-                    <button
-                      onClick={() => window.location.href = '/account/profile'}
-                      className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-3"
-                    >
-                      <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      Profil Bilgileri
-                    </button>
-                    <button
-                      onClick={() => window.location.href = '/account/orders'}
-                      className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-3"
-                    >
-                      <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
-                      Siparişlerim
-                    </button>
-                    <button
-                      onClick={() => window.location.href = '/account/security'}
-                      className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-3"
-                    >
-                      <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
-                      Güvenlik
-                    </button>
-                    <button
-                      onClick={() => window.location.href = '/account/support'}
-                      className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-3"
-                    >
-                      <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                      </svg>
-                      Destek Taleplerim
-                    </button>
-                  </div>
-                  <div className="border-t border-white/10 p-2">
-                    <button
-                      onClick={() => {
-                        localStorage.removeItem('userToken');
-                        localStorage.removeItem('userData');
-                        setIsAuthenticated(false);
-                        toast.success('Çıkış yapıldı');
-                        window.location.reload();
-                      }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-600/10 rounded-lg transition-colors flex items-center gap-3"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
-                      Çıkış Yap
-                    </button>
+
+            {/* Logo */}
+            <a href="/" className="flex items-center gap-2">
+              {siteSettings?.logo ? (
+                <img 
+                  src={siteSettings.logo}
+                  alt={siteSettings?.siteName || 'Logo'} 
+                  className="h-8 md:h-10 w-auto object-contain"
+                />
+              ) : siteSettings ? (
+                <span className="text-xl md:text-2xl font-bold text-white">{siteSettings?.siteName || 'PINLY'}</span>
+              ) : (
+                <div className="h-8 md:h-10 w-24 bg-white/5 animate-pulse rounded"></div>
+              )}
+            </a>
+
+            {/* Navigation - Desktop */}
+            <nav className="hidden md:flex items-center gap-6">
+              <a href="/" className="text-sm text-white/90 hover:text-white transition-colors font-medium">Ana Sayfa</a>
+              <a href="/blog" className="text-sm text-white/70 hover:text-white transition-colors">Blog</a>
+            </nav>
+
+            {/* Auth Buttons */}
+            <div className="flex items-center gap-2 md:gap-3">
+              {isAuthenticated ? (
+                <div className="relative group">
+                  <Button 
+                    variant="ghost" 
+                    className="flex items-center gap-2 text-white hover:bg-white/10 px-2 md:px-3"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                      {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
+                    </div>
+                    <span className="hidden md:inline text-sm">{user?.firstName || 'Hesabım'}</span>
+                    <ChevronDown className="w-4 h-4 hidden md:block" />
+                  </Button>
+                  
+                  {/* Dropdown */}
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-[#1e2229] rounded-lg shadow-xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="p-2 border-b border-white/5">
+                      <p className="text-sm text-white font-medium truncate">{user?.email}</p>
+                      {userBalance > 0 && (
+                        <p className="text-xs text-green-400 mt-1">Bakiye: {userBalance.toFixed(2)} ₺</p>
+                      )}
+                    </div>
+                    <div className="p-1">
+                      <a href="/account/orders" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md transition-colors">
+                        📦 Siparişlerim
+                      </a>
+                      <a href="/account/support" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md transition-colors">
+                        💬 Destek Taleplerim
+                      </a>
+                      <a 
+                        href="https://wa.me/908503469671" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-green-400 hover:text-green-300 hover:bg-white/5 rounded-md transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                        </svg>
+                        WhatsApp Destek
+                      </a>
+                      <button 
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-white/5 rounded-md transition-colors w-full text-left"
+                      >
+                        🚪 Çıkış Yap
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <>
+                  <Button 
+                    variant="ghost" 
+                    className="text-white/80 hover:text-white hover:bg-white/10 text-sm hidden md:flex"
+                    onClick={() => {
+                      setAuthModalTab('login')
+                      setAuthModalOpen(true)
+                    }}
+                  >
+                    Giriş Yap
+                  </Button>
+                  <Button 
+                    className="bg-blue-600 hover:bg-blue-500 text-white text-sm px-3 md:px-4"
+                    onClick={() => {
+                      setAuthModalTab('register')
+                      setAuthModalOpen(true)
+                    }}
+                  >
+                    Kayıt Ol
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Trust Badges - Güven Rozetleri */}
-      <div className="bg-[#0d0d0d] border-b border-white/5">
-        <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-2.5">
-          <div className="flex items-center justify-center gap-4 md:gap-8 flex-wrap text-xs md:text-sm">
-            <div className="flex items-center gap-1.5 text-white/80">
+      {/* Trust Bar */}
+      <div className="bg-[#12151a] border-b border-white/5">
+        <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-2">
+          <div className="flex items-center justify-center gap-4 md:gap-8 text-[11px] md:text-xs overflow-x-auto">
+            <div className="flex items-center gap-1.5 text-white/80 whitespace-nowrap">
               <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
@@ -1100,7 +1101,7 @@ export default function App() {
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage: siteSettings?.heroImage 
-              ? `url(${siteSettings.heroImage}?v=${Date.now()})`
+              ? `url(${siteSettings.heroImage})`
               : 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)'
           }}
         />
@@ -1111,7 +1112,7 @@ export default function App() {
             {siteSettings?.categoryIcon ? (
               <div className="w-14 h-14 md:w-20 md:h-20 rounded-lg overflow-hidden shadow-lg">
                 <img 
-                  src={`${siteSettings.categoryIcon}?v=${Date.now()}`}
+                  src={siteSettings.categoryIcon}
                   alt="Category"
                   className="w-full h-full object-cover"
                 />
@@ -1309,21 +1310,21 @@ export default function App() {
                 <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4">
                 {products.map((product) => (
                   <div
                     key={product.id}
                     onClick={() => handleProductSelect(product)}
-                    className="group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border border-white/10 hover:border-white/20 w-full aspect-[2/3.5] md:aspect-[2/3]"
+                    className="group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border border-white/10 hover:border-white/20 w-full aspect-[2/3.8] md:aspect-[2/3]"
                     style={{ backgroundColor: '#252a34', maxWidth: '270px', margin: '0 auto' }}
                   >
                     {/* Info Icon */}
-                    <div className="absolute top-3 right-3 w-7 h-7 md:w-5 md:h-5 rounded-full bg-white/90 flex items-center justify-center z-20">
-                      <span className="text-gray-700 font-bold text-sm md:text-xs">i</span>
+                    <div className="absolute top-2 right-2 w-6 h-6 md:w-5 md:h-5 rounded-full bg-white/90 flex items-center justify-center z-20">
+                      <span className="text-gray-700 font-bold text-xs md:text-xs">i</span>
                     </div>
 
                     {/* Image Section */}
-                    <div className="relative h-[45%] md:h-[55%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-3 md:p-4">
+                    <div className="relative h-[42%] md:h-[55%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-2 md:p-4">
                       <img 
                         src={product.imageUrl || "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=300&h=300&fit=crop"}
                         alt={product.title}
@@ -1335,22 +1336,22 @@ export default function App() {
                     </div>
 
                     {/* Content Section */}
-                    <div className="h-[55%] md:h-[45%] flex flex-col justify-between p-3 md:p-3.5">
+                    <div className="h-[58%] md:h-[45%] flex flex-col justify-between p-2.5 md:p-3.5">
                       <div>
-                        <div className="text-[12px] md:text-[10px] text-white/60 font-bold uppercase">MOBİLE</div>
-                        <div className="text-[17px] md:text-[13px] font-bold text-white">{product.ucAmount} UC</div>
-                        <div className="flex items-center gap-1.5 mt-1">
+                        <div className="text-[10px] md:text-[10px] text-white/60 font-bold uppercase">MOBİLE</div>
+                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.ucAmount} UC</div>
+                        <div className="flex items-center gap-1 mt-0.5">
                           <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>
-                        <div className="text-[11px] md:text-[9px] text-emerald-400 mt-0.5">Bölgenizde kullanılabilir</div>
+                        <div className="text-[9px] md:text-[9px] text-emerald-400 mt-0.5">Bölgenizde kullanılabilir</div>
                       </div>
-                      <div className="mt-2">
+                      <div className="mt-1">
                         {product.discountPrice < product.price && (
-                          <div className="text-[13px] md:text-[9px] text-red-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
+                          <div className="text-[11px] md:text-[9px] text-red-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
                         )}
-                        <div className="text-[22px] md:text-[15px] font-bold text-white">₺ {product.discountPrice.toFixed(2).replace('.', ',')}</div>
+                        <div className="text-[18px] md:text-[15px] font-bold text-white">₺ {product.discountPrice.toFixed(2).replace('.', ',')}</div>
                         {product.discountPercent > 0 && (
-                          <div className="text-[13px] md:text-[11px] text-emerald-400 font-medium">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
+                          <div className="text-[10px] md:text-[11px] text-emerald-400 font-medium">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
                         )}
                       </div>
                     </div>
@@ -1364,15 +1365,30 @@ export default function App() {
 
       {/* Plyr Style Tab Section - Description & Reviews */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-[#1e2229] rounded-xl overflow-hidden">
-          {/* Tab Bar */}
-          <div className="flex border-b border-white/10">
+        {/* WhatsApp Destek Butonu - Üstte */}
+        <div className="flex justify-center mb-4">
+          <a
+            href="https://wa.me/908503469671"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl text-base font-semibold transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:scale-105"
+          >
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            WhatsApp Destek
+          </a>
+        </div>
+
+        <div className="bg-[#1e2229] rounded-xl border border-white/5">
+          {/* Tab Headers */}
+          <div className="flex border-b border-white/5">
             <button
               onClick={() => setActiveInfoTab('description')}
-              className={`px-6 py-4 text-sm font-semibold transition-colors relative ${
-                activeInfoTab === 'description'
-                  ? 'text-white bg-[#282d36]'
-                  : 'text-white/60 hover:text-white/80'
+              className={`flex-1 px-6 py-4 text-sm font-semibold transition-all relative ${
+                activeInfoTab === 'description' 
+                  ? 'text-white' 
+                  : 'text-white/50 hover:text-white/70'
               }`}
             >
               Açıklama
@@ -1382,17 +1398,13 @@ export default function App() {
             </button>
             <button
               onClick={() => setActiveInfoTab('reviews')}
-              className={`px-6 py-4 text-sm font-semibold transition-colors relative flex items-center gap-2 ${
-                activeInfoTab === 'reviews'
-                  ? 'text-white bg-[#282d36]'
-                  : 'text-white/60 hover:text-white/80'
+              className={`flex-1 px-6 py-4 text-sm font-semibold transition-all relative ${
+                activeInfoTab === 'reviews' 
+                  ? 'text-white' 
+                  : 'text-white/50 hover:text-white/70'
               }`}
             >
-              <span>Değerlendirmeler</span>
-              <div className="flex items-center gap-1 text-yellow-400">
-                <Star className="w-3.5 h-3.5 fill-current" />
-                <span className="text-xs">{reviewStats.avgRating.toFixed(1)} / 5</span>
-              </div>
+              Değerlendirmeler ({reviewStats.reviewCount})
               {activeInfoTab === 'reviews' && (
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
               )}
@@ -1401,94 +1413,111 @@ export default function App() {
 
           {/* Tab Content */}
           <div className="p-6">
-            {/* Description Tab */}
             {activeInfoTab === 'description' && (
-              <div>
-                <div 
-                  className={`prose prose-invert max-w-none overflow-hidden transition-all duration-300 ${
-                    descriptionExpanded ? '' : 'max-h-[300px]'
-                  }`}
-                >
-                  {gameContent?.description ? (
-                    <div className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap">
-                      {gameContent.description.split('\n').map((line, i) => {
-                        if (line.startsWith('# ')) {
-                          return <h1 key={i} className="text-2xl font-bold text-white mt-4 mb-2">{line.slice(2)}</h1>
-                        }
-                        if (line.startsWith('## ')) {
-                          return <h2 key={i} className="text-xl font-semibold text-white mt-4 mb-2">{line.slice(3)}</h2>
-                        }
-                        if (line.startsWith('- ')) {
-                          return <li key={i} className="ml-4 text-white/70">{line.slice(2).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').split('<strong>').map((part, j) => 
-                            part.includes('</strong>') 
-                              ? <><strong key={j} className="text-white">{part.split('</strong>')[0]}</strong>{part.split('</strong>')[1]}</>
-                              : part
-                          )}</li>
-                        }
-                        if (line.startsWith('✓ ')) {
-                          return <div key={i} className="flex items-start gap-2 text-green-400"><Check className="w-4 h-4 mt-0.5 flex-shrink-0" /><span className="text-white/70">{line.slice(2).replace(/\*\*(.*?)\*\*/g, (_, text) => text)}</span></div>
-                        }
-                        if (line === '---') {
-                          return <hr key={i} className="border-white/10 my-4" />
-                        }
-                        if (line.startsWith('*') && line.endsWith('*')) {
-                          return <p key={i} className="text-white/50 italic text-xs mt-2">{line.slice(1, -1)}</p>
-                        }
-                        if (line.trim() === '') {
-                          return <br key={i} />
-                        }
-                        return <p key={i} className="text-white/70 mb-2">{line}</p>
-                      })}
+              <div className="prose prose-invert max-w-none">
+                {gameContent ? (
+                  <div className="space-y-6">
+                    {/* Main Description with Show More/Less */}
+                    <div className="relative">
+                      <div 
+                        className={`text-white/80 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 ${
+                          !descriptionExpanded ? 'max-h-32 overflow-hidden' : ''
+                        }`}
+                        dangerouslySetInnerHTML={{ __html: gameContent.description }}
+                      />
+                      
+                      {/* Gradient overlay when collapsed */}
+                      {!descriptionExpanded && gameContent.description?.length > 300 && (
+                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#1e2229] to-transparent" />
+                      )}
                     </div>
-                  ) : (
-                    <p className="text-white/60">İçerik yükleniyor...</p>
-                  )}
-                </div>
-                
-                {/* Expand/Collapse Button */}
-                {gameContent?.description && gameContent.description.length > 500 && (
-                  <button
-                    onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                    className="mt-4 flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
-                  >
-                    {descriptionExpanded ? (
-                      <>
-                        <ChevronUp className="w-4 h-4" />
-                        Daha az göster
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown className="w-4 h-4" />
-                        Devamını Gör
-                      </>
+
+                    {/* Show More/Less Button */}
+                    {gameContent.description?.length > 300 && (
+                      <button
+                        onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                        className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+                      >
+                        {descriptionExpanded ? (
+                          <>
+                            <ChevronUp className="w-4 h-4" />
+                            Daha az göster
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-4 h-4" />
+                            Devamını göster
+                          </>
+                        )}
+                      </button>
                     )}
-                  </button>
+
+                    {/* UC Packages Info */}
+                    {gameContent.ucPackages && gameContent.ucPackages.length > 0 && (
+                      <div className="mt-8">
+                        <h3 className="text-lg font-bold text-white mb-4">UC Paketleri</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                          {gameContent.ucPackages.map((pkg, idx) => (
+                            <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
+                              <div className="text-yellow-400 font-bold text-lg">{pkg.amount}</div>
+                              <div className="text-white/50 text-xs">{pkg.description}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* FAQ Section */}
+                    {gameContent.faq && gameContent.faq.length > 0 && (
+                      <div className="mt-8">
+                        <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
+                        <div className="space-y-3">
+                          {gameContent.faq.map((item, idx) => (
+                            <div key={idx} className="bg-[#282d36] rounded-lg p-4 border border-white/5">
+                              <h4 className="text-white font-medium mb-2">{item.question}</h4>
+                              <p className="text-white/60 text-sm">{item.answer}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-white/80">
+                      PUBG Mobile UC (Unknown Cash), oyun içi premium para birimidir. UC ile özel kostümler, silah skinleri, 
+                      Royale Pass ve daha birçok özel içeriğe erişebilirsiniz.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                      <div className="bg-[#282d36] rounded-lg p-4">
+                        <h4 className="text-white font-medium mb-2">Anında Teslimat</h4>
+                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra UC'ler anında hesabınıza yüklenir.</p>
+                      </div>
+                      <div className="bg-[#282d36] rounded-lg p-4">
+                        <h4 className="text-white font-medium mb-2">Güvenli Ödeme</h4>
+                        <p className="text-white/60 text-sm">256-bit SSL şifreleme ile tüm ödemeleriniz güvende.</p>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             )}
 
-            {/* Reviews Tab */}
             {activeInfoTab === 'reviews' && (
-              <div>
+              <div className="space-y-6">
                 {/* Stats Summary */}
-                <div className="bg-[#282d36] rounded-lg p-4 mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <div className="flex">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star 
-                            key={star} 
-                            className={`w-5 h-5 ${star <= Math.round(reviewStats.avgRating) ? 'fill-yellow-400 text-yellow-400' : 'text-white/20'}`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-xl font-bold text-white">{reviewStats.avgRating.toFixed(2)}</span>
-                      <span className="text-white/60">/ 5</span>
+                <div className="flex items-center gap-6 p-4 bg-[#282d36] rounded-lg">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-yellow-400">{reviewStats.avgRating.toFixed(1)}</div>
+                    <div className="flex items-center gap-0.5 mt-1">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <Star 
+                          key={star} 
+                          className={`w-4 h-4 ${star <= reviewStats.avgRating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} 
+                        />
+                      ))}
                     </div>
-                    <div className="h-6 w-px bg-white/20" />
-                    <p className="text-white/70 text-sm">
-                      Değerlendirme anketine toplamda <span className="text-white font-semibold">{reviewStats.reviewCount.toLocaleString()}</span> kişi katıldı
-                    </p>
+                    <div className="text-white/40 text-xs mt-1">{reviewStats.reviewCount} değerlendirme</div>
                   </div>
                 </div>
 
@@ -1496,29 +1525,24 @@ export default function App() {
                 <div className="space-y-4">
                   {reviews.length > 0 ? (
                     reviews.map((review) => (
-                      <div key={review.id} className="bg-[#282d36] rounded-lg p-4">
+                      <div key={review.id} className="p-4 bg-[#282d36] rounded-lg">
                         <div className="flex items-start gap-3">
-                          {/* Avatar */}
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                            {review.userName?.charAt(0)?.toUpperCase() || 'M'}
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                            {review.username?.[0]?.toUpperCase() || 'U'}
                           </div>
-                          
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-white">{review.userName || 'Misafir'}</span>
-                              <div className="flex">
-                                {[1, 2, 3, 4, 5].map((star) => (
+                              <span className="text-white font-medium">{review.username}</span>
+                              <div className="flex items-center gap-0.5">
+                                {[1, 2, 3, 4, 5].map(star => (
                                   <Star 
                                     key={star} 
-                                    className={`w-3.5 h-3.5 ${star <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-white/20'}`}
+                                    className={`w-3 h-3 ${star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} 
                                   />
                                 ))}
                               </div>
                             </div>
-                            {review.comment && (
-                              <p className="text-white/70 text-sm mb-2">{review.comment}</p>
-                            )}
+                            <p className="text-white/70 text-sm">{review.comment}</p>
                             <p className="text-white/40 text-xs">
                               {new Date(review.createdAt).toLocaleDateString('tr-TR', {
                                 year: 'numeric',
@@ -1553,7 +1577,13 @@ export default function App() {
         </div>
       </div>
 
-      <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
+      <Dialog open={checkoutOpen} onOpenChange={(open) => {
+        setCheckoutOpen(open);
+        // Clear URL when modal is closed
+        if (!open) {
+          window.history.pushState({}, '', window.location.pathname);
+        }
+      }}>
         <DialogContent className="max-w-[95vw] md:max-w-4xl max-h-[90vh] p-0 gap-0 overflow-hidden border-0" style={{ backgroundColor: 'transparent' }}>
           <div 
             className="absolute inset-0 bg-cover bg-center blur-sm"
@@ -1641,8 +1671,7 @@ export default function App() {
                         <div className="mb-3">
                           <div className="text-base md:text-lg font-bold text-white mb-1 flex items-center gap-2">
                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd"/>
+                              <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd"/>
                             </svg>
                             Bakiye ile Öde
                           </div>
@@ -1985,9 +2014,15 @@ export default function App() {
                   <>
                     <li><a href="/legal/hizmet-sartlari" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Hizmet Şartları</a></li>
                     <li><a href="/legal/kullanici-sozlesmesi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Kullanıcı Sözleşmesi</a></li>
+                    <li><a href="/legal/acceptable-use-conduct-policy" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Kullanım Politikası ve Davranış İlkeleri</a></li>
                     <li><a href="/legal/gizlilik-politikasi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Gizlilik Politikası</a></li>
+                    <li><a href="/legal/cookie-policy" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Çerez Politikası</a></li>
                     <li><a href="/legal/kvkk" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">KVKK Aydınlatma Metni</a></li>
                     <li><a href="/legal/iade-politikasi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">İade Politikası</a></li>
+                    <li><a href="/legal/kara-para" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Kara Paranın Aklanmasının Önlenmesi Politikası</a></li>
+                    <li><a href="/legal/legal-disclaimer" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Yasal Bildirim ve Sorumluluk Reddi</a></li>
+                    <li><a href="/legal/about-us" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Hakkımızda</a></li>
+                    <li><a href="/legal/contact" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">İletişim</a></li>
                   </>
                 )}
               </ul>
@@ -1998,7 +2033,7 @@ export default function App() {
           <div className="mt-12 pt-8 border-t border-white/10">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-white/30 text-sm">
-                © 2025 {siteSettings?.siteName || 'PINLY'}. Tüm hakları saklıdır.
+                © 2026 {siteSettings?.siteName || 'PINLY'}. Tüm hakları saklıdır.
               </p>
               <p className="text-white/20 text-xs text-center md:text-right">
                 PINLY üzerinden oyun içi kodlar ve dijital pinler anında teslim edilir.

@@ -1,4 +1,5 @@
 import './globals.css'
+import CrispChat from '../components/CrispChat'
 
 const BASE_URL = 'https://pinly.com.tr';
 const FAVICON_PATH = '/uploads/favicon/2bbe8446-e4c4-47bd-9cf1-1d5eedea2b32.png';
@@ -109,6 +110,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="tr">
       <head>
+        {/* Google Tag Manager */}
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -118,6 +120,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 })(window,document,'script','dataLayer','GTM-M97FFKWS');`
           }}
         />
+        {/* Schema.org JSON-LD */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -136,6 +139,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <link rel="canonical" href={BASE_URL} />
       </head>
       <body>
+        {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe 
             src="https://www.googletagmanager.com/ns.html?id=GTM-M97FFKWS"
@@ -146,55 +150,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         </noscript>
         
         {children}
-
-        {/* CRISP CHAT - Mobil Uyumlu */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.$crisp=[];
-              window.CRISP_WEBSITE_ID="a12ff9e6-9855-45b3-8d75-227252b9c05d";
-              (function(){
-                var d=document;
-                var s=d.createElement("script");
-                s.src="https://client.crisp.chat/l.js";
-                s.async=1;
-                d.getElementsByTagName("head")[0].appendChild(s);
-              })();
-            `
-          }}
-        />
         
-        {/* CRISP Mobil Stiller */}
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-              .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf {
-                width: 54px !important;
-                height: 54px !important;
-              }
-              @media (max-width: 768px) {
-                .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf {
-                  width: 46px !important;
-                  height: 46px !important;
-                  bottom: 12px !important;
-                  right: 12px !important;
-                }
-                .crisp-client .cc-1brb6 .cc-unoo,
-                .crisp-client .cc-1brb6 .cc-nsge {
-                  display: none !important;
-                }
-                .crisp-client .cc-1brb6[data-full-view="true"] .cc-1yy0g {
-                  bottom: 65px !important;
-                  right: 8px !important;
-                  left: 8px !important;
-                  width: auto !important;
-                  max-height: 60vh !important;
-                  border-radius: 12px !important;
-                }
-              }
-            `
-          }}
-        />
+        {/* Crisp Chat - Mobil uyumlu, "Destek" yazılı */}
+        <CrispChat />
       </body>
     </html>
   )

@@ -2,6 +2,14 @@ import './globals.css'
 
 const BASE_URL = 'https://pinly.com.tr';
 
+// ============================================================================
+// FAVICON AYARLARI - CPANEL'DE BU DOSYAYI DEĞİŞTİRİN
+// ============================================================================
+// Admin panelden yüklenen favicon yolu
+// cPanel'de bu değeri güncelleyin: /uploads/favicon/DOSYA_ADI.png
+const FAVICON_PATH = '/uploads/favicon/2bbe8446-e4c4-47bd-9cf1-1d5eedea2b32.png';
+// ============================================================================
+
 // Comprehensive SEO metadata
 export const metadata = {
   metadataBase: new URL(BASE_URL),
@@ -51,7 +59,7 @@ export const metadata = {
     images: [`${BASE_URL}/og-image.png`],
   },
   
-  // Robots
+  // Robots - Google için optimize edilmiş
   robots: {
     index: true,
     follow: true,
@@ -69,10 +77,56 @@ export const metadata = {
     google: '', // Will be injected dynamically
   },
   
-  // Icons
+  // Icons - Google Search Console için kapsamlı ayarlar
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    // Standard favicon - Google bu sırayla kontrol eder
+    icon: [
+      { url: FAVICON_PATH, type: 'image/png', sizes: '48x48' },
+      { url: FAVICON_PATH, type: 'image/png', sizes: '32x32' },
+      { url: FAVICON_PATH, type: 'image/png', sizes: '16x16' },
+      { url: FAVICON_PATH, type: 'image/png', sizes: '192x192' },
+      { url: FAVICON_PATH, type: 'image/png', sizes: '512x512' },
+    ],
+    // Apple Touch Icon - iOS için
+    apple: [
+      { url: FAVICON_PATH, sizes: '180x180', type: 'image/png' },
+      { url: FAVICON_PATH, sizes: '152x152', type: 'image/png' },
+      { url: FAVICON_PATH, sizes: '144x144', type: 'image/png' },
+      { url: FAVICON_PATH, sizes: '120x120', type: 'image/png' },
+      { url: FAVICON_PATH, sizes: '76x76', type: 'image/png' },
+    ],
+    // Shortcut icon (eski tarayıcılar için)
+    shortcut: FAVICON_PATH,
+    // Other icons
+    other: [
+      {
+        rel: 'mask-icon',
+        url: FAVICON_PATH,
+        color: '#f97316',
+      },
+    ],
+  },
+  
+  // Web App Manifest - PWA için
+  manifest: '/manifest.json',
+  
+  // Theme Color - Tarayıcı UI rengi
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f97316' },
+    { media: '(prefers-color-scheme: dark)', color: '#f97316' },
+  ],
+  
+  // Apple Web App - iOS PWA için
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'PINLY',
+  },
+  
+  // Additional meta for Google
+  other: {
+    'msapplication-TileColor': '#f97316',
+    'msapplication-TileImage': FAVICON_PATH,
   },
 }
 
@@ -115,7 +169,7 @@ export default function RootLayout({ children }) {
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-MNBC3P4H');`
+})(window,document,'script','dataLayer','GTM-M97FFKWS');`
           }}
         />
         {/* End Google Tag Manager */}
@@ -145,7 +199,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe 
-            src="https://www.googletagmanager.com/ns.html?id=GTM-MNBC3P4H"
+            src="https://www.googletagmanager.com/ns.html?id=GTM-M97FFKWS"
             height="0" 
             width="0" 
             style={{display: 'none', visibility: 'hidden'}}
@@ -154,6 +208,72 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {/* End Google Tag Manager (noscript) */}
         
         {children}
+
+        {/* Crisp Chat - Mobil uyumlu, küçük boyut */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.$crisp=[];
+              window.CRISP_WEBSITE_ID="a12ff9e6-9855-45b3-8d75-227252b9c05d";
+              
+              // Crisp ayarları - küçük ve mobil uyumlu
+              window.CRISP_READY_TRIGGER = function() {
+                // Chat kutusunu küçült
+                $crisp.push(["config", "container:index", [1]]);
+                
+                // Mobilde daha küçük göster
+                if (window.innerWidth < 768) {
+                  $crisp.push(["config", "position:reverse", [true]]);
+                }
+              };
+              
+              (function(){
+                var d=document;
+                var s=d.createElement("script");
+                s.src="https://client.crisp.chat/l.js";
+                s.async=1;
+                d.getElementsByTagName("head")[0].appendChild(s);
+              })();
+            `
+          }}
+        />
+        
+        {/* Crisp Chat Stilleri - Küçük ve şık */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              /* Crisp chat butonunu küçült */
+              .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf {
+                width: 54px !important;
+                height: 54px !important;
+              }
+              
+              /* Mobilde daha da küçük */
+              @media (max-width: 768px) {
+                .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf {
+                  width: 48px !important;
+                  height: 48px !important;
+                  bottom: 15px !important;
+                  right: 15px !important;
+                }
+                
+                /* Chat penceresi mobilde tam ekran olmasın */
+                .crisp-client .cc-1brb6[data-full-view="true"] .cc-1yy0g {
+                  bottom: 70px !important;
+                  right: 10px !important;
+                  left: 10px !important;
+                  width: auto !important;
+                  max-height: 70vh !important;
+                }
+              }
+              
+              /* Hover efekti */
+              .crisp-client .cc-1brb6 .cc-1yy0g .cc-1m2mf:hover {
+                transform: scale(1.05);
+              }
+            `
+          }}
+        />
       </body>
     </html>
   )

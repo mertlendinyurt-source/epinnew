@@ -741,8 +741,8 @@ export default function ValorantPage() {
         },
         body: JSON.stringify({
           productId: selectedProduct.id,
-          playerId,
-          playerName,
+          playerId: 'valorant-direct', // Valorant için oyuncu ID gerekmiyor
+          playerName: 'Valorant VP',
           paymentMethod: paymentMethod, // 'card' or 'balance'
           game: GAME_TYPE // 'valorant'
         })

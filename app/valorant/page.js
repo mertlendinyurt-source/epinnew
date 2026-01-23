@@ -136,11 +136,11 @@ export default function App() {
       }
       
       // TEK API ÇAĞRISI - Tüm veriler
-      const response = await fetch('/api/homepage')
+      const response = await fetch('/api/homepage?game=valorant')
       const data = await response.json()
       
       if (data.success) {
-        const { products, accounts, siteSettings, footerSettings, seoSettings, regions, gameContent, reviews } = data.data
+        const { products, siteSettings, footerSettings, seoSettings, regions, gameContent, reviews } = data.data
         
         // State'leri güncelle
         setProducts(products || [])

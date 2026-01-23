@@ -741,8 +741,9 @@ export default function AdminProducts() {
                 <Table>
                   <TableHeader>
                     <TableRow className="border-slate-800">
+                      <TableHead className="text-slate-400">Oyun</TableHead>
                       <TableHead className="text-slate-400">Ürün</TableHead>
-                      <TableHead className="text-slate-400">UC</TableHead>
+                      <TableHead className="text-slate-400">Miktar</TableHead>
                       <TableHead className="text-slate-400">Fiyat</TableHead>
                       <TableHead className="text-slate-400">İnd. Fiyat</TableHead>
                       <TableHead className="text-slate-400">%</TableHead>
@@ -754,8 +755,13 @@ export default function AdminProducts() {
                   <TableBody>
                     {products.map((product) => (
                       <TableRow key={product.id} className="border-slate-800 hover:bg-slate-800/50">
+                        <TableCell>
+                          <Badge variant={product.game === 'valorant' ? 'destructive' : 'default'} className={product.game === 'valorant' ? 'bg-red-600' : 'bg-yellow-600'}>
+                            {product.game === 'valorant' ? 'Valorant' : 'PUBG'}
+                          </Badge>
+                        </TableCell>
                         <TableCell className="text-white font-medium">{product.title}</TableCell>
-                        <TableCell className="text-slate-400">{product.ucAmount}</TableCell>
+                        <TableCell className="text-slate-400">{product.ucAmount || product.vpAmount} {product.game === 'valorant' ? 'VP' : 'UC'}</TableCell>
                         <TableCell className="text-white">{product.price.toFixed(2)} ₺</TableCell>
                         <TableCell className="text-green-400 font-semibold">
                           {product.discountPrice.toFixed(2)} ₺

@@ -710,7 +710,7 @@ export default function ValorantPage() {
       return
     }
 
-    // 3. Check balance if payment method is balance
+    // 2. Check balance if payment method is balance
     if (paymentMethod === 'balance') {
       if (userBalance < selectedProduct.discountPrice) {
         toast.error(`Yetersiz bakiye. Eksik: ${(selectedProduct.discountPrice - userBalance).toFixed(2)} ₺`)

@@ -748,7 +748,8 @@ export default function ValorantPage() {
           productId: selectedProduct.id,
           playerId,
           playerName,
-          paymentMethod: paymentMethod // 'card' or 'balance'
+          paymentMethod: paymentMethod, // 'card' or 'balance'
+          game: GAME_TYPE // 'valorant'
         })
       })
 

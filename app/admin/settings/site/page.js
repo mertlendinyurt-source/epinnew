@@ -465,8 +465,22 @@ export default function SiteSettingsPage() {
             <div className="pt-4 border-t border-slate-800">
               <UploadBox
                 type="heroImage"
-                title="Hero Banner"
-                description="Ana sayfa üst görseli"
+                title="PUBG Hero Banner"
+                description="PUBG UC ana sayfa üst görseli"
+                uploads={uploads}
+                previews={previews}
+                handleFileSelect={handleFileSelect}
+                handleUploadAndSave={handleUploadAndSave}
+                saving={saving}
+                large
+              />
+            </div>
+
+            <div className="pt-4 border-t border-slate-800">
+              <UploadBox
+                type="valorantHeroImage"
+                title="Valorant Hero Banner"
+                description="Valorant VP sayfası üst görseli"
                 uploads={uploads}
                 previews={previews}
                 handleFileSelect={handleFileSelect}

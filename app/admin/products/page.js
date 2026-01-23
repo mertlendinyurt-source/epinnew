@@ -640,22 +640,33 @@ export default function AdminProducts() {
       }
 
       const token = localStorage.getItem('adminToken')
+      
+      // Prepare body based on game type
+      const bodyData = {
+        title: addFormData.title.trim(),
+        price: parseFloat(addFormData.price),
+        discountPrice: salePrice,
+        discountPercent: parseInt(addFormData.discountPercent) || 0,
+        active: addFormData.active,
+        sortOrder: parseInt(addFormData.sortOrder) || 1,
+        imageUrl: imageUrl,
+        game: addFormData.game
+      }
+      
+      // Use ucAmount for PUBG, vpAmount for Valorant
+      if (addFormData.game === 'valorant') {
+        bodyData.vpAmount = parseInt(addFormData.ucAmount)
+      } else {
+        bodyData.ucAmount = parseInt(addFormData.ucAmount)
+      }
+      
       const response = await fetch('/api/admin/products', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          title: addFormData.title.trim(),
-          ucAmount: parseInt(addFormData.ucAmount),
-          price: parseFloat(addFormData.price),
-          discountPrice: salePrice,
-          discountPercent: parseInt(addFormData.discountPercent) || 0,
-          active: addFormData.active,
-          sortOrder: parseInt(addFormData.sortOrder) || 1,
-          imageUrl: imageUrl
-        })
+        body: JSON.stringify(bodyData)
       })
 
       const data = await response.json()

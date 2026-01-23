@@ -6950,13 +6950,21 @@ export async function POST(request) {
         );
       }
 
+      // Ensure game field defaults to 'pubg' if not provided
+      const game = body.game || 'pubg';
+      
       const product = {
         id: uuidv4(),
         ...body,
+        game,
         createdAt: new Date()
       };
 
       await db.collection('products').insertOne(product);
+      
+      // Clear cache for this game
+      clearCache(`products_active_${game}`);
+      clearCache('products_active');
       
       return NextResponse.json({
         success: true,

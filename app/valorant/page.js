@@ -670,10 +670,11 @@ export default function ValorantPage() {
     setPlayerName('')
     setPlayerValid(null)
     
-    // Update URL with product parameter for Google Ads tracking
-    const ucAmount = product.title.match(/(\d+)\s*UC/i);
-    if (ucAmount) {
-      const productSlug = ucAmount[1] + 'uc';
+    // Update URL with product parameter for Google Ads tracking (VP için)
+    const vpAmount = product.title.match(/(\d+)\s*VP/i) || product.vpAmount;
+    if (vpAmount) {
+      const amount = typeof vpAmount === 'object' ? vpAmount[1] : (product.vpAmount || product.ucAmount);
+      const productSlug = amount + 'vp';
       window.history.pushState({}, '', `?product=${productSlug}`);
     }
     

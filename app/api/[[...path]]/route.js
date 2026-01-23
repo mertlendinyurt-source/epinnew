@@ -1741,10 +1741,17 @@ export async function GET(request) {
     // 🚀 HOMEPAGE - TÜM VERİLER TEK SEFERDE
     // ============================================
     if (pathname === '/api/homepage') {
-      const cacheKey = 'homepage_all';
+      const gameFilter = searchParams.get('game'); // 'pubg', 'valorant', or null
+      const cacheKey = gameFilter ? `homepage_${gameFilter}` : 'homepage_all';
       let data = getCached(cacheKey);
       
       if (!data) {
+        // Build product query
+        const productQuery = { active: true };
+        if (gameFilter) {
+          productQuery.game = gameFilter;
+        }
+        
         // Tüm verileri paralel olarak çek
         const [
           products,
@@ -1756,8 +1763,8 @@ export async function GET(request) {
           gameContent,
           reviewsData
         ] = await Promise.all([
-          // Products
-          db.collection('products').find({ active: true }).sort({ sortOrder: 1 }).toArray(),
+          // Products (filtered by game if specified)
+          db.collection('products').find(productQuery).sort({ sortOrder: 1 }).toArray(),
           
           // Accounts
           db.collection('accounts').find({ active: true, status: 'available' }).sort({ order: 1 }).toArray(),

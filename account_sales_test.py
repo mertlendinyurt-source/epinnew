@@ -7,7 +7,7 @@ import os
 import time
 
 # Get base URL from environment
-BASE_URL = os.getenv('NEXT_PUBLIC_BASE_URL', 'https://favicon-fix.preview.emergentagent.com')
+BASE_URL = os.getenv('NEXT_PUBLIC_BASE_URL', 'https://valorpoint.preview.emergentagent.com')
 API_BASE = f"{BASE_URL}/api"
 
 def test_account_sales_api():

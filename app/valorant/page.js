@@ -1986,7 +1986,7 @@ export default function ValorantPage() {
                 Popüler Kategoriler
               </h3>
               <ul className="space-y-3">
-                {(footerSettings?.categories || [{ label: 'PUBG Mobile', url: '/' }]).map((cat, index) => (
+                {(footerSettings?.categories || [{ label: 'PUBG UC', url: '/' }, { label: 'Valorant VP', url: '/valorant' }]).map((cat, index) => (
                   <li key={index}>
                     <a 
                       href={cat.url} 

@@ -820,8 +820,13 @@ export default function AdminProducts() {
                   <div key={product.id} className="p-4 space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant={product.game === 'valorant' ? 'destructive' : 'default'} className={`text-xs ${product.game === 'valorant' ? 'bg-red-600' : 'bg-yellow-600'}`}>
+                            {product.game === 'valorant' ? 'Valorant' : 'PUBG'}
+                          </Badge>
+                        </div>
                         <h3 className="text-white font-medium">{product.title}</h3>
-                        <p className="text-slate-500 text-sm">{product.ucAmount} UC</p>
+                        <p className="text-slate-500 text-sm">{product.ucAmount || product.vpAmount} {product.game === 'valorant' ? 'VP' : 'UC'}</p>
                       </div>
                       <Badge variant={product.active ? 'default' : 'secondary'}>
                         {product.active ? 'Aktif' : 'Pasif'}

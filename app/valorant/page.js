@@ -1605,51 +1605,13 @@ export default function ValorantPage() {
             <div className="overflow-y-auto flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <Label className="text-sm md:text-base text-white/80 uppercase">Oyuncu ID</Label>
-                      {!playerValid && (
-                        <button 
-                          onClick={() => setPlayerIdModalOpen(true)}
-                          className="text-xs md:text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
-                        >
-                          Oyuncu ID Girin
-                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/>
-                          </svg>
-                        </button>
-                      )}
+                  {/* Valorant VP - Oyuncu ID gerekmez, direkt kod teslimi */}
+                  <div className="px-4 py-3.5 rounded bg-red-500/15 border border-red-500/30">
+                    <div className="flex items-center gap-2 text-red-400 mb-1 text-xs font-semibold">
+                      <Check className="w-4 h-4" />
+                      <span>Valorant VP Kodu</span>
                     </div>
-                    
-                    {playerValid && playerName ? (
-                      <div className="px-4 py-3.5 rounded bg-green-500/15 border border-green-500/30 flex items-center justify-between">
-                        <div>
-                          <div className="flex items-center gap-2 text-green-400 mb-1 text-xs font-semibold">
-                            <Check className="w-4 h-4" />
-                            <span>Oyuncu Bulundu</span>
-                          </div>
-                          <p className="text-white text-base font-bold">{playerName}</p>
-                          <p className="text-white/50 text-xs mt-0.5">ID: {playerId}</p>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setPlayerValid(null)
-                            setPlayerName('')
-                            setPlayerId('')
-                          }}
-                          className="text-white/60 hover:text-white text-xs"
-                        >
-                          Değiştir
-                        </button>
-                      </div>
-                    ) : (
-                      <div 
-                        onClick={() => setPlayerIdModalOpen(true)}
-                        className="px-4 py-3 rounded bg-[#12161D] border border-white/10 text-white/40 cursor-pointer hover:border-white/20 transition-colors"
-                      >
-                        <span className="text-sm">Oyuncu ID'nizi girin</span>
-                      </div>
-                    )}
+                    <p className="text-white/70 text-sm">Ödeme sonrası VP kodunuz e-posta ile gönderilecektir.</p>
                   </div>
 
                   <div>

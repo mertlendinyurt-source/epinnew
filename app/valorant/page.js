@@ -158,21 +158,11 @@ export default function App() {
       if (footerData.success) {
         setFooterSettings(footerData.data)
       }
-            injectGA4Script(seoSettings.ga4MeasurementId)
-          }
-          if (seoSettings.gscVerificationCode) {
-            injectGSCMetaTag(seoSettings.gscVerificationCode)
-          }
-        }
-      }
     } catch (error) {
       console.error('Error fetching homepage data:', error)
-      // Fallback: Ayrı ayrı çağır (network hatası durumunda)
+      // Fallback: Valorant ürünlerini çek
       fetchProducts()
       fetchSiteSettings()
-      fetchRegions()
-      fetchGameContent()
-      fetchReviews(1)
       fetchFooterSettings()
     } finally {
       setLoading(false)

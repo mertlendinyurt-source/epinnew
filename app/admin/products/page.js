@@ -43,7 +43,8 @@ export default function AdminProducts() {
     discountPercent: '',
     active: true,
     sortOrder: '',
-    imageUrl: ''
+    imageUrl: '',
+    game: 'pubg'
   })
   const [addFormData, setAddFormData] = useState({
     title: '',
@@ -53,7 +54,8 @@ export default function AdminProducts() {
     discountPercent: '',
     active: true,
     sortOrder: '',
-    imageUrl: ''
+    imageUrl: '',
+    game: 'pubg'
   })
   const [addImageFile, setAddImageFile] = useState(null)
   const [addImagePreview, setAddImagePreview] = useState(null)

@@ -17,6 +17,7 @@ export default function SiteSettingsPage() {
     logo: null,
     favicon: null,
     heroImage: null,
+    valorantHeroImage: null,
     categoryIcon: null,
     siteName: '',
     metaTitle: '',
@@ -30,8 +31,8 @@ export default function SiteSettingsPage() {
     dailyCountdownEnabled: true,
     dailyCountdownLabel: 'Kampanya bitimine'
   });
-  const [uploads, setUploads] = useState({ logo: null, favicon: null, heroImage: null, categoryIcon: null });
-  const [previews, setPreviews] = useState({ logo: null, favicon: null, heroImage: null, categoryIcon: null });
+  const [uploads, setUploads] = useState({ logo: null, favicon: null, heroImage: null, valorantHeroImage: null, categoryIcon: null });
+  const [previews, setPreviews] = useState({ logo: null, favicon: null, heroImage: null, valorantHeroImage: null, categoryIcon: null });
 
   useEffect(() => {
     const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken');

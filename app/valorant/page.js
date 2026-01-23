@@ -1445,11 +1445,6 @@ export default function ValorantPage() {
                         <li>İşlemci: Intel Core 2 Duo E8400</li>
                       </ul>
                     </div>
-                    
-                    {/* Gradient overlay when collapsed */}
-                    {!descriptionExpanded && (
-                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#1e2229] to-transparent" />
-                    )}
                   </div>
 
                   {/* Show More/Less Button */}

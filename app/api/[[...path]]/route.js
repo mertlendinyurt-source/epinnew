@@ -9232,6 +9232,12 @@ export async function PUT(request) {
 
       const updated = await db.collection('products').findOne({ id: productId });
       
+      // Clear cache
+      clearCache('products_active');
+      if (updated?.game) {
+        clearCache(`products_active_${updated.game}`);
+      }
+      
       return NextResponse.json({
         success: true,
         data: updated

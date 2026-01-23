@@ -260,22 +260,26 @@ export default function ValorantPage() {
     const productParam = urlParams.get('product');
     
     if (productParam) {
-      // Find product by slug (e.g., "60uc", "325uc", "660uc")
+      // Find product by slug (e.g., "375vp", "825vp", "1700vp")
       const slug = productParam.toLowerCase().replace('-', '');
       
-      // Try to match by UC amount in title
-      const ucAmount = parseInt(slug.replace('uc', ''));
+      // Try to match by VP amount in title
+      const vpAmount = parseInt(slug.replace('vp', '').replace('uc', ''));
       
       let matchedProduct = null;
       
-      if (!isNaN(ucAmount)) {
-        // Find product that contains the UC amount in title
+      if (!isNaN(vpAmount)) {
+        // Find product that contains the VP amount in title or vpAmount field
         matchedProduct = products.find(p => {
+          // Check vpAmount field first
+          if (p.vpAmount && parseInt(p.vpAmount) === vpAmount) {
+            return true;
+          }
+          // Check title
           const title = p.title.toLowerCase();
-          // Match patterns like "60 UC", "325 UC", "660 UC Yükleme Şansı"
-          const matches = title.match(/(\d+)\s*uc/i);
+          const matches = title.match(/(\d+)\s*vp/i);
           if (matches) {
-            return parseInt(matches[1]) === ucAmount;
+            return parseInt(matches[1]) === vpAmount;
           }
           return false;
         });

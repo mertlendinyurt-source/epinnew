@@ -135,39 +135,29 @@ export default function App() {
         }
       }
       
-      // TEK API ÇAĞRISI - Tüm veriler
-      const response = await fetch('/api/homepage')
-      const data = await response.json()
+      // Valorant ürünlerini çek
+      const [productsRes, settingsRes, footerRes] = await Promise.all([
+        fetch('/api/products?game=valorant'),
+        fetch('/api/settings/site'),
+        fetch('/api/settings/footer')
+      ])
       
-      if (data.success) {
-        const { products, accounts, siteSettings, footerSettings, seoSettings, regions, gameContent, reviews } = data.data
-        
-        // State'leri güncelle
-        setProducts(products || [])
-        setSiteSettings(siteSettings)
-        setRegions(regions || [])
-        setGameContent(gameContent)
-        setFooterSettings(footerSettings)
-        
-        // Reviews
-        if (reviews) {
-          setReviews(reviews.items || [])
-          setReviewStats(reviews.stats || { avgRating: 5.0, reviewCount: 0 })
-          // Set hasMore if total reviews > displayed reviews
-          const totalReviews = reviews.stats?.reviewCount || 0
-          const displayedReviews = reviews.items?.length || 0
-          setReviewsHasMore(totalReviews > displayedReviews)
-        }
-        
-        // Site ayarlarını DOM'a uygula
-        if (siteSettings) {
-          applySettings(siteSettings)
-          localStorage.setItem('siteSettingsCache', JSON.stringify(siteSettings))
-        }
-        
-        // SEO: GA4 ve GSC
-        if (seoSettings) {
-          if (seoSettings.ga4MeasurementId) {
+      const productsData = await productsRes.json()
+      const settingsData = await settingsRes.json()
+      const footerData = await footerRes.json()
+      
+      // State'leri güncelle
+      setProducts(productsData.success ? productsData.data : [])
+      
+      if (settingsData.success) {
+        setSiteSettings(settingsData.data)
+        applySettings(settingsData.data)
+        localStorage.setItem('siteSettingsCache', JSON.stringify(settingsData.data))
+      }
+      
+      if (footerData.success) {
+        setFooterSettings(footerData.data)
+      }
             injectGA4Script(seoSettings.ga4MeasurementId)
           }
           if (seoSettings.gscVerificationCode) {

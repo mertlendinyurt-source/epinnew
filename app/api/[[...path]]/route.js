@@ -1870,14 +1870,19 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data });
     }
 
-    // Get all products - WITH CACHE
+    // Get all products - WITH CACHE (supports game filter)
     if (pathname === '/api/products') {
-      const cacheKey = 'products_active';
+      const game = searchParams.get('game'); // 'pubg', 'valorant', or null (all)
+      const cacheKey = game ? `products_active_${game}` : 'products_active';
       let products = getCached(cacheKey);
       
       if (!products) {
+        const query = { active: true };
+        if (game) {
+          query.game = game;
+        }
         products = await db.collection('products')
-          .find({ active: true })
+          .find(query)
           .sort({ sortOrder: 1 })
           .toArray();
         setCache(cacheKey, products, 120000); // 2 dakika cache

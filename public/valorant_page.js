@@ -1467,12 +1467,12 @@ export default function ValorantPage() {
                     <h3 className="text-lg font-bold text-white mb-4">VP Paketleri</h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                       {[
-                        { amount: '475 VP', description: 'Başlangıç' },
-                        { amount: '1000 VP', description: 'Standart' },
-                        { amount: '2050 VP', description: 'Popüler' },
-                        { amount: '3650 VP', description: 'Değerli' },
-                        { amount: '5350 VP', description: 'Premium' },
-                        { amount: '11000 VP', description: 'Mega' }
+                        { amount: '375 VP', description: 'Başlangıç' },
+                        { amount: '825 VP', description: 'Standart' },
+                        { amount: '1700 VP', description: 'Popüler' },
+                        { amount: '2925 VP', description: 'Değerli' },
+                        { amount: '4325 VP', description: 'Premium' },
+                        { amount: '8900 VP', description: 'Mega' }
                       ].map((pkg, idx) => (
                         <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
                           <div className="text-red-400 font-bold text-lg">{pkg.amount}</div>

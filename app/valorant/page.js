@@ -985,7 +985,8 @@ export default function ValorantPage() {
 
             {/* Navigation - Desktop */}
             <nav className="hidden md:flex items-center gap-6">
-              <a href="/" className="text-sm text-white/90 hover:text-white transition-colors font-medium">Ana Sayfa</a>
+              <a href="/" className="text-sm text-white/70 hover:text-yellow-400 transition-colors">PUBG UC</a>
+              <a href="/valorant" className="text-sm text-red-400 hover:text-red-300 transition-colors font-medium">Valorant VP</a>
               <a href="/blog" className="text-sm text-white/70 hover:text-white transition-colors">Blog</a>
             </nav>
 

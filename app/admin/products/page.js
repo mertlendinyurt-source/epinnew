@@ -588,7 +588,8 @@ export default function AdminProducts() {
       discountPercent: '0',
       active: true,
       sortOrder: (products.length + 1).toString(),
-      imageUrl: ''
+      imageUrl: '',
+      game: 'pubg'
     })
     setAddImageFile(null)
     setAddImagePreview(null)

@@ -1352,7 +1352,7 @@ export default function AdminProducts() {
           <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between">
             <div>
               <DialogTitle className="text-xl font-bold text-white">Yeni Ürün Ekle</DialogTitle>
-              <p className="text-sm text-slate-400 mt-1">Yeni UC paketi ekleyin</p>
+              <p className="text-sm text-slate-400 mt-1">{addFormData.game === 'valorant' ? 'Yeni VP paketi ekleyin' : 'Yeni UC paketi ekleyin'}</p>
             </div>
           </div>
           
@@ -1364,6 +1364,41 @@ export default function AdminProducts() {
                 Ürün Bilgileri
               </h3>
               
+              {/* Game Selection */}
+              <div className="space-y-2">
+                <Label className="text-slate-300 text-sm">Oyun Türü *</Label>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setAddFormData({ ...addFormData, game: 'pubg' })}
+                    className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                      addFormData.game === 'pubg' 
+                        ? 'border-yellow-500 bg-yellow-500/10' 
+                        : 'border-slate-700 bg-slate-800 hover:border-slate-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-lg">🎮</span>
+                      <span className={`font-medium ${addFormData.game === 'pubg' ? 'text-yellow-400' : 'text-white'}`}>PUBG UC</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddFormData({ ...addFormData, game: 'valorant' })}
+                    className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                      addFormData.game === 'valorant' 
+                        ? 'border-red-500 bg-red-500/10' 
+                        : 'border-slate-700 bg-slate-800 hover:border-slate-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-lg">🔫</span>
+                      <span className={`font-medium ${addFormData.game === 'valorant' ? 'text-red-400' : 'text-white'}`}>Valorant VP</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-slate-300 text-sm">Ürün Adı *</Label>
@@ -1371,21 +1406,21 @@ export default function AdminProducts() {
                     value={addFormData.title}
                     onChange={(e) => setAddFormData({ ...addFormData, title: e.target.value })}
                     className="bg-slate-800 border-slate-700 text-white h-11"
-                    placeholder="Örn: 60 UC"
+                    placeholder={addFormData.game === 'valorant' ? 'Örn: 475 VP' : 'Örn: 60 UC'}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-slate-300 text-sm">UC Miktarı *</Label>
+                  <Label className="text-slate-300 text-sm">{addFormData.game === 'valorant' ? 'VP Miktarı *' : 'UC Miktarı *'}</Label>
                   <div className="relative">
                     <Input
                       type="number"
                       value={addFormData.ucAmount}
                       onChange={(e) => setAddFormData({ ...addFormData, ucAmount: e.target.value })}
                       className="bg-slate-800 border-slate-700 text-white h-11 pr-12"
-                      placeholder="60"
+                      placeholder={addFormData.game === 'valorant' ? '475' : '60'}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">UC</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">{addFormData.game === 'valorant' ? 'VP' : 'UC'}</span>
                   </div>
                 </div>
               </div>

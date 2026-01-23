@@ -1133,9 +1133,9 @@ export default function ValorantPage() {
             )}
             <div>
               <div className="text-xs md:text-sm text-white/60 mb-0.5 md:mb-1">Anasayfa &gt; Oyunlar</div>
-              <h1 className="text-xl md:text-[28px] font-bold text-white">PUBG Mobile</h1>
+              <h1 className="text-xl md:text-[28px] font-bold text-white">Valorant</h1>
               <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
-                <span className="text-yellow-400 text-xs md:text-sm">★★★★★ 5/5</span>
+                <span className="text-red-400 text-xs md:text-sm">★★★★★ 5/5</span>
                 <span className="text-white/70 text-xs md:text-sm">(2008) yorum</span>
               </div>
             </div>

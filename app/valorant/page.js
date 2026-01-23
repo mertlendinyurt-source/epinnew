@@ -913,7 +913,7 @@ export default function ValorantPage() {
         <div className="space-y-2">
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
-            <span className="text-sm text-white/70 group-hover:text-white transition-colors">PUBG Mobile</span>
+            <span className="text-sm text-white/70 group-hover:text-white transition-colors">Valorant</span>
           </label>
         </div>
       </div>

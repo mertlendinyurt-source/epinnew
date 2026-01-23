@@ -1492,13 +1492,13 @@ export default function ValorantPage() {
                 ) : (
                   <div className="space-y-4">
                     <p className="text-white/80">
-                      PUBG Mobile UC (Unknown Cash), oyun içi premium para birimidir. UC ile özel kostümler, silah skinleri, 
-                      Royale Pass ve daha birçok özel içeriğe erişebilirsiniz.
+                      Valorant VP (Valorant Points), Riot Games'in taktiksel FPS oyunu Valorant'ta kullanılan premium para birimidir. VP ile özel silah skinleri, 
+                      karakter kostümleri, Battle Pass ve daha birçok özel içeriğe erişebilirsiniz.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                       <div className="bg-[#282d36] rounded-lg p-4">
                         <h4 className="text-white font-medium mb-2">Anında Teslimat</h4>
-                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra UC'ler anında hesabınıza yüklenir.</p>
+                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra VP kodunuz anında iletilir.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4">
                         <h4 className="text-white font-medium mb-2">Güvenli Ödeme</h4>

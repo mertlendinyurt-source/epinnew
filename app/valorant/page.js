@@ -1611,7 +1611,7 @@ export default function ValorantPage() {
                       <Check className="w-4 h-4" />
                       <span>Valorant VP Kodu</span>
                     </div>
-                    <p className="text-white/70 text-sm">Ödeme sonrası VP kodunuz e-posta ile gönderilecektir.</p>
+                    <p className="text-white/70 text-sm">Ödeme sonrası VP kodunuz anında e-posta ile gönderilecek ve Siparişlerim bölümünde görüntülenecektir.</p>
                   </div>
 
                   <div>

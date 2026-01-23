@@ -1597,6 +1597,12 @@ async function initializeDb() {
     { $rename: { image: 'imageUrl' } }
   );
   
+  // Migrate existing products: add 'game' field (default: 'pubg')
+  await db.collection('products').updateMany(
+    { game: { $exists: false } },
+    { $set: { game: 'pubg' } }
+  );
+  
   // Check if products exist
   const productsCount = await db.collection('products').countDocuments();
   if (productsCount === 0) {

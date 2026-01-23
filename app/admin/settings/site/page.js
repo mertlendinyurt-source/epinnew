@@ -62,6 +62,7 @@ export default function SiteSettingsPage() {
           logo: result.data.logo,
           favicon: result.data.favicon,
           heroImage: result.data.heroImage,
+          valorantHeroImage: result.data.valorantHeroImage,
           categoryIcon: result.data.categoryIcon
         });
       }

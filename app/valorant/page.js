@@ -58,7 +58,13 @@ function BannerIcon({ icon, size }) {
   );
 }
 
-export default function App() {
+export default function ValorantPage() {
+  // 🎮 VALORANT PAGE CONFIGURATION
+  const GAME_TYPE = 'valorant'
+  const GAME_NAME = 'Valorant'
+  const CURRENCY_NAME = 'VP'
+  const THEME_COLOR = 'red' // Valorant kırmızı teması
+  
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedProduct, setSelectedProduct] = useState(null)

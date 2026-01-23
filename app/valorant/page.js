@@ -917,19 +917,14 @@ export default function ValorantPage() {
       <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
         <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Bölge</h3>
         <div className="space-y-2">
-          {regions.map(region => (
-            <label key={region.code} className="flex items-center gap-2 cursor-pointer group">
-              <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
-              <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
-                {region.flagImageUrl ? (
-                  <img src={region.flagImageUrl} alt={region.name} className="w-5 h-4 object-cover rounded-sm" />
-                ) : (
-                  <span>{region.flag || '🌍'}</span>
-                )}
-                {region.name}
-              </span>
-            </label>
-          ))}
+          {/* Valorant için sadece Türkiye bölgesi */}
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
+            <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
+              <span>🇹🇷</span>
+              Türkiye
+            </span>
+          </label>
         </div>
       </div>
     </div>

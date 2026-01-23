@@ -921,7 +921,7 @@ export default function ValorantPage() {
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
             <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
-              <span>🇹🇷</span>
+              <img src="https://flagcdn.com/w40/tr.png" alt="Türkiye" className="w-5 h-4 object-cover rounded-sm" />
               Türkiye
             </span>
           </label>

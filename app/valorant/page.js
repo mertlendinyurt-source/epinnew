@@ -698,14 +698,9 @@ export default function ValorantPage() {
   }
 
   const handleCheckout = async () => {
-    // 1. Check player ID first
-    if (!playerValid || !playerName) {
-      setPlayerIdModalOpen(true)
-      setPlayerIdError('')
-      return
-    }
+    // Valorant için Oyuncu ID kontrolü yok - direkt kod teslimi
 
-    // 2. Check authentication
+    // 1. Check authentication
     const token = localStorage.getItem('userToken')
     if (!token) {
       // Open auth modal instead of just showing toast

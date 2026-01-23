@@ -135,8 +135,8 @@ export default function App() {
         }
       }
       
-      // TEK API ÇAĞRISI - Tüm veriler
-      const response = await fetch('/api/homepage')
+      // TEK API ÇAĞRISI - Tüm veriler (sadece PUBG ürünleri)
+      const response = await fetch('/api/homepage?game=pubg')
       const data = await response.json()
       
       if (data.success) {

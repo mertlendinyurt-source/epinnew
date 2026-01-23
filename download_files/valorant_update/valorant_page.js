@@ -1418,91 +1418,117 @@ export default function ValorantPage() {
           <div className="p-6">
             {activeInfoTab === 'description' && (
               <div className="prose prose-invert max-w-none">
-                {gameContent ? (
-                  <div className="space-y-6">
-                    {/* Main Description with Show More/Less */}
-                    <div className="relative">
-                      <div 
-                        className={`text-white/80 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 ${
-                          !descriptionExpanded ? 'max-h-32 overflow-hidden' : ''
-                        }`}
-                        dangerouslySetInnerHTML={{ __html: gameContent.description }}
-                      />
+                {/* Valorant için özel açıklama - gameContent kullanılmıyor */}
+                <div className="space-y-6">
+                  {/* Ana Açıklama */}
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-3">Valorant: Oynanış, Tarihçe ve Sistem Gereksinimleri</h3>
+                    <div className={`text-white/80 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 ${!descriptionExpanded ? 'max-h-32 overflow-hidden' : ''}`}>
+                      <p className="mb-4">Valorant, Riot Games tarafından geliştirilen ve 2020 yılında piyasaya sürülen ücretsiz taktiksel birinci şahıs nişancı (FPS) oyunudur. Oyun, Counter-Strike serisi ile Overwatch'un mekaniklerini birleştirerek benzersiz bir deneyim sunar.</p>
                       
-                      {/* Gradient overlay when collapsed */}
-                      {!descriptionExpanded && gameContent.description?.length > 300 && (
-                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#1e2229] to-transparent" />
-                      )}
+                      <p className="mb-4">5v5 formatında oynanan Valorant'ta, oyuncular farklı yeteneklere sahip "Ajan" karakterlerini seçer. Her ajanın kendine özgü 4 yeteneği vardır: bir imza yeteneği, iki satın alınabilir yetenek ve bir ultimate yeteneği.</p>
+                      
+                      <p className="mb-4">Valorant Points (VP), oyun içi premium para birimidir. VP ile şunları satın alabilirsiniz:</p>
+                      <ul className="list-disc list-inside mb-4 space-y-1">
+                        <li>Silah skinleri ve koleksiyonları</li>
+                        <li>Battle Pass ve Premium Battle Pass</li>
+                        <li>Ajan kostümleri ve aksesuarları</li>
+                        <li>Radianite Points (skin yükseltmeleri için)</li>
+                        <li>Spray'ler, kartlar ve başlıklar</li>
+                      </ul>
+                      
+                      <p className="font-semibold text-white mb-2">Sistem Gereksinimleri (Minimum):</p>
+                      <ul className="list-disc list-inside mb-4 space-y-1">
+                        <li>İşletim Sistemi: Windows 7/8/10 64-bit</li>
+                        <li>RAM: 4 GB</li>
+                        <li>VRAM: 1 GB</li>
+                        <li>İşlemci: Intel Core 2 Duo E8400</li>
+                      </ul>
                     </div>
-
-                    {/* Show More/Less Button */}
-                    {gameContent.description?.length > 300 && (
-                      <button
-                        onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                        className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
-                      >
-                        {descriptionExpanded ? (
-                          <>
-                            <ChevronUp className="w-4 h-4" />
-                            Daha az göster
-                          </>
-                        ) : (
-                          <>
-                            <ChevronDown className="w-4 h-4" />
-                            Devamını göster
-                          </>
-                        )}
-                      </button>
-                    )}
-
-                    {/* UC Packages Info */}
-                    {gameContent.ucPackages && gameContent.ucPackages.length > 0 && (
-                      <div className="mt-8">
-                        <h3 className="text-lg font-bold text-white mb-4">UC Paketleri</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                          {gameContent.ucPackages.map((pkg, idx) => (
-                            <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
-                              <div className="text-yellow-400 font-bold text-lg">{pkg.amount}</div>
-                              <div className="text-white/50 text-xs">{pkg.description}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* FAQ Section */}
-                    {gameContent.faq && gameContent.faq.length > 0 && (
-                      <div className="mt-8">
-                        <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
-                        <div className="space-y-3">
-                          {gameContent.faq.map((item, idx) => (
-                            <div key={idx} className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                              <h4 className="text-white font-medium mb-2">{item.question}</h4>
-                              <p className="text-white/60 text-sm">{item.answer}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                    
+                    {/* Gradient overlay when collapsed */}
+                    {!descriptionExpanded && (
+                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#1e2229] to-transparent" />
                     )}
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <p className="text-white/80">
-                      Valorant VP (Valorant Points), Riot Games'in taktiksel FPS oyunu Valorant'ta kullanılan premium para birimidir. VP ile özel silah skinleri, 
-                      karakter kostümleri, Battle Pass ve daha birçok özel içeriğe erişebilirsiniz.
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                      <div className="bg-[#282d36] rounded-lg p-4">
-                        <h4 className="text-white font-medium mb-2">Anında Teslimat</h4>
-                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra VP kodunuz anında iletilir.</p>
+
+                  {/* Show More/Less Button */}
+                  <button
+                    onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                    className="flex items-center gap-2 text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
+                  >
+                    {descriptionExpanded ? (
+                      <>
+                        <ChevronUp className="w-4 h-4" />
+                        Daha az göster
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4" />
+                        Devamını göster
+                      </>
+                    )}
+                  </button>
+
+                  {/* VP Paketleri */}
+                  <div className="mt-8">
+                    <h3 className="text-lg font-bold text-white mb-4">VP Paketleri</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                      {[
+                        { amount: '475 VP', description: 'Başlangıç' },
+                        { amount: '1000 VP', description: 'Standart' },
+                        { amount: '2050 VP', description: 'Popüler' },
+                        { amount: '3650 VP', description: 'Değerli' },
+                        { amount: '5350 VP', description: 'Premium' },
+                        { amount: '11000 VP', description: 'Mega' }
+                      ].map((pkg, idx) => (
+                        <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
+                          <div className="text-red-400 font-bold text-lg">{pkg.amount}</div>
+                          <div className="text-white/50 text-xs">{pkg.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Özellikler */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <div className="bg-[#282d36] rounded-lg p-4">
+                      <h4 className="text-white font-medium mb-2">🚀 Anında Teslimat</h4>
+                      <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra VP kodunuz anında iletilir ve siparişleriniz bölümünde görüntülenir.</p>
+                    </div>
+                    <div className="bg-[#282d36] rounded-lg p-4">
+                      <h4 className="text-white font-medium mb-2">🔒 Güvenli Ödeme</h4>
+                      <p className="text-white/60 text-sm">256-bit SSL şifreleme ile tüm ödemeleriniz güvende.</p>
+                    </div>
+                    <div className="bg-[#282d36] rounded-lg p-4">
+                      <h4 className="text-white font-medium mb-2">💳 Kolay Kullanım</h4>
+                      <p className="text-white/60 text-sm">Aldığınız VP kodunu Valorant mağazasında kullanabilirsiniz.</p>
+                    </div>
+                    <div className="bg-[#282d36] rounded-lg p-4">
+                      <h4 className="text-white font-medium mb-2">📞 7/24 Destek</h4>
+                      <p className="text-white/60 text-sm">Herhangi bir sorun yaşarsanız destek ekibimiz size yardımcı olacaktır.</p>
+                    </div>
+                  </div>
+
+                  {/* SSS */}
+                  <div className="mt-8">
+                    <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
+                    <div className="space-y-3">
+                      <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
+                        <h4 className="text-white font-medium mb-2">VP kodu nasıl kullanılır?</h4>
+                        <p className="text-white/60 text-sm">Valorant'ı açın, mağazaya gidin ve "VP Satın Al" bölümünden "Kodu Kullan" seçeneğini seçin. Aldığınız kodu girerek VP'nizi hesabınıza yükleyin.</p>
                       </div>
-                      <div className="bg-[#282d36] rounded-lg p-4">
-                        <h4 className="text-white font-medium mb-2">Güvenli Ödeme</h4>
-                        <p className="text-white/60 text-sm">256-bit SSL şifreleme ile tüm ödemeleriniz güvende.</p>
+                      <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
+                        <h4 className="text-white font-medium mb-2">VP kodları hangi bölgelerde geçerli?</h4>
+                        <p className="text-white/60 text-sm">VP kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
+                      </div>
+                      <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
+                        <h4 className="text-white font-medium mb-2">Teslimat ne kadar sürer?</h4>
+                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra VP kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
             )}
 

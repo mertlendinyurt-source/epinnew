@@ -1104,11 +1104,11 @@ export default function MLBBPage() {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: siteSettings?.valorantHeroImage 
-              ? `url(${siteSettings.valorantHeroImage})`
+            backgroundImage: siteSettings?.mlbbHeroImage 
+              ? `url(${siteSettings.mlbbHeroImage})`
               : siteSettings?.heroImage 
                 ? `url(${siteSettings.heroImage})`
-                : 'url(https://images.contentstack.io/v3/assets/bltb6530b271fddd0b1/blt81a85f0d04358da3/5eb7cdc19df5cf37047009d1/Valorant_VALORANT_Background.jpg)'
+                : 'url(https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1920&q=80)'
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-[#1a1a1a]" />

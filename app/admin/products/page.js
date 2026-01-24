@@ -756,12 +756,12 @@ export default function AdminProducts() {
                     {products.map((product) => (
                       <TableRow key={product.id} className="border-slate-800 hover:bg-slate-800/50">
                         <TableCell>
-                          <Badge variant={product.game === 'valorant' ? 'destructive' : 'default'} className={product.game === 'valorant' ? 'bg-red-600' : 'bg-yellow-600'}>
-                            {product.game === 'valorant' ? 'Valorant' : 'PUBG'}
+                          <Badge variant={product.game === 'valorant' ? 'destructive' : product.game === 'mlbb' ? 'default' : 'default'} className={product.game === 'valorant' ? 'bg-red-600' : product.game === 'mlbb' ? 'bg-blue-600' : 'bg-yellow-600'}>
+                            {product.game === 'valorant' ? 'Valorant' : product.game === 'mlbb' ? 'MLBB' : 'PUBG'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-white font-medium">{product.title}</TableCell>
-                        <TableCell className="text-slate-400">{product.ucAmount || product.vpAmount} {product.game === 'valorant' ? 'VP' : 'UC'}</TableCell>
+                        <TableCell className="text-slate-400">{product.ucAmount || product.vpAmount || product.diamondsAmount} {product.game === 'valorant' ? 'VP' : product.game === 'mlbb' ? '💎' : 'UC'}</TableCell>
                         <TableCell className="text-white">{product.price.toFixed(2)} ₺</TableCell>
                         <TableCell className="text-green-400 font-semibold">
                           {product.discountPrice.toFixed(2)} ₺

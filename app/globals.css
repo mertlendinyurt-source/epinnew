@@ -198,6 +198,18 @@ code {
   );
 }
 
+/* Flare animasyonu - sönüp yanma */
+@keyframes flare-pulse {
+  0%, 100% {
+    opacity: 0.25;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  50% {
+    opacity: 0.45;
+    transform: translate(-50%, -50%) scale(1.1) rotate(3deg);
+  }
+}
+
 .go-flare {
   position: absolute;
   top: 50%;
@@ -208,4 +220,5 @@ code {
   opacity: 0.35;
   mix-blend-mode: screen;
   pointer-events: none;
+  animation: flare-pulse 3s ease-in-out infinite;
 }

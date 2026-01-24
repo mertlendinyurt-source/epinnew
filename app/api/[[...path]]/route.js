@@ -7840,6 +7840,7 @@ export async function POST(request) {
         favicon: favicon !== undefined ? favicon : existingSettings?.favicon || null,
         heroImage: heroImage !== undefined ? heroImage : existingSettings?.heroImage || null,
         valorantHeroImage: valorantHeroImage !== undefined ? valorantHeroImage : existingSettings?.valorantHeroImage || null,
+        mlbbHeroImage: mlbbHeroImage !== undefined ? mlbbHeroImage : existingSettings?.mlbbHeroImage || null,
         categoryIcon: categoryIcon !== undefined ? categoryIcon : existingSettings?.categoryIcon || null,
         siteName: siteName !== undefined ? siteName.trim() : existingSettings?.siteName || 'PINLY',
         metaTitle: metaTitle !== undefined ? metaTitle.trim() : existingSettings?.metaTitle || '',

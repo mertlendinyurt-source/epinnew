@@ -674,11 +674,10 @@ export default function MLBBPage() {
     setPlayerName('')
     setPlayerValid(null)
     
-    // Update URL with product parameter for Google Ads tracking (VP için)
-    const vpAmount = product.title.match(/(\d+)\s*VP/i) || product.vpAmount;
-    if (vpAmount) {
-      const amount = typeof vpAmount === 'object' ? vpAmount[1] : (product.vpAmount || product.ucAmount);
-      const productSlug = amount + 'vp';
+    // Update URL with product parameter for Google Ads tracking (Diamonds için)
+    const diamondsAmount = product.diamondsAmount || product.title.match(/(\d+)/)?.[1];
+    if (diamondsAmount) {
+      const productSlug = diamondsAmount + 'diamonds';
       window.history.pushState({}, '', `?product=${productSlug}`);
     }
     

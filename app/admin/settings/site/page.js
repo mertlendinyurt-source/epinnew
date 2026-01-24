@@ -64,6 +64,7 @@ export default function SiteSettingsPage() {
           favicon: result.data.favicon,
           heroImage: result.data.heroImage,
           valorantHeroImage: result.data.valorantHeroImage,
+          mlbbHeroImage: result.data.mlbbHeroImage,
           categoryIcon: result.data.categoryIcon
         });
       }

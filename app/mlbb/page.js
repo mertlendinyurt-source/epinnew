@@ -702,7 +702,11 @@ export default function MLBBPage() {
   }
 
   const handleCheckout = async () => {
-    // Valorant için Oyuncu ID kontrolü yok - direkt kod teslimi
+    // MLBB için ID ve Server ID kontrolü
+    if (!playerId || !playerName) {
+      toast.error('Lütfen MLBB ID ve Server ID bilgilerinizi girin')
+      return
+    }
 
     // 1. Check authentication
     const token = localStorage.getItem('userToken')

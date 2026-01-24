@@ -1534,12 +1534,20 @@ export default function App() {
                     reviews.map((review) => (
                       <div key={review.id} className="p-4 bg-[#282d36] rounded-lg">
                         <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                            {review.username?.[0]?.toUpperCase() || 'U'}
+                          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                            <img 
+                              src={siteSettings?.logoUrl || '/logo.png'} 
+                              alt="Pinly" 
+                              className="w-8 h-8 object-contain"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.parentElement.innerHTML = '<span class="text-blue-600 font-bold text-sm">P</span>';
+                              }}
+                            />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-white font-medium">{review.username}</span>
+                              <span className="text-white font-medium">Misafir</span>
                               <div className="flex items-center gap-0.5">
                                 {[1, 2, 3, 4, 5].map(star => (
                                   <Star 

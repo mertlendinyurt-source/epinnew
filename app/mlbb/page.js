@@ -1629,13 +1629,13 @@ export default function MLBBPage() {
             <div className="overflow-y-auto flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
-                  {/* Valorant VP - Oyuncu ID gerekmez, direkt kod teslimi */}
-                  <div className="px-4 py-3.5 rounded bg-red-500/15 border border-red-500/30">
-                    <div className="flex items-center gap-2 text-red-400 mb-1 text-xs font-semibold">
+                  {/* MLBB Diamonds - Oyuncu ID gerekmez, direkt kod teslimi */}
+                  <div className="px-4 py-3.5 rounded bg-blue-500/15 border border-blue-500/30">
+                    <div className="flex items-center gap-2 text-blue-400 mb-1 text-xs font-semibold">
                       <Check className="w-4 h-4" />
-                      <span>Valorant VP Kodu</span>
+                      <span>MLBB Diamonds Kodu</span>
                     </div>
-                    <p className="text-white/70 text-sm">Ödeme sonrası VP kodunuz anında e-posta ile gönderilecek ve Siparişlerim bölümünde görüntülenecektir.</p>
+                    <p className="text-white/70 text-sm">Ödeme sonrası Diamonds kodunuz anında e-posta ile gönderilecek ve Siparişlerim bölümünde görüntülenecektir.</p>
                   </div>
 
                   <div>

@@ -152,7 +152,7 @@ export default function AdminProducts() {
     setEditingProduct(product)
     setFormData({
       title: product.title,
-      ucAmount: (product.ucAmount || product.vpAmount || '').toString(),
+      ucAmount: (product.ucAmount || product.vpAmount || product.diamondsAmount || '').toString(),
       price: product.price.toString(),
       discountPrice: product.discountPrice.toString(),
       discountPercent: product.discountPercent.toString(),

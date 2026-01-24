@@ -58,7 +58,13 @@ function BannerIcon({ icon, size }) {
   );
 }
 
-export default function App() {
+export default function MLBBPage() {
+  // 🎮 MOBILE LEGENDS PAGE CONFIGURATION
+  const GAME_TYPE = 'mlbb'
+  const GAME_NAME = 'Mobile Legends'
+  const CURRENCY_NAME = 'Diamonds'
+  const THEME_COLOR = 'blue' // MLBB mavi teması
+  
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -135,12 +141,12 @@ export default function App() {
         }
       }
       
-      // TEK API ÇAĞRISI - Tüm veriler (sadece PUBG ürünleri)
-      const response = await fetch('/api/homepage?game=pubg')
+      // TEK API ÇAĞRISI - Tüm veriler (sadece MLBB ürünleri)
+      const response = await fetch('/api/homepage?game=mlbb')
       const data = await response.json()
       
       if (data.success) {
-        const { products, accounts, siteSettings, footerSettings, seoSettings, regions, gameContent, reviews } = data.data
+        const { products, siteSettings, footerSettings, seoSettings, regions, gameContent, reviews } = data.data
         
         // State'leri güncelle
         setProducts(products || [])
@@ -254,22 +260,26 @@ export default function App() {
     const productParam = urlParams.get('product');
     
     if (productParam) {
-      // Find product by slug (e.g., "60uc", "325uc", "660uc")
+      // Find product by slug (e.g., "86diamonds", "172diamonds")
       const slug = productParam.toLowerCase().replace('-', '');
       
-      // Try to match by UC amount in title
-      const ucAmount = parseInt(slug.replace('uc', ''));
+      // Try to match by Diamonds amount
+      const diamondsAmount = parseInt(slug.replace('diamonds', '').replace('vp', '').replace('uc', ''));
       
       let matchedProduct = null;
       
-      if (!isNaN(ucAmount)) {
-        // Find product that contains the UC amount in title
+      if (!isNaN(diamondsAmount)) {
+        // Find product that contains the Diamonds amount
         matchedProduct = products.find(p => {
+          // Check diamondsAmount field first
+          if (p.diamondsAmount && parseInt(p.diamondsAmount) === diamondsAmount) {
+            return true;
+          }
+          // Check title
           const title = p.title.toLowerCase();
-          // Match patterns like "60 UC", "325 UC", "660 UC Yükleme Şansı"
-          const matches = title.match(/(\d+)\s*uc/i);
+          const matches = title.match(/(\d+)/);
           if (matches) {
-            return parseInt(matches[1]) === ucAmount;
+            return parseInt(matches[1]) === diamondsAmount;
           }
           return false;
         });
@@ -664,10 +674,10 @@ export default function App() {
     setPlayerName('')
     setPlayerValid(null)
     
-    // Update URL with product parameter for Google Ads tracking
-    const ucAmount = product.title.match(/(\d+)\s*UC/i);
-    if (ucAmount) {
-      const productSlug = ucAmount[1] + 'uc';
+    // Update URL with product parameter for Google Ads tracking (Diamonds için)
+    const diamondsAmount = product.diamondsAmount || product.title.match(/(\d+)/)?.[1];
+    if (diamondsAmount) {
+      const productSlug = diamondsAmount + 'diamonds';
       window.history.pushState({}, '', `?product=${productSlug}`);
     }
     
@@ -692,14 +702,13 @@ export default function App() {
   }
 
   const handleCheckout = async () => {
-    // 1. Check player ID first
-    if (!playerValid || !playerName) {
-      setPlayerIdModalOpen(true)
-      setPlayerIdError('')
+    // MLBB için ID ve Server ID kontrolü
+    if (!playerId || !playerName) {
+      toast.error('Lütfen MLBB ID ve Server ID bilgilerinizi girin')
       return
     }
 
-    // 2. Check authentication
+    // 1. Check authentication
     const token = localStorage.getItem('userToken')
     if (!token) {
       // Open auth modal instead of just showing toast
@@ -709,7 +718,7 @@ export default function App() {
       return
     }
 
-    // 3. Check balance if payment method is balance
+    // 2. Check balance if payment method is balance
     if (paymentMethod === 'balance') {
       if (userBalance < selectedProduct.discountPrice) {
         toast.error(`Yetersiz bakiye. Eksik: ${(selectedProduct.discountPrice - userBalance).toFixed(2)} ₺`)
@@ -740,9 +749,10 @@ export default function App() {
         },
         body: JSON.stringify({
           productId: selectedProduct.id,
-          playerId,
-          playerName,
-          paymentMethod: paymentMethod // 'card' or 'balance'
+          playerId: playerId, // MLBB ID
+          playerName: playerName, // Server ID
+          paymentMethod: paymentMethod, // 'card' or 'balance'
+          game: GAME_TYPE // 'mlbb'
         })
       })
 
@@ -907,7 +917,7 @@ export default function App() {
         <div className="space-y-2">
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
-            <span className="text-sm text-white/70 group-hover:text-white transition-colors">PUBG Mobile</span>
+            <span className="text-sm text-white/70 group-hover:text-white transition-colors">Mobile Legends</span>
           </label>
         </div>
       </div>
@@ -915,19 +925,14 @@ export default function App() {
       <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
         <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Bölge</h3>
         <div className="space-y-2">
-          {regions.map(region => (
-            <label key={region.code} className="flex items-center gap-2 cursor-pointer group">
-              <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
-              <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
-                {region.flagImageUrl ? (
-                  <img src={region.flagImageUrl} alt={region.name} className="w-5 h-4 object-cover rounded-sm" />
-                ) : (
-                  <span>{region.flag || '🌍'}</span>
-                )}
-                {region.name}
-              </span>
-            </label>
-          ))}
+          {/* MLBB için sadece Türkiye bölgesi */}
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
+            <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
+              <img src="https://flagcdn.com/w40/tr.png" alt="Türkiye" className="w-5 h-4 object-cover rounded-sm" />
+              Türkiye
+            </span>
+          </label>
         </div>
       </div>
     </div>
@@ -979,9 +984,9 @@ export default function App() {
 
             {/* Navigation - Desktop */}
             <nav className="hidden md:flex items-center gap-6">
-              <a href="/" className="text-sm text-white/90 hover:text-white transition-colors font-medium">PUBG UC</a>
+              <a href="/" className="text-sm text-white/70 hover:text-yellow-400 transition-colors">PUBG UC</a>
               <a href="/valorant" className="text-sm text-white/70 hover:text-red-400 transition-colors">Valorant VP</a>
-              <a href="/mlbb" className="text-sm text-white/70 hover:text-blue-400 transition-colors">MLBB Diamonds</a>
+              <a href="/mlbb" className="text-sm text-blue-400 hover:text-blue-300 transition-colors font-medium">MLBB Diamonds</a>
               <a href="/blog" className="text-sm text-white/70 hover:text-white transition-colors">Blog</a>
             </nav>
 
@@ -1102,9 +1107,11 @@ export default function App() {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: siteSettings?.heroImage 
-              ? `url(${siteSettings.heroImage})`
-              : 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)'
+            backgroundImage: siteSettings?.mlbbHeroImage 
+              ? `url(${siteSettings.mlbbHeroImage})`
+              : siteSettings?.heroImage 
+                ? `url(${siteSettings.heroImage})`
+                : 'url(https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1920&q=80)'
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-[#1a1a1a]" />
@@ -1128,9 +1135,9 @@ export default function App() {
             )}
             <div>
               <div className="text-xs md:text-sm text-white/60 mb-0.5 md:mb-1">Anasayfa &gt; Oyunlar</div>
-              <h1 className="text-xl md:text-[28px] font-bold text-white">PUBG Mobile</h1>
+              <h1 className="text-xl md:text-[28px] font-bold text-white">Mobile Legends: Bang Bang</h1>
               <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
-                <span className="text-yellow-400 text-xs md:text-sm">★★★★★ 5/5</span>
+                <span className="text-blue-400 text-xs md:text-sm">★★★★★ 5/5</span>
                 <span className="text-white/70 text-xs md:text-sm">(2008) yorum</span>
               </div>
             </div>
@@ -1346,7 +1353,7 @@ export default function App() {
                     <div className="h-[58%] md:h-[45%] flex flex-col justify-between p-2.5 md:p-3.5">
                       <div>
                         <div className="text-[10px] md:text-[10px] text-white/60 font-bold uppercase">MOBİLE</div>
-                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.ucAmount} UC</div>
+                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.diamondsAmount || product.vpAmount || product.ucAmount} 💎</div>
                         <div className="flex items-center gap-1 mt-0.5">
                           <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>
@@ -1422,91 +1429,112 @@ export default function App() {
           <div className="p-6">
             {activeInfoTab === 'description' && (
               <div className="prose prose-invert max-w-none">
-                {gameContent ? (
-                  <div className="space-y-6">
-                    {/* Main Description with Show More/Less */}
-                    <div className="relative">
-                      <div 
-                        className={`text-white/80 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 ${
-                          !descriptionExpanded ? 'max-h-32 overflow-hidden' : ''
-                        }`}
-                        dangerouslySetInnerHTML={{ __html: gameContent.description }}
-                      />
+                {/* MLBB için özel açıklama - gameContent kullanılmıyor */}
+                <div className="space-y-6">
+                  {/* Ana Açıklama */}
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-3">Mobile Legends: Bang Bang - Oynanış ve Diamonds Rehberi</h3>
+                    <div className={`text-white/80 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 ${!descriptionExpanded ? 'max-h-32 overflow-hidden' : ''}`}>
+                      <p className="mb-4">Mobile Legends: Bang Bang (MLBB), Moonton tarafından geliştirilen ve dünya genelinde milyonlarca oyuncu tarafından oynanan popüler bir mobil MOBA oyunudur. 5v5 formatında gerçek zamanlı strateji ve takım çalışması gerektiren heyecan verici maçlar sunar.</p>
                       
-                      {/* Gradient overlay when collapsed */}
-                      {!descriptionExpanded && gameContent.description?.length > 300 && (
-                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#1e2229] to-transparent" />
-                      )}
-                    </div>
-
-                    {/* Show More/Less Button */}
-                    {gameContent.description?.length > 300 && (
-                      <button
-                        onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                        className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
-                      >
-                        {descriptionExpanded ? (
-                          <>
-                            <ChevronUp className="w-4 h-4" />
-                            Daha az göster
-                          </>
-                        ) : (
-                          <>
-                            <ChevronDown className="w-4 h-4" />
-                            Devamını göster
-                          </>
-                        )}
-                      </button>
-                    )}
-
-                    {/* UC Packages Info */}
-                    {gameContent.ucPackages && gameContent.ucPackages.length > 0 && (
-                      <div className="mt-8">
-                        <h3 className="text-lg font-bold text-white mb-4">UC Paketleri</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                          {gameContent.ucPackages.map((pkg, idx) => (
-                            <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
-                              <div className="text-yellow-400 font-bold text-lg">{pkg.amount}</div>
-                              <div className="text-white/50 text-xs">{pkg.description}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* FAQ Section */}
-                    {gameContent.faq && gameContent.faq.length > 0 && (
-                      <div className="mt-8">
-                        <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
-                        <div className="space-y-3">
-                          {gameContent.faq.map((item, idx) => (
-                            <div key={idx} className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                              <h4 className="text-white font-medium mb-2">{item.question}</h4>
-                              <p className="text-white/60 text-sm">{item.answer}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <p className="text-white/80">
-                      PUBG Mobile UC (Unknown Cash), oyun içi premium para birimidir. UC ile özel kostümler, silah skinleri, 
-                      Royale Pass ve daha birçok özel içeriğe erişebilirsiniz.
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                      <div className="bg-[#282d36] rounded-lg p-4">
-                        <h4 className="text-white font-medium mb-2">Anında Teslimat</h4>
-                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra UC'ler anında hesabınıza yüklenir.</p>
-                      </div>
-                      <div className="bg-[#282d36] rounded-lg p-4">
-                        <h4 className="text-white font-medium mb-2">Güvenli Ödeme</h4>
-                        <p className="text-white/60 text-sm">256-bit SSL şifreleme ile tüm ödemeleriniz güvende.</p>
-                      </div>
+                      <p className="mb-4">Oyunda 100'den fazla kahraman bulunmakta ve her kahramanın kendine özgü yetenekleri vardır. Tank, Fighter, Assassin, Mage, Marksman ve Support gibi farklı roller arasından seçim yapabilirsiniz.</p>
+                      
+                      <p className="mb-4">Diamonds (💎), oyun içi premium para birimidir. Diamonds ile şunları satın alabilirsiniz:</p>
+                      <ul className="list-disc list-inside mb-4 space-y-1">
+                        <li>Yeni kahramanlar ve özel skinler</li>
+                        <li>Starlight üyeliği</li>
+                        <li>Özel efektler ve emote'lar</li>
+                        <li>Battle Pass ve etkinlik ödülleri</li>
+                        <li>Lucky Box ve özel çekiliş hakları</li>
+                      </ul>
+                      
+                      <p className="font-semibold text-white mb-2">Cihaz Gereksinimleri:</p>
+                      <ul className="list-disc list-inside mb-4 space-y-1">
+                        <li>Android 4.1+ veya iOS 9.0+</li>
+                        <li>RAM: 2 GB (önerilen 3 GB+)</li>
+                        <li>Depolama: 3 GB boş alan</li>
+                        <li>İnternet bağlantısı gereklidir</li>
+                      </ul>
                     </div>
                   </div>
-                )}
+
+                  {/* Show More/Less Button */}
+                  <button
+                    onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                    className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+                  >
+                    {descriptionExpanded ? (
+                      <>
+                        <ChevronUp className="w-4 h-4" />
+                        Daha az göster
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4" />
+                        Devamını göster
+                      </>
+                    )}
+                  </button>
+
+                  {/* Diamonds Paketleri */}
+                  <div className="mt-8">
+                    <h3 className="text-lg font-bold text-white mb-4">Diamonds Paketleri</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                      {[
+                        { amount: '86 💎', description: 'Başlangıç' },
+                        { amount: '172 💎', description: 'Küçük' },
+                        { amount: '257 💎', description: 'Standart' },
+                        { amount: '514 💎', description: 'Popüler' },
+                        { amount: '1050 💎', description: 'Değerli' },
+                        { amount: '2195 💎', description: 'Premium' }
+                      ].map((pkg, idx) => (
+                        <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
+                          <div className="text-blue-400 font-bold text-lg">{pkg.amount}</div>
+                          <div className="text-white/50 text-xs">{pkg.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Özellikler */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <div className="bg-[#282d36] rounded-lg p-4">
+                      <h4 className="text-white font-medium mb-2">🚀 Anında Teslimat</h4>
+                      <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra Diamonds kodunuz anında iletilir ve siparişleriniz bölümünde görüntülenir.</p>
+                    </div>
+                    <div className="bg-[#282d36] rounded-lg p-4">
+                      <h4 className="text-white font-medium mb-2">🔒 Güvenli Ödeme</h4>
+                      <p className="text-white/60 text-sm">256-bit SSL şifreleme ile tüm ödemeleriniz güvende.</p>
+                    </div>
+                    <div className="bg-[#282d36] rounded-lg p-4">
+                      <h4 className="text-white font-medium mb-2">💳 Kolay Kullanım</h4>
+                      <p className="text-white/60 text-sm">Aldığınız kodu oyun içi mağazada kullanarak Diamonds'larınızı yükleyebilirsiniz.</p>
+                    </div>
+                    <div className="bg-[#282d36] rounded-lg p-4">
+                      <h4 className="text-white font-medium mb-2">📞 7/24 Destek</h4>
+                      <p className="text-white/60 text-sm">Herhangi bir sorun yaşarsanız destek ekibimiz size yardımcı olacaktır.</p>
+                    </div>
+                  </div>
+
+                  {/* SSS */}
+                  <div className="mt-8">
+                    <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
+                    <div className="space-y-3">
+                      <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
+                        <h4 className="text-white font-medium mb-2">Diamonds kodu nasıl kullanılır?</h4>
+                        <p className="text-white/60 text-sm">Mobile Legends oyununu açın, mağazaya gidin ve "Redeem" veya "Kod Kullan" bölümünden aldığınız kodu girerek Diamonds'larınızı hesabınıza yükleyin.</p>
+                      </div>
+                      <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
+                        <h4 className="text-white font-medium mb-2">Diamonds kodları hangi bölgelerde geçerli?</h4>
+                        <p className="text-white/60 text-sm">Diamonds kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
+                      </div>
+                      <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
+                        <h4 className="text-white font-medium mb-2">Teslimat ne kadar sürer?</h4>
+                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra Diamonds kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1617,51 +1645,32 @@ export default function App() {
             <div className="overflow-y-auto flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
+                  {/* MLBB ID ve Server ID girme alanı */}
                   <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <Label className="text-sm md:text-base text-white/80 uppercase">Oyuncu ID</Label>
-                      {!playerValid && (
-                        <button 
-                          onClick={() => setPlayerIdModalOpen(true)}
-                          className="text-xs md:text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
-                        >
-                          Oyuncu ID Girin
-                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/>
-                          </svg>
-                        </button>
-                      )}
+                    <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">MLBB Hesap Bilgileri</Label>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-white/60 text-xs mb-1 block">MLBB ID (Oyuncu ID)</label>
+                        <input
+                          type="text"
+                          value={playerId}
+                          onChange={(e) => setPlayerId(e.target.value)}
+                          placeholder="Örn: 123456789"
+                          className="w-full px-4 py-3 rounded-lg bg-[#12161D] border border-white/10 text-white placeholder-white/30 focus:border-blue-500 focus:outline-none transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-white/60 text-xs mb-1 block">Server ID</label>
+                        <input
+                          type="text"
+                          value={playerName}
+                          onChange={(e) => setPlayerName(e.target.value)}
+                          placeholder="Örn: 1234"
+                          className="w-full px-4 py-3 rounded-lg bg-[#12161D] border border-white/10 text-white placeholder-white/30 focus:border-blue-500 focus:outline-none transition-colors"
+                        />
+                      </div>
+                      <p className="text-white/50 text-xs">* MLBB ID ve Server ID bilgilerinizi oyun içi profilinizden bulabilirsiniz.</p>
                     </div>
-                    
-                    {playerValid && playerName ? (
-                      <div className="px-4 py-3.5 rounded bg-green-500/15 border border-green-500/30 flex items-center justify-between">
-                        <div>
-                          <div className="flex items-center gap-2 text-green-400 mb-1 text-xs font-semibold">
-                            <Check className="w-4 h-4" />
-                            <span>Oyuncu Bulundu</span>
-                          </div>
-                          <p className="text-white text-base font-bold">{playerName}</p>
-                          <p className="text-white/50 text-xs mt-0.5">ID: {playerId}</p>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setPlayerValid(null)
-                            setPlayerName('')
-                            setPlayerId('')
-                          }}
-                          className="text-white/60 hover:text-white text-xs"
-                        >
-                          Değiştir
-                        </button>
-                      </div>
-                    ) : (
-                      <div 
-                        onClick={() => setPlayerIdModalOpen(true)}
-                        className="px-4 py-3 rounded bg-[#12161D] border border-white/10 text-white/40 cursor-pointer hover:border-white/20 transition-colors"
-                      >
-                        <span className="text-sm">Oyuncu ID'nizi girin</span>
-                      </div>
-                    )}
                   </div>
 
                   <div>

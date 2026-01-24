@@ -162,71 +162,56 @@ code {
   animation: fadeInUp 0.6s ease-out forwards;
 }
 
-/* Product Card Glow Effect - PLYR.com Style - Always Visible */
-@keyframes glow-breathe {
-  0%, 100% {
-    box-shadow: 
-      0 0 8px rgba(59, 130, 246, 0.4),
-      0 0 16px rgba(59, 130, 246, 0.25),
-      0 0 24px rgba(139, 92, 246, 0.15),
-      inset 0 0 8px rgba(59, 130, 246, 0.1);
-  }
-  50% {
-    box-shadow: 
-      0 0 12px rgba(59, 130, 246, 0.6),
-      0 0 24px rgba(59, 130, 246, 0.4),
-      0 0 36px rgba(139, 92, 246, 0.25),
-      inset 0 0 12px rgba(59, 130, 246, 0.15);
-  }
-}
-
-@keyframes border-glow {
-  0%, 100% {
-    border-color: rgba(59, 130, 246, 0.4);
-  }
-  50% {
-    border-color: rgba(139, 92, 246, 0.6);
-  }
-}
-
+/* Product Card Glow Effect - PLYR.com Style */
+/* Üstten gelen parlama efekti */
 .product-card-glow {
   position: relative;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(59, 130, 246, 0.3) !important;
-  animation: glow-breathe 3s ease-in-out infinite, border-glow 3s ease-in-out infinite;
+  overflow: hidden;
 }
 
 .product-card-glow::before {
   content: '';
   position: absolute;
-  inset: -1px;
-  border-radius: inherit;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
   background: linear-gradient(
-    45deg,
-    rgba(59, 130, 246, 0.2),
-    rgba(139, 92, 246, 0.2),
-    rgba(59, 130, 246, 0.2)
+    180deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.08) 30%,
+    rgba(255, 255, 255, 0.02) 60%,
+    transparent 100%
   );
-  z-index: -1;
-  filter: blur(8px);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Üst köşeden gelen ışık parlaması */
+.product-card-glow::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.1) 30%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 3;
   opacity: 0.6;
-  animation: glow-breathe 3s ease-in-out infinite;
 }
 
 .product-card-glow:hover {
-  transform: translateY(-6px) scale(1.03);
-  border-color: rgba(139, 92, 246, 0.8) !important;
-  box-shadow: 
-    0 0 20px rgba(59, 130, 246, 0.7),
-    0 0 40px rgba(139, 92, 246, 0.5),
-    0 0 60px rgba(59, 130, 246, 0.3),
-    0 25px 50px rgba(0, 0, 0, 0.4) !important;
-  animation: none;
+  transform: translateY(-4px);
 }
 
-.product-card-glow:hover::before {
+.product-card-glow:hover::after {
   opacity: 1;
-  filter: blur(12px);
   animation: glow-rotate 3s linear infinite;
 }
 

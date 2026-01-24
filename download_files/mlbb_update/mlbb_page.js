@@ -58,12 +58,12 @@ function BannerIcon({ icon, size }) {
   );
 }
 
-export default function ValorantPage() {
-  // 🎮 VALORANT PAGE CONFIGURATION
-  const GAME_TYPE = 'valorant'
-  const GAME_NAME = 'Valorant'
-  const CURRENCY_NAME = 'VP'
-  const THEME_COLOR = 'red' // Valorant kırmızı teması
+export default function MLBBPage() {
+  // 🎮 MOBILE LEGENDS PAGE CONFIGURATION
+  const GAME_TYPE = 'mlbb'
+  const GAME_NAME = 'Mobile Legends'
+  const CURRENCY_NAME = 'Diamonds'
+  const THEME_COLOR = 'blue' // MLBB mavi teması
   
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -141,8 +141,8 @@ export default function ValorantPage() {
         }
       }
       
-      // TEK API ÇAĞRISI - Tüm veriler
-      const response = await fetch('/api/homepage?game=valorant')
+      // TEK API ÇAĞRISI - Tüm veriler (sadece MLBB ürünleri)
+      const response = await fetch('/api/homepage?game=mlbb')
       const data = await response.json()
       
       if (data.success) {
@@ -260,26 +260,26 @@ export default function ValorantPage() {
     const productParam = urlParams.get('product');
     
     if (productParam) {
-      // Find product by slug (e.g., "375vp", "825vp", "1700vp")
+      // Find product by slug (e.g., "86diamonds", "172diamonds")
       const slug = productParam.toLowerCase().replace('-', '');
       
-      // Try to match by VP amount in title
-      const vpAmount = parseInt(slug.replace('vp', '').replace('uc', ''));
+      // Try to match by Diamonds amount
+      const diamondsAmount = parseInt(slug.replace('diamonds', '').replace('vp', '').replace('uc', ''));
       
       let matchedProduct = null;
       
-      if (!isNaN(vpAmount)) {
-        // Find product that contains the VP amount in title or vpAmount field
+      if (!isNaN(diamondsAmount)) {
+        // Find product that contains the Diamonds amount
         matchedProduct = products.find(p => {
-          // Check vpAmount field first
-          if (p.vpAmount && parseInt(p.vpAmount) === vpAmount) {
+          // Check diamondsAmount field first
+          if (p.diamondsAmount && parseInt(p.diamondsAmount) === diamondsAmount) {
             return true;
           }
           // Check title
           const title = p.title.toLowerCase();
-          const matches = title.match(/(\d+)\s*vp/i);
+          const matches = title.match(/(\d+)/);
           if (matches) {
-            return parseInt(matches[1]) === vpAmount;
+            return parseInt(matches[1]) === diamondsAmount;
           }
           return false;
         });
@@ -674,11 +674,10 @@ export default function ValorantPage() {
     setPlayerName('')
     setPlayerValid(null)
     
-    // Update URL with product parameter for Google Ads tracking (VP için)
-    const vpAmount = product.title.match(/(\d+)\s*VP/i) || product.vpAmount;
-    if (vpAmount) {
-      const amount = typeof vpAmount === 'object' ? vpAmount[1] : (product.vpAmount || product.ucAmount);
-      const productSlug = amount + 'vp';
+    // Update URL with product parameter for Google Ads tracking (Diamonds için)
+    const diamondsAmount = product.diamondsAmount || product.title.match(/(\d+)/)?.[1];
+    if (diamondsAmount) {
+      const productSlug = diamondsAmount + 'diamonds';
       window.history.pushState({}, '', `?product=${productSlug}`);
     }
     
@@ -914,7 +913,7 @@ export default function ValorantPage() {
         <div className="space-y-2">
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
-            <span className="text-sm text-white/70 group-hover:text-white transition-colors">Valorant</span>
+            <span className="text-sm text-white/70 group-hover:text-white transition-colors">Mobile Legends</span>
           </label>
         </div>
       </div>
@@ -922,7 +921,7 @@ export default function ValorantPage() {
       <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
         <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Bölge</h3>
         <div className="space-y-2">
-          {/* Valorant için sadece Türkiye bölgesi */}
+          {/* MLBB için sadece Türkiye bölgesi */}
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
             <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
@@ -982,8 +981,8 @@ export default function ValorantPage() {
             {/* Navigation - Desktop */}
             <nav className="hidden md:flex items-center gap-6">
               <a href="/" className="text-sm text-white/70 hover:text-yellow-400 transition-colors">PUBG UC</a>
-              <a href="/valorant" className="text-sm text-red-400 hover:text-red-300 transition-colors font-medium">Valorant VP</a>
-              <a href="/mlbb" className="text-sm text-white/70 hover:text-blue-400 transition-colors">MLBB Diamonds</a>
+              <a href="/valorant" className="text-sm text-white/70 hover:text-red-400 transition-colors">Valorant VP</a>
+              <a href="/mlbb" className="text-sm text-blue-400 hover:text-blue-300 transition-colors font-medium">MLBB Diamonds</a>
               <a href="/blog" className="text-sm text-white/70 hover:text-white transition-colors">Blog</a>
             </nav>
 
@@ -1104,11 +1103,11 @@ export default function ValorantPage() {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: siteSettings?.valorantHeroImage 
-              ? `url(${siteSettings.valorantHeroImage})`
+            backgroundImage: siteSettings?.mlbbHeroImage 
+              ? `url(${siteSettings.mlbbHeroImage})`
               : siteSettings?.heroImage 
                 ? `url(${siteSettings.heroImage})`
-                : 'url(https://images.contentstack.io/v3/assets/bltb6530b271fddd0b1/blt81a85f0d04358da3/5eb7cdc19df5cf37047009d1/Valorant_VALORANT_Background.jpg)'
+                : 'url(https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1920&q=80)'
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-[#1a1a1a]" />
@@ -1132,9 +1131,9 @@ export default function ValorantPage() {
             )}
             <div>
               <div className="text-xs md:text-sm text-white/60 mb-0.5 md:mb-1">Anasayfa &gt; Oyunlar</div>
-              <h1 className="text-xl md:text-[28px] font-bold text-white">Valorant</h1>
+              <h1 className="text-xl md:text-[28px] font-bold text-white">Mobile Legends: Bang Bang</h1>
               <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
-                <span className="text-red-400 text-xs md:text-sm">★★★★★ 5/5</span>
+                <span className="text-blue-400 text-xs md:text-sm">★★★★★ 5/5</span>
                 <span className="text-white/70 text-xs md:text-sm">(2008) yorum</span>
               </div>
             </div>
@@ -1344,8 +1343,8 @@ export default function ValorantPage() {
                     {/* Content Section */}
                     <div className="h-[58%] md:h-[45%] flex flex-col justify-between p-2.5 md:p-3.5">
                       <div>
-                        <div className="text-[10px] md:text-[10px] text-white/60 font-bold uppercase">PC</div>
-                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.vpAmount || product.ucAmount} VP</div>
+                        <div className="text-[10px] md:text-[10px] text-white/60 font-bold uppercase">MOBİLE</div>
+                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.diamondsAmount || product.vpAmount || product.ucAmount} 💎</div>
                         <div className="flex items-center gap-1 mt-0.5">
                           <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>
@@ -1421,31 +1420,31 @@ export default function ValorantPage() {
           <div className="p-6">
             {activeInfoTab === 'description' && (
               <div className="prose prose-invert max-w-none">
-                {/* Valorant için özel açıklama - gameContent kullanılmıyor */}
+                {/* MLBB için özel açıklama - gameContent kullanılmıyor */}
                 <div className="space-y-6">
                   {/* Ana Açıklama */}
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-3">Valorant: Oynanış, Tarihçe ve Sistem Gereksinimleri</h3>
+                    <h3 className="text-lg font-bold text-white mb-3">Mobile Legends: Bang Bang - Oynanış ve Diamonds Rehberi</h3>
                     <div className={`text-white/80 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 ${!descriptionExpanded ? 'max-h-32 overflow-hidden' : ''}`}>
-                      <p className="mb-4">Valorant, Riot Games tarafından geliştirilen ve 2020 yılında piyasaya sürülen ücretsiz taktiksel birinci şahıs nişancı (FPS) oyunudur. Oyun, Counter-Strike serisi ile Overwatch'un mekaniklerini birleştirerek benzersiz bir deneyim sunar.</p>
+                      <p className="mb-4">Mobile Legends: Bang Bang (MLBB), Moonton tarafından geliştirilen ve dünya genelinde milyonlarca oyuncu tarafından oynanan popüler bir mobil MOBA oyunudur. 5v5 formatında gerçek zamanlı strateji ve takım çalışması gerektiren heyecan verici maçlar sunar.</p>
                       
-                      <p className="mb-4">5v5 formatında oynanan Valorant'ta, oyuncular farklı yeteneklere sahip "Ajan" karakterlerini seçer. Her ajanın kendine özgü 4 yeteneği vardır: bir imza yeteneği, iki satın alınabilir yetenek ve bir ultimate yeteneği.</p>
+                      <p className="mb-4">Oyunda 100'den fazla kahraman bulunmakta ve her kahramanın kendine özgü yetenekleri vardır. Tank, Fighter, Assassin, Mage, Marksman ve Support gibi farklı roller arasından seçim yapabilirsiniz.</p>
                       
-                      <p className="mb-4">Valorant Points (VP), oyun içi premium para birimidir. VP ile şunları satın alabilirsiniz:</p>
+                      <p className="mb-4">Diamonds (💎), oyun içi premium para birimidir. Diamonds ile şunları satın alabilirsiniz:</p>
                       <ul className="list-disc list-inside mb-4 space-y-1">
-                        <li>Silah skinleri ve koleksiyonları</li>
-                        <li>Battle Pass ve Premium Battle Pass</li>
-                        <li>Ajan kostümleri ve aksesuarları</li>
-                        <li>Radianite Points (skin yükseltmeleri için)</li>
-                        <li>Spray'ler, kartlar ve başlıklar</li>
+                        <li>Yeni kahramanlar ve özel skinler</li>
+                        <li>Starlight üyeliği</li>
+                        <li>Özel efektler ve emote'lar</li>
+                        <li>Battle Pass ve etkinlik ödülleri</li>
+                        <li>Lucky Box ve özel çekiliş hakları</li>
                       </ul>
                       
-                      <p className="font-semibold text-white mb-2">Sistem Gereksinimleri (Minimum):</p>
+                      <p className="font-semibold text-white mb-2">Cihaz Gereksinimleri:</p>
                       <ul className="list-disc list-inside mb-4 space-y-1">
-                        <li>İşletim Sistemi: Windows 7/8/10 64-bit</li>
-                        <li>RAM: 4 GB</li>
-                        <li>VRAM: 1 GB</li>
-                        <li>İşlemci: Intel Core 2 Duo E8400</li>
+                        <li>Android 4.1+ veya iOS 9.0+</li>
+                        <li>RAM: 2 GB (önerilen 3 GB+)</li>
+                        <li>Depolama: 3 GB boş alan</li>
+                        <li>İnternet bağlantısı gereklidir</li>
                       </ul>
                     </div>
                   </div>
@@ -1453,7 +1452,7 @@ export default function ValorantPage() {
                   {/* Show More/Less Button */}
                   <button
                     onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                    className="flex items-center gap-2 text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
+                    className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
                   >
                     {descriptionExpanded ? (
                       <>
@@ -1468,20 +1467,20 @@ export default function ValorantPage() {
                     )}
                   </button>
 
-                  {/* VP Paketleri */}
+                  {/* Diamonds Paketleri */}
                   <div className="mt-8">
-                    <h3 className="text-lg font-bold text-white mb-4">VP Paketleri</h3>
+                    <h3 className="text-lg font-bold text-white mb-4">Diamonds Paketleri</h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                       {[
-                        { amount: '375 VP', description: 'Başlangıç' },
-                        { amount: '825 VP', description: 'Standart' },
-                        { amount: '1700 VP', description: 'Popüler' },
-                        { amount: '2925 VP', description: 'Değerli' },
-                        { amount: '4325 VP', description: 'Premium' },
-                        { amount: '8900 VP', description: 'Mega' }
+                        { amount: '86 💎', description: 'Başlangıç' },
+                        { amount: '172 💎', description: 'Küçük' },
+                        { amount: '257 💎', description: 'Standart' },
+                        { amount: '514 💎', description: 'Popüler' },
+                        { amount: '1050 💎', description: 'Değerli' },
+                        { amount: '2195 💎', description: 'Premium' }
                       ].map((pkg, idx) => (
                         <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
-                          <div className="text-red-400 font-bold text-lg">{pkg.amount}</div>
+                          <div className="text-blue-400 font-bold text-lg">{pkg.amount}</div>
                           <div className="text-white/50 text-xs">{pkg.description}</div>
                         </div>
                       ))}
@@ -1492,7 +1491,7 @@ export default function ValorantPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">🚀 Anında Teslimat</h4>
-                      <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra VP kodunuz anında iletilir ve siparişleriniz bölümünde görüntülenir.</p>
+                      <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra Diamonds kodunuz anında iletilir ve siparişleriniz bölümünde görüntülenir.</p>
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">🔒 Güvenli Ödeme</h4>
@@ -1500,7 +1499,7 @@ export default function ValorantPage() {
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">💳 Kolay Kullanım</h4>
-                      <p className="text-white/60 text-sm">Aldığınız VP kodunu Valorant mağazasında kullanabilirsiniz.</p>
+                      <p className="text-white/60 text-sm">Aldığınız kodu oyun içi mağazada kullanarak Diamonds'larınızı yükleyebilirsiniz.</p>
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">📞 7/24 Destek</h4>
@@ -1513,16 +1512,16 @@ export default function ValorantPage() {
                     <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
                     <div className="space-y-3">
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">VP kodu nasıl kullanılır?</h4>
-                        <p className="text-white/60 text-sm">Valorant'ı açın, mağazaya gidin ve "VP Satın Al" bölümünden "Kodu Kullan" seçeneğini seçin. Aldığınız kodu girerek VP'nizi hesabınıza yükleyin.</p>
+                        <h4 className="text-white font-medium mb-2">Diamonds kodu nasıl kullanılır?</h4>
+                        <p className="text-white/60 text-sm">Mobile Legends oyununu açın, mağazaya gidin ve "Redeem" veya "Kod Kullan" bölümünden aldığınız kodu girerek Diamonds'larınızı hesabınıza yükleyin.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">VP kodları hangi bölgelerde geçerli?</h4>
-                        <p className="text-white/60 text-sm">VP kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
+                        <h4 className="text-white font-medium mb-2">Diamonds kodları hangi bölgelerde geçerli?</h4>
+                        <p className="text-white/60 text-sm">Diamonds kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">Teslimat ne kadar sürer?</h4>
-                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra VP kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
+                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra Diamonds kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
                       </div>
                     </div>
                   </div>
@@ -1629,13 +1628,13 @@ export default function ValorantPage() {
             <div className="overflow-y-auto flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
-                  {/* Valorant VP - Oyuncu ID gerekmez, direkt kod teslimi */}
-                  <div className="px-4 py-3.5 rounded bg-red-500/15 border border-red-500/30">
-                    <div className="flex items-center gap-2 text-red-400 mb-1 text-xs font-semibold">
+                  {/* MLBB Diamonds - Oyuncu ID gerekmez, direkt kod teslimi */}
+                  <div className="px-4 py-3.5 rounded bg-blue-500/15 border border-blue-500/30">
+                    <div className="flex items-center gap-2 text-blue-400 mb-1 text-xs font-semibold">
                       <Check className="w-4 h-4" />
-                      <span>Valorant VP Kodu</span>
+                      <span>MLBB Diamonds Kodu</span>
                     </div>
-                    <p className="text-white/70 text-sm">Ödeme sonrası VP kodunuz anında e-posta ile gönderilecek ve Siparişlerim bölümünde görüntülenecektir.</p>
+                    <p className="text-white/70 text-sm">Ödeme sonrası Diamonds kodunuz anında e-posta ile gönderilecek ve Siparişlerim bölümünde görüntülenecektir.</p>
                   </div>
 
                   <div>

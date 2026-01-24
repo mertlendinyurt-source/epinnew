@@ -141,8 +141,8 @@ export default function MLBBPage() {
         }
       }
       
-      // TEK API ÇAĞRISI - Tüm veriler
-      const response = await fetch('/api/homepage?game=valorant')
+      // TEK API ÇAĞRISI - Tüm veriler (sadece MLBB ürünleri)
+      const response = await fetch('/api/homepage?game=mlbb')
       const data = await response.json()
       
       if (data.success) {

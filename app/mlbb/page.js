@@ -1421,31 +1421,31 @@ export default function MLBBPage() {
           <div className="p-6">
             {activeInfoTab === 'description' && (
               <div className="prose prose-invert max-w-none">
-                {/* Valorant için özel açıklama - gameContent kullanılmıyor */}
+                {/* MLBB için özel açıklama - gameContent kullanılmıyor */}
                 <div className="space-y-6">
                   {/* Ana Açıklama */}
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-3">Valorant: Oynanış, Tarihçe ve Sistem Gereksinimleri</h3>
+                    <h3 className="text-lg font-bold text-white mb-3">Mobile Legends: Bang Bang - Oynanış ve Diamonds Rehberi</h3>
                     <div className={`text-white/80 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 ${!descriptionExpanded ? 'max-h-32 overflow-hidden' : ''}`}>
-                      <p className="mb-4">Valorant, Riot Games tarafından geliştirilen ve 2020 yılında piyasaya sürülen ücretsiz taktiksel birinci şahıs nişancı (FPS) oyunudur. Oyun, Counter-Strike serisi ile Overwatch'un mekaniklerini birleştirerek benzersiz bir deneyim sunar.</p>
+                      <p className="mb-4">Mobile Legends: Bang Bang (MLBB), Moonton tarafından geliştirilen ve dünya genelinde milyonlarca oyuncu tarafından oynanan popüler bir mobil MOBA oyunudur. 5v5 formatında gerçek zamanlı strateji ve takım çalışması gerektiren heyecan verici maçlar sunar.</p>
                       
-                      <p className="mb-4">5v5 formatında oynanan Valorant'ta, oyuncular farklı yeteneklere sahip "Ajan" karakterlerini seçer. Her ajanın kendine özgü 4 yeteneği vardır: bir imza yeteneği, iki satın alınabilir yetenek ve bir ultimate yeteneği.</p>
+                      <p className="mb-4">Oyunda 100'den fazla kahraman bulunmakta ve her kahramanın kendine özgü yetenekleri vardır. Tank, Fighter, Assassin, Mage, Marksman ve Support gibi farklı roller arasından seçim yapabilirsiniz.</p>
                       
-                      <p className="mb-4">Valorant Points (VP), oyun içi premium para birimidir. VP ile şunları satın alabilirsiniz:</p>
+                      <p className="mb-4">Diamonds (💎), oyun içi premium para birimidir. Diamonds ile şunları satın alabilirsiniz:</p>
                       <ul className="list-disc list-inside mb-4 space-y-1">
-                        <li>Silah skinleri ve koleksiyonları</li>
-                        <li>Battle Pass ve Premium Battle Pass</li>
-                        <li>Ajan kostümleri ve aksesuarları</li>
-                        <li>Radianite Points (skin yükseltmeleri için)</li>
-                        <li>Spray'ler, kartlar ve başlıklar</li>
+                        <li>Yeni kahramanlar ve özel skinler</li>
+                        <li>Starlight üyeliği</li>
+                        <li>Özel efektler ve emote'lar</li>
+                        <li>Battle Pass ve etkinlik ödülleri</li>
+                        <li>Lucky Box ve özel çekiliş hakları</li>
                       </ul>
                       
-                      <p className="font-semibold text-white mb-2">Sistem Gereksinimleri (Minimum):</p>
+                      <p className="font-semibold text-white mb-2">Cihaz Gereksinimleri:</p>
                       <ul className="list-disc list-inside mb-4 space-y-1">
-                        <li>İşletim Sistemi: Windows 7/8/10 64-bit</li>
-                        <li>RAM: 4 GB</li>
-                        <li>VRAM: 1 GB</li>
-                        <li>İşlemci: Intel Core 2 Duo E8400</li>
+                        <li>Android 4.1+ veya iOS 9.0+</li>
+                        <li>RAM: 2 GB (önerilen 3 GB+)</li>
+                        <li>Depolama: 3 GB boş alan</li>
+                        <li>İnternet bağlantısı gereklidir</li>
                       </ul>
                     </div>
                   </div>
@@ -1453,7 +1453,7 @@ export default function MLBBPage() {
                   {/* Show More/Less Button */}
                   <button
                     onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                    className="flex items-center gap-2 text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
+                    className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
                   >
                     {descriptionExpanded ? (
                       <>
@@ -1468,20 +1468,20 @@ export default function MLBBPage() {
                     )}
                   </button>
 
-                  {/* VP Paketleri */}
+                  {/* Diamonds Paketleri */}
                   <div className="mt-8">
-                    <h3 className="text-lg font-bold text-white mb-4">VP Paketleri</h3>
+                    <h3 className="text-lg font-bold text-white mb-4">Diamonds Paketleri</h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                       {[
-                        { amount: '375 VP', description: 'Başlangıç' },
-                        { amount: '825 VP', description: 'Standart' },
-                        { amount: '1700 VP', description: 'Popüler' },
-                        { amount: '2925 VP', description: 'Değerli' },
-                        { amount: '4325 VP', description: 'Premium' },
-                        { amount: '8900 VP', description: 'Mega' }
+                        { amount: '86 💎', description: 'Başlangıç' },
+                        { amount: '172 💎', description: 'Küçük' },
+                        { amount: '257 💎', description: 'Standart' },
+                        { amount: '514 💎', description: 'Popüler' },
+                        { amount: '1050 💎', description: 'Değerli' },
+                        { amount: '2195 💎', description: 'Premium' }
                       ].map((pkg, idx) => (
                         <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
-                          <div className="text-red-400 font-bold text-lg">{pkg.amount}</div>
+                          <div className="text-blue-400 font-bold text-lg">{pkg.amount}</div>
                           <div className="text-white/50 text-xs">{pkg.description}</div>
                         </div>
                       ))}
@@ -1492,7 +1492,7 @@ export default function MLBBPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">🚀 Anında Teslimat</h4>
-                      <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra VP kodunuz anında iletilir ve siparişleriniz bölümünde görüntülenir.</p>
+                      <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra Diamonds kodunuz anında iletilir ve siparişleriniz bölümünde görüntülenir.</p>
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">🔒 Güvenli Ödeme</h4>
@@ -1500,7 +1500,7 @@ export default function MLBBPage() {
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">💳 Kolay Kullanım</h4>
-                      <p className="text-white/60 text-sm">Aldığınız VP kodunu Valorant mağazasında kullanabilirsiniz.</p>
+                      <p className="text-white/60 text-sm">Aldığınız kodu oyun içi mağazada kullanarak Diamonds'larınızı yükleyebilirsiniz.</p>
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">📞 7/24 Destek</h4>
@@ -1513,16 +1513,16 @@ export default function MLBBPage() {
                     <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
                     <div className="space-y-3">
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">VP kodu nasıl kullanılır?</h4>
-                        <p className="text-white/60 text-sm">Valorant'ı açın, mağazaya gidin ve "VP Satın Al" bölümünden "Kodu Kullan" seçeneğini seçin. Aldığınız kodu girerek VP'nizi hesabınıza yükleyin.</p>
+                        <h4 className="text-white font-medium mb-2">Diamonds kodu nasıl kullanılır?</h4>
+                        <p className="text-white/60 text-sm">Mobile Legends oyununu açın, mağazaya gidin ve "Redeem" veya "Kod Kullan" bölümünden aldığınız kodu girerek Diamonds'larınızı hesabınıza yükleyin.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">VP kodları hangi bölgelerde geçerli?</h4>
-                        <p className="text-white/60 text-sm">VP kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
+                        <h4 className="text-white font-medium mb-2">Diamonds kodları hangi bölgelerde geçerli?</h4>
+                        <p className="text-white/60 text-sm">Diamonds kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">Teslimat ne kadar sürer?</h4>
-                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra VP kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
+                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra Diamonds kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
                       </div>
                     </div>
                   </div>

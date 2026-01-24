@@ -260,26 +260,26 @@ export default function MLBBPage() {
     const productParam = urlParams.get('product');
     
     if (productParam) {
-      // Find product by slug (e.g., "375vp", "825vp", "1700vp")
+      // Find product by slug (e.g., "86diamonds", "172diamonds")
       const slug = productParam.toLowerCase().replace('-', '');
       
-      // Try to match by VP amount in title
-      const vpAmount = parseInt(slug.replace('vp', '').replace('uc', ''));
+      // Try to match by Diamonds amount
+      const diamondsAmount = parseInt(slug.replace('diamonds', '').replace('vp', '').replace('uc', ''));
       
       let matchedProduct = null;
       
-      if (!isNaN(vpAmount)) {
-        // Find product that contains the VP amount in title or vpAmount field
+      if (!isNaN(diamondsAmount)) {
+        // Find product that contains the Diamonds amount
         matchedProduct = products.find(p => {
-          // Check vpAmount field first
-          if (p.vpAmount && parseInt(p.vpAmount) === vpAmount) {
+          // Check diamondsAmount field first
+          if (p.diamondsAmount && parseInt(p.diamondsAmount) === diamondsAmount) {
             return true;
           }
           // Check title
           const title = p.title.toLowerCase();
-          const matches = title.match(/(\d+)\s*vp/i);
+          const matches = title.match(/(\d+)/);
           if (matches) {
-            return parseInt(matches[1]) === vpAmount;
+            return parseInt(matches[1]) === diamondsAmount;
           }
           return false;
         });

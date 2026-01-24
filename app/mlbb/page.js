@@ -1334,10 +1334,15 @@ export default function MLBBPage() {
 
                     {/* Image Section */}
                     <div className="relative h-[42%] md:h-[55%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-2 md:p-4">
+                      {/* Flare Effect - PLYR Style */}
+                      <div className="go-product-shine">
+                        <div className="go-product-shine-overlay"></div>
+                        <img className="go-flare" src="/flare.png" alt="" />
+                      </div>
                       <img 
                         src={product.imageUrl || "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=300&h=300&fit=crop"}
                         alt={product.title}
-                        className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                        className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105 relative z-10"
                         onError={(e) => {
                           e.target.src = "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=300&h=300&fit=crop";
                         }}

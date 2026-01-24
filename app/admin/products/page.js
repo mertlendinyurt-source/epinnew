@@ -336,9 +336,11 @@ export default function AdminProducts() {
         game: formData.game
       }
       
-      // Use ucAmount for PUBG, vpAmount for Valorant
+      // Use ucAmount for PUBG, vpAmount for Valorant, diamondsAmount for MLBB
       if (formData.game === 'valorant') {
         bodyData.vpAmount = parseInt(formData.ucAmount)
+      } else if (formData.game === 'mlbb') {
+        bodyData.diamondsAmount = parseInt(formData.ucAmount)
       } else {
         bodyData.ucAmount = parseInt(formData.ucAmount)
       }

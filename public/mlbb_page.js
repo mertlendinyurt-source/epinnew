@@ -702,7 +702,11 @@ export default function MLBBPage() {
   }
 
   const handleCheckout = async () => {
-    // Valorant için Oyuncu ID kontrolü yok - direkt kod teslimi
+    // MLBB için ID ve Server ID kontrolü
+    if (!playerId || !playerName) {
+      toast.error('Lütfen MLBB ID ve Server ID bilgilerinizi girin')
+      return
+    }
 
     // 1. Check authentication
     const token = localStorage.getItem('userToken')
@@ -745,10 +749,10 @@ export default function MLBBPage() {
         },
         body: JSON.stringify({
           productId: selectedProduct.id,
-          playerId: 'valorant-direct', // Valorant için oyuncu ID gerekmiyor
-          playerName: 'Valorant VP',
+          playerId: playerId, // MLBB ID
+          playerName: playerName, // Server ID
           paymentMethod: paymentMethod, // 'card' or 'balance'
-          game: GAME_TYPE // 'valorant'
+          game: GAME_TYPE // 'mlbb'
         })
       })
 
@@ -1628,13 +1632,32 @@ export default function MLBBPage() {
             <div className="overflow-y-auto flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
-                  {/* MLBB Diamonds - Oyuncu ID gerekmez, direkt kod teslimi */}
-                  <div className="px-4 py-3.5 rounded bg-blue-500/15 border border-blue-500/30">
-                    <div className="flex items-center gap-2 text-blue-400 mb-1 text-xs font-semibold">
-                      <Check className="w-4 h-4" />
-                      <span>MLBB Diamonds Kodu</span>
+                  {/* MLBB ID ve Server ID girme alanı */}
+                  <div>
+                    <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">MLBB Hesap Bilgileri</Label>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-white/60 text-xs mb-1 block">MLBB ID (Oyuncu ID)</label>
+                        <input
+                          type="text"
+                          value={playerId}
+                          onChange={(e) => setPlayerId(e.target.value)}
+                          placeholder="Örn: 123456789"
+                          className="w-full px-4 py-3 rounded-lg bg-[#12161D] border border-white/10 text-white placeholder-white/30 focus:border-blue-500 focus:outline-none transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-white/60 text-xs mb-1 block">Server ID</label>
+                        <input
+                          type="text"
+                          value={playerName}
+                          onChange={(e) => setPlayerName(e.target.value)}
+                          placeholder="Örn: 1234"
+                          className="w-full px-4 py-3 rounded-lg bg-[#12161D] border border-white/10 text-white placeholder-white/30 focus:border-blue-500 focus:outline-none transition-colors"
+                        />
+                      </div>
+                      <p className="text-white/50 text-xs">* MLBB ID ve Server ID bilgilerinizi oyun içi profilinizden bulabilirsiniz.</p>
                     </div>
-                    <p className="text-white/70 text-sm">Ödeme sonrası Diamonds kodunuz anında e-posta ile gönderilecek ve Siparişlerim bölümünde görüntülenecektir.</p>
                   </div>
 
                   <div>

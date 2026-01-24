@@ -1317,7 +1317,7 @@ export default function App() {
                   <div
                     key={product.id}
                     onClick={() => handleProductSelect(product)}
-                    className="group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border border-white/10 hover:border-white/20 w-full aspect-[2/3.8] md:aspect-[2/3]"
+                    className="product-card-shine group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border border-white/10 hover:border-white/20 w-full aspect-[2/3.8] md:aspect-[2/3]"
                     style={{ backgroundColor: '#252a34', maxWidth: '270px', margin: '0 auto' }}
                   >
                     {/* Info Icon */}

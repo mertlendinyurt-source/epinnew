@@ -313,3 +313,91 @@ body {
 .product-card-shine:hover::before {
   animation: shine 1.5s ease-in-out infinite;
 }
+
+/* PLYR Style Flare Effect */
+@keyframes flareMove {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.1),
+                0 0 10px rgba(255, 255, 255, 0.05),
+                inset 0 0 20px rgba(255, 255, 255, 0.02);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2),
+                0 0 30px rgba(255, 255, 255, 0.1),
+                inset 0 0 30px rgba(255, 255, 255, 0.05);
+  }
+}
+
+.product-card-glow {
+  position: relative;
+  overflow: hidden;
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.product-card-glow::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.05) 30%,
+    transparent 70%
+  );
+  transform: translate(-50%, -50%);
+  animation: flareMove 6s linear infinite;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.product-card-glow::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 70%
+  );
+  background-size: 200% 200%;
+  animation: borderShine 4s linear infinite;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes borderShine {
+  0% {
+    background-position: 200% 200%;
+  }
+  100% {
+    background-position: -200% -200%;
+  }
+}

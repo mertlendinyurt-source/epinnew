@@ -162,53 +162,50 @@ code {
   animation: fadeInUp 0.6s ease-out forwards;
 }
 
-/* Product Card Glow Effect - PLYR.com Style Starburst */
+/* Product Card Glow Effect - PLYR.com Style */
 .product-card-glow {
   position: relative;
   overflow: hidden;
-}
-
-/* Yıldız patlaması efekti - sadece görsel arkasında */
-.product-card-glow::before {
-  content: '';
-  position: absolute;
-  top: 5%;
-  left: 50%;
-  width: 80%;
-  height: 45%;
-  transform: translateX(-50%);
-  background-image: url('/flare.png');
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.25;
-  pointer-events: none;
-  z-index: 0;
-  transition: opacity 0.3s ease;
-}
-
-/* Üstten gelen ışık efekti */
-.product-card-glow::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.03) 40%,
-    transparent 100%
-  );
-  pointer-events: none;
-  z-index: 1;
 }
 
 .product-card-glow:hover {
   transform: translateY(-4px);
 }
 
-.product-card-glow:hover::before {
-  opacity: 0.4;
+/* Flare görseli için stil */
+.go-product-shine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.go-product-shine-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.02) 50%,
+    transparent 100%
+  );
+}
+
+.go-flare {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: auto;
+  opacity: 0.35;
+  mix-blend-mode: screen;
+  pointer-events: none;
 }

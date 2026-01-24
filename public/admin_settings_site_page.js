@@ -18,6 +18,7 @@ export default function SiteSettingsPage() {
     favicon: null,
     heroImage: null,
     valorantHeroImage: null,
+    mlbbHeroImage: null,
     categoryIcon: null,
     siteName: '',
     metaTitle: '',
@@ -31,8 +32,8 @@ export default function SiteSettingsPage() {
     dailyCountdownEnabled: true,
     dailyCountdownLabel: 'Kampanya bitimine'
   });
-  const [uploads, setUploads] = useState({ logo: null, favicon: null, heroImage: null, valorantHeroImage: null, categoryIcon: null });
-  const [previews, setPreviews] = useState({ logo: null, favicon: null, heroImage: null, valorantHeroImage: null, categoryIcon: null });
+  const [uploads, setUploads] = useState({ logo: null, favicon: null, heroImage: null, valorantHeroImage: null, mlbbHeroImage: null, categoryIcon: null });
+  const [previews, setPreviews] = useState({ logo: null, favicon: null, heroImage: null, valorantHeroImage: null, mlbbHeroImage: null, categoryIcon: null });
 
   useEffect(() => {
     const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken');
@@ -63,6 +64,7 @@ export default function SiteSettingsPage() {
           favicon: result.data.favicon,
           heroImage: result.data.heroImage,
           valorantHeroImage: result.data.valorantHeroImage,
+          mlbbHeroImage: result.data.mlbbHeroImage,
           categoryIcon: result.data.categoryIcon
         });
       }
@@ -481,6 +483,20 @@ export default function SiteSettingsPage() {
                 type="valorantHeroImage"
                 title="Valorant Hero Banner"
                 description="Valorant VP sayfası üst görseli"
+                uploads={uploads}
+                previews={previews}
+                handleFileSelect={handleFileSelect}
+                handleUploadAndSave={handleUploadAndSave}
+                saving={saving}
+                large
+              />
+            </div>
+
+            <div className="pt-4 border-t border-slate-800">
+              <UploadBox
+                type="mlbbHeroImage"
+                title="MLBB Hero Banner"
+                description="Mobile Legends sayfası üst görseli"
                 uploads={uploads}
                 previews={previews}
                 handleFileSelect={handleFileSelect}

@@ -201,3 +201,103 @@ code {
 .product-card-shine:hover::before {
   animation: shine 1.5s ease-in-out infinite;
 }
+
+/* Product Card Glow Effect - PLYR.com Style */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 5px rgba(59, 130, 246, 0.3),
+      0 0 10px rgba(59, 130, 246, 0.2),
+      0 0 20px rgba(59, 130, 246, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 0 10px rgba(59, 130, 246, 0.5),
+      0 0 20px rgba(59, 130, 246, 0.3),
+      0 0 40px rgba(59, 130, 246, 0.2);
+  }
+}
+
+.product-card-glow {
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card-glow::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.3),
+    rgba(139, 92, 246, 0.3),
+    rgba(59, 130, 246, 0.3)
+  );
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.product-card-glow:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 
+    0 0 20px rgba(59, 130, 246, 0.4),
+    0 0 40px rgba(139, 92, 246, 0.2),
+    0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.product-card-glow:hover::after {
+  opacity: 1;
+  animation: glow-rotate 3s linear infinite;
+}
+
+@keyframes glow-rotate {
+  0% {
+    background: linear-gradient(
+      0deg,
+      rgba(59, 130, 246, 0.5),
+      rgba(139, 92, 246, 0.3),
+      rgba(59, 130, 246, 0.5)
+    );
+  }
+  25% {
+    background: linear-gradient(
+      90deg,
+      rgba(139, 92, 246, 0.5),
+      rgba(59, 130, 246, 0.3),
+      rgba(139, 92, 246, 0.5)
+    );
+  }
+  50% {
+    background: linear-gradient(
+      180deg,
+      rgba(59, 130, 246, 0.5),
+      rgba(139, 92, 246, 0.3),
+      rgba(59, 130, 246, 0.5)
+    );
+  }
+  75% {
+    background: linear-gradient(
+      270deg,
+      rgba(139, 92, 246, 0.5),
+      rgba(59, 130, 246, 0.3),
+      rgba(139, 92, 246, 0.5)
+    );
+  }
+  100% {
+    background: linear-gradient(
+      360deg,
+      rgba(59, 130, 246, 0.5),
+      rgba(139, 92, 246, 0.3),
+      rgba(59, 130, 246, 0.5)
+    );
+  }
+}

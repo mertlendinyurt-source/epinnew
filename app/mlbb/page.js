@@ -58,12 +58,12 @@ function BannerIcon({ icon, size }) {
   );
 }
 
-export default function ValorantPage() {
-  // 🎮 VALORANT PAGE CONFIGURATION
-  const GAME_TYPE = 'valorant'
-  const GAME_NAME = 'Valorant'
-  const CURRENCY_NAME = 'VP'
-  const THEME_COLOR = 'red' // Valorant kırmızı teması
+export default function MLBBPage() {
+  // 🎮 MOBILE LEGENDS PAGE CONFIGURATION
+  const GAME_TYPE = 'mlbb'
+  const GAME_NAME = 'Mobile Legends'
+  const CURRENCY_NAME = 'Diamonds'
+  const THEME_COLOR = 'blue' // MLBB mavi teması
   
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)

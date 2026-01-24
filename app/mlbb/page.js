@@ -749,10 +749,10 @@ export default function MLBBPage() {
         },
         body: JSON.stringify({
           productId: selectedProduct.id,
-          playerId: 'valorant-direct', // Valorant için oyuncu ID gerekmiyor
-          playerName: 'Valorant VP',
+          playerId: playerId, // MLBB ID
+          playerName: playerName, // Server ID
           paymentMethod: paymentMethod, // 'card' or 'balance'
-          game: GAME_TYPE // 'valorant'
+          game: GAME_TYPE // 'mlbb'
         })
       })
 

@@ -76,7 +76,7 @@ export default function MLBBPage() {
   const [playerValid, setPlayerValid] = useState(null)
   const [orderProcessing, setOrderProcessing] = useState(false)
   const [playerIdError, setPlayerIdError] = useState('')
-  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(true)
   const [termsModalOpen, setTermsModalOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalTab, setAuthModalTab] = useState('register')
@@ -675,7 +675,7 @@ export default function MLBBPage() {
     setPlayerId('')
     setPlayerName('')
     setPlayerValid(null)
-    setTermsAccepted(false) // Reset terms acceptance for new product
+    setTermsAccepted(true) // Terms pre-accepted for new product
     
     // Update URL with product parameter for Google Ads tracking (Diamonds için)
     const diamondsAmount = product.diamondsAmount || product.title.match(/(\d+)/)?.[1];

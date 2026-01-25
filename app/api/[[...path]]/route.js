@@ -9832,6 +9832,34 @@ export async function DELETE(request) {
 
     const db = await getDb();
 
+    // Admin: Clear/Reset product stock (delete all available stock items)
+    if (pathname.match(/^\/api\/admin\/products\/[^\/]+\/stock\/clear$/)) {
+      const productId = pathname.split('/')[4];
+      
+      // Validate product exists
+      const product = await db.collection('products').findOne({ id: productId });
+      if (!product) {
+        return NextResponse.json(
+          { success: false, error: 'Ürün bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Delete only available stock items (not assigned ones)
+      const deleteResult = await db.collection('stock').deleteMany({ 
+        productId: productId,
+        status: 'available'
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `${deleteResult.deletedCount} adet mevcut stok silindi`,
+        data: {
+          deletedCount: deleteResult.deletedCount
+        }
+      });
+    }
+
     // Delete blog post
     if (pathname.match(/^\/api\/admin\/blog\/[^\/]+$/)) {
       const postId = pathname.split('/').pop();

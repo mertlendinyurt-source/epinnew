@@ -1849,6 +1849,8 @@ export async function GET(request) {
             metaDescription: siteSettings?.metaDescription || 'PUBG Mobile UC satın al.',
             contactEmail: siteSettings?.contactEmail || '',
             contactPhone: siteSettings?.contactPhone || '',
+            liveSupportEnabled: siteSettings?.liveSupportEnabled !== false,
+            liveSupportHours: siteSettings?.liveSupportHours || '14:00 - 22:00',
             dailyBannerEnabled: siteSettings?.dailyBannerEnabled !== false,
             dailyBannerTitle: siteSettings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar',
             dailyBannerSubtitle: siteSettings?.dailyBannerSubtitle || '',

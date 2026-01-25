@@ -2947,6 +2947,8 @@ export async function GET(request) {
           metaDescription: settings?.metaDescription || 'PUBG Mobile UC satın al. Güvenilir, hızlı ve uygun fiyatlı UC satış platformu.',
           contactEmail: settings?.contactEmail || '',
           contactPhone: settings?.contactPhone || '',
+          liveSupportEnabled: settings?.liveSupportEnabled !== false,
+          liveSupportHours: settings?.liveSupportHours || '14:00 - 22:00',
           dailyBannerEnabled: settings?.dailyBannerEnabled !== false,
           dailyBannerTitle: settings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar',
           dailyBannerSubtitle: settings?.dailyBannerSubtitle || '',

@@ -1772,17 +1772,42 @@ export default function ValorantPage() {
                     </div>
 
                     <div className="pt-5 border-t border-white/10">
-                      <div className="flex justify-between items-center mb-6">
+                      <div className="flex justify-between items-center mb-4">
                         <span className="text-sm md:text-base text-white/70 uppercase">Ödenecek Tutar</span>
                         <span className="text-2xl md:text-3xl font-black text-white">
                           ₺ {selectedProduct.discountPrice.toFixed(2)}
                         </span>
                       </div>
 
+                      {/* Satış Koşulları Onayı */}
+                      <div className="flex items-start gap-2 mb-4">
+                        <input
+                          type="checkbox"
+                          id="termsCheckboxValorant"
+                          checked={termsAccepted}
+                          onChange={(e) => setTermsAccepted(e.target.checked)}
+                          className="mt-1 w-4 h-4 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-blue-500/50 cursor-pointer"
+                        />
+                        <label htmlFor="termsCheckboxValorant" className="text-xs text-white/50 cursor-pointer">
+                          <button 
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); setTermsModalOpen(true); }}
+                            className="text-blue-400 hover:text-blue-300 underline"
+                          >
+                            Satış koşullarını
+                          </button>
+                          {' '}okudum ve kabul ediyorum.
+                        </label>
+                      </div>
+
                       <Button
                         onClick={handleCheckout}
-                        disabled={orderProcessing}
-                        className="w-full h-12 md:h-14 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg"
+                        disabled={orderProcessing || !termsAccepted}
+                        className={`w-full h-12 md:h-14 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg transition-all ${
+                          termsAccepted 
+                            ? 'bg-blue-600 hover:bg-blue-500' 
+                            : 'bg-gray-600 cursor-not-allowed opacity-60'
+                        }`}
                       >
                         {orderProcessing ? (
                           <>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { User, Check, X, Loader2, Info, Menu, Star, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -76,6 +76,8 @@ export default function ValorantPage() {
   const [playerValid, setPlayerValid] = useState(null)
   const [orderProcessing, setOrderProcessing] = useState(false)
   const [playerIdError, setPlayerIdError] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [termsModalOpen, setTermsModalOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalTab, setAuthModalTab] = useState('register')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -673,6 +675,7 @@ export default function ValorantPage() {
     setPlayerId('')
     setPlayerName('')
     setPlayerValid(null)
+    setTermsAccepted(false) // Reset terms acceptance for new product
     
     // Update URL with product parameter for Google Ads tracking (VP için)
     const vpAmount = product.title.match(/(\d+)\s*VP/i) || product.vpAmount;
@@ -1769,17 +1772,42 @@ export default function ValorantPage() {
                     </div>
 
                     <div className="pt-5 border-t border-white/10">
-                      <div className="flex justify-between items-center mb-6">
+                      <div className="flex justify-between items-center mb-4">
                         <span className="text-sm md:text-base text-white/70 uppercase">Ödenecek Tutar</span>
                         <span className="text-2xl md:text-3xl font-black text-white">
                           ₺ {selectedProduct.discountPrice.toFixed(2)}
                         </span>
                       </div>
 
+                      {/* Satış Koşulları Onayı */}
+                      <div className="flex items-start gap-2 mb-4">
+                        <input
+                          type="checkbox"
+                          id="termsCheckboxValorant"
+                          checked={termsAccepted}
+                          onChange={(e) => setTermsAccepted(e.target.checked)}
+                          className="mt-1 w-4 h-4 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-blue-500/50 cursor-pointer"
+                        />
+                        <label htmlFor="termsCheckboxValorant" className="text-xs text-white/50 cursor-pointer">
+                          <button 
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); setTermsModalOpen(true); }}
+                            className="text-blue-400 hover:text-blue-300 underline"
+                          >
+                            Satış koşullarını
+                          </button>
+                          {' '}okudum ve kabul ediyorum.
+                        </label>
+                      </div>
+
                       <Button
                         onClick={handleCheckout}
-                        disabled={orderProcessing}
-                        className="w-full h-12 md:h-14 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg"
+                        disabled={orderProcessing || !termsAccepted}
+                        className={`w-full h-12 md:h-14 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg transition-all ${
+                          termsAccepted 
+                            ? 'bg-blue-600 hover:bg-blue-500' 
+                            : 'bg-gray-600 cursor-not-allowed opacity-60'
+                        }`}
                       >
                         {orderProcessing ? (
                           <>
@@ -2081,6 +2109,63 @@ export default function ValorantPage() {
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
             >
               {phoneLoading ? 'Kaydediliyor...' : 'Onayla ve Devam Et'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Satış Koşulları Modal */}
+      <Dialog open={termsModalOpen} onOpenChange={setTermsModalOpen}>
+        <DialogContent className="max-w-[95vw] md:max-w-2xl max-h-[80vh] overflow-y-auto bg-[#1a1f2e] border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-white">Satış Koşulları ve Kullanım Şartları</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 text-sm text-white/70 leading-relaxed">
+            <section>
+              <h3 className="text-white font-semibold mb-2">1. Genel Hükümler</h3>
+              <p>Bu satış koşulları, PINLY platformu üzerinden gerçekleştirilen tüm dijital ürün satışlarını kapsamaktadır. Satın alma işlemi gerçekleştirerek bu koşulları kabul etmiş sayılırsınız.</p>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">2. Ürün Tanımları ve Özel Koşullar</h3>
+              <p>Platformumuzda satışa sunulan ürünler farklı kategorilerde olabilir:</p>
+              <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
+                <li><strong className="text-white">Standart VP Paketleri:</strong> Belirtilen miktarda VP içerir.</li>
+                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele VP miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, belirtilen minimum ve maksimum VP aralığında rastgele bir miktar yüklenir. Bu tür ürünlerde çıkan VP miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">3. İade ve İptal Politikası</h3>
+              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan VP miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">4. Sorumluluk Reddi</h3>
+              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan VP miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">5. Onay ve Kabul</h3>
+              <p>Bu koşulları onaylayarak, yukarıda belirtilen tüm maddeleri okuduğunuzu, anladığınızı ve kabul ettiğinizi beyan etmiş olursunuz. Şans paketleri dahil tüm ürünlerin özelliklerinden haberdar olduğunuzu teyit edersiniz.</p>
+            </section>
+
+            <div className="pt-4 border-t border-white/10 text-xs text-white/40">
+              <p>Son güncelleme: {new Date().toLocaleDateString('tr-TR')}</p>
+              <p>Bu koşullar PINLY tarafından önceden haber verilmeksizin güncellenebilir.</p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              onClick={() => {
+                setTermsAccepted(true);
+                setTermsModalOpen(false);
+              }}
+              className="bg-blue-600 hover:bg-blue-500 text-white"
+            >
+              Okudum, Kabul Ediyorum
             </Button>
           </div>
         </DialogContent>

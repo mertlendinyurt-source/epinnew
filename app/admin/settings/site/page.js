@@ -25,6 +25,8 @@ export default function SiteSettingsPage() {
     metaDescription: '',
     contactEmail: '',
     contactPhone: '',
+    liveSupportEnabled: true,
+    liveSupportHours: '14:00 - 22:00',
     dailyBannerEnabled: true,
     dailyBannerTitle: 'Bugüne Özel Fiyatlar',
     dailyBannerSubtitle: '',

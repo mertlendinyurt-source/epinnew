@@ -675,6 +675,7 @@ export default function MLBBPage() {
     setPlayerId('')
     setPlayerName('')
     setPlayerValid(null)
+    setTermsAccepted(false) // Reset terms acceptance for new product
     
     // Update URL with product parameter for Google Ads tracking (Diamonds için)
     const diamondsAmount = product.diamondsAmount || product.title.match(/(\d+)/)?.[1];

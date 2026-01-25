@@ -9851,6 +9851,40 @@ export async function DELETE(request) {
       });
     }
 
+    // Reset product stock (Delete all stock for a product)
+    if (pathname.match(/^\/api\/admin\/products\/[^\/]+\/stock\/reset$/)) {
+      const productId = pathname.split('/')[4];
+      
+      const product = await db.collection('products').findOne({ id: productId });
+      if (!product) {
+        return NextResponse.json(
+          { success: false, error: 'Ürün bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Delete all stock items for this product
+      const deleteResult = await db.collection('stock').deleteMany({ 
+        productId: productId,
+        status: 'available' // Only delete available stock, not assigned ones
+      });
+
+      // Log the action
+      await logAuditAction(db, 'STOCK_RESET', user.id || user.username, 'product', productId, request, {
+        productTitle: product.title,
+        stocksDeleted: deleteResult.deletedCount
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `${deleteResult.deletedCount} adet stok sıfırlandı`,
+        data: {
+          productId: productId,
+          stocksDeleted: deleteResult.deletedCount
+        }
+      });
+    }
+
     // Delete PUBG Account (Admin)
     if (pathname.match(/^\/api\/admin\/accounts\/[^\/]+$/)) {
       const accountId = pathname.split('/').pop();

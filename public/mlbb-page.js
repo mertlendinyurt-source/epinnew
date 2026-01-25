@@ -1028,10 +1028,17 @@ export default function MLBBPage() {
                         💬 Destek Taleplerim
                       </a>
                       {siteSettings?.liveSupportEnabled && (
-                        <a href="/canli-destek" className="flex items-center gap-2 px-3 py-2 text-sm text-green-400 hover:text-green-300 hover:bg-white/5 rounded-md transition-colors">
+                        <button 
+                          onClick={() => {
+                            if (window.$crisp) {
+                              window.$crisp.push(["do", "chat:open"]);
+                            }
+                          }}
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-green-400 hover:text-green-300 hover:bg-white/5 rounded-md transition-colors w-full text-left"
+                        >
                           🟢 Canlı Destek
                           <span className="text-[10px] text-white/40">({siteSettings?.liveSupportHours || '14:00-22:00'})</span>
-                        </a>
+                        </button>
                       )}
                       <button 
                         onClick={handleLogout}

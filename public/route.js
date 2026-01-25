@@ -474,6 +474,7 @@ const AUDIT_ACTIONS = {
   PRODUCT_DELETE: 'product.delete',
   STOCK_ADD: 'stock.add',
   STOCK_ASSIGN: 'stock.assign',
+  STOCK_RESET: 'stock.reset',
   ORDER_STATUS_CHANGE: 'order.status_change',
   SITE_SETTINGS_UPDATE: 'settings.site_update',
   OAUTH_SETTINGS_UPDATE: 'settings.oauth_update',
@@ -9831,6 +9832,34 @@ export async function DELETE(request) {
 
     const db = await getDb();
 
+    // Admin: Clear/Reset product stock (delete all available stock items)
+    if (pathname.match(/^\/api\/admin\/products\/[^\/]+\/stock\/clear$/)) {
+      const productId = pathname.split('/')[4];
+      
+      // Validate product exists
+      const product = await db.collection('products').findOne({ id: productId });
+      if (!product) {
+        return NextResponse.json(
+          { success: false, error: 'Ürün bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Delete only available stock items (not assigned ones)
+      const deleteResult = await db.collection('stock').deleteMany({ 
+        productId: productId,
+        status: 'available'
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `${deleteResult.deletedCount} adet mevcut stok silindi`,
+        data: {
+          deletedCount: deleteResult.deletedCount
+        }
+      });
+    }
+
     // Delete blog post
     if (pathname.match(/^\/api\/admin\/blog\/[^\/]+$/)) {
       const postId = pathname.split('/').pop();
@@ -9848,6 +9877,40 @@ export async function DELETE(request) {
       return NextResponse.json({
         success: true,
         message: 'Blog yazısı silindi'
+      });
+    }
+
+    // Reset product stock (Delete all stock for a product)
+    if (pathname.match(/^\/api\/admin\/products\/[^\/]+\/stock\/reset$/)) {
+      const productId = pathname.split('/')[4];
+      
+      const product = await db.collection('products').findOne({ id: productId });
+      if (!product) {
+        return NextResponse.json(
+          { success: false, error: 'Ürün bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Delete all stock items for this product
+      const deleteResult = await db.collection('stock').deleteMany({ 
+        productId: productId,
+        status: 'available' // Only delete available stock, not assigned ones
+      });
+
+      // Log the action
+      await logAuditAction(db, AUDIT_ACTIONS.STOCK_RESET, user.id || user.username, 'product', productId, request, {
+        productTitle: product.title,
+        stocksDeleted: deleteResult.deletedCount
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `${deleteResult.deletedCount} adet stok sıfırlandı`,
+        data: {
+          productId: productId,
+          stocksDeleted: deleteResult.deletedCount
+        }
       });
     }
 

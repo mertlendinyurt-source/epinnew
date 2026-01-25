@@ -76,6 +76,8 @@ export default function ValorantPage() {
   const [playerValid, setPlayerValid] = useState(null)
   const [orderProcessing, setOrderProcessing] = useState(false)
   const [playerIdError, setPlayerIdError] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [termsModalOpen, setTermsModalOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalTab, setAuthModalTab] = useState('register')
   const [isAuthenticated, setIsAuthenticated] = useState(false)

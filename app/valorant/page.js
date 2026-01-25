@@ -996,28 +996,21 @@ export default function ValorantPage() {
             <div className="flex items-center gap-2 md:gap-3">
               {isAuthenticated ? (
                 <div className="relative group">
-                  {/* Mobilde Siparişlerim butonu */}
-                  <a 
-                    href="/account/orders"
-                    className="md:hidden flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-white text-xs font-medium transition-colors"
-                  >
-                    📦 Siparişlerim
-                  </a>
-                  
-                  {/* Desktop'ta dropdown menü */}
                   <Button 
                     variant="ghost" 
-                    className="hidden md:flex items-center gap-2 text-white hover:bg-white/10 px-2 md:px-3"
+                    className="flex items-center gap-2 text-white hover:bg-white/10 px-2 md:px-3"
                   >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                    {/* Mobilde Siparişlerim yazısı, Desktop'ta avatar */}
+                    <span className="md:hidden text-xs font-medium">📦 Siparişlerim</span>
+                    <div className="hidden md:flex w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 items-center justify-center text-white text-sm font-bold">
                       {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
                     </div>
                     <span className="hidden md:inline text-sm">{user?.firstName || 'Hesabım'}</span>
-                    <ChevronDown className="w-4 h-4 hidden md:block" />
+                    <ChevronDown className="w-4 h-4" />
                   </Button>
                   
                   {/* Dropdown */}
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-[#1e2229] rounded-lg shadow-xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 hidden md:block">
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-[#1e2229] rounded-lg shadow-xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                     <div className="p-2 border-b border-white/5">
                       <p className="text-sm text-white font-medium truncate">{user?.email}</p>
                       {userBalance > 0 && (

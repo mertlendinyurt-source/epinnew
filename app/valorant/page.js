@@ -675,7 +675,7 @@ export default function ValorantPage() {
     setPlayerId('')
     setPlayerName('')
     setPlayerValid(null)
-    setTermsAccepted(false) // Reset terms acceptance for new product
+    setTermsAccepted(true) // Terms pre-accepted for new product
     
     // Update URL with product parameter for Google Ads tracking (VP için)
     const vpAmount = product.title.match(/(\d+)\s*VP/i) || product.vpAmount;

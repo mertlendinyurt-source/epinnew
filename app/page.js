@@ -665,7 +665,7 @@ export default function App() {
     setPlayerId('')
     setPlayerName('')
     setPlayerValid(null)
-    setTermsAccepted(false) // Reset terms acceptance for new product
+    setTermsAccepted(true) // Terms pre-accepted for new product
     
     // Update URL with product parameter for Google Ads tracking
     const ucAmount = product.title.match(/(\d+)\s*UC/i);

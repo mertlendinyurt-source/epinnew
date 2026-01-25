@@ -293,6 +293,39 @@ export default function SiteSettingsPage() {
             </div>
           </div>
 
+          {/* Live Support Settings */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 md:p-6 space-y-4 md:space-y-6">
+            <h3 className="text-white font-semibold flex items-center gap-2 text-sm md:text-base">
+              <span className="text-green-400">💬</span>
+              Canlı Destek Ayarları
+            </h3>
+
+            <div className="flex items-center justify-between p-3 md:p-4 bg-slate-800/50 rounded-lg">
+              <div>
+                <Label className="text-white font-medium text-sm">Canlı Destek Aktif</Label>
+                <p className="text-slate-400 text-xs mt-1">Kullanıcı menüsünde canlı destek linki gösterilsin</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSettings({ ...settings, liveSupportEnabled: !settings.liveSupportEnabled })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.liveSupportEnabled ? 'bg-green-600' : 'bg-slate-700'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.liveSupportEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-slate-300 text-sm">Çalışma Saatleri</Label>
+              <Input
+                value={settings.liveSupportHours || ''}
+                onChange={(e) => setSettings({ ...settings, liveSupportHours: e.target.value })}
+                placeholder="14:00 - 22:00"
+                className="bg-slate-800 border-slate-700 text-white"
+              />
+              <p className="text-slate-500 text-xs">Kullanıcılara gösterilecek çalışma saatleri</p>
+            </div>
+          </div>
+
           {/* Daily Banner Settings */}
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 md:p-6 space-y-4 md:space-y-6">
             <h3 className="text-white font-semibold flex items-center gap-2 text-sm md:text-base">

@@ -1022,7 +1022,8 @@ export default function App() {
                       <a href="/account/support" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md transition-colors">
                         💬 Destek Taleplerim
                       </a>
-                      {siteSettings?.liveSupportEnabled && (
+                      {/* Canlı Destek - Aktifse tıklanabilir, pasifse bilgi gösterir */}
+                      {siteSettings?.liveSupportEnabled ? (
                         <button 
                           onClick={() => {
                             if (window.$crisp) {
@@ -1034,6 +1035,11 @@ export default function App() {
                           🟢 Canlı Destek
                           <span className="text-[10px] text-white/40">({siteSettings?.liveSupportHours || '14:00-22:00'})</span>
                         </button>
+                      ) : (
+                        <div className="flex items-center gap-2 px-3 py-2 text-sm text-white/40 cursor-not-allowed">
+                          🔴 Canlı Destek
+                          <span className="text-[10px]">({siteSettings?.liveSupportHours || '14:00-22:00'} arası açık)</span>
+                        </div>
                       )}
                       <button 
                         onClick={handleLogout}

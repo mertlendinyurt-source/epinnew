@@ -2154,7 +2154,7 @@ export default function MLBBPage() {
               <p>Platformumuzda satışa sunulan ürünler farklı kategorilerde olabilir:</p>
               <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
                 <li><strong className="text-white">Standart Diamonds Paketleri:</strong> Belirtilen miktarda Diamonds içerir.</li>
-                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele Diamonds miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, belirtilen minimum ve maksimum Diamonds aralığında rastgele bir miktar yüklenir. Bu tür ürünlerde çıkan Diamonds miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
+                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele Diamonds miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, düşük veya yüksek miktarda Diamonds çıkabilir. Bu tür ürünlerde çıkan Diamonds miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
               </ul>
             </section>
 

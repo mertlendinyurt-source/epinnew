@@ -5974,6 +5974,8 @@ export async function POST(request) {
           amount: orderAmount, // Added amount field
           totalAmount: orderAmount,
           currency: 'TRY',
+          termsAccepted: termsAccepted || false,
+          termsAcceptedAt: termsAcceptedAt ? new Date(termsAcceptedAt) : new Date(),
           delivery: {
             status: 'pending',
             message: 'Stok atanıyor...',

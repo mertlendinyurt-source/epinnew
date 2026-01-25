@@ -9871,7 +9871,7 @@ export async function DELETE(request) {
       });
 
       // Log the action
-      await logAuditAction(db, 'STOCK_RESET', user.id || user.username, 'product', productId, request, {
+      await logAuditAction(db, AUDIT_ACTIONS.STOCK_RESET, user.id || user.username, 'product', productId, request, {
         productTitle: product.title,
         stocksDeleted: deleteResult.deletedCount
       });

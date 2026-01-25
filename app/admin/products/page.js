@@ -480,6 +480,41 @@ export default function AdminProducts() {
     }
   }
 
+  // Handle clear stock
+  const handleClearStock = async () => {
+    if (!selectedProductForStock) return
+    
+    const confirmClear = window.confirm(
+      `"${selectedProductForStock.title}" ürününün tüm mevcut stoklarını silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`
+    )
+    
+    if (!confirmClear) return
+    
+    setStockLoading(true)
+    try {
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch(`/api/admin/products/${selectedProductForStock.id}/stock/clear`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      const data = await response.json()
+      
+      if (data.success) {
+        toast.success(data.message || 'Stoklar sıfırlandı')
+        await fetchStock(selectedProductForStock.id)
+      } else {
+        toast.error(data.error || 'Stok sıfırlanamadı')
+      }
+    } catch (error) {
+      console.error('Error clearing stock:', error)
+      toast.error('Stok sıfırlanırken hata oluştu')
+    } finally {
+      setStockLoading(false)
+    }
+  }
+
   // Handle add form price changes
   const handleAddPriceChange = (field, value) => {
     const newFormData = { ...addFormData, [field]: value }

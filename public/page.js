@@ -745,7 +745,9 @@ export default function App() {
           productId: selectedProduct.id,
           playerId,
           playerName,
-          paymentMethod: paymentMethod // 'card' or 'balance'
+          paymentMethod: paymentMethod, // 'card' or 'balance'
+          termsAccepted: termsAccepted,
+          termsAcceptedAt: new Date().toISOString()
         })
       })
 

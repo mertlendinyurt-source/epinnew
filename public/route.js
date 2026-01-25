@@ -5901,7 +5901,7 @@ export async function POST(request) {
         );
       }
 
-      const { productId, playerId, playerName, paymentMethod } = body; // paymentMethod: 'card' or 'balance'
+      const { productId, playerId, playerName, paymentMethod, termsAccepted, termsAcceptedAt } = body; // paymentMethod: 'card' or 'balance'
       
       if (!productId || !playerId || !playerName) {
         return NextResponse.json(
@@ -5974,6 +5974,8 @@ export async function POST(request) {
           amount: orderAmount, // Added amount field
           totalAmount: orderAmount,
           currency: 'TRY',
+          termsAccepted: termsAccepted || false,
+          termsAcceptedAt: termsAcceptedAt ? new Date(termsAcceptedAt) : new Date(),
           delivery: {
             status: 'pending',
             message: 'Stok atanıyor...',
@@ -6188,6 +6190,8 @@ export async function POST(request) {
         amount: orderAmount, // Backend-controlled price
         totalAmount: orderAmount, // For verification checks
         currency: 'TRY',
+        termsAccepted: termsAccepted || false,
+        termsAcceptedAt: termsAcceptedAt ? new Date(termsAcceptedAt) : new Date(),
         createdAt: new Date(),
         updatedAt: new Date()
       };

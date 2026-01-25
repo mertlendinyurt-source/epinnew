@@ -755,7 +755,9 @@ export default function MLBBPage() {
           playerId: playerId, // MLBB ID
           playerName: playerName, // Server ID
           paymentMethod: paymentMethod, // 'card' or 'balance'
-          game: GAME_TYPE // 'mlbb'
+          game: GAME_TYPE, // 'mlbb'
+          termsAccepted: termsAccepted,
+          termsAcceptedAt: new Date().toISOString()
         })
       })
 

@@ -752,7 +752,9 @@ export default function ValorantPage() {
           playerId: 'valorant-direct', // Valorant için oyuncu ID gerekmiyor
           playerName: 'Valorant VP',
           paymentMethod: paymentMethod, // 'card' or 'balance'
-          game: GAME_TYPE // 'valorant'
+          game: GAME_TYPE, // 'valorant'
+          termsAccepted: termsAccepted,
+          termsAcceptedAt: new Date().toISOString()
         })
       })
 

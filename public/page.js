@@ -1387,6 +1387,35 @@ export default function App() {
 
       {/* Plyr Style Tab Section - Description & Reviews */}
       <div className="max-w-7xl mx-auto px-4 py-8">
+        
+        {/* Canlı Destek Butonu - Üstte */}
+        <div className="flex justify-center mb-4">
+          {siteSettings?.liveSupportEnabled ? (
+            <button
+              onClick={() => {
+                if (window.$crisp) {
+                  window.$crisp.push(["do", "chat:open"]);
+                }
+              }}
+              className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl text-base font-semibold transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:scale-105"
+            >
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+              </span>
+              Canlı Destek
+              <span className="text-xs opacity-75">({siteSettings?.liveSupportHours || '14:00-22:00'})</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-3 px-6 py-3 bg-gray-600/50 text-white/50 rounded-xl text-base font-semibold cursor-not-allowed">
+              <span className="relative flex h-3 w-3">
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-400"></span>
+              </span>
+              Canlı Destek Kapalı
+              <span className="text-xs">({siteSettings?.liveSupportHours || '14:00-22:00'} arası açık)</span>
+            </div>
+          )}
+        </div>
 
         <div className="bg-[#1e2229] rounded-xl border border-white/5">
           {/* Tab Headers */}

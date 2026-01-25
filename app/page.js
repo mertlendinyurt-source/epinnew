@@ -2125,6 +2125,63 @@ export default function App() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Satış Koşulları Modal */}
+      <Dialog open={termsModalOpen} onOpenChange={setTermsModalOpen}>
+        <DialogContent className="max-w-[95vw] md:max-w-2xl max-h-[80vh] overflow-y-auto bg-[#1a1f2e] border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-white">Satış Koşulları ve Kullanım Şartları</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 text-sm text-white/70 leading-relaxed">
+            <section>
+              <h3 className="text-white font-semibold mb-2">1. Genel Hükümler</h3>
+              <p>Bu satış koşulları, PINLY platformu üzerinden gerçekleştirilen tüm dijital ürün satışlarını kapsamaktadır. Satın alma işlemi gerçekleştirerek bu koşulları kabul etmiş sayılırsınız.</p>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">2. Ürün Tanımları ve Özel Koşullar</h3>
+              <p>Platformumuzda satışa sunulan ürünler farklı kategorilerde olabilir:</p>
+              <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
+                <li><strong className="text-white">Standart UC Paketleri:</strong> Belirtilen miktarda UC içerir.</li>
+                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele UC miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, belirtilen minimum ve maksimum UC aralığında rastgele bir miktar yüklenir. Örneğin; 60 UC ile 16200 UC arasında değişen miktarlarda UC çıkabilir. Bu tür ürünlerde çıkan UC miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">3. İade ve İptal Politikası</h3>
+              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan UC miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">4. Sorumluluk Reddi</h3>
+              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan UC miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">5. Onay ve Kabul</h3>
+              <p>Bu koşulları onaylayarak, yukarıda belirtilen tüm maddeleri okuduğunuzu, anladığınızı ve kabul ettiğinizi beyan etmiş olursunuz. Şans paketleri dahil tüm ürünlerin özelliklerinden haberdar olduğunuzu teyit edersiniz.</p>
+            </section>
+
+            <div className="pt-4 border-t border-white/10 text-xs text-white/40">
+              <p>Son güncelleme: {new Date().toLocaleDateString('tr-TR')}</p>
+              <p>Bu koşullar PINLY tarafından önceden haber verilmeksizin güncellenebilir.</p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              onClick={() => {
+                setTermsAccepted(true);
+                setTermsModalOpen(false);
+              }}
+              className="bg-blue-600 hover:bg-blue-500 text-white"
+            >
+              Okudum, Kabul Ediyorum
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

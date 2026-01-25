@@ -474,6 +474,7 @@ const AUDIT_ACTIONS = {
   PRODUCT_DELETE: 'product.delete',
   STOCK_ADD: 'stock.add',
   STOCK_ASSIGN: 'stock.assign',
+  STOCK_RESET: 'stock.reset',
   ORDER_STATUS_CHANGE: 'order.status_change',
   SITE_SETTINGS_UPDATE: 'settings.site_update',
   OAUTH_SETTINGS_UPDATE: 'settings.oauth_update',

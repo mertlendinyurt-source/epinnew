@@ -7798,7 +7798,7 @@ export async function POST(request) {
         );
       }
 
-      const { logo, favicon, heroImage, valorantHeroImage, mlbbHeroImage, categoryIcon, siteName, metaTitle, metaDescription, contactEmail, contactPhone, dailyBannerEnabled, dailyBannerTitle, dailyBannerSubtitle, dailyBannerIcon, dailyCountdownEnabled, dailyCountdownLabel } = body;
+      const { logo, favicon, heroImage, valorantHeroImage, mlbbHeroImage, categoryIcon, siteName, metaTitle, metaDescription, contactEmail, contactPhone, liveSupportEnabled, liveSupportHours, dailyBannerEnabled, dailyBannerTitle, dailyBannerSubtitle, dailyBannerIcon, dailyCountdownEnabled, dailyCountdownLabel } = body;
 
       // Validation
       if (siteName !== undefined && (!siteName || siteName.trim().length === 0)) {
@@ -7854,6 +7854,8 @@ export async function POST(request) {
         metaDescription: metaDescription !== undefined ? metaDescription.trim() : existingSettings?.metaDescription || '',
         contactEmail: contactEmail !== undefined ? contactEmail.trim() : existingSettings?.contactEmail || '',
         contactPhone: contactPhone !== undefined ? contactPhone.trim() : existingSettings?.contactPhone || '',
+        liveSupportEnabled: liveSupportEnabled !== undefined ? liveSupportEnabled : existingSettings?.liveSupportEnabled !== false,
+        liveSupportHours: liveSupportHours !== undefined ? liveSupportHours.trim() : existingSettings?.liveSupportHours || '14:00 - 22:00',
         dailyBannerEnabled: dailyBannerEnabled !== undefined ? dailyBannerEnabled : existingSettings?.dailyBannerEnabled !== false,
         dailyBannerTitle: dailyBannerTitle !== undefined ? dailyBannerTitle.trim() : existingSettings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar',
         dailyBannerSubtitle: dailyBannerSubtitle !== undefined ? dailyBannerSubtitle.trim() : existingSettings?.dailyBannerSubtitle || '',

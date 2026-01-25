@@ -1365,21 +1365,31 @@ export default function AdminProducts() {
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button
-                onClick={() => setStockDialogOpen(false)}
+                onClick={handleClearStock}
+                disabled={stockLoading || !stockData.summary?.available}
                 variant="outline"
-                className="border-slate-700 text-white"
+                className="border-red-700 text-red-400 hover:bg-red-900/20 hover:text-red-300"
               >
-                İptal
+                {stockLoading ? 'İşleniyor...' : `Stokları Sıfırla (${stockData.summary?.available || 0})`}
               </Button>
-              <Button
-                onClick={handleAddStock}
-                disabled={stockLoading || !stockData.items.trim()}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {stockLoading ? 'Ekleniyor...' : 'Toplu Ekle'}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setStockDialogOpen(false)}
+                  variant="outline"
+                  className="border-slate-700 text-white"
+                >
+                  İptal
+                </Button>
+                <Button
+                  onClick={handleAddStock}
+                  disabled={stockLoading || !stockData.items.trim()}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {stockLoading ? 'Ekleniyor...' : 'Toplu Ekle'}
+                </Button>
+              </div>
             </DialogFooter>
           </div>
 

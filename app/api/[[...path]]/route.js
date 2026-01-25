@@ -5901,7 +5901,7 @@ export async function POST(request) {
         );
       }
 
-      const { productId, playerId, playerName, paymentMethod } = body; // paymentMethod: 'card' or 'balance'
+      const { productId, playerId, playerName, paymentMethod, termsAccepted, termsAcceptedAt } = body; // paymentMethod: 'card' or 'balance'
       
       if (!productId || !playerId || !playerName) {
         return NextResponse.json(

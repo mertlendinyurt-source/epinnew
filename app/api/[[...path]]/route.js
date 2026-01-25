@@ -6190,6 +6190,8 @@ export async function POST(request) {
         amount: orderAmount, // Backend-controlled price
         totalAmount: orderAmount, // For verification checks
         currency: 'TRY',
+        termsAccepted: termsAccepted || false,
+        termsAcceptedAt: termsAcceptedAt ? new Date(termsAcceptedAt) : new Date(),
         createdAt: new Date(),
         updatedAt: new Date()
       };

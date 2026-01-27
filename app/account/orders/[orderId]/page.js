@@ -163,6 +163,121 @@ export default function OrderDetailPage() {
           
           {/* Left Column - Order Details */}
           <div className="lg:col-span-2 space-y-6">
+
+            {/* DELIVERY CODES - EN ÜSTTE */}
+            {order.delivery && order.delivery.status === 'delivered' && order.delivery.items && Array.isArray(order.delivery.items) && order.delivery.items.length > 0 && (
+              <div className="bg-gradient-to-br from-green-900/40 to-green-800/30 backdrop-blur-lg rounded-2xl p-6 border-2 border-green-500 shadow-lg shadow-green-500/20">
+                <div className="flex items-center gap-3 mb-4">
+                  <CheckCircle className="w-8 h-8 text-green-400" />
+                  <h2 className="text-2xl font-bold text-white">🎉 Teslimat Kodları</h2>
+                </div>
+
+                <div className="bg-green-900/30 rounded-xl p-4 mb-4 border border-green-600/50">
+                  <p className="text-base text-green-100 font-medium">
+                    ✅ UC kodunuz hazır! Aşağıdaki kodu PUBG Mobile içinde kullanabilirsiniz.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  {order.delivery.items.map((code, index) => (
+                    <div key={index} className="bg-gray-900/80 rounded-xl p-5 border-2 border-green-600/50">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-green-400 text-sm font-bold uppercase">Kod {index + 1}</span>
+                          <Button
+                            onClick={() => handleCopyCode(code, index)}
+                            className="bg-green-600 hover:bg-green-500 text-white font-bold px-4"
+                          >
+                            {copiedCode === index ? <><Check className="w-4 h-4 mr-2" /> Kopyalandı!</> : <><Copy className="w-4 h-4 mr-2" /> KOPYALA</>}
+                          </Button>
+                        </div>
+                        <div className="bg-black/50 rounded-lg p-4 border border-green-500/30">
+                          <code className="font-mono text-2xl md:text-3xl text-white tracking-wider select-all break-all">
+                            {code}
+                          </code>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 text-sm text-green-300/70">
+                  📅 Teslim tarihi: {order.delivery?.assignedAt ? new Date(order.delivery.assignedAt).toLocaleString('tr-TR') : 'N/A'}
+                </div>
+
+                {/* Kodu Nasıl Kullanırım? */}
+                <div className="mt-6 pt-6 border-t border-green-700/50">
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    📖 Kodu Nasıl Kullanırım?
+                  </h3>
+                  
+                  <div className="space-y-3 text-sm">
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                      <div>
+                        <p className="text-white font-medium">Tarayıcıdan siteye girin:</p>
+                        <a 
+                          href="https://www.midasbuy.com/midasbuy/tr/redeem/pubgm" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-green-400 hover:text-green-300 underline break-all"
+                        >
+                          👉 https://www.midasbuy.com/midasbuy/tr/redeem/pubgm
+                        </a>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                      <div>
+                        <p className="text-white font-medium">Hesap oluşturun / giriş yapın</p>
+                        <p className="text-gray-400 text-xs">(Google, Facebook veya e-posta ile giriş olabilir.)</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                      <div>
+                        <p className="text-white font-medium">OYUNCU ID'nizi girin</p>
+                        <p className="text-gray-400 text-xs">PUBG Mobile içinden Profil → Oyuncu ID bölümünden kopyalayın.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">4</span>
+                      <div>
+                        <p className="text-white font-medium">Satın aldığınız KODU girin</p>
+                        <p className="text-gray-400 text-xs">Yukarıdaki kodu kopyalayıp ilgili alana yapıştırın.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">5</span>
+                      <div>
+                        <p className="text-white font-medium">Onayla / Redeem butonuna basın</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">6</span>
+                      <div>
+                        <p className="text-white font-medium">UC otomatik yüklenir</p>
+                        <p className="text-gray-400 text-xs">Genelde anında, bazen birkaç dakika içinde oyun hesabınıza düşer. Oyunu kapatıp açmak gerekebilir.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Uyarılar */}
+                  <div className="mt-4 p-3 bg-red-900/30 rounded-lg border border-red-600/50">
+                    <p className="text-red-300 text-xs font-medium mb-2">⚠️ En sık yapılan hatalar:</p>
+                    <ul className="text-red-200 text-xs space-y-1">
+                      <li>❌ Yanlış Oyuncu ID girilmesi</li>
+                      <li>❌ Kodun boşluklu ya da hatalı kopyalanması</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Order Status Card */}
             <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">

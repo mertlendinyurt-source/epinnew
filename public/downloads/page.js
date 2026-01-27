@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { User, Check, X, Loader2, Info, Menu, Star, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -70,6 +70,8 @@ export default function App() {
   const [playerValid, setPlayerValid] = useState(null)
   const [orderProcessing, setOrderProcessing] = useState(false)
   const [playerIdError, setPlayerIdError] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(true)
+  const [termsModalOpen, setTermsModalOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalTab, setAuthModalTab] = useState('register')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -663,6 +665,7 @@ export default function App() {
     setPlayerId('')
     setPlayerName('')
     setPlayerValid(null)
+    setTermsAccepted(true) // Terms pre-accepted for new product
     
     // Update URL with product parameter for Google Ads tracking
     const ucAmount = product.title.match(/(\d+)\s*UC/i);
@@ -742,7 +745,9 @@ export default function App() {
           productId: selectedProduct.id,
           playerId,
           playerName,
-          paymentMethod: paymentMethod // 'card' or 'balance'
+          paymentMethod: paymentMethod, // 'card' or 'balance'
+          termsAccepted: termsAccepted,
+          termsAcceptedAt: new Date().toISOString()
         })
       })
 
@@ -993,11 +998,13 @@ export default function App() {
                     variant="ghost" 
                     className="flex items-center gap-2 text-white hover:bg-white/10 px-2 md:px-3"
                   >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                    {/* Mobilde Siparişlerim yazısı, Desktop'ta avatar */}
+                    <span className="md:hidden text-xs font-medium">📦 Siparişlerim</span>
+                    <div className="hidden md:flex w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 items-center justify-center text-white text-sm font-bold">
                       {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
                     </div>
                     <span className="hidden md:inline text-sm">{user?.firstName || 'Hesabım'}</span>
-                    <ChevronDown className="w-4 h-4 hidden md:block" />
+                    <ChevronDown className="w-4 h-4" />
                   </Button>
                   
                   {/* Dropdown */}
@@ -1015,17 +1022,25 @@ export default function App() {
                       <a href="/account/support" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md transition-colors">
                         💬 Destek Taleplerim
                       </a>
-                      <a 
-                        href="https://wa.me/908503469671" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-green-400 hover:text-green-300 hover:bg-white/5 rounded-md transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                        </svg>
-                        WhatsApp Destek
-                      </a>
+                      {/* Canlı Destek - Aktifse tıklanabilir, pasifse bilgi gösterir */}
+                      {siteSettings?.liveSupportEnabled ? (
+                        <button 
+                          onClick={() => {
+                            if (window.$crisp) {
+                              window.$crisp.push(["do", "chat:open"]);
+                            }
+                          }}
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-green-400 hover:text-green-300 hover:bg-white/5 rounded-md transition-colors w-full text-left"
+                        >
+                          🟢 Canlı Destek
+                          <span className="text-[10px] text-white/40">({siteSettings?.liveSupportHours || '14:00-22:00'})</span>
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2 px-3 py-2 text-sm text-white/40 cursor-not-allowed">
+                          🔴 Canlı Destek
+                          <span className="text-[10px]">({siteSettings?.liveSupportHours || '14:00-22:00'} arası açık)</span>
+                        </div>
+                      )}
                       <button 
                         onClick={handleLogout}
                         className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-white/5 rounded-md transition-colors w-full text-left"
@@ -1327,10 +1342,15 @@ export default function App() {
 
                     {/* Image Section */}
                     <div className="relative h-[42%] md:h-[55%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-2 md:p-4">
+                      {/* Flare Effect - PLYR Style */}
+                      <div className="go-product-shine">
+                        <div className="go-product-shine-overlay"></div>
+                        <img className="go-flare" src="/flare.png" alt="" />
+                      </div>
                       <img 
                         src={product.imageUrl || "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=300&h=300&fit=crop"}
                         alt={product.title}
-                        className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                        className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105 relative z-10"
                         onError={(e) => {
                           e.target.src = "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=300&h=300&fit=crop";
                         }}
@@ -1367,19 +1387,34 @@ export default function App() {
 
       {/* Plyr Style Tab Section - Description & Reviews */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* WhatsApp Destek Butonu - Üstte */}
+        
+        {/* Canlı Destek Butonu - Üstte */}
         <div className="flex justify-center mb-4">
-          <a
-            href="https://wa.me/908503469671"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl text-base font-semibold transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:scale-105"
-          >
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-            WhatsApp Destek
-          </a>
+          {siteSettings?.liveSupportEnabled ? (
+            <button
+              onClick={() => {
+                if (window.$crisp) {
+                  window.$crisp.push(["do", "chat:open"]);
+                }
+              }}
+              className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl text-base font-semibold transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:scale-105"
+            >
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+              </span>
+              Canlı Destek
+              <span className="text-xs opacity-75">({siteSettings?.liveSupportHours || '14:00-22:00'})</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-3 px-6 py-3 bg-gray-600/50 text-white/50 rounded-xl text-base font-semibold cursor-not-allowed">
+              <span className="relative flex h-3 w-3">
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-400"></span>
+              </span>
+              Canlı Destek Kapalı
+              <span className="text-xs">({siteSettings?.liveSupportHours || '14:00-22:00'} arası açık)</span>
+            </div>
+          )}
         </div>
 
         <div className="bg-[#1e2229] rounded-xl border border-white/5">
@@ -1529,12 +1564,20 @@ export default function App() {
                     reviews.map((review) => (
                       <div key={review.id} className="p-4 bg-[#282d36] rounded-lg">
                         <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                            {review.username?.[0]?.toUpperCase() || 'U'}
+                          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                            <img 
+                              src={siteSettings?.logoUrl || '/logo.png'} 
+                              alt="Pinly" 
+                              className="w-8 h-8 object-contain"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.parentElement.innerHTML = '<span class="text-blue-600 font-bold text-sm">P</span>';
+                              }}
+                            />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-white font-medium">{review.username}</span>
+                              <span className="text-white font-medium">Misafir</span>
                               <div className="flex items-center gap-0.5">
                                 {[1, 2, 3, 4, 5].map(star => (
                                   <Star 
@@ -1769,17 +1812,42 @@ export default function App() {
                     </div>
 
                     <div className="pt-5 border-t border-white/10">
-                      <div className="flex justify-between items-center mb-6">
+                      <div className="flex justify-between items-center mb-4">
                         <span className="text-sm md:text-base text-white/70 uppercase">Ödenecek Tutar</span>
                         <span className="text-2xl md:text-3xl font-black text-white">
                           ₺ {selectedProduct.discountPrice.toFixed(2)}
                         </span>
                       </div>
 
+                      {/* Satış Koşulları Onayı */}
+                      <div className="flex items-start gap-2 mb-4">
+                        <input
+                          type="checkbox"
+                          id="termsCheckbox"
+                          checked={termsAccepted}
+                          onChange={(e) => setTermsAccepted(e.target.checked)}
+                          className="mt-1 w-4 h-4 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-blue-500/50 cursor-pointer"
+                        />
+                        <label htmlFor="termsCheckbox" className="text-xs text-white/50 cursor-pointer">
+                          <button 
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); setTermsModalOpen(true); }}
+                            className="text-blue-400 hover:text-blue-300 underline"
+                          >
+                            Satış koşullarını
+                          </button>
+                          {' '}okudum ve kabul ediyorum.
+                        </label>
+                      </div>
+
                       <Button
                         onClick={handleCheckout}
-                        disabled={orderProcessing}
-                        className="w-full h-12 md:h-14 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg"
+                        disabled={orderProcessing || !termsAccepted}
+                        className={`w-full h-12 md:h-14 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg transition-all ${
+                          termsAccepted 
+                            ? 'bg-blue-600 hover:bg-blue-500' 
+                            : 'bg-gray-600 cursor-not-allowed opacity-60'
+                        }`}
                       >
                         {orderProcessing ? (
                           <>
@@ -2037,6 +2105,34 @@ export default function App() {
               <p className="text-white/30 text-sm">
                 © 2026 {siteSettings?.siteName || 'PINLY'}. Tüm hakları saklıdır.
               </p>
+              
+              {/* Payment Method Logos */}
+              <div className="flex items-center gap-3">
+                {/* Visa */}
+                <div className="bg-white rounded px-2 py-1">
+                  <svg className="h-6 w-auto" viewBox="0 0 780 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M293.2 348.73l33.359-195.76h53.358l-33.384 195.76H293.2zm246.11-191.54c-10.569-3.966-27.135-8.222-47.822-8.222-52.726 0-89.863 26.551-90.18 64.604-.634 28.141 26.485 43.861 46.754 53.208 20.771 9.557 27.769 15.71 27.769 24.283-.317 13.091-16.665 19.054-32.091 19.054-21.401 0-32.728-2.969-50.324-10.27l-6.939-3.138-7.527 44.019c12.507 5.429 35.617 10.143 59.616 10.397 56.07 0 92.502-26.246 92.966-66.859.222-22.254-14.012-39.21-44.808-53.158-18.646-9.047-30.092-15.086-30.092-24.269.159-8.288 9.717-16.888 30.709-16.888 17.474-.253 30.168 3.534 40.068 7.498l4.811 2.265 7.085-42.524zm137.92-4.223h-41.231c-12.773 0-22.332 3.486-27.94 16.235l-79.245 179.32h56.031s9.159-24.112 11.231-29.418c6.123 0 60.555.084 68.336.084 1.596 6.853 6.49 29.334 6.49 29.334h49.518l-43.19-195.55zm-65.417 126.41c4.414-11.279 21.259-54.724 21.259-54.724-.317.507 4.381-11.33 7.074-18.671l3.606 16.861s10.205 46.574 12.347 56.534h-44.286zM241.5 152.97l-52.239 133.49-5.565-27.129c-9.717-31.274-39.949-65.139-73.795-82.088l47.823 171.42 56.455-.063 84.004-195.64-56.683.009z" fill="#0E4595"/>
+                    <path d="M131.92 152.97H46.459l-.682 4.074c66.939 16.204 111.23 55.293 129.62 102.24l-18.709-89.96c-3.229-12.396-12.597-16.095-24.768-16.349z" fill="#F2AE14"/>
+                  </svg>
+                </div>
+                
+                {/* MasterCard */}
+                <div className="bg-white rounded px-2 py-1">
+                  <svg className="h-6 w-auto" viewBox="0 0 152 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="40" fill="#EB001B"/>
+                    <circle cx="102" cy="50" r="40" fill="#F79E1B"/>
+                    <path fillRule="evenodd" clipRule="evenodd" d="M76 79.5C85.3888 71.7178 91 60.5228 91 50C91 39.4772 85.3888 28.2822 76 20.5C66.6112 28.2822 61 39.4772 61 50C61 60.5228 66.6112 71.7178 76 79.5Z" fill="#FF5F00"/>
+                  </svg>
+                </div>
+                
+                {/* American Express */}
+                <div className="bg-[#016fd0] rounded px-2 py-1">
+                  <svg className="h-6 w-auto" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <text x="10" y="50" fontFamily="Arial, sans-serif" fontSize="24" fontWeight="bold" fill="white">AMEX</text>
+                  </svg>
+                </div>
+              </div>
+              
               <p className="text-white/20 text-xs text-center md:text-right">
                 PINLY üzerinden oyun içi kodlar ve dijital pinler anında teslim edilir.
               </p>
@@ -2081,6 +2177,76 @@ export default function App() {
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
             >
               {phoneLoading ? 'Kaydediliyor...' : 'Onayla ve Devam Et'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Satış Koşulları Modal */}
+      <Dialog open={termsModalOpen} onOpenChange={setTermsModalOpen}>
+        <DialogContent className="max-w-[95vw] md:max-w-2xl max-h-[80vh] overflow-y-auto bg-[#1a1f2e] border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-white">Satış Koşulları ve Kullanım Şartları</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 text-sm text-white/70 leading-relaxed">
+            <section>
+              <h3 className="text-white font-semibold mb-2">1. Genel Hükümler</h3>
+              <p>Bu satış koşulları, PINLY platformu üzerinden gerçekleştirilen tüm dijital ürün satışlarını kapsamaktadır. Satın alma işlemi gerçekleştirerek bu koşulları kabul etmiş sayılırsınız.</p>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">2. Ürün Tanımları ve Özel Koşullar</h3>
+              <p>Platformumuzda satışa sunulan ürünler farklı kategorilerde olabilir:</p>
+              <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
+                <li><strong className="text-white">Standart UC Paketleri:</strong> Belirtilen miktarda UC içerir.</li>
+                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele UC miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, düşük veya yüksek miktarda UC çıkabilir. Bu tür ürünlerde çıkan UC miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">3. İade ve İptal Politikası</h3>
+              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan UC miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">4. Sorumluluk Reddi</h3>
+              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan UC miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">5. Onay ve Kabul</h3>
+              <p>Bu koşulları onaylayarak, yukarıda belirtilen tüm maddeleri okuduğunuzu, anladığınızı ve kabul ettiğinizi beyan etmiş olursunuz. Şans paketleri dahil tüm ürünlerin özelliklerinden haberdar olduğunuzu teyit edersiniz.</p>
+            </section>
+
+            <div className="pt-4 border-t border-white/10 text-xs text-white/40">
+              <p>Son güncelleme: {new Date().toLocaleDateString('tr-TR')}</p>
+              <p>Bu koşullar PINLY tarafından önceden haber verilmeksizin güncellenebilir.</p>
+            </div>
+
+            <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <h4 className="text-red-400 font-semibold text-sm mb-2">⚠️ Yasal Uyarı</h4>
+              <p className="text-white/60 text-xs leading-relaxed">
+                İşbu satış koşullarını okuyarak ve onay kutusunu işaretleyerek, tüm maddeleri kabul ettiğinizi hukuken beyan etmiş bulunmaktasınız. Bu onay sonrasında, satış koşullarında belirtilen hususlara ilişkin şikayet, itiraz veya iade talep hakkınız bulunmamaktadır.
+              </p>
+              <p className="text-white/60 text-xs leading-relaxed mt-2">
+                <strong className="text-white/70">PINLY LIMITED</strong> şirketimiz, sosyal medya platformları, tüketici şikayet siteleri veya diğer kamuya açık mecralarda şirketimizi, markamızı veya hizmetlerimizi karalayıcı, hakaret içeren, iftira niteliğinde veya ticari itibarımızı zedeleyici nitelikteki her türlü paylaşım, yorum ve içeriğe karşı yasal haklarını saklı tutmaktadır.
+              </p>
+              <p className="text-white/60 text-xs leading-relaxed mt-2">
+                Bu tür eylemlerin tespiti halinde, <strong className="text-white/70">Türk Ceza Kanunu</strong> ve <strong className="text-white/70">Türk Borçlar Kanunu</strong> kapsamında hukuk müşavirlerimiz aracılığıyla maddi ve manevi tazminat davaları dahil olmak üzere gerekli tüm yasal işlemler başlatılacaktır.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              onClick={() => {
+                setTermsAccepted(true);
+                setTermsModalOpen(false);
+              }}
+              className="bg-blue-600 hover:bg-blue-500 text-white"
+            >
+              Okudum, Kabul Ediyorum
             </Button>
           </div>
         </DialogContent>

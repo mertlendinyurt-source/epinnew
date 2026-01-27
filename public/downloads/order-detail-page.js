@@ -16,7 +16,7 @@ export default function OrderDetailPage() {
   const [payment, setPayment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(null);
-  const [showCodes, setShowCodes] = useState({});
+  const [showCodes, setShowCodes] = useState({ 0: true, 1: true, 2: true, 3: true, 4: true, credentials: true }); // Kodlar varsayılan görünür
 
   useEffect(() => {
     if (orderId) {
@@ -163,121 +163,50 @@ export default function OrderDetailPage() {
           
           {/* Left Column - Order Details */}
           <div className="lg:col-span-2 space-y-6">
-            
-            {/* Order Status Card */}
-            <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
-              <div className="flex items-center gap-3 mb-6">
-                <Package className="w-6 h-6 text-blue-400" />
-                <h2 className="text-xl font-bold text-white">Sipariş Durumu</h2>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
-                  <div className="text-sm text-gray-400 mb-2">Ödeme Durumu</div>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-3 py-1.5 rounded-lg text-sm font-semibold text-white ${getStatusColor(order.status)}`}>
-                      {order.status === 'paid' ? '✓ Ödendi' : order.status === 'pending' ? '⏳ Bekliyor' : '✗ Başarısız'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
-                  <div className="text-sm text-gray-400 mb-2">Teslimat Durumu</div>
-                  <div className="flex items-center gap-2">
-                    {order.delivery ? (
-                      <>
-                        {getDeliveryStatusIcon(order.delivery.status)}
-                        <span className="text-white font-medium">
-                          {order.delivery.status === 'delivered' ? 'Teslim Edildi' : 'Stok Bekleniyor'}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-gray-400">Bekleniyor</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-700">
-                <div className="text-sm text-gray-400">
-                  Sipariş Tarihi: <span className="text-white">{order.createdAt ? new Date(order.createdAt).toLocaleString('tr-TR') : 'N/A'}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Player Info Card */}
-            <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
-              <h2 className="text-xl font-bold text-white mb-4">Oyuncu Bilgileri</h2>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-400">Oyuncu ID</span>
-                  <span className="text-white font-mono">{order.playerId || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-t border-gray-700">
-                  <span className="text-gray-400">Oyuncu Adı</span>
-                  <span className="text-white font-semibold">{order.playerName || 'N/A'}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Delivery Items - CODES */}
+            {/* DELIVERY CODES - EN ÜSTTE */}
             {order.delivery && order.delivery.status === 'delivered' && order.delivery.items && Array.isArray(order.delivery.items) && order.delivery.items.length > 0 && (
-              <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-green-700/50">
+              <div className="bg-gradient-to-br from-green-900/40 to-green-800/30 backdrop-blur-lg rounded-2xl p-6 border-2 border-green-500 shadow-lg shadow-green-500/20">
                 <div className="flex items-center gap-3 mb-4">
-                  <CheckCircle className="w-6 h-6 text-green-400" />
-                  <h2 className="text-xl font-bold text-white">Teslimat Kodları</h2>
+                  <CheckCircle className="w-8 h-8 text-green-400" />
+                  <h2 className="text-2xl font-bold text-white">🎉 Teslimat Kodları</h2>
                 </div>
 
-                <div className="bg-gray-900/50 rounded-xl p-4 mb-4 border border-green-700/30">
-                  <p className="text-sm text-green-200">
-                    🎉 UC kodunuz hazır! Aşağıdaki kodu PUBG Mobile içinde kullanabilirsiniz.
+                <div className="bg-green-900/30 rounded-xl p-4 mb-4 border border-green-600/50">
+                  <p className="text-base text-green-100 font-medium">
+                    ✅ UC kodunuz hazır! Aşağıdaki kodu PUBG Mobile içinde kullanabilirsiniz.
                   </p>
                 </div>
 
                 <div className="space-y-3">
                   {order.delivery.items.map((code, index) => (
-                    <div key={index} className="bg-gray-900/70 rounded-xl p-4 border border-gray-700">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs text-gray-400 mb-1">Kod {index + 1}</div>
-                          <div className="font-mono text-lg text-white break-all">
-                            {showCodes[index] ? code : maskCode(code)}
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={() => toggleCodeVisibility(index)}
-                            variant="ghost"
-                            size="icon"
-                            className="text-gray-400 hover:text-white hover:bg-gray-800"
-                            title={showCodes[index] ? 'Gizle' : 'Göster'}
-                          >
-                            {showCodes[index] ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                          </Button>
-                          
+                    <div key={index} className="bg-gray-900/80 rounded-xl p-5 border-2 border-green-600/50">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-green-400 text-sm font-bold uppercase">Kod {index + 1}</span>
                           <Button
                             onClick={() => handleCopyCode(code, index)}
-                            variant="ghost"
-                            size="icon"
-                            className="text-green-400 hover:text-green-300 hover:bg-green-900/20"
-                            title="Kopyala"
+                            className="bg-green-600 hover:bg-green-500 text-white font-bold px-4"
                           >
-                            {copiedCode === index ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                            {copiedCode === index ? <><Check className="w-4 h-4 mr-2" /> Kopyalandı!</> : <><Copy className="w-4 h-4 mr-2" /> KOPYALA</>}
                           </Button>
+                        </div>
+                        <div className="bg-black/50 rounded-lg p-4 border border-green-500/30">
+                          <code className="font-mono text-2xl md:text-3xl text-white tracking-wider select-all break-all">
+                            {code}
+                          </code>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-4 text-xs text-gray-400">
-                  Teslim tarihi: {order.delivery?.assignedAt ? new Date(order.delivery.assignedAt).toLocaleString('tr-TR') : 'N/A'}
+                <div className="mt-4 text-sm text-green-300/70">
+                  📅 Teslim tarihi: {order.delivery?.assignedAt ? new Date(order.delivery.assignedAt).toLocaleString('tr-TR') : 'N/A'}
                 </div>
 
-                {/* Kodu Nasıl Kullanırım? Açıklaması */}
-                <div className="mt-6 pt-6 border-t border-green-700/30">
+                {/* Kodu Nasıl Kullanırım? */}
+                <div className="mt-6 pt-6 border-t border-green-700/50">
                   <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                     📖 Kodu Nasıl Kullanırım?
                   </h3>
@@ -339,11 +268,182 @@ export default function OrderDetailPage() {
                   </div>
 
                   {/* Uyarılar */}
-                  <div className="mt-4 p-3 bg-red-900/20 rounded-lg border border-red-700/30">
+                  <div className="mt-4 p-3 bg-red-900/30 rounded-lg border border-red-600/50">
                     <p className="text-red-300 text-xs font-medium mb-2">⚠️ En sık yapılan hatalar:</p>
                     <ul className="text-red-200 text-xs space-y-1">
                       <li>❌ Yanlış Oyuncu ID girilmesi</li>
                       <li>❌ Kodun boşluklu ya da hatalı kopyalanması</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Order Status Card */}
+            <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
+              <div className="flex items-center gap-3 mb-6">
+                <Package className="w-6 h-6 text-blue-400" />
+                <h2 className="text-xl font-bold text-white">Sipariş Durumu</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
+                  <div className="text-sm text-gray-400 mb-2">Ödeme Durumu</div>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-3 py-1.5 rounded-lg text-sm font-semibold text-white ${getStatusColor(order.status)}`}>
+                      {order.status === 'paid' ? '✓ Ödendi' : order.status === 'pending' ? '⏳ Bekliyor' : '✗ Başarısız'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
+                  <div className="text-sm text-gray-400 mb-2">Teslimat Durumu</div>
+                  <div className="flex items-center gap-2">
+                    {order.delivery ? (
+                      <>
+                        {getDeliveryStatusIcon(order.delivery.status)}
+                        <span className="text-white font-medium">
+                          {order.delivery.status === 'delivered' ? 'Teslim Edildi' : 'Stok Bekleniyor'}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-gray-400">Bekleniyor</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-gray-700">
+                <div className="text-sm text-gray-400">
+                  Sipariş Tarihi: <span className="text-white">{order.createdAt ? new Date(order.createdAt).toLocaleString('tr-TR') : 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Player Info Card - Only for UC orders */}
+            {order.type !== 'account' && (
+            <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
+              <h2 className="text-xl font-bold text-white mb-4">Oyuncu Bilgileri</h2>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-400">Oyuncu ID</span>
+                  <span className="text-white font-mono">{order.playerId || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-t border-gray-700">
+                  <span className="text-gray-400">Oyuncu Adı</span>
+                  <span className="text-white font-semibold">{order.playerName || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+            )}
+
+            {/* Account Info Card - Only for Account orders */}
+            {order.type === 'account' && (
+            <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
+              <h2 className="text-xl font-bold text-white mb-4">Hesap Detayları</h2>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-400">Ürün</span>
+                  <span className="text-white font-semibold">{order.accountTitle || 'PUBG Hesap'}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-t border-gray-700">
+                  <span className="text-gray-400">Sipariş Türü</span>
+                  <span className="text-purple-400 font-semibold">Hesap Satışı</span>
+                </div>
+              </div>
+            </div>
+            )}
+
+            {/* ACCOUNT ORDER - Credentials Display */}
+            {order.type === 'account' && order.delivery && order.delivery.status === 'delivered' && order.delivery.credentials && (
+              <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-purple-700/50">
+                <div className="flex items-center gap-3 mb-4">
+                  <CheckCircle className="w-6 h-6 text-purple-400" />
+                  <h2 className="text-xl font-bold text-white">Hesap Bilgileri</h2>
+                </div>
+
+                <div className="bg-gray-900/50 rounded-xl p-4 mb-4 border border-purple-700/30">
+                  <p className="text-sm text-purple-200">
+                    🎉 Hesap bilgileriniz hazır! Aşağıdaki bilgileri kullanarak giriş yapabilirsiniz.
+                  </p>
+                </div>
+
+                <div className="bg-gray-900/70 rounded-xl p-4 border border-gray-700">
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div className="text-xs text-gray-400">Hesap Giriş Bilgileri</div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowCodes(prev => ({ ...prev, credentials: !prev.credentials }))}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        {showCodes.credentials ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        <span className="ml-1 text-xs">{showCodes.credentials ? 'Gizle' : 'Göster'}</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(order.delivery.credentials);
+                          setCopiedCode('credentials');
+                          setTimeout(() => setCopiedCode(null), 2000);
+                          toast.success('Kopyalandı!');
+                        }}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        {copiedCode === 'credentials' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                        <span className="ml-1 text-xs">Kopyala</span>
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="font-mono text-sm text-white whitespace-pre-wrap bg-gray-800/50 rounded-lg p-3">
+                    {showCodes.credentials ? order.delivery.credentials : '••••••••••••••••••••'}
+                  </div>
+                </div>
+
+                {/* Account Usage Instructions */}
+                <div className="mt-6 pt-6 border-t border-purple-700/30">
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    📖 Hesabı Nasıl Kullanırım?
+                  </h3>
+                  
+                  <div className="space-y-3 text-sm">
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                      <div>
+                        <p className="text-white font-medium">PUBG Mobile'ı açın</p>
+                        <p className="text-gray-400 text-xs">Oyunu başlatın ve giriş ekranına gelin.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                      <div>
+                        <p className="text-white font-medium">Mevcut hesaptan çıkış yapın</p>
+                        <p className="text-gray-400 text-xs">Ayarlar → Hesap → Çıkış Yap</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                      <div>
+                        <p className="text-white font-medium">Satın aldığınız hesap bilgileriyle giriş yapın</p>
+                        <p className="text-gray-400 text-xs">Yukarıdaki bilgileri kullanarak hesaba giriş yapın.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Warnings */}
+                  <div className="mt-4 p-3 bg-amber-900/20 rounded-lg border border-amber-700/30">
+                    <p className="text-amber-300 text-xs font-medium mb-2">⚠️ Önemli Uyarılar:</p>
+                    <ul className="text-amber-200 text-xs space-y-1">
+                      <li>• Hesap bilgilerini kimseyle paylaşmayın</li>
+                      <li>• Giriş yaptıktan sonra şifreyi değiştirin</li>
+                      <li>• Sorun yaşarsanız destek ekibiyle iletişime geçin</li>
                     </ul>
                   </div>
                 </div>

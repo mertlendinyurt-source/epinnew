@@ -263,11 +263,41 @@ export default function AccountOrdersPage() {
                     )}
 
                     {order.delivery && order.delivery.status === 'delivered' && (
-                      <div className="mt-3 flex items-center gap-2 text-green-400 text-sm">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        <span>Kodunuz hazır! Detayları görmek için tıklayın.</span>
+                      <div className="mt-4 p-4 bg-gradient-to-r from-green-900/40 to-green-800/30 rounded-xl border-2 border-green-500/50">
+                        <div className="flex items-center gap-2 text-green-400 font-bold text-base mb-3">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          <span>✅ KODUNUZ HAZIR!</span>
+                        </div>
+                        
+                        {/* Show codes directly in the list */}
+                        {order.delivery.items && Array.isArray(order.delivery.items) && order.delivery.items.length > 0 && (
+                          <div className="space-y-2">
+                            {order.delivery.items.map((code, idx) => (
+                              <div key={idx} className="flex items-center gap-2 bg-gray-900/60 rounded-lg p-3 border border-green-600/30">
+                                <span className="text-green-300 text-xs font-medium">KOD {idx + 1}:</span>
+                                <code className="flex-1 text-white font-mono text-lg tracking-wider bg-black/30 px-3 py-1 rounded select-all">
+                                  {code}
+                                </code>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(code);
+                                    toast.success('Kod kopyalandı!');
+                                  }}
+                                  className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded transition-colors"
+                                >
+                                  KOPYALA
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        <p className="text-green-200/70 text-xs mt-3">
+                          💡 Kodu nasıl kullanacağınızı görmek için tıklayın
+                        </p>
                       </div>
                     )}
                   </div>

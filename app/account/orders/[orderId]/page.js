@@ -16,7 +16,7 @@ export default function OrderDetailPage() {
   const [payment, setPayment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(null);
-  const [showCodes, setShowCodes] = useState({});
+  const [showCodes, setShowCodes] = useState({ 0: true, 1: true, 2: true, 3: true, 4: true, credentials: true }); // Kodlar varsayılan görünür
 
   useEffect(() => {
     if (orderId) {

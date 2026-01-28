@@ -42,6 +42,7 @@ export default function AdminProducts() {
     discountPrice: '',
     discountPercent: '',
     active: true,
+    featured: false,
     sortOrder: '',
     imageUrl: '',
     game: 'pubg'
@@ -53,6 +54,7 @@ export default function AdminProducts() {
     discountPrice: '',
     discountPercent: '',
     active: true,
+    featured: false,
     sortOrder: '',
     imageUrl: '',
     game: 'pubg'

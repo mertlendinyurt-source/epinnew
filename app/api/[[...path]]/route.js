@@ -7993,11 +7993,12 @@ export async function POST(request) {
 
       const ticketId = pathname.split('/')[4];
       const userId = userData.id || userData.userId;
-      const { message } = body;
+      const { message, imageUrl } = body;
 
-      if (!message || message.length < 2) {
+      // Mesaj veya resim olmalı
+      if ((!message || message.length < 1) && !imageUrl) {
         return NextResponse.json(
-          { success: false, error: 'Mesaj en az 2 karakter olmalıdır' },
+          { success: false, error: 'Mesaj veya fotoğraf gerekli' },
           { status: 400 }
         );
       }
@@ -8031,7 +8032,8 @@ export async function POST(request) {
         id: uuidv4(),
         ticketId,
         sender: 'user',
-        message,
+        message: message || '',
+        imageUrl: imageUrl || null,
         createdAt: new Date()
       };
 

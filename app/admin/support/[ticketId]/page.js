@@ -398,30 +398,47 @@ export default function AdminTicketDetail() {
           </div>
         ) : (
           <form onSubmit={handleSendMessage} className="space-y-3">
-            {/* Image Preview */}
-            {imagePreview && (
-              <div className="relative inline-block">
-                <img 
-                  src={imagePreview} 
-                  alt="Seçilen görsel" 
-                  className="max-h-24 rounded-lg border border-slate-600"
-                />
-                <button
-                  type="button"
-                  onClick={removeSelectedImage}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+            {/* Multiple Image Previews */}
+            {imagePreviews.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">{imagePreviews.length} fotoğraf seçildi</span>
+                  <button
+                    type="button"
+                    onClick={clearAllImages}
+                    className="text-xs text-red-400 hover:text-red-300"
+                  >
+                    Tümünü Kaldır
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className="relative">
+                      <img 
+                        src={preview} 
+                        alt={`Seçilen görsel ${index + 1}`}
+                        className="h-16 w-16 object-cover rounded-lg border border-slate-600"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSelectedImage(index)}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
             
             <div className="flex gap-2 md:gap-3">
-              {/* Hidden File Input */}
+              {/* Hidden File Input - Multiple */}
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleImageSelect}
                 className="hidden"
               />
@@ -433,7 +450,7 @@ export default function AdminTicketDetail() {
                 disabled={sending}
                 variant="outline"
                 className="px-3 border-slate-600 text-slate-400 hover:text-white hover:bg-slate-700"
-                title="Fotoğraf ekle"
+                title="Fotoğraf ekle (birden fazla seçebilirsiniz)"
               >
                 <ImagePlus className="w-5 h-5" />
               </Button>
@@ -448,7 +465,7 @@ export default function AdminTicketDetail() {
               />
               <Button
                 type="submit"
-                disabled={sending || (!newMessage.trim() && !selectedImage)}
+                disabled={sending || (!newMessage.trim() && selectedImages.length === 0)}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 md:px-6"
               >
                 {sending ? (
@@ -462,7 +479,7 @@ export default function AdminTicketDetail() {
             {uploadingImage && (
               <p className="text-xs text-emerald-400 flex items-center gap-2">
                 <Loader2 className="w-3 h-3 animate-spin" />
-                Fotoğraf yükleniyor...
+                Fotoğraflar yükleniyor...
               </p>
             )}
           </form>

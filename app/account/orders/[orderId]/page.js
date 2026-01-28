@@ -505,7 +505,7 @@ export default function OrderDetailPage() {
                     <div className="flex gap-3">
                       <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">1</span>
                       <div>
-                        <p className="text-white font-medium">PUBG Mobile'ı açın</p>
+                        <p className="text-white font-medium">PUBG Mobile&apos;ı açın</p>
                         <p className="text-gray-400 text-xs">Oyunu başlatın ve giriş ekranına gelin.</p>
                       </div>
                     </div>

@@ -390,8 +390,25 @@ export default function AdminSupport() {
             {/* Mobile Card View */}
             <div className="lg:hidden divide-y divide-slate-800">
               {filteredTickets.map((ticket) => (
-                <div key={ticket.id} className="p-4 space-y-3">
-                  <div className="flex items-start justify-between">
+                <div 
+                  key={ticket.id} 
+                  className={`p-4 space-y-3 ${
+                    bulkDeleteMode && selectedTickets.includes(ticket.id) ? 'bg-red-900/10' : ''
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    {bulkDeleteMode && (
+                      <button
+                        onClick={() => toggleTicketSelection(ticket.id)}
+                        className="text-slate-400 hover:text-white flex-shrink-0 mt-1"
+                      >
+                        {selectedTickets.includes(ticket.id) ? (
+                          <CheckSquare className="w-5 h-5 text-red-500" />
+                        ) : (
+                          <Square className="w-5 h-5 text-green-500" />
+                        )}
+                      </button>
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium truncate">{ticket.subject}</p>
                       <p className="text-slate-500 text-xs">#{ticket.id.slice(-8)}</p>

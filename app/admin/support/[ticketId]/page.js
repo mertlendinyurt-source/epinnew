@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { Headphones, ArrowLeft, Send, Lock, User, Loader2, XCircle } from 'lucide-react'
+import { Headphones, ArrowLeft, Send, Lock, User, Loader2, XCircle, ImagePlus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Toaster } from '@/components/ui/sonner'

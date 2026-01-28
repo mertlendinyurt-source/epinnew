@@ -7993,12 +7993,12 @@ export async function POST(request) {
 
       const ticketId = pathname.split('/')[4];
       const userId = userData.id || userData.userId;
-      const { message, imageUrl } = body;
+      const { message } = body;
 
-      // Mesaj veya resim olmalı
-      if ((!message || message.length < 1) && !imageUrl) {
+      // Kullanıcı sadece metin mesaj gönderebilir
+      if (!message || message.length < 2) {
         return NextResponse.json(
-          { success: false, error: 'Mesaj veya fotoğraf gerekli' },
+          { success: false, error: 'Mesaj en az 2 karakter olmalıdır' },
           { status: 400 }
         );
       }
@@ -8027,13 +8027,13 @@ export async function POST(request) {
         );
       }
 
-      // Create message
+      // Create message (kullanıcı fotoğraf gönderemez)
       const ticketMessage = {
         id: uuidv4(),
         ticketId,
         sender: 'user',
-        message: message || '',
-        imageUrl: imageUrl || null,
+        message,
+        imageUrl: null,
         createdAt: new Date()
       };
 

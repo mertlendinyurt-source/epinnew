@@ -93,10 +93,10 @@ export default function AccountOrdersPage() {
       return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-green-500">✅ Teslim Edildi</span>;
     }
 
-    // Check verification status
+    // Check verification status - KIRMIZI VE DİKKAT ÇEKİCİ
     if (verification?.required) {
       if (verification.status === 'pending' && !verification.submittedAt) {
-        return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-amber-500">🔐 Doğrulama Gerekli</span>;
+        return <span className="px-3 py-1.5 rounded text-xs font-bold text-white bg-red-600 animate-pulse shadow-lg shadow-red-500/50">⚠️ DOĞRULAMA GEREKLİ</span>;
       }
       if (verification.status === 'pending' && verification.submittedAt) {
         return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-blue-500">🔍 İnceleniyor</span>;
@@ -107,7 +107,7 @@ export default function AccountOrdersPage() {
     }
 
     if (delivery.status === 'verification_pending' || delivery.status === 'verification_required') {
-      return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-amber-500">🔐 Doğrulama Bekleniyor</span>;
+      return <span className="px-3 py-1.5 rounded text-xs font-bold text-white bg-red-600 animate-pulse shadow-lg shadow-red-500/50">⚠️ DOĞRULAMA GEREKLİ</span>;
     }
 
     if (delivery.status === 'pending') {
@@ -234,13 +234,21 @@ export default function AccountOrdersPage() {
                       </div>
                     )}
 
-                    {/* Verification message for high-value orders */}
+                    {/* Verification message for high-value orders - KIRMIZI UYARI */}
                     {order.verification?.required && order.verification?.status === 'pending' && !order.verification?.submittedAt && (
-                      <div className="mt-3 flex items-center gap-2 text-amber-400 text-sm">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                        </svg>
-                        <span>Doğrulama için belge yüklemeniz gerekiyor. Detaylar için tıklayın.</span>
+                      <div className="mt-4 p-4 bg-gradient-to-r from-red-900/50 to-red-800/40 rounded-xl border-2 border-red-500 animate-pulse">
+                        <div className="flex items-center gap-2 text-red-400 font-bold text-base mb-2">
+                          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          <span>⚠️ DOĞRULAMA GEREKİYOR!</span>
+                        </div>
+                        <p className="text-red-300 text-sm font-medium">
+                          👉 Siparişe tıklayın, aşağı kaydırın ve kimlik doğrulaması yapın.
+                        </p>
+                        <p className="text-red-200/70 text-xs mt-2">
+                          Doğrulama yapılmadan siparişiniz tamamlanamaz.
+                        </p>
                       </div>
                     )}
 

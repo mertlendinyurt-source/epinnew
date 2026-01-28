@@ -132,23 +132,33 @@ export default function AdminTicketDetail() {
 
   const uploadImage = async (file) => {
     const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+    console.log('Uploading file:', file.name, 'Token exists:', !!token)
+    
     const formData = new FormData()
     formData.append('file', file)
     formData.append('category', 'support')
 
-    const response = await fetch('/api/admin/upload', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    })
+    try {
+      const response = await fetch('/api/admin/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      })
 
-    const data = await response.json()
-    if (data.success) {
-      return data.data.url
+      console.log('Upload response status:', response.status)
+      const data = await response.json()
+      console.log('Upload response data:', data)
+      
+      if (data.success) {
+        return data.data.url
+      }
+      throw new Error(data.error || 'Fotoğraf yüklenemedi')
+    } catch (error) {
+      console.error('Upload error:', error)
+      throw error
     }
-    throw new Error(data.error || 'Fotoğraf yüklenemedi')
   }
 
   const handleSendMessage = async (e) => {

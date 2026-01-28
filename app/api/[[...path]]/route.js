@@ -3459,6 +3459,56 @@ export async function GET(request) {
       });
     }
 
+    // Auto-cleanup: Delete tickets with no messages older than 48 hours
+    async function cleanupOldEmptyTickets(db) {
+      try {
+        const cutoffDate = new Date(Date.now() - 48 * 60 * 60 * 1000); // 48 hours ago
+        
+        // Find tickets older than 48 hours
+        const oldTickets = await db.collection('tickets')
+          .find({ createdAt: { $lt: cutoffDate } })
+          .toArray();
+        
+        for (const ticket of oldTickets) {
+          // Check if ticket has any messages
+          const messageCount = await db.collection('ticket_messages')
+            .countDocuments({ ticketId: ticket.id });
+          
+          // If no messages (or only initial message), delete the ticket
+          if (messageCount <= 1) {
+            // Get messages to delete their images
+            const messages = await db.collection('ticket_messages')
+              .find({ ticketId: ticket.id })
+              .toArray();
+            
+            // Delete images from messages
+            for (const msg of messages) {
+              // Delete single imageUrl
+              if (msg.imageUrl) {
+                deleteUploadedFile(msg.imageUrl);
+              }
+              // Delete multiple imageUrls
+              if (msg.imageUrls && Array.isArray(msg.imageUrls)) {
+                for (const url of msg.imageUrls) {
+                  deleteUploadedFile(url);
+                }
+              }
+            }
+            
+            // Delete messages
+            await db.collection('ticket_messages').deleteMany({ ticketId: ticket.id });
+            
+            // Delete ticket
+            await db.collection('tickets').deleteOne({ id: ticket.id });
+            
+            console.log(`Auto-deleted empty ticket: ${ticket.id} (created: ${ticket.createdAt})`);
+          }
+        }
+      } catch (error) {
+        console.error('Cleanup error:', error);
+      }
+    }
+
     // Admin: Get all support tickets
     if (pathname === '/api/admin/support/tickets') {
       const user = verifyAdminToken(request);
@@ -3468,6 +3518,9 @@ export async function GET(request) {
           { status: 401 }
         );
       }
+
+      // Run cleanup on each request (lightweight check)
+      await cleanupOldEmptyTickets(db);
 
       const status = searchParams.get('status');
       const query = status ? { status } : {};

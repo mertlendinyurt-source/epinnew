@@ -327,7 +327,7 @@ export default function OrderDetailPage() {
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">3</span>
                         <div>
-                          <p className="text-white font-medium">OYUNCU ID'nizi girin</p>
+                          <p className="text-white font-medium">OYUNCU ID&apos;nizi girin</p>
                           <p className="text-gray-400 text-xs">PUBG Mobile içinden Profil → Oyuncu ID bölümünden kopyalayın.</p>
                         </div>
                       </div>

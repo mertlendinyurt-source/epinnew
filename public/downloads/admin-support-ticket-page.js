@@ -132,27 +132,42 @@ export default function AdminTicketDetail() {
 
   const uploadImage = async (file) => {
     const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+    console.log('Uploading file:', file.name, 'Token exists:', !!token)
+    
     const formData = new FormData()
     formData.append('file', file)
     formData.append('category', 'support')
 
-    const response = await fetch('/api/admin/upload', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    })
+    try {
+      const response = await fetch('/api/admin/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      })
 
-    const data = await response.json()
-    if (data.success) {
-      return data.data.url
+      console.log('Upload response status:', response.status)
+      const data = await response.json()
+      console.log('Upload response data:', data)
+      
+      if (data.success) {
+        return data.data.url
+      }
+      throw new Error(data.error || 'Fotoğraf yüklenemedi')
+    } catch (error) {
+      console.error('Upload error:', error)
+      throw error
     }
-    throw new Error(data.error || 'Fotoğraf yüklenemedi')
   }
 
   const handleSendMessage = async (e) => {
     e.preventDefault()
+    console.log('handleSendMessage called', { 
+      message: newMessage, 
+      imagesCount: selectedImages.length 
+    })
+    
     if (!newMessage.trim() && selectedImages.length === 0) {
       toast.error('Mesaj veya fotoğraf gerekli')
       return
@@ -166,12 +181,18 @@ export default function AdminTicketDetail() {
       // Upload all images
       if (selectedImages.length > 0) {
         setUploadingImage(true)
+        console.log('Starting to upload', selectedImages.length, 'images')
         try {
-          for (const file of selectedImages) {
+          for (let i = 0; i < selectedImages.length; i++) {
+            const file = selectedImages[i]
+            console.log(`Uploading image ${i + 1}/${selectedImages.length}:`, file.name)
             const url = await uploadImage(file)
+            console.log(`Image ${i + 1} uploaded:`, url)
             imageUrls.push(url)
           }
+          console.log('All images uploaded:', imageUrls)
         } catch (uploadError) {
+          console.error('Upload failed:', uploadError)
           toast.error('Fotoğraf yüklenemedi: ' + uploadError.message)
           setUploadingImage(false)
           setSending(false)
@@ -180,6 +201,7 @@ export default function AdminTicketDetail() {
         setUploadingImage(false)
       }
 
+      console.log('Sending message with imageUrls:', imageUrls)
       const response = await fetch(`/api/admin/support/tickets/${params.ticketId}/messages`, {
         method: 'POST',
         headers: {
@@ -193,6 +215,8 @@ export default function AdminTicketDetail() {
       })
 
       const data = await response.json()
+      console.log('Message send response:', data)
+      
       if (data.success) {
         setNewMessage('')
         clearAllImages()

@@ -78,10 +78,65 @@ export default function TicketDetail() {
     }
   };
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Sadece resim dosyaları yüklenebilir');
+      return;
+    }
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Dosya boyutu maksimum 5MB olabilir');
+      return;
+    }
+
+    setSelectedImage(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeSelectedImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadImage = async (file) => {
+    const token = localStorage.getItem('userToken');
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('category', 'support');
+
+    const response = await fetch('/api/support/upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      return data.data.url;
+    }
+    throw new Error(data.error || 'Fotoğraf yüklenemedi');
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || newMessage.length < 2) {
-      toast.error('Mesaj en az 2 karakter olmalıdır');
+    if (!newMessage.trim() && !selectedImage) {
+      toast.error('Mesaj veya fotoğraf gerekli');
       return;
     }
 
@@ -93,13 +148,32 @@ export default function TicketDetail() {
 
     setSending(true);
     try {
+      let imageUrl = null;
+
+      // Upload image if selected
+      if (selectedImage) {
+        setUploadingImage(true);
+        try {
+          imageUrl = await uploadImage(selectedImage);
+        } catch (uploadError) {
+          toast.error('Fotoğraf yüklenemedi: ' + uploadError.message);
+          setUploadingImage(false);
+          setSending(false);
+          return;
+        }
+        setUploadingImage(false);
+      }
+
       const response = await fetch(`/api/support/tickets/${params.ticketId}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ message: newMessage })
+        body: JSON.stringify({ 
+          message: newMessage || (imageUrl ? '📷 Fotoğraf gönderildi' : ''),
+          imageUrl 
+        })
       });
 
       const data = await response.json();
@@ -111,6 +185,7 @@ export default function TicketDetail() {
 
       if (data.success) {
         setNewMessage('');
+        removeSelectedImage();
         // Refresh ticket to get updated status
         await fetchTicket();
         toast.success('Mesajınız gönderildi');

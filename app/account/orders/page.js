@@ -93,10 +93,10 @@ export default function AccountOrdersPage() {
       return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-green-500">✅ Teslim Edildi</span>;
     }
 
-    // Check verification status
+    // Check verification status - KIRMIZI VE DİKKAT ÇEKİCİ
     if (verification?.required) {
       if (verification.status === 'pending' && !verification.submittedAt) {
-        return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-amber-500">🔐 Doğrulama Gerekli</span>;
+        return <span className="px-3 py-1.5 rounded text-xs font-bold text-white bg-red-600 animate-pulse shadow-lg shadow-red-500/50">⚠️ DOĞRULAMA GEREKLİ</span>;
       }
       if (verification.status === 'pending' && verification.submittedAt) {
         return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-blue-500">🔍 İnceleniyor</span>;
@@ -107,7 +107,7 @@ export default function AccountOrdersPage() {
     }
 
     if (delivery.status === 'verification_pending' || delivery.status === 'verification_required') {
-      return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-amber-500">🔐 Doğrulama Bekleniyor</span>;
+      return <span className="px-3 py-1.5 rounded text-xs font-bold text-white bg-red-600 animate-pulse shadow-lg shadow-red-500/50">⚠️ DOĞRULAMA GEREKLİ</span>;
     }
 
     if (delivery.status === 'pending') {

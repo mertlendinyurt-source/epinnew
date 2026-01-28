@@ -311,6 +311,20 @@ export default function AdminSupport() {
               <table className="w-full">
                 <thead className="bg-slate-800/50">
                   <tr>
+                    {bulkDeleteMode && (
+                      <th className="px-4 py-4 text-left">
+                        <button
+                          onClick={toggleSelectAll}
+                          className="text-slate-400 hover:text-white"
+                        >
+                          {selectedTickets.length === filteredTickets.length ? (
+                            <CheckSquare className="w-5 h-5 text-red-500" />
+                          ) : (
+                            <Square className="w-5 h-5" />
+                          )}
+                        </button>
+                      </th>
+                    )}
                     <th className="px-4 md:px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase">Kullanıcı</th>
                     <th className="px-4 md:px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase">Konu</th>
                     <th className="px-4 md:px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase">Kategori</th>
@@ -321,7 +335,26 @@ export default function AdminSupport() {
                 </thead>
                 <tbody className="divide-y divide-slate-800">
                   {filteredTickets.map((ticket) => (
-                    <tr key={ticket.id} className="hover:bg-slate-800/30 transition-colors">
+                    <tr 
+                      key={ticket.id} 
+                      className={`hover:bg-slate-800/30 transition-colors ${
+                        bulkDeleteMode && selectedTickets.includes(ticket.id) ? 'bg-red-900/10' : ''
+                      }`}
+                    >
+                      {bulkDeleteMode && (
+                        <td className="px-4 py-4">
+                          <button
+                            onClick={() => toggleTicketSelection(ticket.id)}
+                            className="text-slate-400 hover:text-white"
+                          >
+                            {selectedTickets.includes(ticket.id) ? (
+                              <CheckSquare className="w-5 h-5 text-red-500" />
+                            ) : (
+                              <Square className="w-5 h-5 text-green-500" />
+                            )}
+                          </button>
+                        </td>
+                      )}
                       <td className="px-4 md:px-6 py-4">
                         <div>
                           <p className="text-white font-medium">{ticket.userName}</p>

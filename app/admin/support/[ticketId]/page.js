@@ -335,8 +335,28 @@ export default function AdminTicketDetail() {
                     ? 'bg-emerald-600 text-white rounded-br-md'
                     : 'bg-slate-800 border border-slate-700 text-white rounded-bl-md'
                 }`}>
-                  {/* Show image if exists */}
-                  {msg.imageUrl && (
+                  {/* Show multiple images if exists */}
+                  {msg.imageUrls && msg.imageUrls.length > 0 && (
+                    <div className={`grid gap-2 mb-2 ${msg.imageUrls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                      {msg.imageUrls.map((url, idx) => (
+                        <a 
+                          key={idx}
+                          href={url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          <img 
+                            src={url} 
+                            alt={`Görsel ${idx + 1}`}
+                            className="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition-opacity object-cover"
+                          />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                  {/* Legacy: single imageUrl support */}
+                  {msg.imageUrl && !msg.imageUrls && (
                     <a 
                       href={msg.imageUrl} 
                       target="_blank" 

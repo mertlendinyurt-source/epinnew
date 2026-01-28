@@ -174,7 +174,12 @@ export default function OrderDetailPage() {
 
                 <div className="bg-green-900/30 rounded-xl p-4 mb-4 border border-green-600/50">
                   <p className="text-base text-green-100 font-medium">
-                    ✅ UC kodunuz hazır! Aşağıdaki kodu PUBG Mobile içinde kullanabilirsiniz.
+                    {order.productTitle?.toLowerCase().includes('valorant') || order.productTitle?.toLowerCase().includes('vp')
+                      ? '✅ VP kodunuz hazır! Aşağıdaki kodu Valorant içinde kullanabilirsiniz.'
+                      : order.productTitle?.toLowerCase().includes('mlbb') || order.productTitle?.toLowerCase().includes('diamond') || order.productTitle?.toLowerCase().includes('elmas')
+                      ? '✅ Diamonds kodunuz hazır! Aşağıdaki kodu Mobile Legends içinde kullanabilirsiniz.'
+                      : '✅ UC kodunuz hazır! Aşağıdaki kodu PUBG Mobile içinde kullanabilirsiniz.'
+                    }
                   </p>
                 </div>
 
@@ -205,58 +210,142 @@ export default function OrderDetailPage() {
                   📅 Teslim tarihi: {order.delivery?.assignedAt ? new Date(order.delivery.assignedAt).toLocaleString('tr-TR') : 'N/A'}
                 </div>
 
-                {/* Kodu Nasıl Kullanırım? */}
+                {/* Kodu Nasıl Kullanırım? - Dinamik */}
                 <div className="mt-6 pt-6 border-t border-green-700/50">
                   <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                     📖 Kodu Nasıl Kullanırım?
                   </h3>
                   
-                  <div className="space-y-3 text-sm">
-                    <div className="flex gap-3">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">1</span>
-                      <div>
-                        <p className="text-white font-medium">Tarayıcıdan siteye girin:</p>
-                        <a 
-                          href="https://www.midasbuy.com/midasbuy/tr/redeem/pubgm" 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-green-400 hover:text-green-300 underline break-all"
-                        >
-                          👉 https://www.midasbuy.com/midasbuy/tr/redeem/pubgm
-                        </a>
+                  {/* VALORANT VP Talimatları */}
+                  {(order.productTitle?.toLowerCase().includes('valorant') || order.productTitle?.toLowerCase().includes('vp')) && (
+                    <div className="space-y-3 text-sm">
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                        <div>
+                          <p className="text-white font-medium">Riot Games sitesine gidin:</p>
+                          <a 
+                            href="https://account.riotgames.com/" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-red-400 hover:text-red-300 underline break-all"
+                          >
+                            👉 https://account.riotgames.com/
+                          </a>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                        <div>
+                          <p className="text-white font-medium">Riot hesabınızla giriş yapın</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                        <div>
+                          <p className="text-white font-medium">"Kod Kullan" veya "Redeem Code" bölümüne gidin</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">4</span>
+                        <div>
+                          <p className="text-white font-medium">Yukarıdaki kodu yapıştırın ve onaylayın</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">5</span>
+                        <div>
+                          <p className="text-white font-medium">VP hesabınıza yüklenecek</p>
+                          <p className="text-gray-400 text-xs">Valorant oyununu açıp kontrol edebilirsiniz.</p>
+                        </div>
                       </div>
                     </div>
+                  )}
 
-                    <div className="flex gap-3">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">2</span>
-                      <div>
-                        <p className="text-white font-medium">Hesap oluşturun / giriş yapın</p>
-                        <p className="text-gray-400 text-xs">(Google, Facebook veya e-posta ile giriş olabilir.)</p>
+                  {/* MLBB Diamonds Talimatları */}
+                  {(order.productTitle?.toLowerCase().includes('mlbb') || order.productTitle?.toLowerCase().includes('diamond') || order.productTitle?.toLowerCase().includes('elmas')) && (
+                    <div className="space-y-3 text-sm">
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                        <div>
+                          <p className="text-white font-medium">Mobile Legends oyununu açın</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                        <div>
+                          <p className="text-white font-medium">Profil → Kod Kullan bölümüne gidin</p>
+                          <p className="text-gray-400 text-xs">Ayarlar içinden "Exchange Code" veya "Kod Kullan" seçeneği</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                        <div>
+                          <p className="text-white font-medium">Yukarıdaki kodu yapıştırın</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">4</span>
+                        <div>
+                          <p className="text-white font-medium">Onayla butonuna basın</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">5</span>
+                        <div>
+                          <p className="text-white font-medium">Diamonds hesabınıza yüklenecek</p>
+                        </div>
                       </div>
                     </div>
+                  )}
 
-                    <div className="flex gap-3">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">3</span>
-                      <div>
-                        <p className="text-white font-medium">OYUNCU ID'nizi girin</p>
-                        <p className="text-gray-400 text-xs">PUBG Mobile içinden Profil → Oyuncu ID bölümünden kopyalayın.</p>
+                  {/* PUBG UC Talimatları (varsayılan) */}
+                  {!(order.productTitle?.toLowerCase().includes('valorant') || order.productTitle?.toLowerCase().includes('vp') || order.productTitle?.toLowerCase().includes('mlbb') || order.productTitle?.toLowerCase().includes('diamond') || order.productTitle?.toLowerCase().includes('elmas')) && (
+                    <div className="space-y-3 text-sm">
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                        <div>
+                          <p className="text-white font-medium">Tarayıcıdan siteye girin:</p>
+                          <a 
+                            href="https://www.midasbuy.com/midasbuy/tr/redeem/pubgm" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-green-400 hover:text-green-300 underline break-all"
+                          >
+                            👉 https://www.midasbuy.com/midasbuy/tr/redeem/pubgm
+                          </a>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex gap-3">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">4</span>
-                      <div>
-                        <p className="text-white font-medium">Satın aldığınız KODU girin</p>
-                        <p className="text-gray-400 text-xs">Yukarıdaki kodu kopyalayıp ilgili alana yapıştırın.</p>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                        <div>
+                          <p className="text-white font-medium">Hesap oluşturun / giriş yapın</p>
+                          <p className="text-gray-400 text-xs">(Google, Facebook veya e-posta ile giriş olabilir.)</p>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex gap-3">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">5</span>
-                      <div>
-                        <p className="text-white font-medium">Onayla / Redeem butonuna basın</p>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                        <div>
+                          <p className="text-white font-medium">OYUNCU ID'nizi girin</p>
+                          <p className="text-gray-400 text-xs">PUBG Mobile içinden Profil → Oyuncu ID bölümünden kopyalayın.</p>
+                        </div>
                       </div>
-                    </div>
+
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">4</span>
+                        <div>
+                          <p className="text-white font-medium">Satın aldığınız KODU girin</p>
+                          <p className="text-gray-400 text-xs">Yukarıdaki kodu kopyalayıp ilgili alana yapıştırın.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">5</span>
+                        <div>
+                          <p className="text-white font-medium">Onayla / Redeem butonuna basın</p>
+                        </div>
+                      </div>
 
                     <div className="flex gap-3">
                       <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">6</span>

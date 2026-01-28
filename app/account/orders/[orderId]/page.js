@@ -242,7 +242,7 @@ export default function OrderDetailPage() {
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">3</span>
                         <div>
-                          <p className="text-white font-medium">"Kod Kullan" veya "Redeem Code" bölümüne gidin</p>
+                          <p className="text-white font-medium">&quot;Kod Kullan&quot; veya &quot;Redeem Code&quot; bölümüne gidin</p>
                         </div>
                       </div>
                       <div className="flex gap-3">

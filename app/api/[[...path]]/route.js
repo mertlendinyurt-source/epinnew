@@ -4553,6 +4553,74 @@ export async function POST(request) {
         message: 'Talep kapatıldı'
       });
     }
+
+    // Admin: Bulk delete tickets (with images)
+    if (pathname === '/api/admin/support/tickets/bulk-delete') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      try {
+        const body = await request.json();
+        const { ticketIds } = body;
+
+        if (!ticketIds || !Array.isArray(ticketIds) || ticketIds.length === 0) {
+          return NextResponse.json(
+            { success: false, error: 'Silinecek talep seçilmedi' },
+            { status: 400 }
+          );
+        }
+
+        let deletedCount = 0;
+        let deletedImagesCount = 0;
+
+        for (const ticketId of ticketIds) {
+          // Get all messages for this ticket
+          const messages = await db.collection('ticket_messages')
+            .find({ ticketId })
+            .toArray();
+
+          // Delete images from messages
+          for (const msg of messages) {
+            if (msg.imageUrl) {
+              deleteUploadedFile(msg.imageUrl);
+              deletedImagesCount++;
+            }
+            if (msg.imageUrls && Array.isArray(msg.imageUrls)) {
+              for (const url of msg.imageUrls) {
+                deleteUploadedFile(url);
+                deletedImagesCount++;
+              }
+            }
+          }
+
+          // Delete messages
+          await db.collection('ticket_messages').deleteMany({ ticketId });
+
+          // Delete ticket
+          const result = await db.collection('tickets').deleteOne({ id: ticketId });
+          if (result.deletedCount > 0) {
+            deletedCount++;
+          }
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: `${deletedCount} talep ve ${deletedImagesCount} resim silindi`,
+          data: { deletedTickets: deletedCount, deletedImages: deletedImagesCount }
+        });
+      } catch (error) {
+        console.error('Bulk delete error:', error);
+        return NextResponse.json(
+          { success: false, error: 'Silme işlemi başarısız' },
+          { status: 500 }
+        );
+      }
+    }
     
     // ============================================
     // SPIN WHEEL - ÇARK ÇEVİRME (POST) - Body parse gerektirmez

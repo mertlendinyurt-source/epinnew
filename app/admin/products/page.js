@@ -1224,6 +1224,23 @@ export default function AdminProducts() {
                   </div>
                 </div>
 
+                {/* En Çok Tercih Edilen */}
+                <div className="flex items-center justify-between p-4 bg-yellow-900/20 rounded-xl border border-yellow-700/30">
+                  <div>
+                    <Label className="text-yellow-400 text-sm font-medium">⭐ En Çok Tercih Edilen</Label>
+                    <p className="text-xs text-yellow-600/70 mt-1">Bu ürün öne çıkarılır</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-sm ${formData.featured ? 'text-yellow-400' : 'text-slate-400'}`}>
+                      {formData.featured ? 'Evet' : 'Hayır'}
+                    </span>
+                    <Switch
+                      checked={formData.featured}
+                      onCheckedChange={(checked) => setFormData({ ...formData, featured: checked })}
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label className="text-slate-300 text-sm">Sıralama</Label>
                   <Input

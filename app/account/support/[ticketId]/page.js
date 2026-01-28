@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Send, Loader2, Lock, Clock, CheckCircle, AlertCircle, User, Headphones, ImagePlus, X } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Lock, Clock, CheckCircle, AlertCircle, User, Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 

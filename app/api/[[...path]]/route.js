@@ -8059,7 +8059,7 @@ export async function POST(request) {
       });
     }
 
-    // Admin: Send message to ticket (with optional image)
+    // Admin: Send message to ticket (with optional images - multiple)
     if (pathname.match(/^\/api\/admin\/support\/tickets\/[^\/]+\/messages$/)) {
       const user = verifyAdminToken(request);
       if (!user) {
@@ -8070,10 +8070,11 @@ export async function POST(request) {
       }
 
       const ticketId = pathname.split('/')[5];
-      const { message, imageUrl } = body;
+      const { message, imageUrl, imageUrls } = body;
 
-      // Admin mesaj veya fotoğraf gönderebilir
-      if ((!message || message.length < 1) && !imageUrl) {
+      // Admin mesaj veya fotoğraf(lar) gönderebilir
+      const hasImages = (imageUrls && imageUrls.length > 0) || imageUrl;
+      if ((!message || message.length < 1) && !hasImages) {
         return NextResponse.json(
           { success: false, error: 'Mesaj veya fotoğraf gerekli' },
           { status: 400 }
@@ -8088,7 +8089,7 @@ export async function POST(request) {
         );
       }
 
-      // Create message (admin fotoğraf gönderebilir)
+      // Create message (admin çoklu fotoğraf gönderebilir)
       const ticketMessage = {
         id: uuidv4(),
         ticketId,
@@ -8096,6 +8097,7 @@ export async function POST(request) {
         adminUsername: user.username,
         message: message || '',
         imageUrl: imageUrl || null,
+        imageUrls: imageUrls || null,
         createdAt: new Date()
       };
 

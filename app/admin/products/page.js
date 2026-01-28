@@ -334,6 +334,7 @@ export default function AdminProducts() {
         discountPrice: parseFloat(formData.discountPrice),
         discountPercent: parseInt(formData.discountPercent),
         active: formData.active,
+        featured: formData.featured,
         sortOrder: parseInt(formData.sortOrder),
         imageUrl: imageUrl,
         game: formData.game

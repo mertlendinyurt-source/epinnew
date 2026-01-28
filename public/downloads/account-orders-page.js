@@ -191,11 +191,14 @@ export default function AccountOrdersPage() {
                 className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-all cursor-pointer hover:shadow-lg hover:scale-[1.01]"
               >
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <h3 className="text-xl font-semibold text-white">
-                        {order.productSnapshot?.title || order.productTitle || 'Ürün'}
-                      </h3>
+                  <div className="flex-1 min-w-0">
+                    {/* Başlık - Mobilde kendi satırında */}
+                    <h3 className="text-lg md:text-xl font-semibold text-white mb-2 truncate">
+                      {order.productSnapshot?.title || order.productTitle || 'Ürün'}
+                    </h3>
+                    
+                    {/* Badge'ler - Mobilde wrap olacak */}
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
                       {getStatusBadge(order.status)}
                       {getDeliveryBadge(order)}
                     </div>
@@ -236,25 +239,25 @@ export default function AccountOrdersPage() {
 
                     {/* Verification message for high-value orders - KIRMIZI UYARI */}
                     {order.verification?.required && order.verification?.status === 'pending' && !order.verification?.submittedAt && (
-                      <div className="mt-4 p-4 bg-gradient-to-r from-red-900/50 to-red-800/40 rounded-xl border-2 border-red-500 animate-pulse">
-                        <div className="flex items-center gap-2 text-red-400 font-bold text-base mb-2">
-                          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="mt-3 p-3 md:p-4 bg-gradient-to-r from-red-900/50 to-red-800/40 rounded-xl border-2 border-red-500 animate-pulse">
+                        <div className="flex items-center gap-2 text-red-400 font-bold text-sm md:text-base mb-2">
+                          <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                           </svg>
                           <span>⚠️ DOĞRULAMA GEREKİYOR!</span>
                         </div>
-                        <p className="text-red-300 text-sm font-medium">
+                        <p className="text-red-300 text-xs md:text-sm font-medium">
                           👉 Siparişe tıklayın, aşağı kaydırın ve kimlik doğrulaması yapın.
                         </p>
-                        <p className="text-red-200/70 text-xs mt-2">
+                        <p className="text-red-200/70 text-xs mt-1 md:mt-2">
                           Doğrulama yapılmadan siparişiniz tamamlanamaz.
                         </p>
                       </div>
                     )}
 
                     {order.verification?.required && order.verification?.status === 'pending' && order.verification?.submittedAt && (
-                      <div className="mt-3 flex items-center gap-2 text-blue-400 text-sm">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="mt-3 flex items-start gap-2 text-blue-400 text-xs md:text-sm">
+                        <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                         </svg>
                         <span>Belgeleriniz inceleniyor. En kısa sürede sonuçlandırılacak.</span>
@@ -271,21 +274,21 @@ export default function AccountOrdersPage() {
                     )}
 
                     {order.delivery && order.delivery.status === 'delivered' && (
-                      <div className="mt-4 p-4 bg-gradient-to-r from-green-900/40 to-green-800/30 rounded-xl border-2 border-green-500/50">
-                        <div className="flex items-center gap-2 text-green-400 font-bold text-base mb-3">
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="mt-3 p-3 md:p-4 bg-gradient-to-r from-green-900/40 to-green-800/30 rounded-xl border-2 border-green-500/50">
+                        <div className="flex items-center gap-2 text-green-400 font-bold text-sm md:text-base mb-2 md:mb-3">
+                          <svg className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>
                           <span>✅ KODUNUZ HAZIR!</span>
                         </div>
                         
-                        {/* Show codes directly in the list */}
+                        {/* Show codes directly in the list - Mobil uyumlu */}
                         {order.delivery.items && Array.isArray(order.delivery.items) && order.delivery.items.length > 0 && (
                           <div className="space-y-2">
                             {order.delivery.items.map((code, idx) => (
-                              <div key={idx} className="flex items-center gap-2 bg-gray-900/60 rounded-lg p-3 border border-green-600/30">
+                              <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-2 bg-gray-900/60 rounded-lg p-2 md:p-3 border border-green-600/30">
                                 <span className="text-green-300 text-xs font-medium">KOD {idx + 1}:</span>
-                                <code className="flex-1 text-white font-mono text-lg tracking-wider bg-black/30 px-3 py-1 rounded select-all">
+                                <code className="flex-1 text-white font-mono text-sm md:text-base tracking-wider bg-black/30 px-2 py-1 rounded select-all break-all">
                                   {code}
                                 </code>
                                 <button
@@ -294,7 +297,7 @@ export default function AccountOrdersPage() {
                                     navigator.clipboard.writeText(code);
                                     toast.success('Kod kopyalandı!');
                                   }}
-                                  className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded transition-colors"
+                                  className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded transition-colors w-full sm:w-auto"
                                 >
                                   KOPYALA
                                 </button>
@@ -303,7 +306,7 @@ export default function AccountOrdersPage() {
                           </div>
                         )}
                         
-                        <p className="text-green-200/70 text-xs mt-3">
+                        <p className="text-green-200/70 text-xs mt-2 md:mt-3">
                           💡 Kodu nasıl kullanacağınızı görmek için tıklayın
                         </p>
                       </div>

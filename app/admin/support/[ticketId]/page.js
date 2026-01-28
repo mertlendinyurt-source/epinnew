@@ -315,7 +315,22 @@ export default function AdminTicketDetail() {
                     ? 'bg-emerald-600 text-white rounded-br-md'
                     : 'bg-slate-800 border border-slate-700 text-white rounded-bl-md'
                 }`}>
-                  <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{msg.message}</p>
+                  {/* Show image if exists */}
+                  {msg.imageUrl && (
+                    <a 
+                      href={msg.imageUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block mb-2"
+                    >
+                      <img 
+                        src={msg.imageUrl} 
+                        alt="Ek görsel" 
+                        className="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                      />
+                    </a>
+                  )}
+                  {msg.message && <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{msg.message}</p>}
                 </div>
               </div>
               

@@ -242,7 +242,7 @@ export default function OrderDetailPage() {
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">3</span>
                         <div>
-                          <p className="text-white font-medium">"Kod Kullan" veya "Redeem Code" bölümüne gidin</p>
+                          <p className="text-white font-medium">&quot;Kod Kullan&quot; veya &quot;Redeem Code&quot; bölümüne gidin</p>
                         </div>
                       </div>
                       <div className="flex gap-3">
@@ -274,7 +274,7 @@ export default function OrderDetailPage() {
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">2</span>
                         <div>
                           <p className="text-white font-medium">Profil → Kod Kullan bölümüne gidin</p>
-                          <p className="text-gray-400 text-xs">Ayarlar içinden "Exchange Code" veya "Kod Kullan" seçeneği</p>
+                          <p className="text-gray-400 text-xs">Ayarlar içinden &quot;Exchange Code&quot; veya &quot;Kod Kullan&quot; seçeneği</p>
                         </div>
                       </div>
                       <div className="flex gap-3">
@@ -327,7 +327,7 @@ export default function OrderDetailPage() {
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">3</span>
                         <div>
-                          <p className="text-white font-medium">OYUNCU ID'nizi girin</p>
+                          <p className="text-white font-medium">OYUNCU ID&apos;nizi girin</p>
                           <p className="text-gray-400 text-xs">PUBG Mobile içinden Profil → Oyuncu ID bölümünden kopyalayın.</p>
                         </div>
                       </div>
@@ -354,16 +354,17 @@ export default function OrderDetailPage() {
                         <p className="text-gray-400 text-xs">Genelde anında, bazen birkaç dakika içinde oyun hesabınıza düşer. Oyunu kapatıp açmak gerekebilir.</p>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Uyarılar */}
-                  <div className="mt-4 p-3 bg-red-900/30 rounded-lg border border-red-600/50">
-                    <p className="text-red-300 text-xs font-medium mb-2">⚠️ En sık yapılan hatalar:</p>
-                    <ul className="text-red-200 text-xs space-y-1">
-                      <li>❌ Yanlış Oyuncu ID girilmesi</li>
-                      <li>❌ Kodun boşluklu ya da hatalı kopyalanması</li>
-                    </ul>
+                    {/* Uyarılar - PUBG için */}
+                    <div className="mt-4 p-3 bg-red-900/30 rounded-lg border border-red-600/50">
+                      <p className="text-red-300 text-xs font-medium mb-2">⚠️ En sık yapılan hatalar:</p>
+                      <ul className="text-red-200 text-xs space-y-1">
+                        <li>❌ Yanlış Oyuncu ID girilmesi</li>
+                        <li>❌ Kodun boşluklu ya da hatalı kopyalanması</li>
+                      </ul>
+                    </div>
                   </div>
+                  )}
                 </div>
               </div>
             )}
@@ -504,7 +505,7 @@ export default function OrderDetailPage() {
                     <div className="flex gap-3">
                       <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">1</span>
                       <div>
-                        <p className="text-white font-medium">PUBG Mobile'ı açın</p>
+                        <p className="text-white font-medium">PUBG Mobile&apos;ı açın</p>
                         <p className="text-gray-400 text-xs">Oyunu başlatın ve giriş ekranına gelin.</p>
                       </div>
                     </div>

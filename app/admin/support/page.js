@@ -82,6 +82,76 @@ export default function AdminSupport() {
     );
   });
 
+  // Toplu silme modunu aç - tüm ticketlar seçili başlar
+  const startBulkDelete = () => {
+    setBulkDeleteMode(true)
+    setSelectedTickets(filteredTickets.map(t => t.id))
+  }
+
+  // Toplu silme modunu kapat
+  const cancelBulkDelete = () => {
+    setBulkDeleteMode(false)
+    setSelectedTickets([])
+  }
+
+  // Ticket seçim toggle
+  const toggleTicketSelection = (ticketId) => {
+    setSelectedTickets(prev => 
+      prev.includes(ticketId) 
+        ? prev.filter(id => id !== ticketId)
+        : [...prev, ticketId]
+    )
+  }
+
+  // Tümünü seç/kaldır
+  const toggleSelectAll = () => {
+    if (selectedTickets.length === filteredTickets.length) {
+      setSelectedTickets([])
+    } else {
+      setSelectedTickets(filteredTickets.map(t => t.id))
+    }
+  }
+
+  // Toplu silme işlemi
+  const handleBulkDelete = async () => {
+    if (selectedTickets.length === 0) {
+      toast.error('Silinecek talep seçilmedi')
+      return
+    }
+
+    if (!confirm(`${selectedTickets.length} talep silinecek. Resimler dahil tüm veriler kalıcı olarak silinecek. Emin misiniz?`)) {
+      return
+    }
+
+    setDeleting(true)
+    try {
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+      const response = await fetch('/api/admin/support/tickets/bulk-delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ ticketIds: selectedTickets })
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        toast.success(data.message)
+        setBulkDeleteMode(false)
+        setSelectedTickets([])
+        await fetchTickets()
+      } else {
+        toast.error(data.error || 'Silme işlemi başarısız')
+      }
+    } catch (error) {
+      console.error('Bulk delete error:', error)
+      toast.error('Bir hata oluştu')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const getStatusBadge = (status) => {
     const config = statusConfig[status] || statusConfig['waiting_admin'];
     return (

@@ -4455,63 +4455,6 @@ export async function POST(request) {
       );
     }
     
-    // User: Upload file for support ticket (MUST BE BEFORE body = await request.json())
-    if (pathname === '/api/support/upload') {
-      const userData = verifyToken(request);
-      if (!userData) {
-        return NextResponse.json(
-          { success: false, error: 'Oturum açmanız gerekiyor' },
-          { status: 401 }
-        );
-      }
-
-      try {
-        const formData = await request.formData();
-        const file = formData.get('file');
-        const category = formData.get('category') || 'support';
-
-        if (!file) {
-          return NextResponse.json(
-            { success: false, error: 'Dosya seçilmedi' },
-            { status: 400 }
-          );
-        }
-
-        // Check file type - only images allowed
-        if (!file.type.startsWith('image/')) {
-          return NextResponse.json(
-            { success: false, error: 'Sadece resim dosyaları yüklenebilir' },
-            { status: 400 }
-          );
-        }
-
-        // Check file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          return NextResponse.json(
-            { success: false, error: 'Dosya boyutu maksimum 5MB olabilir' },
-            { status: 400 }
-          );
-        }
-
-        const fileUrl = await saveUploadedFile(file, category);
-
-        return NextResponse.json({
-          success: true,
-          data: {
-            url: fileUrl,
-            filename: file.name,
-            size: file.size,
-            type: file.type
-          }
-        });
-      } catch (error) {
-        return NextResponse.json(
-          { success: false, error: error.message },
-          { status: 400 }
-        );
-      }
-    }
-    
     // Admin: Upload file (MUST BE BEFORE body = await request.json())
     if (pathname === '/api/admin/upload') {
       const user = verifyAdminToken(request);

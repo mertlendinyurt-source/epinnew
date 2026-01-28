@@ -159,6 +159,7 @@ export default function AdminProducts() {
       discountPrice: product.discountPrice.toString(),
       discountPercent: product.discountPercent.toString(),
       active: product.active,
+      featured: product.featured || false,
       sortOrder: product.sortOrder.toString(),
       imageUrl: product.imageUrl || '',
       game: product.game || 'pubg'

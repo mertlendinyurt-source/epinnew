@@ -274,7 +274,7 @@ export default function OrderDetailPage() {
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">2</span>
                         <div>
                           <p className="text-white font-medium">Profil → Kod Kullan bölümüne gidin</p>
-                          <p className="text-gray-400 text-xs">Ayarlar içinden "Exchange Code" veya "Kod Kullan" seçeneği</p>
+                          <p className="text-gray-400 text-xs">Ayarlar içinden &quot;Exchange Code&quot; veya &quot;Kod Kullan&quot; seçeneği</p>
                         </div>
                       </div>
                       <div className="flex gap-3">

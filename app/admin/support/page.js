@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Headphones, Clock, CheckCircle, AlertCircle, Search, Loader2 } from 'lucide-react'
+import { Headphones, Clock, CheckCircle, AlertCircle, Search, Loader2, Trash2, X, CheckSquare, Square } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +29,9 @@ export default function AdminSupport() {
   const [tickets, setTickets] = useState([])
   const [statusFilter, setStatusFilter] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [bulkDeleteMode, setBulkDeleteMode] = useState(false)
+  const [selectedTickets, setSelectedTickets] = useState([])
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')

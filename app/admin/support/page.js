@@ -236,16 +236,63 @@ export default function AdminSupport() {
             className="pl-10 bg-slate-900 border-slate-800 text-white placeholder:text-slate-500"
           />
         </div>
-        {statusFilter && (
-          <Button
-            variant="outline"
-            onClick={() => setStatusFilter('')}
-            className="border-slate-700 text-slate-300 w-full sm:w-auto"
-          >
-            Filtreyi Temizle
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {statusFilter && (
+            <Button
+              variant="outline"
+              onClick={() => setStatusFilter('')}
+              className="border-slate-700 text-slate-300"
+            >
+              Filtreyi Temizle
+            </Button>
+          )}
+          {!bulkDeleteMode ? (
+            <Button
+              variant="outline"
+              onClick={startBulkDelete}
+              className="border-red-700 text-red-400 hover:bg-red-900/20"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Toplu Sil
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={cancelBulkDelete}
+                className="border-slate-700 text-slate-300"
+              >
+                <X className="w-4 h-4 mr-2" />
+                İptal
+              </Button>
+              <Button
+                onClick={handleBulkDelete}
+                disabled={deleting || selectedTickets.length === 0}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {deleting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4 mr-2" />
+                )}
+                {selectedTickets.length} Talebi Sil
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Bulk Delete Info */}
+      {bulkDeleteMode && (
+        <div className="mb-4 p-4 bg-red-900/20 border border-red-700/50 rounded-xl">
+          <p className="text-red-300 text-sm">
+            <strong>Toplu Silme Modu:</strong> Tüm talepler seçili. Silmek <strong>İSTEMEDİĞİNİZ</strong> taleplerin checkbox'ını kaldırın.
+          </p>
+          <p className="text-red-400/70 text-xs mt-1">
+            Silinecek: {selectedTickets.length} talep (resimler dahil kalıcı olarak silinecek)
+          </p>
+        </div>
+      )}
 
       {/* Tickets */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">

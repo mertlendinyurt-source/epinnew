@@ -246,74 +246,26 @@ export default function TicketDetail() {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSendMessage} className="space-y-3">
-            {/* Image Preview */}
-            {imagePreview && (
-              <div className="relative inline-block">
-                <img 
-                  src={imagePreview} 
-                  alt="Seçilen görsel" 
-                  className="max-h-32 rounded-lg border border-white/20"
-                />
-                <button
-                  type="button"
-                  onClick={removeSelectedImage}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-            
-            <div className="flex gap-2">
-              {/* Hidden File Input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageSelect}
-                className="hidden"
-              />
-              
-              {/* Image Upload Button */}
-              <Button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={sending}
-                variant="outline"
-                className="px-3 border-white/20 text-white/70 hover:text-white hover:bg-white/10"
-                title="Fotoğraf ekle"
-              >
-                <ImagePlus className="w-5 h-5" />
-              </Button>
-              
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Mesajınızı yazın..."
-                className="flex-1 px-4 py-3 rounded-lg bg-[#12151a] border border-white/10 text-white placeholder:text-white/40 focus:border-blue-500 focus:outline-none"
-                disabled={sending}
-              />
-              <Button
-                type="submit"
-                disabled={sending || (!newMessage.trim() && !selectedImage)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6"
-              >
-                {sending ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Send className="w-5 h-5" />
-                )}
-              </Button>
-            </div>
-            
-            {uploadingImage && (
-              <p className="text-xs text-blue-400 flex items-center gap-2">
-                <Loader2 className="w-3 h-3 animate-spin" />
-                Fotoğraf yükleniyor...
-              </p>
-            )}
+          <form onSubmit={handleSendMessage} className="flex gap-3">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Mesajınızı yazın..."
+              className="flex-1 px-4 py-3 rounded-lg bg-[#12151a] border border-white/10 text-white placeholder:text-white/40 focus:border-blue-500 focus:outline-none"
+              disabled={sending}
+            />
+            <Button
+              type="submit"
+              disabled={sending || !newMessage.trim()}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+            >
+              {sending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+            </Button>
           </form>
         )}
       </div>

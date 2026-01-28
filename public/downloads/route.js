@@ -474,6 +474,7 @@ const AUDIT_ACTIONS = {
   PRODUCT_DELETE: 'product.delete',
   STOCK_ADD: 'stock.add',
   STOCK_ASSIGN: 'stock.assign',
+  STOCK_RESET: 'stock.reset',
   ORDER_STATUS_CHANGE: 'order.status_change',
   SITE_SETTINGS_UPDATE: 'settings.site_update',
   OAUTH_SETTINGS_UPDATE: 'settings.oauth_update',
@@ -1035,7 +1036,7 @@ async function sendPaymentSuccessSms(db, order, user, productTitle) {
   }
   
   const customerName = user.firstName || user.name || 'Müşteri';
-  const message = `${customerName} Merhaba siparisin onaylandi lutfen siparislerim kismindaki kodunu aktif et whatsapp destek: 0850 346 9671 - PINLY`;
+  const message = `${customerName} Merhaba siparisin onaylandi lutfen siparislerim kismindaki kodunu aktif et. Sorulariniz icin sitemizden canli destek kismina yazabilirsiniz. Calisma saatleri: 14:00-22:00 her gun - PINLY`;
   return sendSms(db, user.phone, message, 'payment_success', order.id);
 }
 
@@ -1597,6 +1598,12 @@ async function initializeDb() {
     { $rename: { image: 'imageUrl' } }
   );
   
+  // Migrate existing products: add 'game' field (default: 'pubg')
+  await db.collection('products').updateMany(
+    { game: { $exists: false } },
+    { $set: { game: 'pubg' } }
+  );
+  
   // Check if products exist
   const productsCount = await db.collection('products').countDocuments();
   if (productsCount === 0) {
@@ -1735,10 +1742,17 @@ export async function GET(request) {
     // 🚀 HOMEPAGE - TÜM VERİLER TEK SEFERDE
     // ============================================
     if (pathname === '/api/homepage') {
-      const cacheKey = 'homepage_all';
+      const gameFilter = searchParams.get('game'); // 'pubg', 'valorant', or null
+      const cacheKey = gameFilter ? `homepage_${gameFilter}` : 'homepage_all';
       let data = getCached(cacheKey);
       
       if (!data) {
+        // Build product query
+        const productQuery = { active: true };
+        if (gameFilter) {
+          productQuery.game = gameFilter;
+        }
+        
         // Tüm verileri paralel olarak çek
         const [
           products,
@@ -1750,8 +1764,8 @@ export async function GET(request) {
           gameContent,
           reviewsData
         ] = await Promise.all([
-          // Products
-          db.collection('products').find({ active: true }).sort({ sortOrder: 1 }).toArray(),
+          // Products (filtered by game if specified)
+          db.collection('products').find(productQuery).sort({ sortOrder: 1 }).toArray(),
           
           // Accounts
           db.collection('accounts').find({ active: true, status: 'available' }).sort({ order: 1 }).toArray(),
@@ -1827,12 +1841,16 @@ export async function GET(request) {
             logo: siteSettings?.logo || null,
             favicon: siteSettings?.favicon || null,
             heroImage: siteSettings?.heroImage || null,
+            valorantHeroImage: siteSettings?.valorantHeroImage || null,
+            mlbbHeroImage: siteSettings?.mlbbHeroImage || null,
             categoryIcon: siteSettings?.categoryIcon || null,
             siteName: siteSettings?.siteName || 'PINLY',
             metaTitle: siteSettings?.metaTitle || 'PINLY – Dijital Kod ve Oyun Satış Platformu',
             metaDescription: siteSettings?.metaDescription || 'PUBG Mobile UC satın al.',
             contactEmail: siteSettings?.contactEmail || '',
             contactPhone: siteSettings?.contactPhone || '',
+            liveSupportEnabled: siteSettings?.liveSupportEnabled !== false,
+            liveSupportHours: siteSettings?.liveSupportHours || '14:00 - 22:00',
             dailyBannerEnabled: siteSettings?.dailyBannerEnabled !== false,
             dailyBannerTitle: siteSettings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar',
             dailyBannerSubtitle: siteSettings?.dailyBannerSubtitle || '',
@@ -1864,14 +1882,19 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data });
     }
 
-    // Get all products - WITH CACHE
+    // Get all products - WITH CACHE (supports game filter)
     if (pathname === '/api/products') {
-      const cacheKey = 'products_active';
+      const game = searchParams.get('game'); // 'pubg', 'valorant', or null (all)
+      const cacheKey = game ? `products_active_${game}` : 'products_active';
       let products = getCached(cacheKey);
       
       if (!products) {
+        const query = { active: true };
+        if (game) {
+          query.game = game;
+        }
         products = await db.collection('products')
-          .find({ active: true })
+          .find(query)
           .sort({ sortOrder: 1 })
           .toArray();
         setCache(cacheKey, products, 120000); // 2 dakika cache
@@ -2918,12 +2941,16 @@ export async function GET(request) {
           logo: settings?.logo || null,
           favicon: settings?.favicon || null,
           heroImage: settings?.heroImage || null,
+          valorantHeroImage: settings?.valorantHeroImage || null,
+          mlbbHeroImage: settings?.mlbbHeroImage || null,
           categoryIcon: settings?.categoryIcon || null,
           siteName: settings?.siteName || 'PINLY',
           metaTitle: settings?.metaTitle || 'PINLY – Dijital Kod ve Oyun Satış Platformu',
           metaDescription: settings?.metaDescription || 'PUBG Mobile UC satın al. Güvenilir, hızlı ve uygun fiyatlı UC satış platformu.',
           contactEmail: settings?.contactEmail || '',
           contactPhone: settings?.contactPhone || '',
+          liveSupportEnabled: settings?.liveSupportEnabled !== false,
+          liveSupportHours: settings?.liveSupportHours || '14:00 - 22:00',
           dailyBannerEnabled: settings?.dailyBannerEnabled !== false,
           dailyBannerTitle: settings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar',
           dailyBannerSubtitle: settings?.dailyBannerSubtitle || '',
@@ -4428,6 +4455,63 @@ export async function POST(request) {
       );
     }
     
+    // User: Upload file for support ticket (MUST BE BEFORE body = await request.json())
+    if (pathname === '/api/support/upload') {
+      const userData = verifyToken(request);
+      if (!userData) {
+        return NextResponse.json(
+          { success: false, error: 'Oturum açmanız gerekiyor' },
+          { status: 401 }
+        );
+      }
+
+      try {
+        const formData = await request.formData();
+        const file = formData.get('file');
+        const category = formData.get('category') || 'support';
+
+        if (!file) {
+          return NextResponse.json(
+            { success: false, error: 'Dosya seçilmedi' },
+            { status: 400 }
+          );
+        }
+
+        // Check file type - only images allowed
+        if (!file.type.startsWith('image/')) {
+          return NextResponse.json(
+            { success: false, error: 'Sadece resim dosyaları yüklenebilir' },
+            { status: 400 }
+          );
+        }
+
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          return NextResponse.json(
+            { success: false, error: 'Dosya boyutu maksimum 5MB olabilir' },
+            { status: 400 }
+          );
+        }
+
+        const fileUrl = await saveUploadedFile(file, category);
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            url: fileUrl,
+            filename: file.name,
+            size: file.size,
+            type: file.type
+          }
+        });
+      } catch (error) {
+        return NextResponse.json(
+          { success: false, error: error.message },
+          { status: 400 }
+        );
+      }
+    }
+    
     // Admin: Upload file (MUST BE BEFORE body = await request.json())
     if (pathname === '/api/admin/upload') {
       const user = verifyAdminToken(request);
@@ -5878,7 +5962,7 @@ export async function POST(request) {
         );
       }
 
-      const { productId, playerId, playerName, paymentMethod } = body; // paymentMethod: 'card' or 'balance'
+      const { productId, playerId, playerName, paymentMethod, termsAccepted, termsAcceptedAt } = body; // paymentMethod: 'card' or 'balance'
       
       if (!productId || !playerId || !playerName) {
         return NextResponse.json(
@@ -5951,6 +6035,8 @@ export async function POST(request) {
           amount: orderAmount, // Added amount field
           totalAmount: orderAmount,
           currency: 'TRY',
+          termsAccepted: termsAccepted || false,
+          termsAcceptedAt: termsAcceptedAt ? new Date(termsAcceptedAt) : new Date(),
           delivery: {
             status: 'pending',
             message: 'Stok atanıyor...',
@@ -6165,6 +6251,8 @@ export async function POST(request) {
         amount: orderAmount, // Backend-controlled price
         totalAmount: orderAmount, // For verification checks
         currency: 'TRY',
+        termsAccepted: termsAccepted || false,
+        termsAcceptedAt: termsAcceptedAt ? new Date(termsAcceptedAt) : new Date(),
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -6939,13 +7027,21 @@ export async function POST(request) {
         );
       }
 
+      // Ensure game field defaults to 'pubg' if not provided
+      const game = body.game || 'pubg';
+      
       const product = {
         id: uuidv4(),
         ...body,
+        game,
         createdAt: new Date()
       };
 
       await db.collection('products').insertOne(product);
+      
+      // Clear cache for this game
+      clearCache(`products_active_${game}`);
+      clearCache('products_active');
       
       return NextResponse.json({
         success: true,
@@ -7761,7 +7857,7 @@ export async function POST(request) {
         );
       }
 
-      const { logo, favicon, heroImage, categoryIcon, siteName, metaTitle, metaDescription, contactEmail, contactPhone, dailyBannerEnabled, dailyBannerTitle, dailyBannerSubtitle, dailyBannerIcon, dailyCountdownEnabled, dailyCountdownLabel } = body;
+      const { logo, favicon, heroImage, valorantHeroImage, mlbbHeroImage, categoryIcon, siteName, metaTitle, metaDescription, contactEmail, contactPhone, liveSupportEnabled, liveSupportHours, dailyBannerEnabled, dailyBannerTitle, dailyBannerSubtitle, dailyBannerIcon, dailyCountdownEnabled, dailyCountdownLabel } = body;
 
       // Validation
       if (siteName !== undefined && (!siteName || siteName.trim().length === 0)) {
@@ -7809,12 +7905,16 @@ export async function POST(request) {
         logo: logo !== undefined ? logo : existingSettings?.logo || null,
         favicon: favicon !== undefined ? favicon : existingSettings?.favicon || null,
         heroImage: heroImage !== undefined ? heroImage : existingSettings?.heroImage || null,
+        valorantHeroImage: valorantHeroImage !== undefined ? valorantHeroImage : existingSettings?.valorantHeroImage || null,
+        mlbbHeroImage: mlbbHeroImage !== undefined ? mlbbHeroImage : existingSettings?.mlbbHeroImage || null,
         categoryIcon: categoryIcon !== undefined ? categoryIcon : existingSettings?.categoryIcon || null,
         siteName: siteName !== undefined ? siteName.trim() : existingSettings?.siteName || 'PINLY',
         metaTitle: metaTitle !== undefined ? metaTitle.trim() : existingSettings?.metaTitle || '',
         metaDescription: metaDescription !== undefined ? metaDescription.trim() : existingSettings?.metaDescription || '',
         contactEmail: contactEmail !== undefined ? contactEmail.trim() : existingSettings?.contactEmail || '',
         contactPhone: contactPhone !== undefined ? contactPhone.trim() : existingSettings?.contactPhone || '',
+        liveSupportEnabled: liveSupportEnabled !== undefined ? liveSupportEnabled : existingSettings?.liveSupportEnabled !== false,
+        liveSupportHours: liveSupportHours !== undefined ? liveSupportHours.trim() : existingSettings?.liveSupportHours || '14:00 - 22:00',
         dailyBannerEnabled: dailyBannerEnabled !== undefined ? dailyBannerEnabled : existingSettings?.dailyBannerEnabled !== false,
         dailyBannerTitle: dailyBannerTitle !== undefined ? dailyBannerTitle.trim() : existingSettings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar',
         dailyBannerSubtitle: dailyBannerSubtitle !== undefined ? dailyBannerSubtitle.trim() : existingSettings?.dailyBannerSubtitle || '',
@@ -7950,11 +8050,12 @@ export async function POST(request) {
 
       const ticketId = pathname.split('/')[4];
       const userId = userData.id || userData.userId;
-      const { message } = body;
+      const { message, imageUrl } = body;
 
-      if (!message || message.length < 2) {
+      // Mesaj veya resim olmalı
+      if ((!message || message.length < 1) && !imageUrl) {
         return NextResponse.json(
-          { success: false, error: 'Mesaj en az 2 karakter olmalıdır' },
+          { success: false, error: 'Mesaj veya fotoğraf gerekli' },
           { status: 400 }
         );
       }
@@ -7988,7 +8089,8 @@ export async function POST(request) {
         id: uuidv4(),
         ticketId,
         sender: 'user',
-        message,
+        message: message || '',
+        imageUrl: imageUrl || null,
         createdAt: new Date()
       };
 
@@ -9213,6 +9315,12 @@ export async function PUT(request) {
 
       const updated = await db.collection('products').findOne({ id: productId });
       
+      // Clear cache
+      clearCache('products_active');
+      if (updated?.game) {
+        clearCache(`products_active_${updated.game}`);
+      }
+      
       return NextResponse.json({
         success: true,
         data: updated
@@ -9793,6 +9901,34 @@ export async function DELETE(request) {
 
     const db = await getDb();
 
+    // Admin: Clear/Reset product stock (delete all available stock items)
+    if (pathname.match(/^\/api\/admin\/products\/[^\/]+\/stock\/clear$/)) {
+      const productId = pathname.split('/')[4];
+      
+      // Validate product exists
+      const product = await db.collection('products').findOne({ id: productId });
+      if (!product) {
+        return NextResponse.json(
+          { success: false, error: 'Ürün bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Delete only available stock items (not assigned ones)
+      const deleteResult = await db.collection('stock').deleteMany({ 
+        productId: productId,
+        status: 'available'
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `${deleteResult.deletedCount} adet mevcut stok silindi`,
+        data: {
+          deletedCount: deleteResult.deletedCount
+        }
+      });
+    }
+
     // Delete blog post
     if (pathname.match(/^\/api\/admin\/blog\/[^\/]+$/)) {
       const postId = pathname.split('/').pop();
@@ -9810,6 +9946,40 @@ export async function DELETE(request) {
       return NextResponse.json({
         success: true,
         message: 'Blog yazısı silindi'
+      });
+    }
+
+    // Reset product stock (Delete all stock for a product)
+    if (pathname.match(/^\/api\/admin\/products\/[^\/]+\/stock\/reset$/)) {
+      const productId = pathname.split('/')[4];
+      
+      const product = await db.collection('products').findOne({ id: productId });
+      if (!product) {
+        return NextResponse.json(
+          { success: false, error: 'Ürün bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      // Delete all stock items for this product
+      const deleteResult = await db.collection('stock').deleteMany({ 
+        productId: productId,
+        status: 'available' // Only delete available stock, not assigned ones
+      });
+
+      // Log the action
+      await logAuditAction(db, AUDIT_ACTIONS.STOCK_RESET, user.id || user.username, 'product', productId, request, {
+        productTitle: product.title,
+        stocksDeleted: deleteResult.deletedCount
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `${deleteResult.deletedCount} adet stok sıfırlandı`,
+        data: {
+          productId: productId,
+          stocksDeleted: deleteResult.deletedCount
+        }
       });
     }
 

@@ -354,16 +354,17 @@ export default function OrderDetailPage() {
                         <p className="text-gray-400 text-xs">Genelde anında, bazen birkaç dakika içinde oyun hesabınıza düşer. Oyunu kapatıp açmak gerekebilir.</p>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Uyarılar */}
-                  <div className="mt-4 p-3 bg-red-900/30 rounded-lg border border-red-600/50">
-                    <p className="text-red-300 text-xs font-medium mb-2">⚠️ En sık yapılan hatalar:</p>
-                    <ul className="text-red-200 text-xs space-y-1">
-                      <li>❌ Yanlış Oyuncu ID girilmesi</li>
-                      <li>❌ Kodun boşluklu ya da hatalı kopyalanması</li>
-                    </ul>
+                    {/* Uyarılar - PUBG için */}
+                    <div className="mt-4 p-3 bg-red-900/30 rounded-lg border border-red-600/50">
+                      <p className="text-red-300 text-xs font-medium mb-2">⚠️ En sık yapılan hatalar:</p>
+                      <ul className="text-red-200 text-xs space-y-1">
+                        <li>❌ Yanlış Oyuncu ID girilmesi</li>
+                        <li>❌ Kodun boşluklu ya da hatalı kopyalanması</li>
+                      </ul>
+                    </div>
                   </div>
+                  )}
                 </div>
               </div>
             )}

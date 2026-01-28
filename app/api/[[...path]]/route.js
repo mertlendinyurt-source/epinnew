@@ -4477,6 +4477,24 @@ export async function POST(request) {
           );
         }
 
+        // Debug log
+        console.log('Upload file info:', {
+          name: file.name,
+          type: file.type,
+          size: file.size
+        });
+
+        // Validate file type manually if file.type is missing
+        const fileType = file.type || 'image/png';
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml', 'image/webp', 'image/gif'];
+        
+        if (!allowedTypes.some(t => fileType.startsWith('image/'))) {
+          return NextResponse.json(
+            { success: false, error: 'Sadece resim dosyaları yüklenebilir' },
+            { status: 400 }
+          );
+        }
+
         const fileUrl = await saveUploadedFile(file, category);
 
         return NextResponse.json({
@@ -4485,10 +4503,11 @@ export async function POST(request) {
             url: fileUrl,
             filename: file.name,
             size: file.size,
-            type: file.type
+            type: fileType
           }
         });
       } catch (error) {
+        console.error('Upload error:', error);
         return NextResponse.json(
           { success: false, error: error.message },
           { status: 400 }

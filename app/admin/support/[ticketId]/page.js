@@ -357,26 +357,74 @@ export default function AdminTicketDetail() {
             <span>Bu talep kapatılmıştır.</span>
           </div>
         ) : (
-          <form onSubmit={handleSendMessage} className="flex gap-2 md:gap-3">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Yanıtınızı yazın..."
-              className="flex-1 px-3 md:px-4 py-2 md:py-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none text-sm"
-              disabled={sending}
-            />
-            <Button
-              type="submit"
-              disabled={sending || !newMessage.trim()}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 md:px-6"
-            >
-              {sending ? (
-                <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4 md:w-5 md:h-5" />
-              )}
-            </Button>
+          <form onSubmit={handleSendMessage} className="space-y-3">
+            {/* Image Preview */}
+            {imagePreview && (
+              <div className="relative inline-block">
+                <img 
+                  src={imagePreview} 
+                  alt="Seçilen görsel" 
+                  className="max-h-24 rounded-lg border border-slate-600"
+                />
+                <button
+                  type="button"
+                  onClick={removeSelectedImage}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+            
+            <div className="flex gap-2 md:gap-3">
+              {/* Hidden File Input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden"
+              />
+              
+              {/* Image Upload Button */}
+              <Button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={sending}
+                variant="outline"
+                className="px-3 border-slate-600 text-slate-400 hover:text-white hover:bg-slate-700"
+                title="Fotoğraf ekle"
+              >
+                <ImagePlus className="w-5 h-5" />
+              </Button>
+              
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Yanıtınızı yazın..."
+                className="flex-1 px-3 md:px-4 py-2 md:py-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none text-sm"
+                disabled={sending}
+              />
+              <Button
+                type="submit"
+                disabled={sending || (!newMessage.trim() && !selectedImage)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 md:px-6"
+              >
+                {sending ? (
+                  <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4 md:w-5 md:h-5" />
+                )}
+              </Button>
+            </div>
+            
+            {uploadingImage && (
+              <p className="text-xs text-emerald-400 flex items-center gap-2">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Fotoğraf yükleniyor...
+              </p>
+            )}
           </form>
         )}
       </div>

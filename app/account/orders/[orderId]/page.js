@@ -622,7 +622,12 @@ export default function OrderDetailPage() {
                   {order.productSnapshot?.title || order.productTitle || 'Ürün'}
                 </div>
                 <div className="text-sm text-gray-400">
-                  PUBG Mobile UC Paketi
+                  {order.productTitle?.toLowerCase().includes('valorant') || order.productTitle?.toLowerCase().includes('vp') 
+                    ? 'Valorant VP Paketi'
+                    : order.productTitle?.toLowerCase().includes('mlbb') || order.productTitle?.toLowerCase().includes('diamond') || order.productTitle?.toLowerCase().includes('elmas')
+                    ? 'MLBB Diamonds Paketi'
+                    : 'PUBG Mobile UC Paketi'
+                  }
                 </div>
               </div>
 

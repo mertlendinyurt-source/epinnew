@@ -31,8 +31,8 @@ export default function AdminTicketDetail() {
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
   const [closing, setClosing] = useState(false)
-  const [selectedImage, setSelectedImage] = useState(null)
-  const [imagePreview, setImagePreview] = useState(null)
+  const [selectedImages, setSelectedImages] = useState([])
+  const [imagePreviews, setImagePreviews] = useState([])
   const [uploadingImage, setUploadingImage] = useState(false)
   const fileInputRef = useRef(null)
   const messagesEndRef = useRef(null)
@@ -83,31 +83,48 @@ export default function AdminTicketDetail() {
   }
 
   const handleImageSelect = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+    const files = Array.from(e.target.files)
+    if (!files.length) return
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Sadece resim dosyaları yüklenebilir')
-      return
+    const validFiles = []
+    const previews = []
+
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} - Sadece resim dosyaları yüklenebilir`)
+        continue
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} - Dosya boyutu maksimum 5MB olabilir`)
+        continue
+      }
+
+      validFiles.push(file)
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Dosya boyutu maksimum 5MB olabilir')
-      return
-    }
+    if (validFiles.length === 0) return
 
-    setSelectedImage(file)
-    
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      setImagePreview(e.target.result)
-    }
-    reader.readAsDataURL(file)
+    // Create previews for all valid files
+    validFiles.forEach(file => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreviews(prev => [...prev, e.target.result])
+      }
+      reader.readAsDataURL(file)
+    })
+
+    setSelectedImages(prev => [...prev, ...validFiles])
   }
 
-  const removeSelectedImage = () => {
-    setSelectedImage(null)
-    setImagePreview(null)
+  const removeSelectedImage = (index) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index))
+    setImagePreviews(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const clearAllImages = () => {
+    setSelectedImages([])
+    setImagePreviews([])
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -136,7 +153,7 @@ export default function AdminTicketDetail() {
 
   const handleSendMessage = async (e) => {
     e.preventDefault()
-    if (!newMessage.trim() && !selectedImage) {
+    if (!newMessage.trim() && selectedImages.length === 0) {
       toast.error('Mesaj veya fotoğraf gerekli')
       return
     }
@@ -144,13 +161,16 @@ export default function AdminTicketDetail() {
     setSending(true)
     try {
       const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
-      let imageUrl = null
+      let imageUrls = []
 
-      // Upload image if selected
-      if (selectedImage) {
+      // Upload all images
+      if (selectedImages.length > 0) {
         setUploadingImage(true)
         try {
-          imageUrl = await uploadImage(selectedImage)
+          for (const file of selectedImages) {
+            const url = await uploadImage(file)
+            imageUrls.push(url)
+          }
         } catch (uploadError) {
           toast.error('Fotoğraf yüklenemedi: ' + uploadError.message)
           setUploadingImage(false)
@@ -167,15 +187,15 @@ export default function AdminTicketDetail() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ 
-          message: newMessage || (imageUrl ? '📷 Fotoğraf' : ''),
-          imageUrl 
+          message: newMessage || (imageUrls.length > 0 ? `📷 ${imageUrls.length} Fotoğraf` : ''),
+          imageUrls: imageUrls.length > 0 ? imageUrls : null
         })
       })
 
       const data = await response.json()
       if (data.success) {
         setNewMessage('')
-        removeSelectedImage()
+        clearAllImages()
         await fetchTicket()
         toast.success('Yanıt gönderildi')
       } else {
@@ -315,8 +335,28 @@ export default function AdminTicketDetail() {
                     ? 'bg-emerald-600 text-white rounded-br-md'
                     : 'bg-slate-800 border border-slate-700 text-white rounded-bl-md'
                 }`}>
-                  {/* Show image if exists */}
-                  {msg.imageUrl && (
+                  {/* Show multiple images if exists */}
+                  {msg.imageUrls && msg.imageUrls.length > 0 && (
+                    <div className={`grid gap-2 mb-2 ${msg.imageUrls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                      {msg.imageUrls.map((url, idx) => (
+                        <a 
+                          key={idx}
+                          href={url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          <img 
+                            src={url} 
+                            alt={`Görsel ${idx + 1}`}
+                            className="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition-opacity object-cover"
+                          />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                  {/* Legacy: single imageUrl support */}
+                  {msg.imageUrl && !msg.imageUrls && (
                     <a 
                       href={msg.imageUrl} 
                       target="_blank" 
@@ -358,30 +398,47 @@ export default function AdminTicketDetail() {
           </div>
         ) : (
           <form onSubmit={handleSendMessage} className="space-y-3">
-            {/* Image Preview */}
-            {imagePreview && (
-              <div className="relative inline-block">
-                <img 
-                  src={imagePreview} 
-                  alt="Seçilen görsel" 
-                  className="max-h-24 rounded-lg border border-slate-600"
-                />
-                <button
-                  type="button"
-                  onClick={removeSelectedImage}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+            {/* Multiple Image Previews */}
+            {imagePreviews.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">{imagePreviews.length} fotoğraf seçildi</span>
+                  <button
+                    type="button"
+                    onClick={clearAllImages}
+                    className="text-xs text-red-400 hover:text-red-300"
+                  >
+                    Tümünü Kaldır
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className="relative">
+                      <img 
+                        src={preview} 
+                        alt={`Seçilen görsel ${index + 1}`}
+                        className="h-16 w-16 object-cover rounded-lg border border-slate-600"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSelectedImage(index)}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
             
             <div className="flex gap-2 md:gap-3">
-              {/* Hidden File Input */}
+              {/* Hidden File Input - Multiple */}
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleImageSelect}
                 className="hidden"
               />
@@ -393,7 +450,7 @@ export default function AdminTicketDetail() {
                 disabled={sending}
                 variant="outline"
                 className="px-3 border-slate-600 text-slate-400 hover:text-white hover:bg-slate-700"
-                title="Fotoğraf ekle"
+                title="Fotoğraf ekle (birden fazla seçebilirsiniz)"
               >
                 <ImagePlus className="w-5 h-5" />
               </Button>
@@ -408,7 +465,7 @@ export default function AdminTicketDetail() {
               />
               <Button
                 type="submit"
-                disabled={sending || (!newMessage.trim() && !selectedImage)}
+                disabled={sending || (!newMessage.trim() && selectedImages.length === 0)}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 md:px-6"
               >
                 {sending ? (
@@ -422,7 +479,7 @@ export default function AdminTicketDetail() {
             {uploadingImage && (
               <p className="text-xs text-emerald-400 flex items-center gap-2">
                 <Loader2 className="w-3 h-3 animate-spin" />
-                Fotoğraf yükleniyor...
+                Fotoğraflar yükleniyor...
               </p>
             )}
           </form>

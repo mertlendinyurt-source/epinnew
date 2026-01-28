@@ -1336,18 +1336,18 @@ export default function ValorantPage() {
                   <div
                     key={product.id}
                     onClick={() => handleProductSelect(product)}
-                    className={`product-card-glow group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border ${(product.vpAmount === 8900 || product.ucAmount === 8900) ? 'border-yellow-500/50 ring-2 ring-yellow-500/30' : 'border-white/10'} hover:border-white/20 w-full aspect-[2/3.8] md:aspect-[2/3]`}
+                    className={`product-card-glow group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border ${(product.vpAmount === 8900 || product.ucAmount === 8900 || product.title?.includes('8900')) ? 'border-yellow-500/50 ring-2 ring-yellow-500/30' : 'border-white/10'} hover:border-white/20 w-full aspect-[2/3.8] md:aspect-[2/3]`}
                     style={{ backgroundColor: '#252a34', maxWidth: '270px', margin: '0 auto' }}
                   >
                     {/* En Çok Tercih Edilen Badge */}
-                    {(product.vpAmount === 8900 || product.ucAmount === 8900) && (
+                    {(product.vpAmount === 8900 || product.ucAmount === 8900 || product.title?.includes('8900')) && (
                       <div className="absolute top-0 left-0 right-0 z-30 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white text-[10px] md:text-[11px] font-bold py-1 px-2 text-center shadow-lg">
                         ⭐ EN ÇOK TERCİH EDİLEN
                       </div>
                     )}
                     
                     {/* Info Icon */}
-                    <div className={`absolute ${(product.vpAmount === 8900 || product.ucAmount === 8900) ? 'top-8' : 'top-2'} right-2 w-6 h-6 md:w-5 md:h-5 rounded-full bg-white/90 flex items-center justify-center z-20`}>
+                    <div className={`absolute ${(product.vpAmount === 8900 || product.ucAmount === 8900 || product.title?.includes('8900')) ? 'top-8' : 'top-2'} right-2 w-6 h-6 md:w-5 md:h-5 rounded-full bg-white/90 flex items-center justify-center z-20`}>
                       <span className="text-gray-700 font-bold text-xs md:text-xs">i</span>
                     </div>
 

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Send, Loader2, Lock, Clock, CheckCircle, AlertCircle, User, Headphones, ImagePlus, X } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Lock, Clock, CheckCircle, AlertCircle, User, Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -28,10 +28,6 @@ export default function TicketDetail() {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -78,65 +74,10 @@ export default function TicketDetail() {
     }
   };
 
-  const handleImageSelect = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Check file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Sadece resim dosyaları yüklenebilir');
-      return;
-    }
-
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Dosya boyutu maksimum 5MB olabilir');
-      return;
-    }
-
-    setSelectedImage(file);
-    
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImagePreview(e.target.result);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const removeSelectedImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const uploadImage = async (file) => {
-    const token = localStorage.getItem('userToken');
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('category', 'support');
-
-    const response = await fetch('/api/support/upload', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    });
-
-    const data = await response.json();
-    if (data.success) {
-      return data.data.url;
-    }
-    throw new Error(data.error || 'Fotoğraf yüklenemedi');
-  };
-
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() && !selectedImage) {
-      toast.error('Mesaj veya fotoğraf gerekli');
+    if (!newMessage.trim() || newMessage.length < 2) {
+      toast.error('Mesaj en az 2 karakter olmalıdır');
       return;
     }
 
@@ -148,32 +89,13 @@ export default function TicketDetail() {
 
     setSending(true);
     try {
-      let imageUrl = null;
-
-      // Upload image if selected
-      if (selectedImage) {
-        setUploadingImage(true);
-        try {
-          imageUrl = await uploadImage(selectedImage);
-        } catch (uploadError) {
-          toast.error('Fotoğraf yüklenemedi: ' + uploadError.message);
-          setUploadingImage(false);
-          setSending(false);
-          return;
-        }
-        setUploadingImage(false);
-      }
-
       const response = await fetch(`/api/support/tickets/${params.ticketId}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          message: newMessage || (imageUrl ? '📷 Fotoğraf gönderildi' : ''),
-          imageUrl 
-        })
+        body: JSON.stringify({ message: newMessage })
       });
 
       const data = await response.json();
@@ -185,7 +107,6 @@ export default function TicketDetail() {
 
       if (data.success) {
         setNewMessage('');
-        removeSelectedImage();
         // Refresh ticket to get updated status
         await fetchTicket();
         toast.success('Mesajınız gönderildi');
@@ -325,74 +246,26 @@ export default function TicketDetail() {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSendMessage} className="space-y-3">
-            {/* Image Preview */}
-            {imagePreview && (
-              <div className="relative inline-block">
-                <img 
-                  src={imagePreview} 
-                  alt="Seçilen görsel" 
-                  className="max-h-32 rounded-lg border border-white/20"
-                />
-                <button
-                  type="button"
-                  onClick={removeSelectedImage}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-            
-            <div className="flex gap-2">
-              {/* Hidden File Input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageSelect}
-                className="hidden"
-              />
-              
-              {/* Image Upload Button */}
-              <Button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={sending}
-                variant="outline"
-                className="px-3 border-white/20 text-white/70 hover:text-white hover:bg-white/10"
-                title="Fotoğraf ekle"
-              >
-                <ImagePlus className="w-5 h-5" />
-              </Button>
-              
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Mesajınızı yazın..."
-                className="flex-1 px-4 py-3 rounded-lg bg-[#12151a] border border-white/10 text-white placeholder:text-white/40 focus:border-blue-500 focus:outline-none"
-                disabled={sending}
-              />
-              <Button
-                type="submit"
-                disabled={sending || (!newMessage.trim() && !selectedImage)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6"
-              >
-                {sending ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Send className="w-5 h-5" />
-                )}
-              </Button>
-            </div>
-            
-            {uploadingImage && (
-              <p className="text-xs text-blue-400 flex items-center gap-2">
-                <Loader2 className="w-3 h-3 animate-spin" />
-                Fotoğraf yükleniyor...
-              </p>
-            )}
+          <form onSubmit={handleSendMessage} className="flex gap-3">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Mesajınızı yazın..."
+              className="flex-1 px-4 py-3 rounded-lg bg-[#12151a] border border-white/10 text-white placeholder:text-white/40 focus:border-blue-500 focus:outline-none"
+              disabled={sending}
+            />
+            <Button
+              type="submit"
+              disabled={sending || !newMessage.trim()}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+            >
+              {sending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+            </Button>
           </form>
         )}
       </div>

@@ -4455,63 +4455,6 @@ export async function POST(request) {
       );
     }
     
-    // User: Upload file for support ticket (MUST BE BEFORE body = await request.json())
-    if (pathname === '/api/support/upload') {
-      const userData = verifyToken(request);
-      if (!userData) {
-        return NextResponse.json(
-          { success: false, error: 'Oturum açmanız gerekiyor' },
-          { status: 401 }
-        );
-      }
-
-      try {
-        const formData = await request.formData();
-        const file = formData.get('file');
-        const category = formData.get('category') || 'support';
-
-        if (!file) {
-          return NextResponse.json(
-            { success: false, error: 'Dosya seçilmedi' },
-            { status: 400 }
-          );
-        }
-
-        // Check file type - only images allowed
-        if (!file.type.startsWith('image/')) {
-          return NextResponse.json(
-            { success: false, error: 'Sadece resim dosyaları yüklenebilir' },
-            { status: 400 }
-          );
-        }
-
-        // Check file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          return NextResponse.json(
-            { success: false, error: 'Dosya boyutu maksimum 5MB olabilir' },
-            { status: 400 }
-          );
-        }
-
-        const fileUrl = await saveUploadedFile(file, category);
-
-        return NextResponse.json({
-          success: true,
-          data: {
-            url: fileUrl,
-            filename: file.name,
-            size: file.size,
-            type: file.type
-          }
-        });
-      } catch (error) {
-        return NextResponse.json(
-          { success: false, error: error.message },
-          { status: 400 }
-        );
-      }
-    }
-    
     // Admin: Upload file (MUST BE BEFORE body = await request.json())
     if (pathname === '/api/admin/upload') {
       const user = verifyAdminToken(request);
@@ -8050,12 +7993,12 @@ export async function POST(request) {
 
       const ticketId = pathname.split('/')[4];
       const userId = userData.id || userData.userId;
-      const { message, imageUrl } = body;
+      const { message } = body;
 
-      // Mesaj veya resim olmalı
-      if ((!message || message.length < 1) && !imageUrl) {
+      // Kullanıcı sadece metin mesaj gönderebilir
+      if (!message || message.length < 2) {
         return NextResponse.json(
-          { success: false, error: 'Mesaj veya fotoğraf gerekli' },
+          { success: false, error: 'Mesaj en az 2 karakter olmalıdır' },
           { status: 400 }
         );
       }
@@ -8084,13 +8027,13 @@ export async function POST(request) {
         );
       }
 
-      // Create message
+      // Create message (kullanıcı fotoğraf gönderemez)
       const ticketMessage = {
         id: uuidv4(),
         ticketId,
         sender: 'user',
-        message: message || '',
-        imageUrl: imageUrl || null,
+        message,
+        imageUrl: null,
         createdAt: new Date()
       };
 
@@ -8116,7 +8059,7 @@ export async function POST(request) {
       });
     }
 
-    // Admin: Send message to ticket
+    // Admin: Send message to ticket (with optional image)
     if (pathname.match(/^\/api\/admin\/support\/tickets\/[^\/]+\/messages$/)) {
       const user = verifyAdminToken(request);
       if (!user) {
@@ -8127,11 +8070,12 @@ export async function POST(request) {
       }
 
       const ticketId = pathname.split('/')[5];
-      const { message } = body;
+      const { message, imageUrl } = body;
 
-      if (!message || message.length < 2) {
+      // Admin mesaj veya fotoğraf gönderebilir
+      if ((!message || message.length < 1) && !imageUrl) {
         return NextResponse.json(
-          { success: false, error: 'Mesaj en az 2 karakter olmalıdır' },
+          { success: false, error: 'Mesaj veya fotoğraf gerekli' },
           { status: 400 }
         );
       }
@@ -8144,13 +8088,14 @@ export async function POST(request) {
         );
       }
 
-      // Create message
+      // Create message (admin fotoğraf gönderebilir)
       const ticketMessage = {
         id: uuidv4(),
         ticketId,
         sender: 'admin',
         adminUsername: user.username,
-        message,
+        message: message || '',
+        imageUrl: imageUrl || null,
         createdAt: new Date()
       };
 
@@ -8172,7 +8117,7 @@ export async function POST(request) {
       // Send support reply email to user
       const ticketUser = await db.collection('users').findOne({ id: ticket.userId });
       if (ticketUser) {
-        sendSupportReplyEmail(db, ticket, ticketUser, message).catch(err => 
+        sendSupportReplyEmail(db, ticket, ticketUser, message || '📷 Fotoğraf gönderildi').catch(err => 
           console.error('Support reply email failed:', err)
         );
       }

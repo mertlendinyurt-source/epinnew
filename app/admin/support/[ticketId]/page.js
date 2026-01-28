@@ -83,31 +83,48 @@ export default function AdminTicketDetail() {
   }
 
   const handleImageSelect = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+    const files = Array.from(e.target.files)
+    if (!files.length) return
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Sadece resim dosyaları yüklenebilir')
-      return
+    const validFiles = []
+    const previews = []
+
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} - Sadece resim dosyaları yüklenebilir`)
+        continue
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} - Dosya boyutu maksimum 5MB olabilir`)
+        continue
+      }
+
+      validFiles.push(file)
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Dosya boyutu maksimum 5MB olabilir')
-      return
-    }
+    if (validFiles.length === 0) return
 
-    setSelectedImage(file)
-    
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      setImagePreview(e.target.result)
-    }
-    reader.readAsDataURL(file)
+    // Create previews for all valid files
+    validFiles.forEach(file => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreviews(prev => [...prev, e.target.result])
+      }
+      reader.readAsDataURL(file)
+    })
+
+    setSelectedImages(prev => [...prev, ...validFiles])
   }
 
-  const removeSelectedImage = () => {
-    setSelectedImage(null)
-    setImagePreview(null)
+  const removeSelectedImage = (index) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index))
+    setImagePreviews(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const clearAllImages = () => {
+    setSelectedImages([])
+    setImagePreviews([])
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -136,7 +153,7 @@ export default function AdminTicketDetail() {
 
   const handleSendMessage = async (e) => {
     e.preventDefault()
-    if (!newMessage.trim() && !selectedImage) {
+    if (!newMessage.trim() && selectedImages.length === 0) {
       toast.error('Mesaj veya fotoğraf gerekli')
       return
     }
@@ -144,13 +161,16 @@ export default function AdminTicketDetail() {
     setSending(true)
     try {
       const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
-      let imageUrl = null
+      let imageUrls = []
 
-      // Upload image if selected
-      if (selectedImage) {
+      // Upload all images
+      if (selectedImages.length > 0) {
         setUploadingImage(true)
         try {
-          imageUrl = await uploadImage(selectedImage)
+          for (const file of selectedImages) {
+            const url = await uploadImage(file)
+            imageUrls.push(url)
+          }
         } catch (uploadError) {
           toast.error('Fotoğraf yüklenemedi: ' + uploadError.message)
           setUploadingImage(false)
@@ -167,15 +187,15 @@ export default function AdminTicketDetail() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ 
-          message: newMessage || (imageUrl ? '📷 Fotoğraf' : ''),
-          imageUrl 
+          message: newMessage || (imageUrls.length > 0 ? `📷 ${imageUrls.length} Fotoğraf` : ''),
+          imageUrls: imageUrls.length > 0 ? imageUrls : null
         })
       })
 
       const data = await response.json()
       if (data.success) {
         setNewMessage('')
-        removeSelectedImage()
+        clearAllImages()
         await fetchTicket()
         toast.success('Yanıt gönderildi')
       } else {

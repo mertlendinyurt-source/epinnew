@@ -191,11 +191,14 @@ export default function AccountOrdersPage() {
                 className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-all cursor-pointer hover:shadow-lg hover:scale-[1.01]"
               >
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <h3 className="text-xl font-semibold text-white">
-                        {order.productSnapshot?.title || order.productTitle || 'Ürün'}
-                      </h3>
+                  <div className="flex-1 min-w-0">
+                    {/* Başlık - Mobilde kendi satırında */}
+                    <h3 className="text-lg md:text-xl font-semibold text-white mb-2 truncate">
+                      {order.productSnapshot?.title || order.productTitle || 'Ürün'}
+                    </h3>
+                    
+                    {/* Badge'ler - Mobilde wrap olacak */}
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
                       {getStatusBadge(order.status)}
                       {getDeliveryBadge(order)}
                     </div>

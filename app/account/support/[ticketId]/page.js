@@ -273,7 +273,22 @@ export default function TicketDetail() {
                     ? 'bg-blue-600 text-white rounded-br-md'
                     : 'bg-[#1e2229] border border-white/10 text-white rounded-bl-md'
                 }`}>
-                  <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                  {/* Show image if exists */}
+                  {msg.imageUrl && (
+                    <a 
+                      href={msg.imageUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block mb-2"
+                    >
+                      <img 
+                        src={msg.imageUrl} 
+                        alt="Ek görsel" 
+                        className="max-w-full max-h-64 rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                      />
+                    </a>
+                  )}
+                  {msg.message && <p className="text-sm whitespace-pre-wrap">{msg.message}</p>}
                 </div>
               </div>
               

@@ -1216,12 +1216,12 @@ export default function LolPage() {
 
             <a 
               href="/valorant" 
-              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/30 ring-1 ring-yellow-500/30 flex-shrink-0 group"
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-red-500/20 flex-shrink-0 group"
             >
               <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                 <img src="/valorant-logo.png" alt="Valorant" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
               </div>
-              <span className="text-xs md:text-sm font-medium text-yellow-400 whitespace-nowrap">Valorant</span>
+              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-red-400 transition-colors whitespace-nowrap">Valorant</span>
             </a>
 
             <a 
@@ -1234,15 +1234,15 @@ export default function LolPage() {
               <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-blue-400 transition-colors whitespace-nowrap">Mobile Legends</span>
             </a>
 
-            {/* League of Legends */}
+            {/* League of Legends - Active */}
             <a 
               href="/lol" 
-              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/20 flex-shrink-0 group"
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/30 ring-1 ring-yellow-500/30 flex-shrink-0 group"
             >
               <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                 <img src="/lol-logo.png" alt="League of Legends" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
               </div>
-              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-yellow-400 transition-colors whitespace-nowrap">League of Legends</span>
+              <span className="text-xs md:text-sm font-medium text-yellow-400 whitespace-nowrap">League of Legends</span>
             </a>
           </div>
         </div>

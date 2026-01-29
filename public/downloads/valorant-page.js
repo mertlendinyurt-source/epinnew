@@ -2099,31 +2099,13 @@ export default function ValorantPage() {
                 © 2026 {siteSettings?.siteName || 'PINLY'}. Tüm hakları saklıdır.
               </p>
               
-              {/* Payment Method Logos */}
-              <div className="flex items-center gap-3">
-                {/* Visa */}
-                <div className="bg-white rounded px-2 py-1">
-                  <svg className="h-6 w-auto" viewBox="0 0 780 500" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M293.2 348.73l33.359-195.76h53.358l-33.384 195.76H293.2zm246.11-191.54c-10.569-3.966-27.135-8.222-47.822-8.222-52.726 0-89.863 26.551-90.18 64.604-.634 28.141 26.485 43.861 46.754 53.208 20.771 9.557 27.769 15.71 27.769 24.283-.317 13.091-16.665 19.054-32.091 19.054-21.401 0-32.728-2.969-50.324-10.27l-6.939-3.138-7.527 44.019c12.507 5.429 35.617 10.143 59.616 10.397 56.07 0 92.502-26.246 92.966-66.859.222-22.254-14.012-39.21-44.808-53.158-18.646-9.047-30.092-15.086-30.092-24.269.159-8.288 9.717-16.888 30.709-16.888 17.474-.253 30.168 3.534 40.068 7.498l4.811 2.265 7.085-42.524zm137.92-4.223h-41.231c-12.773 0-22.332 3.486-27.94 16.235l-79.245 179.32h56.031s9.159-24.112 11.231-29.418c6.123 0 60.555.084 68.336.084 1.596 6.853 6.49 29.334 6.49 29.334h49.518l-43.19-195.55zm-65.417 126.41c4.414-11.279 21.259-54.724 21.259-54.724-.317.507 4.381-11.33 7.074-18.671l3.606 16.861s10.205 46.574 12.347 56.534h-44.286zM241.5 152.97l-52.239 133.49-5.565-27.129c-9.717-31.274-39.949-65.139-73.795-82.088l47.823 171.42 56.455-.063 84.004-195.64-56.683.009z" fill="#0E4595"/>
-                    <path d="M131.92 152.97H46.459l-.682 4.074c66.939 16.204 111.23 55.293 129.62 102.24l-18.709-89.96c-3.229-12.396-12.597-16.095-24.768-16.349z" fill="#F2AE14"/>
-                  </svg>
-                </div>
-                
-                {/* MasterCard */}
-                <div className="bg-white rounded px-2 py-1">
-                  <svg className="h-6 w-auto" viewBox="0 0 152 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="50" cy="50" r="40" fill="#EB001B"/>
-                    <circle cx="102" cy="50" r="40" fill="#F79E1B"/>
-                    <path fillRule="evenodd" clipRule="evenodd" d="M76 79.5C85.3888 71.7178 91 60.5228 91 50C91 39.4772 85.3888 28.2822 76 20.5C66.6112 28.2822 61 39.4772 61 50C61 60.5228 66.6112 71.7178 76 79.5Z" fill="#FF5F00"/>
-                  </svg>
-                </div>
-                
-                {/* American Express */}
-                <div className="bg-[#016fd0] rounded px-2 py-1">
-                  <svg className="h-6 w-auto" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <text x="10" y="50" fontFamily="Arial, sans-serif" fontSize="24" fontWeight="bold" fill="white">AMEX</text>
-                  </svg>
-                </div>
+              {/* Payment Method Logos - iyzico */}
+              <div className="flex items-center justify-center">
+                <img 
+                  src="/payment-logos.png" 
+                  alt="iyzico, Mastercard, Visa, American Express, Troy"
+                  className="h-8 md:h-10 w-auto object-contain opacity-80"
+                />
               </div>
               
               <p className="text-white/20 text-xs text-center md:text-right">

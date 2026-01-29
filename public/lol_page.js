@@ -679,10 +679,10 @@ export default function LolPage() {
     setTermsAccepted(true) // Terms pre-accepted for new product
     
     // Update URL with product parameter for Google Ads tracking (RP için)
-    const rpAmount = product.title.match(/(\d+)\s*VP/i) || product.rpAmount;
+    const rpAmount = product.title.match(/(\d+)\s*RP/i) || product.rpAmount;
     if (rpAmount) {
       const amount = typeof rpAmount === 'object' ? rpAmount[1] : (product.rpAmount || product.ucAmount);
-      const productSlug = amount + 'vp';
+      const productSlug = amount + 'rp';
       window.history.pushState({}, '', `?product=${productSlug}`);
     }
     

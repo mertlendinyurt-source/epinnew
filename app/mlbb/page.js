@@ -1525,7 +1525,6 @@ export default function MLBBPage() {
                     </div>
                   </div>
                 ))}
-                </div>
               </div>
             )}
           </div>

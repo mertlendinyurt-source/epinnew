@@ -1605,7 +1605,7 @@ export default function LolPage() {
                       
                       <p className="mb-4">5v5 formatında oynanan League of Legends'ta, oyuncular farklı yeteneklere sahip ""Şampiyon" karakterlerini seçer. Her şampiyonun kendine özgü 4 yeteneği vardır: bir imza yeteneği, iki satın alınabilir yetenek ve bir ultimate yeteneği.</p>
                       
-                      <p className="mb-4">Riot Points (RP), oyun içi premium para birimidir. VP ile şunları satın alabilirsiniz:</p>
+                      <p className="mb-4">Riot Points (RP), oyun içi premium para birimidir. RP ile şunları satın alabilirsiniz:</p>
                       <ul className="list-disc list-inside mb-4 space-y-1">
                         <li>Silah skinleri ve koleksiyonları</li>
                         <li>Battle Pass ve Premium Battle Pass</li>
@@ -1647,12 +1647,12 @@ export default function LolPage() {
                     <h3 className="text-lg font-bold text-white mb-4">RP Paketleri</h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                       {[
-                        { amount: '375 VP', description: 'Başlangıç' },
-                        { amount: '825 VP', description: 'Standart' },
-                        { amount: '1700 VP', description: 'Popüler' },
-                        { amount: '2925 VP', description: 'Değerli' },
-                        { amount: '4325 VP', description: 'Premium' },
-                        { amount: '8900 VP', description: 'Mega' }
+                        { amount: '375 RP', description: 'Başlangıç' },
+                        { amount: '825 RP', description: 'Standart' },
+                        { amount: '1700 RP', description: 'Popüler' },
+                        { amount: '2925 RP', description: 'Değerli' },
+                        { amount: '4325 RP', description: 'Premium' },
+                        { amount: '8900 RP', description: 'Mega' }
                       ].map((pkg, idx) => (
                         <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
                           <div className="text-yellow-400 font-bold text-lg">{pkg.amount}</div>
@@ -1687,12 +1687,12 @@ export default function LolPage() {
                     <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
                     <div className="space-y-3">
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">VP kodu nasıl kullanılır?</h4>
+                        <h4 className="text-white font-medium mb-2">RP kodu nasıl kullanılır?</h4>
                         <p className="text-white/60 text-sm">League of Legends'i açın, mağazaya gidin ve "RP Satın Al" bölümünden "Kodu Kullan" seçeneğini seçin. Aldığınız kodu girerek RP'nizi hesabınıza yükleyin.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">VP kodları hangi bölgelerde geçerli?</h4>
-                        <p className="text-white/60 text-sm">VP kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
+                        <h4 className="text-white font-medium mb-2">RP kodları hangi bölgelerde geçerli?</h4>
+                        <p className="text-white/60 text-sm">RP kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">Teslimat ne kadar sürer?</h4>

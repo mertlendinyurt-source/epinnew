@@ -42,6 +42,7 @@ export default function AdminProducts() {
     discountPrice: '',
     discountPercent: '',
     active: true,
+    featured: false,
     sortOrder: '',
     imageUrl: '',
     game: 'pubg'
@@ -53,6 +54,7 @@ export default function AdminProducts() {
     discountPrice: '',
     discountPercent: '',
     active: true,
+    featured: false,
     sortOrder: '',
     imageUrl: '',
     game: 'pubg'
@@ -157,6 +159,7 @@ export default function AdminProducts() {
       discountPrice: product.discountPrice.toString(),
       discountPercent: product.discountPercent.toString(),
       active: product.active,
+      featured: product.featured || false,
       sortOrder: product.sortOrder.toString(),
       imageUrl: product.imageUrl || '',
       game: product.game || 'pubg'
@@ -331,6 +334,7 @@ export default function AdminProducts() {
         discountPrice: parseFloat(formData.discountPrice),
         discountPercent: parseInt(formData.discountPercent),
         active: formData.active,
+        featured: formData.featured,
         sortOrder: parseInt(formData.sortOrder),
         imageUrl: imageUrl,
         game: formData.game
@@ -475,6 +479,41 @@ export default function AdminProducts() {
     } catch (error) {
       console.error('Error adding stock:', error)
       toast.error('Stok eklenirken hata oluştu')
+    } finally {
+      setStockLoading(false)
+    }
+  }
+
+  // Handle clear stock
+  const handleClearStock = async () => {
+    if (!selectedProductForStock) return
+    
+    const confirmClear = window.confirm(
+      `"${selectedProductForStock.title}" ürününün tüm mevcut stoklarını silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`
+    )
+    
+    if (!confirmClear) return
+    
+    setStockLoading(true)
+    try {
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch(`/api/admin/products/${selectedProductForStock.id}/stock/clear`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      const data = await response.json()
+      
+      if (data.success) {
+        toast.success(data.message || 'Stoklar sıfırlandı')
+        await fetchStock(selectedProductForStock.id)
+      } else {
+        toast.error(data.error || 'Stok sıfırlanamadı')
+      }
+    } catch (error) {
+      console.error('Error clearing stock:', error)
+      toast.error('Stok sıfırlanırken hata oluştu')
     } finally {
       setStockLoading(false)
     }
@@ -761,7 +800,7 @@ export default function AdminProducts() {
                       <TableRow key={product.id} className="border-slate-800 hover:bg-slate-800/50">
                         <TableCell>
                           <Badge variant={product.game === 'valorant' ? 'destructive' : product.game === 'mlbb' ? 'default' : 'default'} className={product.game === 'valorant' ? 'bg-red-600' : product.game === 'mlbb' ? 'bg-blue-600' : 'bg-yellow-600'}>
-                            {product.game === 'valorant' ? 'Valorant' : product.game === 'mlbb' ? 'MLBB' : 'PUBG'}
+                            {product.game === 'valorant' ? 'Valorant' : product.game === 'mlbb' ? 'MLBB' : product.game === 'lol' ? 'LoL' : 'PUBG'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-white font-medium">{product.title}</TableCell>
@@ -826,7 +865,7 @@ export default function AdminProducts() {
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <Badge variant={product.game === 'valorant' ? 'destructive' : product.game === 'mlbb' ? 'default' : 'default'} className={`text-xs ${product.game === 'valorant' ? 'bg-red-600' : product.game === 'mlbb' ? 'bg-blue-600' : 'bg-yellow-600'}`}>
-                            {product.game === 'valorant' ? 'Valorant' : product.game === 'mlbb' ? 'MLBB' : 'PUBG'}
+                            {product.game === 'valorant' ? 'Valorant' : product.game === 'mlbb' ? 'MLBB' : product.game === 'lol' ? 'LoL' : 'PUBG'}
                           </Badge>
                         </div>
                         <h3 className="text-white font-medium">{product.title}</h3>
@@ -979,6 +1018,20 @@ export default function AdminProducts() {
                       <span className={`font-medium ${formData.game === 'mlbb' ? 'text-blue-400' : 'text-white'}`}>MLBB</span>
                     </div>
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, game: 'lol' })}
+                    className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                      formData.game === 'lol' 
+                        ? 'border-yellow-500 bg-yellow-500/10' 
+                        : 'border-slate-700 bg-slate-800 hover:border-slate-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-lg">⚔️</span>
+                      <span className={`font-medium ${formData.game === 'lol' ? 'text-yellow-400' : 'text-white'}`}>LoL RP</span>
+                    </div>
+                  </button>
                 </div>
               </div>
               
@@ -989,21 +1042,21 @@ export default function AdminProducts() {
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     className="bg-slate-800 border-slate-700 text-white h-11"
-                    placeholder={formData.game === 'valorant' ? 'Örn: 475 VP' : formData.game === 'mlbb' ? 'Örn: 86 Diamonds' : 'Örn: 60 UC'}
+                    placeholder={formData.game === 'valorant' ? 'Örn: 475 VP' : formData.game === 'mlbb' ? 'Örn: 86 Diamonds' : formData.game === 'lol' ? 'Örn: 650 RP' : 'Örn: 60 UC'}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-slate-300 text-sm">{formData.game === 'valorant' ? 'VP Miktarı' : formData.game === 'mlbb' ? 'Diamonds Miktarı' : 'UC Miktarı'}</Label>
+                  <Label className="text-slate-300 text-sm">{formData.game === 'valorant' ? 'VP Miktarı' : formData.game === 'mlbb' ? 'Diamonds Miktarı' : formData.game === 'lol' ? 'RP Miktarı' : 'UC Miktarı'}</Label>
                   <div className="relative">
                     <Input
                       type="number"
                       value={formData.ucAmount}
                       onChange={(e) => setFormData({ ...formData, ucAmount: e.target.value })}
                       className="bg-slate-800 border-slate-700 text-white h-11 pr-12"
-                      placeholder={formData.game === 'valorant' ? '475' : formData.game === 'mlbb' ? '86' : '60'}
+                      placeholder={formData.game === 'valorant' ? '475' : formData.game === 'mlbb' ? '86' : formData.game === 'lol' ? '650' : '60'}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">{formData.game === 'valorant' ? 'VP' : formData.game === 'mlbb' ? '💎' : 'UC'}</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">{formData.game === 'valorant' ? 'VP' : formData.game === 'mlbb' ? '💎' : formData.game === 'lol' ? 'RP' : 'UC'}</span>
                   </div>
                 </div>
               </div>
@@ -1186,6 +1239,23 @@ export default function AdminProducts() {
                   </div>
                 </div>
 
+                {/* En Çok Tercih Edilen */}
+                <div className="flex items-center justify-between p-4 bg-yellow-900/20 rounded-xl border border-yellow-700/30">
+                  <div>
+                    <Label className="text-yellow-400 text-sm font-medium">⭐ En Çok Tercih Edilen</Label>
+                    <p className="text-xs text-yellow-600/70 mt-1">Bu ürün öne çıkarılır</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-sm ${formData.featured ? 'text-yellow-400' : 'text-slate-400'}`}>
+                      {formData.featured ? 'Evet' : 'Hayır'}
+                    </span>
+                    <Switch
+                      checked={formData.featured}
+                      onCheckedChange={(checked) => setFormData({ ...formData, featured: checked })}
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label className="text-slate-300 text-sm">Sıralama</Label>
                   <Input
@@ -1330,21 +1400,31 @@ export default function AdminProducts() {
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button
-                onClick={() => setStockDialogOpen(false)}
+                onClick={handleClearStock}
+                disabled={stockLoading || !stockData.summary?.available}
                 variant="outline"
-                className="border-slate-700 text-white"
+                className="border-red-700 text-red-400 hover:bg-red-900/20 hover:text-red-300"
               >
-                İptal
+                {stockLoading ? 'İşleniyor...' : `Stokları Sıfırla (${stockData.summary?.available || 0})`}
               </Button>
-              <Button
-                onClick={handleAddStock}
-                disabled={stockLoading || !stockData.items.trim()}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {stockLoading ? 'Ekleniyor...' : 'Toplu Ekle'}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setStockDialogOpen(false)}
+                  variant="outline"
+                  className="border-slate-700 text-white"
+                >
+                  İptal
+                </Button>
+                <Button
+                  onClick={handleAddStock}
+                  disabled={stockLoading || !stockData.items.trim()}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {stockLoading ? 'Ekleniyor...' : 'Toplu Ekle'}
+                </Button>
+              </div>
             </DialogFooter>
           </div>
 
@@ -1428,6 +1508,20 @@ export default function AdminProducts() {
                       <span className={`font-medium ${addFormData.game === 'mlbb' ? 'text-blue-400' : 'text-white'}`}>MLBB</span>
                     </div>
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddFormData({ ...addFormData, game: 'lol' })}
+                    className={`flex-1 py-3 px-4 rounded-lg border transition-all ${
+                      addFormData.game === 'lol' 
+                        ? 'border-yellow-500 bg-yellow-500/10' 
+                        : 'border-slate-700 bg-slate-800 hover:border-slate-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-lg">⚔️</span>
+                      <span className={`font-medium ${addFormData.game === 'lol' ? 'text-yellow-400' : 'text-white'}`}>LoL RP</span>
+                    </div>
+                  </button>
                 </div>
               </div>
               
@@ -1438,21 +1532,21 @@ export default function AdminProducts() {
                     value={addFormData.title}
                     onChange={(e) => setAddFormData({ ...addFormData, title: e.target.value })}
                     className="bg-slate-800 border-slate-700 text-white h-11"
-                    placeholder={addFormData.game === 'valorant' ? 'Örn: 475 VP' : addFormData.game === 'mlbb' ? 'Örn: 86 Diamonds' : 'Örn: 60 UC'}
+                    placeholder={addFormData.game === 'valorant' ? 'Örn: 475 VP' : addFormData.game === 'mlbb' ? 'Örn: 86 Diamonds' : addFormData.game === 'lol' ? 'Örn: 650 RP' : 'Örn: 60 UC'}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-slate-300 text-sm">{addFormData.game === 'valorant' ? 'VP Miktarı *' : addFormData.game === 'mlbb' ? 'Diamonds Miktarı *' : 'UC Miktarı *'}</Label>
+                  <Label className="text-slate-300 text-sm">{addFormData.game === 'valorant' ? 'VP Miktarı *' : addFormData.game === 'mlbb' ? 'Diamonds Miktarı *' : addFormData.game === 'lol' ? 'RP Miktarı *' : 'UC Miktarı *'}</Label>
                   <div className="relative">
                     <Input
                       type="number"
                       value={addFormData.ucAmount}
                       onChange={(e) => setAddFormData({ ...addFormData, ucAmount: e.target.value })}
                       className="bg-slate-800 border-slate-700 text-white h-11 pr-12"
-                      placeholder={addFormData.game === 'valorant' ? '475' : addFormData.game === 'mlbb' ? '86' : '60'}
+                      placeholder={addFormData.game === 'valorant' ? '475' : addFormData.game === 'mlbb' ? '86' : addFormData.game === 'lol' ? '650' : '60'}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">{addFormData.game === 'valorant' ? 'VP' : addFormData.game === 'mlbb' ? '💎' : 'UC'}</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">{addFormData.game === 'valorant' ? 'VP' : addFormData.game === 'mlbb' ? '💎' : addFormData.game === 'lol' ? 'RP' : 'UC'}</span>
                   </div>
                 </div>
               </div>

@@ -542,6 +542,20 @@ export default function SiteSettingsPage() {
                 large
               />
             </div>
+
+            <div className="pt-4 border-t border-slate-800">
+              <UploadBox
+                type="lolHeroImage"
+                title="LoL Hero Banner"
+                description="League of Legends sayfası üst görseli"
+                uploads={uploads}
+                previews={previews}
+                handleFileSelect={handleFileSelect}
+                handleUploadAndSave={handleUploadAndSave}
+                saving={saving}
+                large
+              />
+            </div>
           </div>
 
           {/* SEO Preview */}

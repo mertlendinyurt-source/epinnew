@@ -58,12 +58,12 @@ function BannerIcon({ icon, size }) {
   );
 }
 
-export default function ValorantPage() {
+export default function LolPage() {
   // 🎮 VALORANT PAGE CONFIGURATION
-  const GAME_TYPE = 'valorant'
-  const GAME_NAME = 'Valorant'
-  const CURRENCY_NAME = 'VP'
-  const THEME_COLOR = 'red' // Valorant kırmızı teması
+  const GAME_TYPE = 'lol'
+  const GAME_NAME = 'League of Legends'
+  const CURRENCY_NAME = 'RP'
+  const THEME_COLOR = 'yellow' // Valorant kırmızı teması
   
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)

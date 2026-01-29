@@ -25,13 +25,13 @@ function BannerIcon({ icon, size }) {
   };
 
   const colors = {
-    fire: { from: 'from-orange-500/20', to: 'to-red-500/20', border: 'border-orange-500/30', text: 'text-orange-500', shadow: 'shadow-orange-500/10' },
+    fire: { from: 'from-orange-500/20', to: 'to-yellow-500/20', border: 'border-orange-500/30', text: 'text-orange-500', shadow: 'shadow-orange-500/10' },
     bolt: { from: 'from-yellow-500/20', to: 'to-amber-500/20', border: 'border-yellow-500/30', text: 'text-yellow-500', shadow: 'shadow-yellow-500/10' },
     star: { from: 'from-yellow-500/20', to: 'to-amber-500/20', border: 'border-yellow-500/30', text: 'text-yellow-500', shadow: 'shadow-yellow-500/10' },
     gift: { from: 'from-pink-500/20', to: 'to-rose-500/20', border: 'border-pink-500/30', text: 'text-pink-500', shadow: 'shadow-pink-500/10' },
     sparkles: { from: 'from-purple-500/20', to: 'to-violet-500/20', border: 'border-purple-500/30', text: 'text-purple-500', shadow: 'shadow-purple-500/10' },
     tag: { from: 'from-green-500/20', to: 'to-emerald-500/20', border: 'border-green-500/30', text: 'text-green-500', shadow: 'shadow-green-500/10' },
-    percent: { from: 'from-red-500/20', to: 'to-rose-500/20', border: 'border-red-500/30', text: 'text-red-500', shadow: 'shadow-red-500/10' },
+    percent: { from: 'from-yellow-500/20', to: 'to-rose-500/20', border: 'border-yellow-500/30', text: 'text-yellow-500', shadow: 'shadow-red-500/10' },
     clock: { from: 'from-blue-500/20', to: 'to-cyan-500/20', border: 'border-blue-500/30', text: 'text-blue-500', shadow: 'shadow-blue-500/10' },
   };
 
@@ -58,12 +58,12 @@ function BannerIcon({ icon, size }) {
   );
 }
 
-export default function LoLPage() {
-  // 🎮 LEAGUE OF LEGENDS PAGE CONFIGURATION
+export default function LolPage() {
+  // 🎮 VALORANT PAGE CONFIGURATION
   const GAME_TYPE = 'lol'
   const GAME_NAME = 'League of Legends'
   const CURRENCY_NAME = 'RP'
-  const THEME_COLOR = 'yellow' // LoL altın/turkuaz teması
+  const THEME_COLOR = 'yellow' // League of Legends sarı teması
   
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -144,8 +144,8 @@ export default function LoLPage() {
         }
       }
       
-      // TEK API ÇAĞRISI - Tüm veriler (sadece LoL ürünleri)
-      const response = await fetch('/api/homepage?game=lol')
+      // TEK API ÇAĞRISI - Tüm veriler
+      const response = await fetch('/api/homepage?game=valorant')
       const data = await response.json()
       
       if (data.success) {
@@ -263,16 +263,16 @@ export default function LoLPage() {
     const productParam = urlParams.get('product');
     
     if (productParam) {
-      // Find product by slug (e.g., "650rp", "1380rp")
+      // Find product by slug (e.g., "375vp", "825vp", "1700vp")
       const slug = productParam.toLowerCase().replace('-', '');
       
-      // Try to match by RP amount in title
-      const rpAmount = parseInt(slug.replace('rp', '').replace('vp', '').replace('uc', ''));
+      // Try to match by VP amount in title
+      const rpAmount = parseInt(slug.replace('vp', '').replace('uc', ''));
       
       let matchedProduct = null;
       
       if (!isNaN(rpAmount)) {
-        // Find product that contains the RP amount in title or rpAmount field
+        // Find product that contains the VP amount in title or rpAmount field
         matchedProduct = products.find(p => {
           // Check rpAmount field first
           if (p.rpAmount && parseInt(p.rpAmount) === rpAmount) {
@@ -280,7 +280,7 @@ export default function LoLPage() {
           }
           // Check title
           const title = p.title.toLowerCase();
-          const matches = title.match(/(\d+)\s*rp/i);
+          const matches = title.match(/(\d+)\s*vp/i);
           if (matches) {
             return parseInt(matches[1]) === rpAmount;
           }
@@ -678,11 +678,11 @@ export default function LoLPage() {
     setPlayerValid(null)
     setTermsAccepted(true) // Terms pre-accepted for new product
     
-    // Update URL with product parameter for Google Ads tracking (RP için)
-    const rpAmount = product.title.match(/(\d+)\s*RP/i) || product.rpAmount;
+    // Update URL with product parameter for Google Ads tracking (VP için)
+    const rpAmount = product.title.match(/(\d+)\s*VP/i) || product.rpAmount;
     if (rpAmount) {
       const amount = typeof rpAmount === 'object' ? rpAmount[1] : (product.rpAmount || product.ucAmount);
-      const productSlug = amount + 'rp';
+      const productSlug = amount + 'vp';
       window.history.pushState({}, '', `?product=${productSlug}`);
     }
     
@@ -707,7 +707,7 @@ export default function LoLPage() {
   }
 
   const handleCheckout = async () => {
-    // LoL için Oyuncu ID kontrolü yok - direkt kod teslimi
+    // League of Legends için Oyuncu ID kontrolü yok - direkt kod teslimi
 
     // 1. Check authentication
     const token = localStorage.getItem('userToken')
@@ -750,10 +750,10 @@ export default function LoLPage() {
         },
         body: JSON.stringify({
           productId: selectedProduct.id,
-          playerId: 'lol-direct', // LoL için oyuncu ID gerekmiyor
+          playerId: 'lol-direct', // Valorant için oyuncu ID gerekmiyor
           playerName: 'League of Legends RP',
           paymentMethod: paymentMethod, // 'card' or 'balance'
-          game: GAME_TYPE, // 'lol'
+          game: GAME_TYPE, // 'valorant'
           termsAccepted: termsAccepted,
           termsAcceptedAt: new Date().toISOString()
         })
@@ -920,7 +920,7 @@ export default function LoLPage() {
         <div className="space-y-2">
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
-            <span className="text-sm text-white/70 group-hover:text-white transition-colors">League of Legends</span>
+            <span className="text-sm text-white/70 group-hover:text-white transition-colors">Valorant</span>
           </label>
         </div>
       </div>
@@ -928,7 +928,7 @@ export default function LoLPage() {
       <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
         <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Bölge</h3>
         <div className="space-y-2">
-          {/* LoL için sadece Türkiye bölgesi */}
+          {/* League of Legends için sadece Türkiye bölgesi */}
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
             <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
@@ -1066,7 +1066,7 @@ export default function LoLPage() {
                       )}
                       <button 
                         onClick={handleLogout}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-white/5 rounded-md transition-colors w-full text-left"
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-yellow-400 hover:text-red-300 hover:bg-white/5 rounded-md transition-colors w-full text-left"
                       >
                         🚪 Çıkış Yap
                       </button>
@@ -1101,6 +1101,7 @@ export default function LoLPage() {
         </div>
       </header>
 
+      {/* Trust Bar */}
       {/* Mobile Trust Badges */}
       <div className="md:hidden bg-[#12151a] border-b border-white/5">
         <div className="flex items-center justify-center gap-3 px-4 py-2 overflow-x-auto scrollbar-hide">
@@ -1289,7 +1290,7 @@ export default function LoLPage() {
         </div>
       </div>
 
-      {/* Daily Banner */}
+      {/* Daily Banner - "Bugüne Özel Fiyatlar" with Countdown */}
       {siteSettings?.dailyBannerEnabled !== false && (
         <div 
           className="relative overflow-hidden mx-4 md:mx-6 mt-4 rounded-2xl animate-fadeInUp"
@@ -1297,19 +1298,29 @@ export default function LoLPage() {
           aria-label="Günlük kampanya banner"
           style={{ minHeight: '80px' }}
         >
+          {/* Background with gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#1a1f35] via-[#252d4a] to-[#1a1f35]" />
-          <div className="absolute top-0 left-1/4 w-64 h-32 bg-yellow-500/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-64 h-32 bg-cyan-500/15 rounded-full blur-3xl" />
           
+          {/* Glow effects */}
+          <div className="absolute top-0 left-1/4 w-64 h-32 bg-blue-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-64 h-32 bg-purple-500/15 rounded-full blur-3xl" />
+          
+          {/* Countdown glow effect - intensifies in last 10 minutes */}
           {siteSettings?.dailyCountdownEnabled !== false && countdown.hours === 0 && countdown.minutes < 10 && (
             <div className="absolute top-1/2 right-1/4 w-48 h-24 bg-orange-500/30 rounded-full blur-3xl animate-pulse" />
           )}
           
+          {/* Border glow */}
           <div className="absolute inset-0 rounded-2xl border border-white/10" />
           
+          {/* Content */}
           <div className="relative z-10 px-5 md:px-8 py-5 md:py-6 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-4">
+            {/* Left side - Text */}
             <div className="flex items-center gap-4 text-center md:text-left">
+              {/* Dynamic Icon - Desktop */}
               <BannerIcon icon={siteSettings?.dailyBannerIcon || 'fire'} size="desktop" />
+              
+              {/* Dynamic Icon - Mobile */}
               <BannerIcon icon={siteSettings?.dailyBannerIcon || 'fire'} size="mobile" />
               
               <div>
@@ -1322,7 +1333,9 @@ export default function LoLPage() {
               </div>
             </div>
             
+            {/* Right side - Countdown + Badge */}
             <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-4">
+              {/* Countdown Timer */}
               {siteSettings?.dailyCountdownEnabled !== false && (
                 <div className="flex flex-col items-center">
                   <span className="text-[10px] md:text-xs text-white/50 uppercase tracking-wider mb-1.5 flex items-center gap-1">
@@ -1335,7 +1348,7 @@ export default function LoLPage() {
                     className={`flex items-center gap-1 md:gap-1.5 font-mono text-lg md:text-xl lg:text-2xl font-bold tracking-wider transition-colors duration-500 ${
                       countdown.hours === 0 && countdown.minutes < 10
                         ? countdown.minutes < 5
-                          ? 'text-red-400'
+                          ? 'text-yellow-400'
                           : 'text-orange-400'
                         : 'text-cyan-400'
                     }`}
@@ -1347,49 +1360,83 @@ export default function LoLPage() {
                         : '0 0 20px rgba(34, 211, 238, 0.5), 0 0 40px rgba(34, 211, 238, 0.2)'
                     }}
                   >
+                    {/* Hours */}
                     <div className="relative">
                       <div className={`px-2 py-1 md:px-2.5 md:py-1.5 rounded-md bg-black/40 border ${
                         countdown.hours === 0 && countdown.minutes < 10
                           ? countdown.minutes < 5
-                            ? 'border-red-500/40'
+                            ? 'border-yellow-500/40'
                             : 'border-orange-500/40'
                           : 'border-cyan-500/30'
                       }`}>
-                        <span>{String(countdown.hours).padStart(2, '0')}</span>
+                        <span className={`transition-all duration-200 ${countdown.seconds % 2 === 0 ? 'opacity-100' : 'opacity-95'}`}>
+                          {String(countdown.hours).padStart(2, '0')}
+                        </span>
                       </div>
                     </div>
-                    <span className="animate-pulse">:</span>
+                    
+                    {/* Separator */}
+                    <span className={`animate-pulse ${
+                      countdown.hours === 0 && countdown.minutes < 10
+                        ? countdown.minutes < 5
+                          ? 'text-yellow-400'
+                          : 'text-orange-400'
+                        : 'text-cyan-400/80'
+                    }`}>:</span>
+                    
+                    {/* Minutes */}
                     <div className="relative">
                       <div className={`px-2 py-1 md:px-2.5 md:py-1.5 rounded-md bg-black/40 border ${
                         countdown.hours === 0 && countdown.minutes < 10
                           ? countdown.minutes < 5
-                            ? 'border-red-500/40'
+                            ? 'border-yellow-500/40'
                             : 'border-orange-500/40'
                           : 'border-cyan-500/30'
                       }`}>
-                        <span>{String(countdown.minutes).padStart(2, '0')}</span>
+                        <span className={`transition-all duration-200 ${countdown.seconds % 2 === 0 ? 'opacity-100' : 'opacity-95'}`}>
+                          {String(countdown.minutes).padStart(2, '0')}
+                        </span>
                       </div>
                     </div>
-                    <span className="animate-pulse">:</span>
+                    
+                    {/* Separator */}
+                    <span className={`animate-pulse ${
+                      countdown.hours === 0 && countdown.minutes < 10
+                        ? countdown.minutes < 5
+                          ? 'text-yellow-400'
+                          : 'text-orange-400'
+                        : 'text-cyan-400/80'
+                    }`}>:</span>
+                    
+                    {/* Seconds */}
                     <div className="relative">
                       <div className={`px-2 py-1 md:px-2.5 md:py-1.5 rounded-md bg-black/40 border ${
                         countdown.hours === 0 && countdown.minutes < 10
                           ? countdown.minutes < 5
-                            ? 'border-red-500/40'
+                            ? 'border-yellow-500/40'
                             : 'border-orange-500/40'
                           : 'border-cyan-500/30'
                       }`}>
-                        <span>{String(countdown.seconds).padStart(2, '0')}</span>
+                        <span 
+                          className="inline-block transition-transform duration-100"
+                          style={{
+                            transform: `scale(${countdown.seconds % 2 === 0 ? 1 : 0.98})`
+                          }}
+                        >
+                          {String(countdown.seconds).padStart(2, '0')}
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
               
+              {/* Divider - only on desktop when countdown is visible */}
               {siteSettings?.dailyCountdownEnabled !== false && (
                 <div className="hidden md:block w-px h-10 bg-white/10" />
               )}
               
+              {/* Badge */}
               <div className="px-4 py-2 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30">
                 <span className="text-xs md:text-sm font-semibold text-yellow-400 flex items-center gap-1.5">
                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
@@ -1403,42 +1450,23 @@ export default function LoLPage() {
         </div>
       )}
 
-      {/* Main Content */}
       <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-4 md:py-6">
         <div className="flex gap-4 md:gap-5">
-          {/* Sidebar - Desktop */}
-          <div className="hidden md:block w-48 lg:w-56 shrink-0">
-            <FilterSidebar />
+          <div className="hidden lg:block w-[240px] xl:w-[265px] flex-shrink-0">
+            <div className="sticky top-24">
+              <FilterSidebar />
+            </div>
           </div>
 
-          {/* Product Grid */}
           <div className="flex-1">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-white/50">{products.length} ürün</span>
-            </div>
-
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="bg-[#1e2229] rounded-xl p-4 animate-pulse">
-                    <div className="w-full h-24 bg-white/5 rounded-lg mb-3"></div>
-                    <div className="h-4 bg-white/5 rounded mb-2 w-3/4"></div>
-                    <div className="h-6 bg-white/5 rounded w-1/2"></div>
-                  </div>
-                ))}
-              </div>
-            ) : products.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/10 flex items-center justify-center">
-                  <span className="text-3xl">⚔️</span>
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">Ürünler Yakında</h3>
-                <p className="text-white/60 text-sm">League of Legends RP paketleri çok yakında eklenecek!</p>
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4">
-                {products.map(product => (
-                  <div 
+                {products.map((product) => (
+                  <div
                     key={product.id}
                     onClick={() => handleProductSelect(product)}
                     className={`product-card-glow group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border ${product.featured ? 'border-yellow-500/50 ring-2 ring-yellow-500/30' : 'border-white/10'} hover:border-white/20 w-full aspect-[2/3.8] md:aspect-[2/3]`}
@@ -1464,11 +1492,11 @@ export default function LoLPage() {
                         <img className="go-flare" src="/flare.png" alt="" />
                       </div>
                       <img 
-                        src={product.imageUrl || "https://images.contentstack.io/v3/assets/blt731acb42bb3d1659/bltf8be62f1eb58b34c/5ef1134fa8a14a6c8c81b71e/LOL_PROMOART_14.jpg"}
+                        src={product.imageUrl || "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=300&h=300&fit=crop"}
                         alt={product.title}
                         className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105 relative z-10"
                         onError={(e) => {
-                          e.target.src = "https://images.contentstack.io/v3/assets/blt731acb42bb3d1659/bltf8be62f1eb58b34c/5ef1134fa8a14a6c8c81b71e/LOL_PROMOART_14.jpg";
+                          e.target.src = "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=300&h=300&fit=crop";
                         }}
                       />
                     </div>
@@ -1484,7 +1512,7 @@ export default function LoLPage() {
                       </div>
                       <div className="mt-1">
                         {product.discountPrice < product.price && (
-                          <div className="text-[11px] md:text-[9px] text-red-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
+                          <div className="text-[11px] md:text-[9px] text-yellow-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
                         )}
                         <div className="text-[18px] md:text-[15px] font-bold text-white">₺ {product.discountPrice.toFixed(2).replace('.', ',')}</div>
                         {product.discountPercent > 0 && (
@@ -1500,186 +1528,837 @@ export default function LoLPage() {
         </div>
       </div>
 
-      {/* Checkout Modal */}
-      <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
-        <DialogContent className="bg-[#1e2229] border-white/10 text-white max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <span className="text-yellow-400">⚔️</span>
-              {selectedProduct?.title}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            {/* Product Info */}
-            <div className="bg-[#12151a] rounded-lg p-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-white/60">Ürün</span>
-                <span className="font-semibold">{selectedProduct?.title}</span>
-              </div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-white/60">Teslimat</span>
-                <span className="text-green-400 text-sm">Anında Kod Teslimi</span>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t border-white/10">
-                <span className="text-white/60">Toplam</span>
-                <span className="text-xl font-bold text-yellow-400">{selectedProduct?.discountPrice.toFixed(2)} ₺</span>
-              </div>
+      {/* Plyr Style Tab Section - Description & Reviews */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        
+        {/* Canlı Destek Butonu - Üstte */}
+        <div className="flex justify-center mb-4">
+          {siteSettings?.liveSupportEnabled ? (
+            <button
+              onClick={() => {
+                if (window.$crisp) {
+                  window.$crisp.push(["do", "chat:open"]);
+                }
+              }}
+              className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl text-base font-semibold transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:scale-105"
+            >
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+              </span>
+              Canlı Destek
+              <span className="text-xs opacity-75">({siteSettings?.liveSupportHours || '14:00-22:00'})</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-3 px-6 py-3 bg-gray-600/50 text-white/50 rounded-xl text-base font-semibold cursor-not-allowed">
+              <span className="relative flex h-3 w-3">
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-400"></span>
+              </span>
+              Canlı Destek Kapalı
+              <span className="text-xs">({siteSettings?.liveSupportHours || '14:00-22:00'} arası açık)</span>
             </div>
+          )}
+        </div>
 
-            {/* LoL için bilgi */}
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-              <p className="text-sm text-yellow-400 flex items-center gap-2">
-                <Info className="w-4 h-4" />
-                Riot Points kodunuz ödeme sonrası anında teslim edilecektir.
-              </p>
-            </div>
+        <div className="bg-[#1e2229] rounded-xl border border-white/5">
+          {/* Tab Headers */}
+          <div className="flex border-b border-white/5">
+            <button
+              onClick={() => setActiveInfoTab('description')}
+              className={`flex-1 px-6 py-4 text-sm font-semibold transition-all relative ${
+                activeInfoTab === 'description' 
+                  ? 'text-white' 
+                  : 'text-white/50 hover:text-white/70'
+              }`}
+            >
+              Açıklama
+              {activeInfoTab === 'description' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveInfoTab('reviews')}
+              className={`flex-1 px-6 py-4 text-sm font-semibold transition-all relative ${
+                activeInfoTab === 'reviews' 
+                  ? 'text-white' 
+                  : 'text-white/50 hover:text-white/70'
+              }`}
+            >
+              Değerlendirmeler ({reviewStats.reviewCount})
+              {activeInfoTab === 'reviews' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+              )}
+            </button>
+          </div>
 
-            {/* Payment Method */}
-            {isAuthenticated && userBalance > 0 && (
-              <div className="space-y-2">
-                <Label className="text-white/80">Ödeme Yöntemi</Label>
-                <div className="grid grid-cols-2 gap-2">
+          {/* Tab Content */}
+          <div className="p-6">
+            {activeInfoTab === 'description' && (
+              <div className="prose prose-invert max-w-none">
+                {/* League of Legends için özel açıklama - gameContent kullanılmıyor */}
+                <div className="space-y-6">
+                  {/* Ana Açıklama */}
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-3">League of Legends: Oynanış, Tarihçe ve Sistem Gereksinimleri</h3>
+                    <div className={`text-white/80 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 ${!descriptionExpanded ? 'max-h-32 overflow-hidden' : ''}`}>
+                      <p className="mb-4">League of Legends, Riot Games tarafından geliştirilen ve 2009 yılında piyasaya sürülen ücretsiz MOBA türündeki dünyanın en popüler oyunudur. Oyun, Dota ve diğer strateji oyunlarının mekaniklerini birleştirerek benzersiz bir deneyim sunar.</p>
+                      
+                      <p className="mb-4">5v5 formatında oynanan League of Legends'ta, oyuncular farklı yeteneklere sahip ""Şampiyon" karakterlerini seçer. Her şampiyonun kendine özgü 4 yeteneği vardır: bir imza yeteneği, iki satın alınabilir yetenek ve bir ultimate yeteneği.</p>
+                      
+                      <p className="mb-4">Riot Points (RP), oyun içi premium para birimidir. VP ile şunları satın alabilirsiniz:</p>
+                      <ul className="list-disc list-inside mb-4 space-y-1">
+                        <li>Silah skinleri ve koleksiyonları</li>
+                        <li>Battle Pass ve Premium Battle Pass</li>
+                        <li>Ajan kostümleri ve aksesuarları</li>
+                        <li>Radianite Points (skin yükseltmeleri için)</li>
+                        <li>Spray'ler, kartlar ve başlıklar</li>
+                      </ul>
+                      
+                      <p className="font-semibold text-white mb-2">Sistem Gereksinimleri (Minimum):</p>
+                      <ul className="list-disc list-inside mb-4 space-y-1">
+                        <li>İşletim Sistemi: Windows 7/8/10 64-bit</li>
+                        <li>RAM: 4 GB</li>
+                        <li>VRAM: 1 GB</li>
+                        <li>İşlemci: Intel Core 2 Duo E8400</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Show More/Less Button */}
                   <button
-                    onClick={() => setPaymentMethod('card')}
-                    className={`p-3 rounded-lg border transition-all ${
-                      paymentMethod === 'card' 
-                        ? 'border-yellow-500 bg-yellow-500/10' 
-                        : 'border-white/10 hover:border-white/20'
-                    }`}
+                    onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                    className="flex items-center gap-2 text-yellow-400 hover:text-red-300 text-sm font-medium transition-colors"
                   >
-                    <span className="text-sm font-medium">💳 Kredi Kartı</span>
+                    {descriptionExpanded ? (
+                      <>
+                        <ChevronUp className="w-4 h-4" />
+                        Daha az göster
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4" />
+                        Devamını göster
+                      </>
+                    )}
                   </button>
-                  <button
-                    onClick={() => setPaymentMethod('balance')}
-                    disabled={userBalance < (selectedProduct?.discountPrice || 0)}
-                    className={`p-3 rounded-lg border transition-all ${
-                      paymentMethod === 'balance' 
-                        ? 'border-green-500 bg-green-500/10' 
-                        : 'border-white/10 hover:border-white/20'
-                    } ${userBalance < (selectedProduct?.discountPrice || 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <span className="text-sm font-medium">💰 Bakiye ({userBalance.toFixed(2)} ₺)</span>
-                  </button>
+
+                  {/* VP Paketleri */}
+                  <div className="mt-8">
+                    <h3 className="text-lg font-bold text-white mb-4">VP Paketleri</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                      {[
+                        { amount: '375 VP', description: 'Başlangıç' },
+                        { amount: '825 VP', description: 'Standart' },
+                        { amount: '1700 VP', description: 'Popüler' },
+                        { amount: '2925 VP', description: 'Değerli' },
+                        { amount: '4325 VP', description: 'Premium' },
+                        { amount: '8900 VP', description: 'Mega' }
+                      ].map((pkg, idx) => (
+                        <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
+                          <div className="text-yellow-400 font-bold text-lg">{pkg.amount}</div>
+                          <div className="text-white/50 text-xs">{pkg.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Özellikler */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <div className="bg-[#282d36] rounded-lg p-4">
+                      <h4 className="text-white font-medium mb-2">🚀 Anında Teslimat</h4>
+                      <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra RP kodunuz anında iletilir ve siparişleriniz bölümünde görüntülenir.</p>
+                    </div>
+                    <div className="bg-[#282d36] rounded-lg p-4">
+                      <h4 className="text-white font-medium mb-2">🔒 Güvenli Ödeme</h4>
+                      <p className="text-white/60 text-sm">256-bit SSL şifreleme ile tüm ödemeleriniz güvende.</p>
+                    </div>
+                    <div className="bg-[#282d36] rounded-lg p-4">
+                      <h4 className="text-white font-medium mb-2">💳 Kolay Kullanım</h4>
+                      <p className="text-white/60 text-sm">Aldığınız RP kodunu League of Legends mağazasında kullanabilirsiniz.</p>
+                    </div>
+                    <div className="bg-[#282d36] rounded-lg p-4">
+                      <h4 className="text-white font-medium mb-2">📞 7/24 Destek</h4>
+                      <p className="text-white/60 text-sm">Herhangi bir sorun yaşarsanız destek ekibimiz size yardımcı olacaktır.</p>
+                    </div>
+                  </div>
+
+                  {/* SSS */}
+                  <div className="mt-8">
+                    <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
+                    <div className="space-y-3">
+                      <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
+                        <h4 className="text-white font-medium mb-2">VP kodu nasıl kullanılır?</h4>
+                        <p className="text-white/60 text-sm">League of Legends'i açın, mağazaya gidin ve "RP Satın Al" bölümünden "Kodu Kullan" seçeneğini seçin. Aldığınız kodu girerek RP'nizi hesabınıza yükleyin.</p>
+                      </div>
+                      <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
+                        <h4 className="text-white font-medium mb-2">VP kodları hangi bölgelerde geçerli?</h4>
+                        <p className="text-white/60 text-sm">VP kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
+                      </div>
+                      <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
+                        <h4 className="text-white font-medium mb-2">Teslimat ne kadar sürer?</h4>
+                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra RP kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Terms */}
-            <div className="flex items-start gap-2">
-              <input
-                type="checkbox"
-                id="terms"
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
-                className="mt-1 rounded bg-[#12151a] border-white/20"
-              />
-              <label htmlFor="terms" className="text-sm text-white/60">
-                <button onClick={() => setTermsModalOpen(true)} className="text-yellow-400 hover:underline">
-                  Satış koşullarını
-                </button>
-                {' '}okudum ve kabul ediyorum.
-              </label>
+            {activeInfoTab === 'reviews' && (
+              <div className="space-y-6">
+                {/* Stats Summary */}
+                <div className="flex items-center gap-6 p-4 bg-[#282d36] rounded-lg">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-yellow-400">{reviewStats.avgRating.toFixed(1)}</div>
+                    <div className="flex items-center gap-0.5 mt-1">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <Star 
+                          key={star} 
+                          className={`w-4 h-4 ${star <= reviewStats.avgRating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} 
+                        />
+                      ))}
+                    </div>
+                    <div className="text-white/40 text-xs mt-1">{reviewStats.reviewCount} değerlendirme</div>
+                  </div>
+                </div>
+
+                {/* Reviews List */}
+                <div className="space-y-4">
+                  {reviews.length > 0 ? (
+                    reviews.map((review) => (
+                      <div key={review.id} className="p-4 bg-[#282d36] rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                            <img 
+                              src={siteSettings?.logoUrl || '/logo.png'} 
+                              alt="Pinly" 
+                              className="w-8 h-8 object-contain"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.parentElement.innerHTML = '<span class="text-blue-600 font-bold text-sm">P</span>';
+                              }}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-white font-medium">Misafir</span>
+                              <div className="flex items-center gap-0.5">
+                                {[1, 2, 3, 4, 5].map(star => (
+                                  <Star 
+                                    key={star} 
+                                    className={`w-3 h-3 ${star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} 
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            <p className="text-white/70 text-sm">{review.comment}</p>
+                            <p className="text-white/40 text-xs">
+                              {new Date(review.createdAt).toLocaleDateString('tr-TR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-white/60">
+                      Henüz değerlendirme bulunmuyor.
+                    </div>
+                  )}
+                </div>
+
+                {/* Load More Button */}
+                {reviewsHasMore && (
+                  <button
+                    onClick={loadMoreReviews}
+                    disabled={loadingReviews}
+                    className="mt-6 w-full py-3 bg-[#282d36] hover:bg-[#323842] rounded-lg text-blue-400 font-medium text-sm transition-colors disabled:opacity-50"
+                  >
+                    {loadingReviews ? 'Yükleniyor...' : 'Daha fazla görüntüle'}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <Dialog open={checkoutOpen} onOpenChange={(open) => {
+        setCheckoutOpen(open);
+        // Clear URL when modal is closed
+        if (!open) {
+          window.history.pushState({}, '', window.location.pathname);
+        }
+      }}>
+        <DialogContent className="max-w-[95vw] md:max-w-4xl max-h-[90vh] p-0 gap-0 overflow-hidden border-0" style={{ backgroundColor: 'transparent' }}>
+          <div 
+            className="absolute inset-0 bg-cover bg-center blur-sm"
+            style={{
+              backgroundImage: 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)',
+              zIndex: -1
+            }}
+          />
+          <div className="absolute inset-0 bg-black/70" style={{ zIndex: -1 }} />
+          
+          <div className="relative bg-[#1e2229]/95 backdrop-blur-md flex flex-col max-h-[90vh]">
+            <div className="px-5 md:px-8 py-4 md:py-6 border-b border-white/5 flex-shrink-0">
+              <h2 className="text-lg md:text-xl font-bold text-white uppercase tracking-wide">ÖDEME TÜRÜNÜ SEÇİN</h2>
             </div>
+            
+            <div className="overflow-y-auto flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2">
+                <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
+                  {/* League of Legends RP - Oyuncu ID gerekmez, direkt kod teslimi */}
+                  <div className="px-4 py-3.5 rounded bg-yellow-500/15 border border-yellow-500/30">
+                    <div className="flex items-center gap-2 text-yellow-400 mb-1 text-xs font-semibold">
+                      <Check className="w-4 h-4" />
+                      <span>League of Legends RP Kodu</span>
+                    </div>
+                    <p className="text-white/70 text-sm">Ödeme sonrası RP kodunuz anında e-posta ile gönderilecek ve Siparişlerim bölümünde görüntülenecektir.</p>
+                  </div>
 
-            {/* Checkout Button */}
-            <Button
-              onClick={handleCheckout}
-              disabled={!termsAccepted || orderProcessing}
-              className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black font-bold py-3"
-            >
-              {orderProcessing ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  İşleniyor...
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  {paymentMethod === 'balance' ? 'Bakiye ile Öde' : 'Ödemeye Geç'}
-                </>
-              )}
-            </Button>
+                  <div>
+                    <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Ödeme yöntemleri</Label>
+                    
+                    {/* Balance Payment Option - Only show if user has SUFFICIENT balance */}
+                    {isAuthenticated && selectedProduct && userBalance >= selectedProduct.discountPrice && (
+                      <div 
+                        onClick={() => setPaymentMethod('balance')}
+                        className={`relative p-4 md:p-5 rounded-lg border-2 mb-3 cursor-pointer transition-all ${
+                          paymentMethod === 'balance'
+                            ? 'bg-green-900/20 border-green-500'
+                            : 'bg-[#12161D] border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        {paymentMethod === 'balance' && (
+                          <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <Check className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                        
+                        <div className="mb-3">
+                          <div className="text-base md:text-lg font-bold text-white mb-1 flex items-center gap-2">
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd"/>
+                            </svg>
+                            Bakiye ile Öde
+                          </div>
+                          <div className="inline-block px-2 py-0.5 rounded bg-green-500/20 text-[11px] text-green-400 font-semibold">
+                            Anında teslimat
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <div className="text-sm text-white/70">
+                            Mevcut Bakiye: <span className="font-bold text-green-400">{userBalance.toFixed(2)} ₺</span>
+                          </div>
+                          <div className="text-xs text-green-400 font-semibold">
+                            ✓ Yeterli bakiye
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Card Payment Option */}
+                    <div 
+                      onClick={() => setPaymentMethod('card')}
+                      className={`relative p-4 md:p-5 rounded-lg border-2 cursor-pointer transition-all ${
+                        paymentMethod === 'card'
+                          ? 'bg-blue-900/20 border-blue-500'
+                          : 'bg-[#12161D] border-white/10 hover:border-white/20'
+                      }`}
+                    >
+                      {paymentMethod === 'card' && (
+                        <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                      
+                      <div className="mb-3">
+                        <div className="text-base md:text-lg font-bold text-white mb-1">Kredi / Banka Kartı</div>
+                        <div className="inline-block px-2 py-0.5 rounded bg-white/10 text-[11px] text-white/70">
+                          Anında teslimat
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <img src="/uploads/cards/visa.svg" alt="VISA" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                        <span className="px-2 py-1 bg-white rounded text-blue-600 font-bold text-xs hidden">VISA</span>
+                        <img src="/uploads/cards/mastercard.svg" alt="Mastercard" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                        <span className="px-2 py-1 bg-white rounded text-red-600 font-bold text-xs hidden">MC</span>
+                        <img src="/uploads/cards/troy.svg" alt="Troy" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                        <span className="px-2 py-1 bg-white rounded text-blue-500 font-bold text-xs hidden">TROY</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedProduct && (
+                  <div className="p-5 md:p-8 space-y-6 md:space-y-8 bg-[#1a1e24]/95">
+                    <div>
+                      <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Ürün</Label>
+                      <div className="flex items-start gap-4">
+                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg flex items-center justify-center bg-[#12161D] overflow-hidden p-2">
+                          <img 
+                            src={selectedProduct.imageUrl || "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=100&h=100&fit=crop"}
+                            alt={selectedProduct.title}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              e.target.src = "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=100&h=100&fit=crop";
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-xl md:text-2xl font-bold text-white mb-2">{selectedProduct.title}</div>
+                          <div className="flex items-center gap-1.5 text-xs md:text-sm font-bold text-white mb-1">
+                            <RegionDisplay regionCode={selectedProduct.regionCode || 'TR'} size="lg" />
+                          </div>
+                          <div className="text-[11px] md:text-xs text-green-400">Bölgenizde kullanılabilir</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Fiyat detayları</Label>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center text-sm md:text-base">
+                          <span className="text-white/70">Orjinal Fiyat</span>
+                          <span className="text-white font-bold">₺ {selectedProduct.price.toFixed(2)}</span>
+                        </div>
+                        {selectedProduct.discountPrice < selectedProduct.price && (
+                          <div className="flex justify-between items-center text-sm md:text-base">
+                            <span className="text-green-400 font-semibold">Size Özel Fiyat</span>
+                            <span className="text-green-400 font-bold">₺ {selectedProduct.discountPrice.toFixed(2)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-5 border-t border-white/10">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-sm md:text-base text-white/70 uppercase">Ödenecek Tutar</span>
+                        <span className="text-2xl md:text-3xl font-black text-white">
+                          ₺ {selectedProduct.discountPrice.toFixed(2)}
+                        </span>
+                      </div>
+
+                      {/* Satış Koşulları Onayı */}
+                      <div className="flex items-start gap-2 mb-4">
+                        <input
+                          type="checkbox"
+                          id="termsCheckboxLol"
+                          checked={termsAccepted}
+                          onChange={(e) => setTermsAccepted(e.target.checked)}
+                          className="mt-1 w-4 h-4 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-blue-500/50 cursor-pointer"
+                        />
+                        <label htmlFor="termsCheckboxLol" className="text-xs text-white/50 cursor-pointer">
+                          <button 
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); setTermsModalOpen(true); }}
+                            className="text-blue-400 hover:text-blue-300 underline"
+                          >
+                            Satış koşullarını
+                          </button>
+                          {' '}okudum ve kabul ediyorum.
+                        </label>
+                      </div>
+
+                      <Button
+                        onClick={handleCheckout}
+                        disabled={orderProcessing || !termsAccepted}
+                        className={`w-full h-12 md:h-14 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg transition-all ${
+                          termsAccepted 
+                            ? 'bg-blue-600 hover:bg-blue-500' 
+                            : 'bg-gray-600 cursor-not-allowed opacity-60'
+                        }`}
+                      >
+                        {orderProcessing ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            İşleniyor...
+                          </>
+                        ) : (
+                          'Ödemeye Git'
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Terms Modal */}
-      <Dialog open={termsModalOpen} onOpenChange={setTermsModalOpen}>
-        <DialogContent className="bg-[#1e2229] border-white/10 text-white max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Satış Koşulları</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 text-sm text-white/80">
-            <p>1. League of Legends RP kodları Riot Games tarafından sağlanmaktadır.</p>
-            <p>2. Satın alınan kodlar iade edilemez.</p>
-            <p>3. Kodlar yalnızca belirtilen bölge için geçerlidir.</p>
-            <p>4. Teslimat ödeme onayından sonra anında yapılır.</p>
-            <p>5. Herhangi bir sorun yaşamanız durumunda destek ekibimizle iletişime geçebilirsiniz.</p>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        initialTab={authModalTab}
-        onSuccess={handleAuthSuccess}
-      />
-
-      {/* Phone Modal for Google Users */}
-      <Dialog open={phoneModalOpen} onOpenChange={setPhoneModalOpen}>
-        <DialogContent className="bg-[#1e2229] border-white/10 text-white max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Telefon Numaranızı Girin</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-white/60">Siparişleriniz hakkında sizi bilgilendirmemiz için telefon numaranıza ihtiyacımız var.</p>
-            <Input
-              type="tel"
-              placeholder="05XX XXX XX XX"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              className="bg-[#12151a] border-white/10 text-white"
+      <Dialog open={playerIdModalOpen} onOpenChange={setPlayerIdModalOpen}>
+        <DialogContent 
+          className="max-w-[90vw] md:max-w-md p-0 gap-0 border-0 rounded-lg overflow-hidden" 
+          style={{ 
+            backgroundColor: 'transparent',
+            backgroundImage: 'none'
+          }}
+        >
+          {/* PUBG Wallpaper - As first child with absolute positioning */}
+          <div className="absolute top-0 left-0 right-0 bottom-0 z-0">
+            <div 
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage: 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)',
+                filter: 'blur(6px)'
+              }}
             />
-            <Button
-              onClick={handleSavePhone}
-              disabled={phoneLoading}
-              className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold"
-            >
-              {phoneLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Kaydet'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Footer */}
-      <footer className="bg-[#0d1117] border-t border-white/5 mt-12">
-        <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              {siteSettings?.logo ? (
-                <img src={siteSettings.logo} alt="Logo" className="h-6" />
-              ) : (
-                <span className="text-lg font-bold text-white">{siteSettings?.siteName || 'PINLY'}</span>
-              )}
-            </div>
-            <p className="text-sm text-white/40">© 2025 {siteSettings?.siteName || 'PINLY'}. Tüm hakları saklıdır.</p>
+            <div className="absolute inset-0 bg-black/35" />
           </div>
           
-          {/* Payment Logos */}
-          <div className="mt-6 pt-6 border-t border-white/5">
-            <div className="flex justify-center">
-              <img 
-                src="/payment-logos.png" 
-                alt="iyzico ile güvenli ödeme - Visa, Mastercard, Troy" 
-                className="h-8 md:h-10 object-contain opacity-70 hover:opacity-100 transition-opacity"
-              />
+          {/* Content - relative z-10 to stay above background */}
+          <div className="relative z-10 bg-[#1e2229]/90 backdrop-blur-sm rounded-lg">
+            {playerIdError && (
+              <div className="px-5 py-3 bg-yellow-600 flex items-start gap-3 rounded-t-lg">
+                <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-red-600 font-bold text-sm">!</span>
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-white mb-0.5">Hata</div>
+                  <div className="text-sm text-white">{playerIdError}</div>
+                </div>
+              </div>
+            )}
+
+            <div className="px-6 py-5 border-b border-white/5">
+              <h2 className="text-lg font-bold text-white">Oyuncu ID</h2>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div>
+                <Label className="text-sm text-white/70 mb-2 block">Oyuncu ID'nizi girin</Label>
+                <Input
+                  placeholder="Oyuncu ID"
+                  value={playerId}
+                  onChange={(e) => {
+                    setPlayerId(e.target.value)
+                    setPlayerIdError('')
+                  }}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handlePlayerIdConfirm()
+                    }
+                  }}
+                  className="h-12 px-4 text-sm bg-[#12161D] text-white placeholder:text-white/40 border border-white/10 focus:border-blue-500 rounded"
+                  autoFocus
+                />
+              </div>
+
+              <Button
+                onClick={handlePlayerIdConfirm}
+                disabled={playerLoading}
+                className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base uppercase tracking-wide rounded-lg"
+              >
+                {playerLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Doğrulanıyor...
+                  </>
+                ) : (
+                  'Onayla'
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Plyr Style Footer */}
+      <footer className="mt-12 md:mt-16 bg-[#12151a] border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-8">
+            
+            {/* Column 1: Logo & Social */}
+            <div className="space-y-5">
+              {/* Logo */}
+              <div className="flex items-center gap-3">
+                {siteSettings?.logo ? (
+                  <img 
+                    src={siteSettings.logo} 
+                    alt={siteSettings?.siteName || 'Logo'} 
+                    className="h-10 w-auto object-contain"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-lg">UC</span>
+                  </div>
+                )}
+                {!siteSettings?.logo && (
+                  <span className="text-xl font-bold text-white">{siteSettings?.siteName || 'PINLY'}</span>
+                )}
+              </div>
+              
+              <p className="text-white/50 text-sm">
+                Güvenli ve hızlı UC satın alma platformu
+              </p>
+              
+              {/* Contact Info */}
+              {(siteSettings?.contactPhone || siteSettings?.contactEmail) && (
+                <div className="space-y-2 pt-2">
+                  {siteSettings?.contactPhone && (
+                    <a href={`tel:${siteSettings.contactPhone.replace(/\s/g, '')}`} className="flex items-center gap-2 text-white/50 hover:text-white text-sm transition-colors">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                      {siteSettings.contactPhone}
+                    </a>
+                  )}
+                  {siteSettings?.contactEmail && (
+                    <a href={`mailto:${siteSettings.contactEmail}`} className="flex items-center gap-2 text-white/50 hover:text-white text-sm transition-colors">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      {siteSettings.contactEmail}
+                    </a>
+                  )}
+                </div>
+              )}
+              
+              {/* Social Icons */}
+              <div className="flex items-center gap-3">
+                <a 
+                  href="#" 
+                  className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+                  title="Instagram"
+                >
+                  <svg className="w-5 h-5 text-white/60 hover:text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                  </svg>
+                </a>
+                <a 
+                  href="#" 
+                  className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+                  title="Twitter/X"
+                >
+                  <svg className="w-5 h-5 text-white/60 hover:text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+
+            {/* Column 2: Hızlı Erişim */}
+            <div>
+              <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-5">
+                Hızlı Erişim
+              </h3>
+              <ul className="space-y-3">
+                {(footerSettings?.quickLinks || [
+                  { label: 'Giriş Yap', action: 'login' },
+                  { label: 'Kayıt Ol', action: 'register' }
+                ]).map((link, index) => (
+                  <li key={index}>
+                    <button 
+                      onClick={() => {
+                        setAuthModalTab(link.action === 'login' ? 'login' : 'register');
+                        setAuthModalOpen(true);
+                      }}
+                      className="text-white/50 hover:text-white hover:underline text-sm transition-colors"
+                    >
+                      {link.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Column 3: Popüler Kategoriler */}
+            <div>
+              <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-5">
+                Popüler Kategoriler
+              </h3>
+              <ul className="space-y-3">
+                {(footerSettings?.categories || [{ label: 'PUBG UC', url: '/' }, { label: 'Valorant VP', url: '/valorant' }, { label: 'MLBB Diamonds', url: '/mlbb' }]).map((cat, index) => (
+                  <li key={index}>
+                    <a 
+                      href={cat.url} 
+                      className="text-white/50 hover:text-white hover:underline text-sm transition-colors"
+                    >
+                      {cat.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Column 4: Kurumsal/Künye */}
+            <div>
+              <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-5">
+                Kurumsal/Künye
+              </h3>
+              <ul className="space-y-3">
+                {(footerSettings?.corporateLinks || []).length > 0 ? (
+                  footerSettings.corporateLinks.map((link, index) => (
+                    <li key={index}>
+                      <a 
+                        href={`/legal/${link.slug}`} 
+                        className="text-white/50 hover:text-white hover:underline text-sm transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ))
+                ) : (
+                  // Fallback if no footer settings
+                  <>
+                    <li><a href="/legal/hizmet-sartlari" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Hizmet Şartları</a></li>
+                    <li><a href="/legal/kullanici-sozlesmesi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Kullanıcı Sözleşmesi</a></li>
+                    <li><a href="/legal/acceptable-use-conduct-policy" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Kullanım Politikası ve Davranış İlkeleri</a></li>
+                    <li><a href="/legal/gizlilik-politikasi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Gizlilik Politikası</a></li>
+                    <li><a href="/legal/cookie-policy" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Çerez Politikası</a></li>
+                    <li><a href="/legal/kvkk" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">KVKK Aydınlatma Metni</a></li>
+                    <li><a href="/legal/iade-politikasi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">İade Politikası</a></li>
+                    <li><a href="/legal/kara-para" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Kara Paranın Aklanmasının Önlenmesi Politikası</a></li>
+                    <li><a href="/legal/legal-disclaimer" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Yasal Bildirim ve Sorumluluk Reddi</a></li>
+                    <li><a href="/legal/about-us" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Hakkımızda</a></li>
+                    <li><a href="/legal/contact" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">İletişim</a></li>
+                  </>
+                )}
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="mt-12 pt-8 border-t border-white/10">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-white/30 text-sm">
+                © 2026 {siteSettings?.siteName || 'PINLY'}. Tüm hakları saklıdır.
+              </p>
+              
+              {/* Payment Method Logos - iyzico */}
+              <div className="flex items-center justify-center">
+                <img 
+                  src="/payment-logos.png" 
+                  alt="iyzico, Mastercard, Visa, American Express, Troy"
+                  className="h-8 md:h-10 w-auto object-contain opacity-80"
+                />
+              </div>
+              
+              <p className="text-white/20 text-xs text-center md:text-right">
+                PINLY üzerinden oyun içi kodlar ve dijital pinler anında teslim edilir.
+              </p>
             </div>
           </div>
         </div>
       </footer>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        open={authModalOpen} 
+        onClose={() => setAuthModalOpen(false)}
+        onSuccess={handleAuthSuccess}
+        defaultTab={authModalTab}
+      />
+
+      {/* Phone Number Modal for Google Users */}
+      <Dialog open={phoneModalOpen} onOpenChange={setPhoneModalOpen}>
+        <DialogContent className="sm:max-w-md bg-gray-900 border-gray-700 text-white">
+          <div className="space-y-4">
+            <div className="text-center">
+              <h2 className="text-xl font-bold mb-2">Telefon Numarası Gerekli</h2>
+              <p className="text-sm text-gray-400">
+                Siparişleriniz için telefon numaranıza ihtiyacımız var
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-gray-300">Telefon Numarası *</Label>
+              <Input
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="5551234567"
+                className="bg-gray-800 border-gray-700 text-white"
+              />
+            </div>
+            
+            <Button
+              onClick={handleSavePhone}
+              disabled={phoneLoading}
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+            >
+              {phoneLoading ? 'Kaydediliyor...' : 'Onayla ve Devam Et'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Satış Koşulları Modal */}
+      <Dialog open={termsModalOpen} onOpenChange={setTermsModalOpen}>
+        <DialogContent className="max-w-[95vw] md:max-w-2xl max-h-[80vh] overflow-y-auto bg-[#1a1f2e] border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-white">Satış Koşulları ve Kullanım Şartları</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 text-sm text-white/70 leading-relaxed">
+            <section>
+              <h3 className="text-white font-semibold mb-2">1. Genel Hükümler</h3>
+              <p>Bu satış koşulları, PINLY platformu üzerinden gerçekleştirilen tüm dijital ürün satışlarını kapsamaktadır. Satın alma işlemi gerçekleştirerek bu koşulları kabul etmiş sayılırsınız.</p>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">2. Ürün Tanımları ve Özel Koşullar</h3>
+              <p>Platformumuzda satışa sunulan ürünler farklı kategorilerde olabilir:</p>
+              <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
+                <li><strong className="text-white">Standart VP Paketleri:</strong> Belirtilen miktarda VP içerir.</li>
+                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele VP miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, düşük veya yüksek miktarda VP çıkabilir. Bu tür ürünlerde çıkan VP miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">3. İade ve İptal Politikası</h3>
+              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan VP miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">4. Sorumluluk Reddi</h3>
+              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan VP miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">5. Onay ve Kabul</h3>
+              <p>Bu koşulları onaylayarak, yukarıda belirtilen tüm maddeleri okuduğunuzu, anladığınızı ve kabul ettiğinizi beyan etmiş olursunuz. Şans paketleri dahil tüm ürünlerin özelliklerinden haberdar olduğunuzu teyit edersiniz.</p>
+            </section>
+
+            <div className="pt-4 border-t border-white/10 text-xs text-white/40">
+              <p>Son güncelleme: {new Date().toLocaleDateString('tr-TR')}</p>
+              <p>Bu koşullar PINLY tarafından önceden haber verilmeksizin güncellenebilir.</p>
+            </div>
+
+            <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <h4 className="text-yellow-400 font-semibold text-sm mb-2">⚠️ Yasal Uyarı</h4>
+              <p className="text-white/60 text-xs leading-relaxed">
+                İşbu satış koşullarını okuyarak ve onay kutusunu işaretleyerek, tüm maddeleri kabul ettiğinizi hukuken beyan etmiş bulunmaktasınız. Bu onay sonrasında, satış koşullarında belirtilen hususlara ilişkin şikayet, itiraz veya iade talep hakkınız bulunmamaktadır.
+              </p>
+              <p className="text-white/60 text-xs leading-relaxed mt-2">
+                <strong className="text-white/70">PINLY LIMITED</strong> şirketimiz, sosyal medya platformları, tüketici şikayet siteleri veya diğer kamuya açık mecralarda şirketimizi, markamızı veya hizmetlerimizi karalayıcı, hakaret içeren, iftira niteliğinde veya ticari itibarımızı zedeleyici nitelikteki her türlü paylaşım, yorum ve içeriğe karşı yasal haklarını saklı tutmaktadır.
+              </p>
+              <p className="text-white/60 text-xs leading-relaxed mt-2">
+                Bu tür eylemlerin tespiti halinde, <strong className="text-white/70">Türk Ceza Kanunu</strong> ve <strong className="text-white/70">Türk Borçlar Kanunu</strong> kapsamında hukuk müşavirlerimiz aracılığıyla maddi ve manevi tazminat davaları dahil olmak üzere gerekli tüm yasal işlemler başlatılacaktır.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              onClick={() => {
+                setTermsAccepted(true);
+                setTermsModalOpen(false);
+              }}
+              className="bg-blue-600 hover:bg-blue-500 text-white"
+            >
+              Okudum, Kabul Ediyorum
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

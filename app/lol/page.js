@@ -1436,54 +1436,60 @@ export default function LoLPage() {
                 <p className="text-white/60 text-sm">League of Legends RP paketleri çok yakında eklenecek!</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4">
                 {products.map(product => (
                   <div 
                     key={product.id}
                     onClick={() => handleProductSelect(product)}
-                    className="group bg-gradient-to-b from-[#1e2229] to-[#1a1d22] rounded-xl overflow-hidden cursor-pointer hover:ring-2 hover:ring-yellow-500/50 transition-all duration-200 border border-white/5 hover:border-yellow-500/30"
+                    className={`product-card-glow group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border ${product.featured ? 'border-yellow-500/50 ring-2 ring-yellow-500/30' : 'border-white/10'} hover:border-white/20 w-full aspect-[2/3.8] md:aspect-[2/3]`}
+                    style={{ backgroundColor: '#252a34', maxWidth: '270px', margin: '0 auto' }}
                   >
-                    {/* Product Image */}
-                    <div className="relative h-24 md:h-28 bg-gradient-to-br from-yellow-600/20 to-cyan-600/20 flex items-center justify-center overflow-hidden">
-                      {product.imageUrl ? (
-                        <img 
-                          src={product.imageUrl} 
-                          alt={product.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="text-4xl">⚔️</div>
-                      )}
-                      {product.discountPercent > 0 && (
-                        <div className="absolute top-2 right-2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg">
-                          %{product.discountPercent} İNDİRİM
-                        </div>
-                      )}
-                      {product.featured && (
-                        <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg flex items-center gap-1">
-                          <Star className="w-3 h-3" fill="currentColor" />
-                          ÖNE ÇIKAN
-                        </div>
-                      )}
-                    </div>
+                    {/* En Çok Tercih Edilen Badge */}
+                    {product.featured && (
+                      <div className="absolute top-0 left-0 right-0 z-30 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white text-[10px] md:text-[11px] font-bold py-1 px-2 text-center shadow-lg">
+                        ⭐ EN ÇOK TERCİH EDİLEN
+                      </div>
+                    )}
                     
-                    {/* Product Info */}
-                    <div className="p-3 md:p-4">
-                      <h3 className="text-sm md:text-base font-bold text-white mb-2 group-hover:text-yellow-400 transition-colors">
-                        {product.title}
-                      </h3>
-                      
-                      <div className="flex items-center justify-between">
-                        <div>
-                          {product.discountPercent > 0 && (
-                            <span className="text-xs text-white/40 line-through mr-2">
-                              {product.price.toFixed(2)} ₺
-                            </span>
-                          )}
-                          <span className="text-base md:text-lg font-bold text-yellow-400">
-                            {product.discountPrice.toFixed(2)} ₺
-                          </span>
+                    {/* Info Icon */}
+                    <div className={`absolute ${product.featured ? 'top-8' : 'top-2'} right-2 w-6 h-6 md:w-5 md:h-5 rounded-full bg-white/90 flex items-center justify-center z-20`}>
+                      <span className="text-gray-700 font-bold text-xs md:text-xs">i</span>
+                    </div>
+
+                    {/* Image Section */}
+                    <div className="relative h-[42%] md:h-[55%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-2 md:p-4">
+                      {/* Flare Effect - PLYR Style */}
+                      <div className="go-product-shine">
+                        <div className="go-product-shine-overlay"></div>
+                        <img className="go-flare" src="/flare.png" alt="" />
+                      </div>
+                      <img 
+                        src={product.imageUrl || "https://images.contentstack.io/v3/assets/blt731acb42bb3d1659/bltf8be62f1eb58b34c/5ef1134fa8a14a6c8c81b71e/LOL_PROMOART_14.jpg"}
+                        alt={product.title}
+                        className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105 relative z-10"
+                        onError={(e) => {
+                          e.target.src = "https://images.contentstack.io/v3/assets/blt731acb42bb3d1659/bltf8be62f1eb58b34c/5ef1134fa8a14a6c8c81b71e/LOL_PROMOART_14.jpg";
+                        }}
+                      />
+                    </div>
+
+                    {/* Content Section */}
+                    <div className="h-[58%] md:h-[45%] flex flex-col justify-between p-2.5 md:p-3.5">
+                      <div>
+                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.rpAmount || product.ucAmount} RP</div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>
+                        <div className="text-[9px] md:text-[9px] text-emerald-400 mt-0.5">Bölgenizde kullanılabilir</div>
+                      </div>
+                      <div className="mt-1">
+                        {product.discountPrice < product.price && (
+                          <div className="text-[11px] md:text-[9px] text-red-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
+                        )}
+                        <div className="text-[18px] md:text-[15px] font-bold text-white">₺ {product.discountPrice.toFixed(2).replace('.', ',')}</div>
+                        {product.discountPercent > 0 && (
+                          <div className="text-[10px] md:text-[11px] text-emerald-400 font-medium">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
+                        )}
                       </div>
                     </div>
                   </div>

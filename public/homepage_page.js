@@ -25,13 +25,13 @@ function BannerIcon({ icon, size }) {
   };
 
   const colors = {
-    fire: { from: 'from-orange-500/20', to: 'to-yellow-500/20', border: 'border-orange-500/30', text: 'text-orange-500', shadow: 'shadow-orange-500/10' },
+    fire: { from: 'from-orange-500/20', to: 'to-red-500/20', border: 'border-orange-500/30', text: 'text-orange-500', shadow: 'shadow-orange-500/10' },
     bolt: { from: 'from-yellow-500/20', to: 'to-amber-500/20', border: 'border-yellow-500/30', text: 'text-yellow-500', shadow: 'shadow-yellow-500/10' },
     star: { from: 'from-yellow-500/20', to: 'to-amber-500/20', border: 'border-yellow-500/30', text: 'text-yellow-500', shadow: 'shadow-yellow-500/10' },
     gift: { from: 'from-pink-500/20', to: 'to-rose-500/20', border: 'border-pink-500/30', text: 'text-pink-500', shadow: 'shadow-pink-500/10' },
     sparkles: { from: 'from-purple-500/20', to: 'to-violet-500/20', border: 'border-purple-500/30', text: 'text-purple-500', shadow: 'shadow-purple-500/10' },
     tag: { from: 'from-green-500/20', to: 'to-emerald-500/20', border: 'border-green-500/30', text: 'text-green-500', shadow: 'shadow-green-500/10' },
-    percent: { from: 'from-yellow-500/20', to: 'to-rose-500/20', border: 'border-yellow-500/30', text: 'text-yellow-500', shadow: 'shadow-red-500/10' },
+    percent: { from: 'from-red-500/20', to: 'to-rose-500/20', border: 'border-red-500/30', text: 'text-red-500', shadow: 'shadow-red-500/10' },
     clock: { from: 'from-blue-500/20', to: 'to-cyan-500/20', border: 'border-blue-500/30', text: 'text-blue-500', shadow: 'shadow-blue-500/10' },
   };
 
@@ -58,13 +58,7 @@ function BannerIcon({ icon, size }) {
   );
 }
 
-export default function LolPage() {
-  // 🎮 VALORANT PAGE CONFIGURATION
-  const GAME_TYPE = 'lol'
-  const GAME_NAME = 'League of Legends'
-  const CURRENCY_NAME = 'RP'
-  const THEME_COLOR = 'yellow' // League of Legends sarı teması
-  
+export default function App() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -144,12 +138,12 @@ export default function LolPage() {
         }
       }
       
-      // TEK API ÇAĞRISI - Tüm veriler
-      const response = await fetch('/api/homepage?game=lol')
+      // TEK API ÇAĞRISI - Tüm veriler (sadece PUBG ürünleri)
+      const response = await fetch('/api/homepage?game=pubg')
       const data = await response.json()
       
       if (data.success) {
-        const { products, siteSettings, footerSettings, seoSettings, regions, gameContent, reviews } = data.data
+        const { products, accounts, siteSettings, footerSettings, seoSettings, regions, gameContent, reviews } = data.data
         
         // State'leri güncelle
         setProducts(products || [])
@@ -263,26 +257,22 @@ export default function LolPage() {
     const productParam = urlParams.get('product');
     
     if (productParam) {
-      // Find product by slug (e.g., "375vp", "825vp", "1700vp")
+      // Find product by slug (e.g., "60uc", "325uc", "660uc")
       const slug = productParam.toLowerCase().replace('-', '');
       
-      // Try to match by RP amount in title
-      const rpAmount = parseInt(slug.replace('vp', '').replace('uc', ''));
+      // Try to match by UC amount in title
+      const ucAmount = parseInt(slug.replace('uc', ''));
       
       let matchedProduct = null;
       
-      if (!isNaN(rpAmount)) {
-        // Find product that contains the RP amount in title or rpAmount field
+      if (!isNaN(ucAmount)) {
+        // Find product that contains the UC amount in title
         matchedProduct = products.find(p => {
-          // Check rpAmount field first
-          if (p.rpAmount && parseInt(p.rpAmount) === rpAmount) {
-            return true;
-          }
-          // Check title
           const title = p.title.toLowerCase();
-          const matches = title.match(/(\d+)\s*vp/i);
+          // Match patterns like "60 UC", "325 UC", "660 UC Yükleme Şansı"
+          const matches = title.match(/(\d+)\s*uc/i);
           if (matches) {
-            return parseInt(matches[1]) === rpAmount;
+            return parseInt(matches[1]) === ucAmount;
           }
           return false;
         });
@@ -678,11 +668,10 @@ export default function LolPage() {
     setPlayerValid(null)
     setTermsAccepted(true) // Terms pre-accepted for new product
     
-    // Update URL with product parameter for Google Ads tracking (RP için)
-    const rpAmount = product.title.match(/(\d+)\s*VP/i) || product.rpAmount;
-    if (rpAmount) {
-      const amount = typeof rpAmount === 'object' ? rpAmount[1] : (product.rpAmount || product.ucAmount);
-      const productSlug = amount + 'vp';
+    // Update URL with product parameter for Google Ads tracking
+    const ucAmount = product.title.match(/(\d+)\s*UC/i);
+    if (ucAmount) {
+      const productSlug = ucAmount[1] + 'uc';
       window.history.pushState({}, '', `?product=${productSlug}`);
     }
     
@@ -707,9 +696,14 @@ export default function LolPage() {
   }
 
   const handleCheckout = async () => {
-    // League of Legends için Oyuncu ID kontrolü yok - direkt kod teslimi
+    // 1. Check player ID first
+    if (!playerValid || !playerName) {
+      setPlayerIdModalOpen(true)
+      setPlayerIdError('')
+      return
+    }
 
-    // 1. Check authentication
+    // 2. Check authentication
     const token = localStorage.getItem('userToken')
     if (!token) {
       // Open auth modal instead of just showing toast
@@ -719,7 +713,7 @@ export default function LolPage() {
       return
     }
 
-    // 2. Check balance if payment method is balance
+    // 3. Check balance if payment method is balance
     if (paymentMethod === 'balance') {
       if (userBalance < selectedProduct.discountPrice) {
         toast.error(`Yetersiz bakiye. Eksik: ${(selectedProduct.discountPrice - userBalance).toFixed(2)} ₺`)
@@ -750,10 +744,9 @@ export default function LolPage() {
         },
         body: JSON.stringify({
           productId: selectedProduct.id,
-          playerId: 'lol-direct', // Valorant için oyuncu ID gerekmiyor
-          playerName: 'League of Legends RP',
+          playerId,
+          playerName,
           paymentMethod: paymentMethod, // 'card' or 'balance'
-          game: GAME_TYPE, // 'valorant'
           termsAccepted: termsAccepted,
           termsAcceptedAt: new Date().toISOString()
         })
@@ -920,7 +913,7 @@ export default function LolPage() {
         <div className="space-y-2">
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
-            <span className="text-sm text-white/70 group-hover:text-white transition-colors">League of Legends</span>
+            <span className="text-sm text-white/70 group-hover:text-white transition-colors">PUBG Mobile</span>
           </label>
         </div>
       </div>
@@ -928,14 +921,19 @@ export default function LolPage() {
       <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
         <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Bölge</h3>
         <div className="space-y-2">
-          {/* League of Legends için sadece Türkiye bölgesi */}
-          <label className="flex items-center gap-2 cursor-pointer group">
-            <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
-            <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
-              <img src="https://flagcdn.com/w40/tr.png" alt="Türkiye" className="w-5 h-4 object-cover rounded-sm" />
-              Türkiye
-            </span>
-          </label>
+          {regions.map(region => (
+            <label key={region.code} className="flex items-center gap-2 cursor-pointer group">
+              <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
+              <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
+                {region.flagImageUrl ? (
+                  <img src={region.flagImageUrl} alt={region.name} className="w-5 h-4 object-cover rounded-sm" />
+                ) : (
+                  <span>{region.flag || '🌍'}</span>
+                )}
+                {region.name}
+              </span>
+            </label>
+          ))}
         </div>
       </div>
     </div>
@@ -1066,7 +1064,7 @@ export default function LolPage() {
                       )}
                       <button 
                         onClick={handleLogout}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-yellow-400 hover:text-red-300 hover:bg-white/5 rounded-md transition-colors w-full text-left"
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-white/5 rounded-md transition-colors w-full text-left"
                       >
                         🚪 Çıkış Yap
                       </button>
@@ -1101,7 +1099,6 @@ export default function LolPage() {
         </div>
       </header>
 
-      {/* Trust Bar */}
       {/* Mobile Trust Badges */}
       <div className="md:hidden bg-[#12151a] border-b border-white/5">
         <div className="flex items-center justify-center gap-3 px-4 py-2 overflow-x-auto scrollbar-hide">
@@ -1157,7 +1154,7 @@ export default function LolPage() {
                     className="fixed inset-0 z-40" 
                     onClick={() => setCategoryDropdownOpen(false)}
                   />
-                  <div className="absolute left-0 top-full mt-2 w-64 bg-[#1a1f2e] rounded-xl shadow-2xl border border-white/10 z-50">
+                  <div className="absolute left-0 top-full mt-2 w-64 bg-[#1a1f2e] rounded-xl shadow-2xl border border-white/10 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                     {/* User Actions */}
                     <div className="p-2 border-b border-white/10">
                       <a href="/account/orders" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
@@ -1173,11 +1170,11 @@ export default function LolPage() {
                     {/* Game Categories */}
                     <div className="p-2">
                       <p className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-white/40 font-medium">Oyun Kategorileri</p>
-                      <a href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                      <a href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors bg-white/5">
                         <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                           <img src="/pubg-logo.png" alt="PUBG" className="w-6 h-6 object-contain" />
                         </div>
-                        <span className="text-sm text-white/90">Pubg Mobile</span>
+                        <span className="text-sm text-yellow-400">Pubg Mobile</span>
                       </a>
                       <a href="/valorant" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
                         <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
@@ -1191,11 +1188,11 @@ export default function LolPage() {
                         </div>
                         <span className="text-sm text-white/90">Mobile Legends</span>
                       </a>
-                      <a href="/lol" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors bg-white/5">
+                      <a href="/lol" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
                         <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                           <img src="/lol-logo.png" alt="League of Legends" className="w-6 h-6 object-contain" />
                         </div>
-                        <span className="text-sm text-yellow-400">League of Legends</span>
+                        <span className="text-sm text-white/90">League of Legends</span>
                       </a>
                     </div>
                   </div>
@@ -1206,12 +1203,12 @@ export default function LolPage() {
             {/* Game Categories - Horizontal */}
             <a 
               href="/" 
-              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/20 flex-shrink-0 group"
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/30 ring-1 ring-yellow-500/30 flex-shrink-0 group"
             >
               <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                 <img src="/pubg-logo.png" alt="PUBG" className="w-6 h-6 md:w-7 md:h-7 object-contain" />
               </div>
-              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-yellow-400 transition-colors whitespace-nowrap">Pubg Mobile</span>
+              <span className="text-xs md:text-sm font-medium text-yellow-400 whitespace-nowrap">Pubg Mobile</span>
             </a>
 
             <a 
@@ -1234,15 +1231,15 @@ export default function LolPage() {
               <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-blue-400 transition-colors whitespace-nowrap">Mobile Legends</span>
             </a>
 
-            {/* League of Legends - Active */}
+            {/* League of Legends */}
             <a 
               href="/lol" 
-              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/30 ring-1 ring-yellow-500/30 flex-shrink-0 group"
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/20 flex-shrink-0 group"
             >
               <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                 <img src="/lol-logo.png" alt="League of Legends" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
               </div>
-              <span className="text-xs md:text-sm font-medium text-yellow-400 whitespace-nowrap">League of Legends</span>
+              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-yellow-400 transition-colors whitespace-nowrap">League of Legends</span>
             </a>
           </div>
         </div>
@@ -1252,11 +1249,9 @@ export default function LolPage() {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: siteSettings?.lolHeroImage 
-              ? `url(${siteSettings.lolHeroImage})`
-              : siteSettings?.heroImage 
-                ? `url(${siteSettings.heroImage})`
-                : 'url(https://images.contentstack.io/v3/assets/blt731acb42bb3d1659/bltf8be62f1eb58b34c/5ef1134fa8a14a6c8c81b71e/LOL_PROMOART_14.jpg)'
+            backgroundImage: siteSettings?.heroImage 
+              ? `url(${siteSettings.heroImage})`
+              : 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)'
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-[#1a1a1a]" />
@@ -1280,7 +1275,7 @@ export default function LolPage() {
             )}
             <div>
               <div className="text-xs md:text-sm text-white/60 mb-0.5 md:mb-1">Anasayfa &gt; Oyunlar</div>
-              <h1 className="text-xl md:text-[28px] font-bold text-white">League of Legends</h1>
+              <h1 className="text-xl md:text-[28px] font-bold text-white">PUBG Mobile</h1>
               <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
                 <span className="text-yellow-400 text-xs md:text-sm">★★★★★ 5/5</span>
                 <span className="text-white/70 text-xs md:text-sm">(2008) yorum</span>
@@ -1348,7 +1343,7 @@ export default function LolPage() {
                     className={`flex items-center gap-1 md:gap-1.5 font-mono text-lg md:text-xl lg:text-2xl font-bold tracking-wider transition-colors duration-500 ${
                       countdown.hours === 0 && countdown.minutes < 10
                         ? countdown.minutes < 5
-                          ? 'text-yellow-400'
+                          ? 'text-red-400'
                           : 'text-orange-400'
                         : 'text-cyan-400'
                     }`}
@@ -1365,7 +1360,7 @@ export default function LolPage() {
                       <div className={`px-2 py-1 md:px-2.5 md:py-1.5 rounded-md bg-black/40 border ${
                         countdown.hours === 0 && countdown.minutes < 10
                           ? countdown.minutes < 5
-                            ? 'border-yellow-500/40'
+                            ? 'border-red-500/40'
                             : 'border-orange-500/40'
                           : 'border-cyan-500/30'
                       }`}>
@@ -1379,7 +1374,7 @@ export default function LolPage() {
                     <span className={`animate-pulse ${
                       countdown.hours === 0 && countdown.minutes < 10
                         ? countdown.minutes < 5
-                          ? 'text-yellow-400'
+                          ? 'text-red-400'
                           : 'text-orange-400'
                         : 'text-cyan-400/80'
                     }`}>:</span>
@@ -1389,7 +1384,7 @@ export default function LolPage() {
                       <div className={`px-2 py-1 md:px-2.5 md:py-1.5 rounded-md bg-black/40 border ${
                         countdown.hours === 0 && countdown.minutes < 10
                           ? countdown.minutes < 5
-                            ? 'border-yellow-500/40'
+                            ? 'border-red-500/40'
                             : 'border-orange-500/40'
                           : 'border-cyan-500/30'
                       }`}>
@@ -1403,7 +1398,7 @@ export default function LolPage() {
                     <span className={`animate-pulse ${
                       countdown.hours === 0 && countdown.minutes < 10
                         ? countdown.minutes < 5
-                          ? 'text-yellow-400'
+                          ? 'text-red-400'
                           : 'text-orange-400'
                         : 'text-cyan-400/80'
                     }`}>:</span>
@@ -1413,7 +1408,7 @@ export default function LolPage() {
                       <div className={`px-2 py-1 md:px-2.5 md:py-1.5 rounded-md bg-black/40 border ${
                         countdown.hours === 0 && countdown.minutes < 10
                           ? countdown.minutes < 5
-                            ? 'border-yellow-500/40'
+                            ? 'border-red-500/40'
                             : 'border-orange-500/40'
                           : 'border-cyan-500/30'
                       }`}>
@@ -1484,15 +1479,15 @@ export default function LolPage() {
                       <span className="text-gray-700 font-bold text-xs md:text-xs">i</span>
                     </div>
 
-                    {/* Image Section - LoL Theme */}
-                    <div className="relative h-[42%] md:h-[55%] bg-gradient-to-br from-[#1a1a3e] via-[#2d1f4e] to-[#1a1a3e] flex items-center justify-center p-2 md:p-4 overflow-hidden">
+                    {/* Image Section - PUBG Theme */}
+                    <div className="relative h-[42%] md:h-[55%] bg-gradient-to-br from-[#2a2a1a] via-[#3d3a1a] to-[#2a2a1a] flex items-center justify-center p-2 md:p-4 overflow-hidden">
                       {/* Background Logo Pattern */}
                       <div className="absolute inset-0 flex items-center justify-center opacity-10">
-                        <img src="/lol-logo.png" alt="" className="w-32 h-32 object-contain" />
+                        <img src="/pubg-logo.png" alt="" className="w-32 h-32 object-contain" />
                       </div>
                       {/* Decorative Glow */}
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 bg-blue-500/20 rounded-full blur-2xl"></div>
-                      <div className="absolute bottom-0 left-1/4 w-24 h-12 bg-purple-500/15 rounded-full blur-xl"></div>
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 bg-yellow-500/20 rounded-full blur-2xl"></div>
+                      <div className="absolute bottom-0 left-1/4 w-24 h-12 bg-orange-500/15 rounded-full blur-xl"></div>
                       {/* Flare Effect */}
                       <div className="go-product-shine">
                         <div className="go-product-shine-overlay"></div>
@@ -1511,7 +1506,8 @@ export default function LolPage() {
                     {/* Content Section */}
                     <div className="h-[58%] md:h-[45%] flex flex-col justify-between p-2.5 md:p-3.5">
                       <div>
-                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.rpAmount || product.ucAmount} RP</div>
+                        <div className="text-[10px] md:text-[10px] text-white/60 font-bold uppercase">MOBİLE</div>
+                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.ucAmount} UC</div>
                         <div className="flex items-center gap-1 mt-0.5">
                           <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>
@@ -1519,7 +1515,7 @@ export default function LolPage() {
                       </div>
                       <div className="mt-1">
                         {product.discountPrice < product.price && (
-                          <div className="text-[11px] md:text-[9px] text-yellow-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
+                          <div className="text-[11px] md:text-[9px] text-red-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
                         )}
                         <div className="text-[18px] md:text-[15px] font-bold text-white">₺ {product.discountPrice.toFixed(2).replace('.', ',')}</div>
                         {product.discountPercent > 0 && (
@@ -1602,111 +1598,91 @@ export default function LolPage() {
           <div className="p-6">
             {activeInfoTab === 'description' && (
               <div className="prose prose-invert max-w-none">
-                {/* League of Legends için özel açıklama - gameContent kullanılmıyor */}
-                <div className="space-y-6">
-                  {/* Ana Açıklama */}
-                  <div>
-                    <h3 className="text-lg font-bold text-white mb-3">League of Legends: Oynanış, Tarihçe ve Sistem Gereksinimleri</h3>
-                    <div className={`text-white/80 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 ${!descriptionExpanded ? 'max-h-32 overflow-hidden' : ''}`}>
-                      <p className="mb-4">League of Legends, Riot Games tarafından geliştirilen ve 2009 yılında piyasaya sürülen ücretsiz MOBA türündeki dünyanın en popüler oyunudur. Oyun, Dota ve diğer strateji oyunlarının mekaniklerini birleştirerek benzersiz bir deneyim sunar.</p>
+                {gameContent ? (
+                  <div className="space-y-6">
+                    {/* Main Description with Show More/Less */}
+                    <div className="relative">
+                      <div 
+                        className={`text-white/80 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 ${
+                          !descriptionExpanded ? 'max-h-32 overflow-hidden' : ''
+                        }`}
+                        dangerouslySetInnerHTML={{ __html: gameContent.description }}
+                      />
                       
-                      <p className="mb-4">5v5 formatında oynanan League of Legends'ta, oyuncular farklı yeteneklere sahip ""Şampiyon" karakterlerini seçer. Her şampiyonun kendine özgü 4 yeteneği vardır: bir imza yeteneği, iki satın alınabilir yetenek ve bir ultimate yeteneği.</p>
-                      
-                      <p className="mb-4">Riot Points (RP), oyun içi premium para birimidir. RP ile şunları satın alabilirsiniz:</p>
-                      <ul className="list-disc list-inside mb-4 space-y-1">
-                        <li>Silah skinleri ve koleksiyonları</li>
-                        <li>Battle Pass ve Premium Battle Pass</li>
-                        <li>Ajan kostümleri ve aksesuarları</li>
-                        <li>Radianite Points (skin yükseltmeleri için)</li>
-                        <li>Spray'ler, kartlar ve başlıklar</li>
-                      </ul>
-                      
-                      <p className="font-semibold text-white mb-2">Sistem Gereksinimleri (Minimum):</p>
-                      <ul className="list-disc list-inside mb-4 space-y-1">
-                        <li>İşletim Sistemi: Windows 7/8/10 64-bit</li>
-                        <li>RAM: 4 GB</li>
-                        <li>VRAM: 1 GB</li>
-                        <li>İşlemci: Intel Core 2 Duo E8400</li>
-                      </ul>
+                      {/* Gradient overlay when collapsed */}
+                      {!descriptionExpanded && gameContent.description?.length > 300 && (
+                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#1e2229] to-transparent" />
+                      )}
                     </div>
-                  </div>
 
-                  {/* Show More/Less Button */}
-                  <button
-                    onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                    className="flex items-center gap-2 text-yellow-400 hover:text-red-300 text-sm font-medium transition-colors"
-                  >
-                    {descriptionExpanded ? (
-                      <>
-                        <ChevronUp className="w-4 h-4" />
-                        Daha az göster
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown className="w-4 h-4" />
-                        Devamını göster
-                      </>
+                    {/* Show More/Less Button */}
+                    {gameContent.description?.length > 300 && (
+                      <button
+                        onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                        className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+                      >
+                        {descriptionExpanded ? (
+                          <>
+                            <ChevronUp className="w-4 h-4" />
+                            Daha az göster
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-4 h-4" />
+                            Devamını göster
+                          </>
+                        )}
+                      </button>
                     )}
-                  </button>
 
-                  {/* RP Paketleri */}
-                  <div className="mt-8">
-                    <h3 className="text-lg font-bold text-white mb-4">RP Paketleri</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                      {[
-                        { amount: '460 RP' },
-                        { amount: '1005 RP' },
-                        { amount: '2105 RP' },
-                        { amount: '3625 RP' },
-                        { amount: '5295 RP' },
-                        { amount: '10875 RP' }
-                      ].map((pkg, idx) => (
-                        <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
-                          <div className="text-yellow-400 font-bold text-lg">{pkg.amount}</div>
+                    {/* UC Packages Info */}
+                    {gameContent.ucPackages && gameContent.ucPackages.length > 0 && (
+                      <div className="mt-8">
+                        <h3 className="text-lg font-bold text-white mb-4">UC Paketleri</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                          {gameContent.ucPackages.map((pkg, idx) => (
+                            <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
+                              <div className="text-yellow-400 font-bold text-lg">{pkg.amount}</div>
+                              <div className="text-white/50 text-xs">{pkg.description}</div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                      </div>
+                    )}
 
-                  {/* Özellikler */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                    <div className="bg-[#282d36] rounded-lg p-4">
-                      <h4 className="text-white font-medium mb-2">🚀 Anında Teslimat</h4>
-                      <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra RP kodunuz anında iletilir ve siparişleriniz bölümünde görüntülenir.</p>
-                    </div>
-                    <div className="bg-[#282d36] rounded-lg p-4">
-                      <h4 className="text-white font-medium mb-2">🔒 Güvenli Ödeme</h4>
-                      <p className="text-white/60 text-sm">256-bit SSL şifreleme ile tüm ödemeleriniz güvende.</p>
-                    </div>
-                    <div className="bg-[#282d36] rounded-lg p-4">
-                      <h4 className="text-white font-medium mb-2">💳 Kolay Kullanım</h4>
-                      <p className="text-white/60 text-sm">Aldığınız RP kodunu League of Legends mağazasında kullanabilirsiniz.</p>
-                    </div>
-                    <div className="bg-[#282d36] rounded-lg p-4">
-                      <h4 className="text-white font-medium mb-2">📞 7/24 Destek</h4>
-                      <p className="text-white/60 text-sm">Herhangi bir sorun yaşarsanız destek ekibimiz size yardımcı olacaktır.</p>
-                    </div>
+                    {/* FAQ Section */}
+                    {gameContent.faq && gameContent.faq.length > 0 && (
+                      <div className="mt-8">
+                        <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
+                        <div className="space-y-3">
+                          {gameContent.faq.map((item, idx) => (
+                            <div key={idx} className="bg-[#282d36] rounded-lg p-4 border border-white/5">
+                              <h4 className="text-white font-medium mb-2">{item.question}</h4>
+                              <p className="text-white/60 text-sm">{item.answer}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-
-                  {/* SSS */}
-                  <div className="mt-8">
-                    <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
-                    <div className="space-y-3">
-                      <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">RP kodu nasıl kullanılır?</h4>
-                        <p className="text-white/60 text-sm">Riot Games hesabınıza giriş yapın, ardından kodlar.riotgames.com adresine gidin. "Kodu Kullan" bölümüne Riot Cash kodunuzu girin ve RP'niz hesabınıza yüklenecektir.</p>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-white/80">
+                      PUBG Mobile UC (Unknown Cash), oyun içi premium para birimidir. UC ile özel kostümler, silah skinleri, 
+                      Royale Pass ve daha birçok özel içeriğe erişebilirsiniz.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                      <div className="bg-[#282d36] rounded-lg p-4">
+                        <h4 className="text-white font-medium mb-2">Anında Teslimat</h4>
+                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra UC'ler anında hesabınıza yüklenir.</p>
                       </div>
-                      <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">RP kodları hangi bölgelerde geçerli?</h4>
-                        <p className="text-white/60 text-sm">RP kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
-                      </div>
-                      <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">Teslimat ne kadar sürer?</h4>
-                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra Riot Cash kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
+                      <div className="bg-[#282d36] rounded-lg p-4">
+                        <h4 className="text-white font-medium mb-2">Güvenli Ödeme</h4>
+                        <p className="text-white/60 text-sm">256-bit SSL şifreleme ile tüm ödemeleriniz güvende.</p>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -1817,13 +1793,51 @@ export default function LolPage() {
             <div className="overflow-y-auto flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
-                  {/* League of Legends RP - Oyuncu ID gerekmez, direkt kod teslimi */}
-                  <div className="px-4 py-3.5 rounded bg-yellow-500/15 border border-yellow-500/30">
-                    <div className="flex items-center gap-2 text-yellow-400 mb-1 text-xs font-semibold">
-                      <Check className="w-4 h-4" />
-                      <span>League of Legends RP Kodu</span>
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <Label className="text-sm md:text-base text-white/80 uppercase">Oyuncu ID</Label>
+                      {!playerValid && (
+                        <button 
+                          onClick={() => setPlayerIdModalOpen(true)}
+                          className="text-xs md:text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                        >
+                          Oyuncu ID Girin
+                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/>
+                          </svg>
+                        </button>
+                      )}
                     </div>
-                    <p className="text-white/70 text-sm">Ödeme sonrası RP kodunuz anında e-posta ile gönderilecek ve Siparişlerim bölümünde görüntülenecektir.</p>
+                    
+                    {playerValid && playerName ? (
+                      <div className="px-4 py-3.5 rounded bg-green-500/15 border border-green-500/30 flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 text-green-400 mb-1 text-xs font-semibold">
+                            <Check className="w-4 h-4" />
+                            <span>Oyuncu Bulundu</span>
+                          </div>
+                          <p className="text-white text-base font-bold">{playerName}</p>
+                          <p className="text-white/50 text-xs mt-0.5">ID: {playerId}</p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setPlayerValid(null)
+                            setPlayerName('')
+                            setPlayerId('')
+                          }}
+                          className="text-white/60 hover:text-white text-xs"
+                        >
+                          Değiştir
+                        </button>
+                      </div>
+                    ) : (
+                      <div 
+                        onClick={() => setPlayerIdModalOpen(true)}
+                        className="px-4 py-3 rounded bg-[#12161D] border border-white/10 text-white/40 cursor-pointer hover:border-white/20 transition-colors"
+                      >
+                        <span className="text-sm">Oyuncu ID'nizi girin</span>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -1955,12 +1969,12 @@ export default function LolPage() {
                       <div className="flex items-start gap-2 mb-4">
                         <input
                           type="checkbox"
-                          id="termsCheckboxLol"
+                          id="termsCheckbox"
                           checked={termsAccepted}
                           onChange={(e) => setTermsAccepted(e.target.checked)}
                           className="mt-1 w-4 h-4 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-blue-500/50 cursor-pointer"
                         />
-                        <label htmlFor="termsCheckboxLol" className="text-xs text-white/50 cursor-pointer">
+                        <label htmlFor="termsCheckbox" className="text-xs text-white/50 cursor-pointer">
                           <button 
                             type="button"
                             onClick={(e) => { e.preventDefault(); setTermsModalOpen(true); }}
@@ -2022,7 +2036,7 @@ export default function LolPage() {
           {/* Content - relative z-10 to stay above background */}
           <div className="relative z-10 bg-[#1e2229]/90 backdrop-blur-sm rounded-lg">
             {playerIdError && (
-              <div className="px-5 py-3 bg-yellow-600 flex items-start gap-3 rounded-t-lg">
+              <div className="px-5 py-3 bg-red-600 flex items-start gap-3 rounded-t-lg">
                 <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span className="text-red-600 font-bold text-sm">!</span>
                 </div>
@@ -2313,19 +2327,19 @@ export default function LolPage() {
               <h3 className="text-white font-semibold mb-2">2. Ürün Tanımları ve Özel Koşullar</h3>
               <p>Platformumuzda satışa sunulan ürünler farklı kategorilerde olabilir:</p>
               <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
-                <li><strong className="text-white">Standart RP Paketleri:</strong> Belirtilen miktarda RP içerir.</li>
-                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele RP miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, düşük veya yüksek miktarda RP çıkabilir. Bu tür ürünlerde çıkan RP miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
+                <li><strong className="text-white">Standart UC Paketleri:</strong> Belirtilen miktarda UC içerir.</li>
+                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele UC miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, düşük veya yüksek miktarda UC çıkabilir. Bu tür ürünlerde çıkan UC miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
               </ul>
             </section>
 
             <section>
               <h3 className="text-white font-semibold mb-2">3. İade ve İptal Politikası</h3>
-              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan RP miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
+              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan UC miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
             </section>
 
             <section>
               <h3 className="text-white font-semibold mb-2">4. Sorumluluk Reddi</h3>
-              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan RP miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
+              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan UC miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
             </section>
 
             <section>
@@ -2338,8 +2352,8 @@ export default function LolPage() {
               <p>Bu koşullar PINLY tarafından önceden haber verilmeksizin güncellenebilir.</p>
             </div>
 
-            <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-              <h4 className="text-yellow-400 font-semibold text-sm mb-2">⚠️ Yasal Uyarı</h4>
+            <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <h4 className="text-red-400 font-semibold text-sm mb-2">⚠️ Yasal Uyarı</h4>
               <p className="text-white/60 text-xs leading-relaxed">
                 İşbu satış koşullarını okuyarak ve onay kutusunu işaretleyerek, tüm maddeleri kabul ettiğinizi hukuken beyan etmiş bulunmaktasınız. Bu onay sonrasında, satış koşullarında belirtilen hususlara ilişkin şikayet, itiraz veya iade talep hakkınız bulunmamaktadır.
               </p>

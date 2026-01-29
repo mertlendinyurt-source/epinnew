@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { User, Check, X, Loader2, Info, Menu, Star, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -76,6 +76,8 @@ export default function ValorantPage() {
   const [playerValid, setPlayerValid] = useState(null)
   const [orderProcessing, setOrderProcessing] = useState(false)
   const [playerIdError, setPlayerIdError] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(true)
+  const [termsModalOpen, setTermsModalOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalTab, setAuthModalTab] = useState('register')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -106,6 +108,7 @@ export default function ValorantPage() {
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 })
   const [userBalance, setUserBalance] = useState(0)
   const [paymentMethod, setPaymentMethod] = useState('card') // 'card' or 'balance'
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
 
   // Calculate time remaining until midnight (end of day)
   const calculateTimeToMidnight = () => {
@@ -673,6 +676,7 @@ export default function ValorantPage() {
     setPlayerId('')
     setPlayerName('')
     setPlayerValid(null)
+    setTermsAccepted(true) // Terms pre-accepted for new product
     
     // Update URL with product parameter for Google Ads tracking (VP için)
     const vpAmount = product.title.match(/(\d+)\s*VP/i) || product.vpAmount;
@@ -749,7 +753,9 @@ export default function ValorantPage() {
           playerId: 'valorant-direct', // Valorant için oyuncu ID gerekmiyor
           playerName: 'Valorant VP',
           paymentMethod: paymentMethod, // 'card' or 'balance'
-          game: GAME_TYPE // 'valorant'
+          game: GAME_TYPE, // 'valorant'
+          termsAccepted: termsAccepted,
+          termsAcceptedAt: new Date().toISOString()
         })
       })
 
@@ -942,7 +948,7 @@ export default function ValorantPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-[#12151a]/95 backdrop-blur-sm border-b border-white/5">
         <div className="max-w-[1920px] mx-auto">
-          <div className="flex items-center justify-between h-16 px-4 md:px-6">
+          <div className="flex items-center justify-between h-14 md:h-16 px-4 md:px-6">
             {/* Mobile Menu Button */}
             <Sheet>
               <SheetTrigger asChild>
@@ -979,13 +985,33 @@ export default function ValorantPage() {
               )}
             </a>
 
-            {/* Navigation - Desktop */}
-            <nav className="hidden md:flex items-center gap-6">
-              <a href="/" className="text-sm text-white/70 hover:text-yellow-400 transition-colors">PUBG UC</a>
-              <a href="/valorant" className="text-sm text-red-400 hover:text-red-300 transition-colors font-medium">Valorant VP</a>
-              <a href="/mlbb" className="text-sm text-white/70 hover:text-blue-400 transition-colors">MLBB Diamonds</a>
-              <a href="/blog" className="text-sm text-white/70 hover:text-white transition-colors">Blog</a>
-            </nav>
+            {/* Trust Badges - Desktop Only */}
+            <div className="hidden md:flex items-center gap-6 text-[11px] lg:text-xs">
+              <div className="flex items-center gap-1.5 text-white/80 whitespace-nowrap">
+                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>SSL Güvenli</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-white/80 whitespace-nowrap">
+                <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                </svg>
+                <span>Anında Teslimat</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-white/80 whitespace-nowrap">
+                <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+                </svg>
+                <span>7/24 Destek</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-white/80 whitespace-nowrap">
+                <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                <span>10.000+ Mutlu Müşteri</span>
+              </div>
+            </div>
 
             {/* Auth Buttons */}
             <div className="flex items-center gap-2 md:gap-3">
@@ -995,11 +1021,13 @@ export default function ValorantPage() {
                     variant="ghost" 
                     className="flex items-center gap-2 text-white hover:bg-white/10 px-2 md:px-3"
                   >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                    {/* Mobilde Siparişlerim yazısı, Desktop'ta avatar */}
+                    <span className="md:hidden text-xs font-medium">📦 Siparişlerim</span>
+                    <div className="hidden md:flex w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 items-center justify-center text-white text-sm font-bold">
                       {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
                     </div>
                     <span className="hidden md:inline text-sm">{user?.firstName || 'Hesabım'}</span>
-                    <ChevronDown className="w-4 h-4 hidden md:block" />
+                    <ChevronDown className="w-4 h-4" />
                   </Button>
                   
                   {/* Dropdown */}
@@ -1017,17 +1045,25 @@ export default function ValorantPage() {
                       <a href="/account/support" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md transition-colors">
                         💬 Destek Taleplerim
                       </a>
-                      <a 
-                        href="https://wa.me/908503469671" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-green-400 hover:text-green-300 hover:bg-white/5 rounded-md transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                        </svg>
-                        WhatsApp Destek
-                      </a>
+                      {/* Canlı Destek - Aktifse tıklanabilir, pasifse bilgi gösterir */}
+                      {siteSettings?.liveSupportEnabled ? (
+                        <button 
+                          onClick={() => {
+                            if (window.$crisp) {
+                              window.$crisp.push(["do", "chat:open"]);
+                            }
+                          }}
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-green-400 hover:text-green-300 hover:bg-white/5 rounded-md transition-colors w-full text-left"
+                        >
+                          🟢 Canlı Destek
+                          <span className="text-[10px] text-white/40">({siteSettings?.liveSupportHours || '14:00-22:00'})</span>
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2 px-3 py-2 text-sm text-white/40 cursor-not-allowed">
+                          🔴 Canlı Destek
+                          <span className="text-[10px]">({siteSettings?.liveSupportHours || '14:00-22:00'} arası açık)</span>
+                        </div>
+                      )}
                       <button 
                         onClick={handleLogout}
                         className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-white/5 rounded-md transition-colors w-full text-left"
@@ -1066,36 +1102,148 @@ export default function ValorantPage() {
       </header>
 
       {/* Trust Bar */}
-      <div className="bg-[#12151a] border-b border-white/5">
-        <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-2">
-          <div className="flex items-center justify-center gap-4 md:gap-8 text-[11px] md:text-xs overflow-x-auto">
-            <div className="flex items-center gap-1.5 text-white/80 whitespace-nowrap">
-              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span>SSL Güvenli</span>
+      {/* Mobile Trust Badges */}
+      <div className="md:hidden bg-[#12151a] border-b border-white/5">
+        <div className="flex items-center justify-center gap-3 px-4 py-2 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center gap-1 text-white/70 whitespace-nowrap">
+            <svg className="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span className="text-[10px]">SSL</span>
+          </div>
+          <div className="flex items-center gap-1 text-white/70 whitespace-nowrap">
+            <svg className="w-3.5 h-3.5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+            </svg>
+            <span className="text-[10px]">Anında</span>
+          </div>
+          <div className="flex items-center gap-1 text-white/70 whitespace-nowrap">
+            <svg className="w-3.5 h-3.5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+            </svg>
+            <span className="text-[10px]">7/24</span>
+          </div>
+          <div className="flex items-center gap-1 text-white/70 whitespace-nowrap">
+            <svg className="w-3.5 h-3.5 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <span className="text-[10px]">10K+</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Category Navigation Bar */}
+      <div className="bg-[#0d1117] border-b border-white/5">
+        <div className="max-w-[1920px] mx-auto">
+          <div className="flex items-center gap-2 px-4 md:px-6 py-3 overflow-x-auto scrollbar-hide" style={{ overflow: categoryDropdownOpen ? 'visible' : 'auto' }}>
+            {/* Kategoriler Dropdown */}
+            <div className="relative flex-shrink-0" style={{ zIndex: 100 }}>
+              <button 
+                onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 rounded-lg transition-all border border-white/10"
+              >
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <span className="text-xs md:text-sm font-medium text-white">Kategoriler</span>
+                <ChevronDown className={`w-4 h-4 text-white/60 transition-transform ${categoryDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {/* Dropdown Menu */}
+              {categoryDropdownOpen && (
+                <>
+                  {/* Backdrop to close dropdown */}
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setCategoryDropdownOpen(false)}
+                  />
+                  <div className="absolute left-0 top-full mt-2 w-64 bg-[#1a1f2e] rounded-xl shadow-2xl border border-white/10 z-50">
+                    {/* User Actions */}
+                    <div className="p-2 border-b border-white/10">
+                      <a href="/account/orders" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                        <span className="text-lg">📦</span>
+                        <span className="text-sm text-white/90">Siparişlerim</span>
+                      </a>
+                      <a href="/account/support/new" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                        <span className="text-lg">💬</span>
+                        <span className="text-sm text-white/90">Destek Talebi Oluştur</span>
+                      </a>
+                    </div>
+                    
+                    {/* Game Categories */}
+                    <div className="p-2">
+                      <p className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-white/40 font-medium">Oyun Kategorileri</p>
+                      <a href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
+                          <img src="/pubg-logo.png" alt="PUBG" className="w-6 h-6 object-contain" />
+                        </div>
+                        <span className="text-sm text-white/90">Pubg Mobile</span>
+                      </a>
+                      <a href="/valorant" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors bg-white/5">
+                        <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
+                          <img src="/valorant-logo.png" alt="Valorant" className="w-6 h-6 object-contain" />
+                        </div>
+                        <span className="text-sm text-red-400">Valorant</span>
+                      </a>
+                      <a href="/mlbb" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
+                          <img src="/mlbb-logo.png" alt="Mobile Legends" className="w-6 h-6 object-contain" />
+                        </div>
+                        <span className="text-sm text-white/90">Mobile Legends</span>
+                      </a>
+                      <a href="/lol" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
+                          <img src="/lol-logo.png" alt="League of Legends" className="w-6 h-6 object-contain" />
+                        </div>
+                        <span className="text-sm text-white/90">League of Legends</span>
+                      </a>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-            <div className="hidden md:block w-px h-4 bg-white/20"></div>
-            <div className="flex items-center gap-1.5 text-white/80">
-              <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-              </svg>
-              <span>Anında Teslimat</span>
-            </div>
-            <div className="hidden md:block w-px h-4 bg-white/20"></div>
-            <div className="flex items-center gap-1.5 text-white/80">
-              <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
-              </svg>
-              <span>7/24 Destek</span>
-            </div>
-            <div className="hidden md:block w-px h-4 bg-white/20"></div>
-            <div className="flex items-center gap-1.5 text-white/80">
-              <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-              <span>10.000+ Mutlu Müşteri</span>
-            </div>
+
+            {/* Game Categories - Horizontal */}
+            <a 
+              href="/" 
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/20 flex-shrink-0 group"
+            >
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
+                <img src="/pubg-logo.png" alt="PUBG" className="w-6 h-6 md:w-7 md:h-7 object-contain" />
+              </div>
+              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-yellow-400 transition-colors whitespace-nowrap">Pubg Mobile</span>
+            </a>
+
+            <a 
+              href="/valorant" 
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-red-500/30 ring-1 ring-red-500/30 flex-shrink-0 group"
+            >
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
+                <img src="/valorant-logo.png" alt="Valorant" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
+              </div>
+              <span className="text-xs md:text-sm font-medium text-red-400 whitespace-nowrap">Valorant</span>
+            </a>
+
+            <a 
+              href="/mlbb" 
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-blue-500/20 flex-shrink-0 group"
+            >
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
+                <img src="/mlbb-logo.png" alt="Mobile Legends" className="w-6 h-6 md:w-7 md:h-7 object-contain" />
+              </div>
+              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-blue-400 transition-colors whitespace-nowrap">Mobile Legends</span>
+            </a>
+
+            {/* League of Legends */}
+            <a 
+              href="/lol" 
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/20 flex-shrink-0 group"
+            >
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
+                <img src="/lol-logo.png" alt="League of Legends" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
+              </div>
+              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-yellow-400 transition-colors whitespace-nowrap">League of Legends</span>
+            </a>
           </div>
         </div>
       </div>
@@ -1321,20 +1469,39 @@ export default function ValorantPage() {
                   <div
                     key={product.id}
                     onClick={() => handleProductSelect(product)}
-                    className="product-card-shine group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border border-white/10 hover:border-white/20 w-full aspect-[2/3.8] md:aspect-[2/3]"
+                    className={`product-card-glow group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border ${product.featured ? 'border-yellow-500/50 ring-2 ring-yellow-500/30' : 'border-white/10'} hover:border-white/20 w-full aspect-[2/3.8] md:aspect-[2/3]`}
                     style={{ backgroundColor: '#252a34', maxWidth: '270px', margin: '0 auto' }}
                   >
+                    {/* En Çok Tercih Edilen Badge */}
+                    {product.featured && (
+                      <div className="absolute top-0 left-0 right-0 z-30 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white text-[10px] md:text-[11px] font-bold py-1 px-2 text-center shadow-lg">
+                        ⭐ EN ÇOK TERCİH EDİLEN
+                      </div>
+                    )}
+                    
                     {/* Info Icon */}
-                    <div className="absolute top-2 right-2 w-6 h-6 md:w-5 md:h-5 rounded-full bg-white/90 flex items-center justify-center z-20">
+                    <div className={`absolute ${product.featured ? 'top-8' : 'top-2'} right-2 w-6 h-6 md:w-5 md:h-5 rounded-full bg-white/90 flex items-center justify-center z-20`}>
                       <span className="text-gray-700 font-bold text-xs md:text-xs">i</span>
                     </div>
 
-                    {/* Image Section */}
-                    <div className="relative h-[42%] md:h-[55%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-2 md:p-4">
+                    {/* Image Section - Valorant Theme */}
+                    <div className="relative h-[42%] md:h-[55%] bg-gradient-to-br from-[#1a1a2e] via-[#3d1a3d] to-[#1a1a2e] flex items-center justify-center p-2 md:p-4 overflow-hidden">
+                      {/* Background Logo Pattern */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-10">
+                        <img src="/valorant-logo.png" alt="" className="w-32 h-32 object-contain" />
+                      </div>
+                      {/* Decorative Glow */}
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 bg-red-500/20 rounded-full blur-2xl"></div>
+                      <div className="absolute bottom-0 left-1/4 w-24 h-12 bg-pink-500/15 rounded-full blur-xl"></div>
+                      {/* Flare Effect */}
+                      <div className="go-product-shine">
+                        <div className="go-product-shine-overlay"></div>
+                        <img className="go-flare" src="/flare.png" alt="" />
+                      </div>
                       <img 
                         src={product.imageUrl || "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=300&h=300&fit=crop"}
                         alt={product.title}
-                        className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                        className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105 relative z-10"
                         onError={(e) => {
                           e.target.src = "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=300&h=300&fit=crop";
                         }}
@@ -1344,7 +1511,6 @@ export default function ValorantPage() {
                     {/* Content Section */}
                     <div className="h-[58%] md:h-[45%] flex flex-col justify-between p-2.5 md:p-3.5">
                       <div>
-                        <div className="text-[10px] md:text-[10px] text-white/60 font-bold uppercase">PC</div>
                         <div className="text-[15px] md:text-[13px] font-bold text-white">{product.vpAmount || product.ucAmount} VP</div>
                         <div className="flex items-center gap-1 mt-0.5">
                           <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
@@ -1371,19 +1537,34 @@ export default function ValorantPage() {
 
       {/* Plyr Style Tab Section - Description & Reviews */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* WhatsApp Destek Butonu - Üstte */}
+        
+        {/* Canlı Destek Butonu - Üstte */}
         <div className="flex justify-center mb-4">
-          <a
-            href="https://wa.me/908503469671"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl text-base font-semibold transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:scale-105"
-          >
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-            WhatsApp Destek
-          </a>
+          {siteSettings?.liveSupportEnabled ? (
+            <button
+              onClick={() => {
+                if (window.$crisp) {
+                  window.$crisp.push(["do", "chat:open"]);
+                }
+              }}
+              className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl text-base font-semibold transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:scale-105"
+            >
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+              </span>
+              Canlı Destek
+              <span className="text-xs opacity-75">({siteSettings?.liveSupportHours || '14:00-22:00'})</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-3 px-6 py-3 bg-gray-600/50 text-white/50 rounded-xl text-base font-semibold cursor-not-allowed">
+              <span className="relative flex h-3 w-3">
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-400"></span>
+              </span>
+              Canlı Destek Kapalı
+              <span className="text-xs">({siteSettings?.liveSupportHours || '14:00-22:00'} arası açık)</span>
+            </div>
+          )}
         </div>
 
         <div className="bg-[#1e2229] rounded-xl border border-white/5">
@@ -1554,12 +1735,20 @@ export default function ValorantPage() {
                     reviews.map((review) => (
                       <div key={review.id} className="p-4 bg-[#282d36] rounded-lg">
                         <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                            {review.username?.[0]?.toUpperCase() || 'U'}
+                          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                            <img 
+                              src={siteSettings?.logoUrl || '/logo.png'} 
+                              alt="Pinly" 
+                              className="w-8 h-8 object-contain"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.parentElement.innerHTML = '<span class="text-blue-600 font-bold text-sm">P</span>';
+                              }}
+                            />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-white font-medium">{review.username}</span>
+                              <span className="text-white font-medium">Misafir</span>
                               <div className="flex items-center gap-0.5">
                                 {[1, 2, 3, 4, 5].map(star => (
                                   <Star 
@@ -1756,17 +1945,42 @@ export default function ValorantPage() {
                     </div>
 
                     <div className="pt-5 border-t border-white/10">
-                      <div className="flex justify-between items-center mb-6">
+                      <div className="flex justify-between items-center mb-4">
                         <span className="text-sm md:text-base text-white/70 uppercase">Ödenecek Tutar</span>
                         <span className="text-2xl md:text-3xl font-black text-white">
                           ₺ {selectedProduct.discountPrice.toFixed(2)}
                         </span>
                       </div>
 
+                      {/* Satış Koşulları Onayı */}
+                      <div className="flex items-start gap-2 mb-4">
+                        <input
+                          type="checkbox"
+                          id="termsCheckboxValorant"
+                          checked={termsAccepted}
+                          onChange={(e) => setTermsAccepted(e.target.checked)}
+                          className="mt-1 w-4 h-4 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-blue-500/50 cursor-pointer"
+                        />
+                        <label htmlFor="termsCheckboxValorant" className="text-xs text-white/50 cursor-pointer">
+                          <button 
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); setTermsModalOpen(true); }}
+                            className="text-blue-400 hover:text-blue-300 underline"
+                          >
+                            Satış koşullarını
+                          </button>
+                          {' '}okudum ve kabul ediyorum.
+                        </label>
+                      </div>
+
                       <Button
                         onClick={handleCheckout}
-                        disabled={orderProcessing}
-                        className="w-full h-12 md:h-14 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg"
+                        disabled={orderProcessing || !termsAccepted}
+                        className={`w-full h-12 md:h-14 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg transition-all ${
+                          termsAccepted 
+                            ? 'bg-blue-600 hover:bg-blue-500' 
+                            : 'bg-gray-600 cursor-not-allowed opacity-60'
+                        }`}
                       >
                         {orderProcessing ? (
                           <>
@@ -2024,6 +2238,16 @@ export default function ValorantPage() {
               <p className="text-white/30 text-sm">
                 © 2026 {siteSettings?.siteName || 'PINLY'}. Tüm hakları saklıdır.
               </p>
+              
+              {/* Payment Method Logos - iyzico */}
+              <div className="flex items-center justify-center">
+                <img 
+                  src="/payment-logos.png" 
+                  alt="iyzico, Mastercard, Visa, American Express, Troy"
+                  className="h-8 md:h-10 w-auto object-contain opacity-80"
+                />
+              </div>
+              
               <p className="text-white/20 text-xs text-center md:text-right">
                 PINLY üzerinden oyun içi kodlar ve dijital pinler anında teslim edilir.
               </p>
@@ -2068,6 +2292,76 @@ export default function ValorantPage() {
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
             >
               {phoneLoading ? 'Kaydediliyor...' : 'Onayla ve Devam Et'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Satış Koşulları Modal */}
+      <Dialog open={termsModalOpen} onOpenChange={setTermsModalOpen}>
+        <DialogContent className="max-w-[95vw] md:max-w-2xl max-h-[80vh] overflow-y-auto bg-[#1a1f2e] border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-white">Satış Koşulları ve Kullanım Şartları</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 text-sm text-white/70 leading-relaxed">
+            <section>
+              <h3 className="text-white font-semibold mb-2">1. Genel Hükümler</h3>
+              <p>Bu satış koşulları, PINLY platformu üzerinden gerçekleştirilen tüm dijital ürün satışlarını kapsamaktadır. Satın alma işlemi gerçekleştirerek bu koşulları kabul etmiş sayılırsınız.</p>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">2. Ürün Tanımları ve Özel Koşullar</h3>
+              <p>Platformumuzda satışa sunulan ürünler farklı kategorilerde olabilir:</p>
+              <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
+                <li><strong className="text-white">Standart VP Paketleri:</strong> Belirtilen miktarda VP içerir.</li>
+                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele VP miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, düşük veya yüksek miktarda VP çıkabilir. Bu tür ürünlerde çıkan VP miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">3. İade ve İptal Politikası</h3>
+              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan VP miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">4. Sorumluluk Reddi</h3>
+              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan VP miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold mb-2">5. Onay ve Kabul</h3>
+              <p>Bu koşulları onaylayarak, yukarıda belirtilen tüm maddeleri okuduğunuzu, anladığınızı ve kabul ettiğinizi beyan etmiş olursunuz. Şans paketleri dahil tüm ürünlerin özelliklerinden haberdar olduğunuzu teyit edersiniz.</p>
+            </section>
+
+            <div className="pt-4 border-t border-white/10 text-xs text-white/40">
+              <p>Son güncelleme: {new Date().toLocaleDateString('tr-TR')}</p>
+              <p>Bu koşullar PINLY tarafından önceden haber verilmeksizin güncellenebilir.</p>
+            </div>
+
+            <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <h4 className="text-red-400 font-semibold text-sm mb-2">⚠️ Yasal Uyarı</h4>
+              <p className="text-white/60 text-xs leading-relaxed">
+                İşbu satış koşullarını okuyarak ve onay kutusunu işaretleyerek, tüm maddeleri kabul ettiğinizi hukuken beyan etmiş bulunmaktasınız. Bu onay sonrasında, satış koşullarında belirtilen hususlara ilişkin şikayet, itiraz veya iade talep hakkınız bulunmamaktadır.
+              </p>
+              <p className="text-white/60 text-xs leading-relaxed mt-2">
+                <strong className="text-white/70">PINLY LIMITED</strong> şirketimiz, sosyal medya platformları, tüketici şikayet siteleri veya diğer kamuya açık mecralarda şirketimizi, markamızı veya hizmetlerimizi karalayıcı, hakaret içeren, iftira niteliğinde veya ticari itibarımızı zedeleyici nitelikteki her türlü paylaşım, yorum ve içeriğe karşı yasal haklarını saklı tutmaktadır.
+              </p>
+              <p className="text-white/60 text-xs leading-relaxed mt-2">
+                Bu tür eylemlerin tespiti halinde, <strong className="text-white/70">Türk Ceza Kanunu</strong> ve <strong className="text-white/70">Türk Borçlar Kanunu</strong> kapsamında hukuk müşavirlerimiz aracılığıyla maddi ve manevi tazminat davaları dahil olmak üzere gerekli tüm yasal işlemler başlatılacaktır.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              onClick={() => {
+                setTermsAccepted(true);
+                setTermsModalOpen(false);
+              }}
+              className="bg-blue-600 hover:bg-blue-500 text-white"
+            >
+              Okudum, Kabul Ediyorum
             </Button>
           </div>
         </DialogContent>

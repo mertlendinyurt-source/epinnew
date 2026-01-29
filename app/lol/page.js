@@ -1688,7 +1688,7 @@ export default function LolPage() {
                     <div className="space-y-3">
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">RP kodu nasıl kullanılır?</h4>
-                        <p className="text-white/60 text-sm">League of Legends'i açın, mağazaya gidin ve "RP Satın Al" bölümünden "Kodu Kullan" seçeneğini seçin. Aldığınız kodu girerek RP'nizi hesabınıza yükleyin.</p>
+                        <p className="text-white/60 text-sm">Riot Games hesabınıza giriş yapın, ardından kodlar.riotgames.com adresine gidin. "Kodu Kullan" bölümüne Riot Cash kodunuzu girin ve RP'niz hesabınıza yüklenecektir.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">RP kodları hangi bölgelerde geçerli?</h4>
@@ -1696,7 +1696,7 @@ export default function LolPage() {
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">Teslimat ne kadar sürer?</h4>
-                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra RP kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
+                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra Riot Cash kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
                       </div>
                     </div>
                   </div>

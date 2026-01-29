@@ -1535,6 +1535,7 @@ export default function LolPage() {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
             )}
           </div>

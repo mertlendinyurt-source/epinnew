@@ -2099,12 +2099,12 @@ export default function ValorantPage() {
                 © 2026 {siteSettings?.siteName || 'PINLY'}. Tüm hakları saklıdır.
               </p>
               
-              {/* Payment Method Logos */}
-              <div className="flex items-center">
+              {/* Payment Method Logos - iyzico */}
+              <div className="flex items-center justify-center">
                 <img 
                   src="/payment-logos.png" 
-                  alt="iyzico, Mastercard, Visa, American Express, Troy" 
-                  className="h-8 md:h-10 w-auto"
+                  alt="iyzico, Mastercard, Visa, American Express, Troy"
+                  className="h-8 md:h-10 w-auto object-contain opacity-80"
                 />
               </div>
               

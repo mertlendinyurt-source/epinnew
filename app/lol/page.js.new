@@ -267,22 +267,22 @@ export default function LolPage() {
       const slug = productParam.toLowerCase().replace('-', '');
       
       // Try to match by VP amount in title
-      const vpAmount = parseInt(slug.replace('vp', '').replace('uc', ''));
+      const rpAmount = parseInt(slug.replace('vp', '').replace('uc', ''));
       
       let matchedProduct = null;
       
-      if (!isNaN(vpAmount)) {
-        // Find product that contains the VP amount in title or vpAmount field
+      if (!isNaN(rpAmount)) {
+        // Find product that contains the VP amount in title or rpAmount field
         matchedProduct = products.find(p => {
-          // Check vpAmount field first
-          if (p.vpAmount && parseInt(p.vpAmount) === vpAmount) {
+          // Check rpAmount field first
+          if (p.rpAmount && parseInt(p.rpAmount) === rpAmount) {
             return true;
           }
           // Check title
           const title = p.title.toLowerCase();
           const matches = title.match(/(\d+)\s*vp/i);
           if (matches) {
-            return parseInt(matches[1]) === vpAmount;
+            return parseInt(matches[1]) === rpAmount;
           }
           return false;
         });
@@ -679,9 +679,9 @@ export default function LolPage() {
     setTermsAccepted(true) // Terms pre-accepted for new product
     
     // Update URL with product parameter for Google Ads tracking (VP için)
-    const vpAmount = product.title.match(/(\d+)\s*VP/i) || product.vpAmount;
-    if (vpAmount) {
-      const amount = typeof vpAmount === 'object' ? vpAmount[1] : (product.vpAmount || product.ucAmount);
+    const rpAmount = product.title.match(/(\d+)\s*VP/i) || product.rpAmount;
+    if (rpAmount) {
+      const amount = typeof rpAmount === 'object' ? rpAmount[1] : (product.rpAmount || product.ucAmount);
       const productSlug = amount + 'vp';
       window.history.pushState({}, '', `?product=${productSlug}`);
     }
@@ -751,7 +751,7 @@ export default function LolPage() {
         body: JSON.stringify({
           productId: selectedProduct.id,
           playerId: 'valorant-direct', // Valorant için oyuncu ID gerekmiyor
-          playerName: 'Valorant VP',
+          playerName: 'League of Legends RP',
           paymentMethod: paymentMethod, // 'card' or 'balance'
           game: GAME_TYPE, // 'valorant'
           termsAccepted: termsAccepted,
@@ -1252,11 +1252,11 @@ export default function LolPage() {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: siteSettings?.valorantHeroImage 
-              ? `url(${siteSettings.valorantHeroImage})`
+            backgroundImage: siteSettings?.lolHeroImage 
+              ? `url(${siteSettings.lolHeroImage})`
               : siteSettings?.heroImage 
                 ? `url(${siteSettings.heroImage})`
-                : 'url(https://images.contentstack.io/v3/assets/bltb6530b271fddd0b1/blt81a85f0d04358da3/5eb7cdc19df5cf37047009d1/Valorant_VALORANT_Background.jpg)'
+                : 'url(https://images.contentstack.io/v3/assets/blt731acb42bb3d1659/bltf8be62f1eb58b34c/5ef1134fa8a14a6c8c81b71e/LOL_PROMOART_14.jpg)'
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-[#1a1a1a]" />
@@ -1504,7 +1504,7 @@ export default function LolPage() {
                     {/* Content Section */}
                     <div className="h-[58%] md:h-[45%] flex flex-col justify-between p-2.5 md:p-3.5">
                       <div>
-                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.vpAmount || product.ucAmount} VP</div>
+                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.rpAmount || product.ucAmount} RP</div>
                         <div className="flex items-center gap-1 mt-0.5">
                           <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>
@@ -1666,7 +1666,7 @@ export default function LolPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">🚀 Anında Teslimat</h4>
-                      <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra VP kodunuz anında iletilir ve siparişleriniz bölümünde görüntülenir.</p>
+                      <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra RP kodunuz anında iletilir ve siparişleriniz bölümünde görüntülenir.</p>
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">🔒 Güvenli Ödeme</h4>
@@ -1696,7 +1696,7 @@ export default function LolPage() {
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">Teslimat ne kadar sürer?</h4>
-                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra VP kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
+                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra RP kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
                       </div>
                     </div>
                   </div>
@@ -1811,13 +1811,13 @@ export default function LolPage() {
             <div className="overflow-y-auto flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
-                  {/* Valorant VP - Oyuncu ID gerekmez, direkt kod teslimi */}
+                  {/* League of Legends RP - Oyuncu ID gerekmez, direkt kod teslimi */}
                   <div className="px-4 py-3.5 rounded bg-red-500/15 border border-red-500/30">
                     <div className="flex items-center gap-2 text-red-400 mb-1 text-xs font-semibold">
                       <Check className="w-4 h-4" />
-                      <span>Valorant VP Kodu</span>
+                      <span>Valorant RP Kodu</span>
                     </div>
-                    <p className="text-white/70 text-sm">Ödeme sonrası VP kodunuz anında e-posta ile gönderilecek ve Siparişlerim bölümünde görüntülenecektir.</p>
+                    <p className="text-white/70 text-sm">Ödeme sonrası RP kodunuz anında e-posta ile gönderilecek ve Siparişlerim bölümünde görüntülenecektir.</p>
                   </div>
 
                   <div>
@@ -2175,7 +2175,7 @@ export default function LolPage() {
                 Popüler Kategoriler
               </h3>
               <ul className="space-y-3">
-                {(footerSettings?.categories || [{ label: 'PUBG UC', url: '/' }, { label: 'Valorant VP', url: '/valorant' }, { label: 'MLBB Diamonds', url: '/mlbb' }]).map((cat, index) => (
+                {(footerSettings?.categories || [{ label: 'PUBG UC', url: '/' }, { label: 'League of Legends RP', url: '/valorant' }, { label: 'MLBB Diamonds', url: '/mlbb' }]).map((cat, index) => (
                   <li key={index}>
                     <a 
                       href={cat.url} 

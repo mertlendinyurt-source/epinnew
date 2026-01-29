@@ -1647,16 +1647,15 @@ export default function LolPage() {
                     <h3 className="text-lg font-bold text-white mb-4">RP Paketleri</h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                       {[
-                        { amount: '460 RP', description: 'Riot Cash 120 TL' },
-                        { amount: '1005 RP', description: 'Riot Cash 250 TL' },
-                        { amount: '2105 RP', description: 'Riot Cash 500 TL' },
-                        { amount: '3625 RP', description: 'Riot Cash 850 TL' },
-                        { amount: '5295 RP', description: 'Riot Cash 1230 TL' },
-                        { amount: '10875 RP', description: 'Riot Cash 2450 TL' }
+                        { amount: '460 RP' },
+                        { amount: '1005 RP' },
+                        { amount: '2105 RP' },
+                        { amount: '3625 RP' },
+                        { amount: '5295 RP' },
+                        { amount: '10875 RP' }
                       ].map((pkg, idx) => (
                         <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
                           <div className="text-yellow-400 font-bold text-lg">{pkg.amount}</div>
-                          <div className="text-white/50 text-xs">{pkg.description}</div>
                         </div>
                       ))}
                     </div>

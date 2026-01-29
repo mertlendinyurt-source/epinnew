@@ -987,14 +987,6 @@ export default function MLBBPage() {
               )}
             </a>
 
-            {/* Navigation - Desktop */}
-            <nav className="hidden md:flex items-center gap-6">
-              <a href="/" className="text-sm text-white/70 hover:text-yellow-400 transition-colors">PUBG UC</a>
-              <a href="/valorant" className="text-sm text-white/70 hover:text-red-400 transition-colors">Valorant VP</a>
-              <a href="/mlbb" className="text-sm text-blue-400 hover:text-blue-300 transition-colors font-medium">MLBB Diamonds</a>
-              <a href="/blog" className="text-sm text-white/70 hover:text-white transition-colors">Blog</a>
-            </nav>
-
             {/* Auth Buttons */}
             <div className="flex items-center gap-2 md:gap-3">
               {isAuthenticated ? (

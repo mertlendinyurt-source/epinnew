@@ -145,7 +145,7 @@ export default function LolPage() {
       }
       
       // TEK API ÇAĞRISI - Tüm veriler
-      const response = await fetch('/api/homepage?game=valorant')
+      const response = await fetch('/api/homepage?game=lol')
       const data = await response.json()
       
       if (data.success) {
@@ -920,7 +920,7 @@ export default function LolPage() {
         <div className="space-y-2">
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
-            <span className="text-sm text-white/70 group-hover:text-white transition-colors">Valorant</span>
+            <span className="text-sm text-white/70 group-hover:text-white transition-colors">League of Legends</span>
           </label>
         </div>
       </div>

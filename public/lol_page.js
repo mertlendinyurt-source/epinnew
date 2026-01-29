@@ -263,11 +263,11 @@ export default function LolPage() {
     const productParam = urlParams.get('product');
     
     if (productParam) {
-      // Find product by slug (e.g., "375vp", "825vp", "1700vp")
+      // Find product by slug (e.g., "460rp", "1005rp", "2105rp")
       const slug = productParam.toLowerCase().replace('-', '');
       
       // Try to match by RP amount in title
-      const rpAmount = parseInt(slug.replace('vp', '').replace('uc', ''));
+      const rpAmount = parseInt(slug.replace('rp', '').replace('uc', ''));
       
       let matchedProduct = null;
       
@@ -278,9 +278,13 @@ export default function LolPage() {
           if (p.rpAmount && parseInt(p.rpAmount) === rpAmount) {
             return true;
           }
+          // Check ucAmount as fallback
+          if (p.ucAmount && parseInt(p.ucAmount) === rpAmount) {
+            return true;
+          }
           // Check title
           const title = p.title.toLowerCase();
-          const matches = title.match(/(\d+)\s*vp/i);
+          const matches = title.match(/(\d+)\s*rp/i);
           if (matches) {
             return parseInt(matches[1]) === rpAmount;
           }

@@ -266,13 +266,13 @@ export default function LolPage() {
       // Find product by slug (e.g., "375vp", "825vp", "1700vp")
       const slug = productParam.toLowerCase().replace('-', '');
       
-      // Try to match by VP amount in title
+      // Try to match by RP amount in title
       const rpAmount = parseInt(slug.replace('vp', '').replace('uc', ''));
       
       let matchedProduct = null;
       
       if (!isNaN(rpAmount)) {
-        // Find product that contains the VP amount in title or rpAmount field
+        // Find product that contains the RP amount in title or rpAmount field
         matchedProduct = products.find(p => {
           // Check rpAmount field first
           if (p.rpAmount && parseInt(p.rpAmount) === rpAmount) {
@@ -678,7 +678,7 @@ export default function LolPage() {
     setPlayerValid(null)
     setTermsAccepted(true) // Terms pre-accepted for new product
     
-    // Update URL with product parameter for Google Ads tracking (VP için)
+    // Update URL with product parameter for Google Ads tracking (RP için)
     const rpAmount = product.title.match(/(\d+)\s*VP/i) || product.rpAmount;
     if (rpAmount) {
       const amount = typeof rpAmount === 'object' ? rpAmount[1] : (product.rpAmount || product.ucAmount);

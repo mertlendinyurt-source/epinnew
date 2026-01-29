@@ -1414,10 +1414,6 @@ export default function LoLPage() {
           {/* Product Grid */}
           <div className="flex-1">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
-                <span className="text-yellow-400">⚔️</span>
-                RP Paketleri
-              </h2>
               <span className="text-sm text-white/50">{products.length} ürün</span>
             </div>
 

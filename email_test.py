@@ -7,7 +7,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://pinly-esports.preview.emergentagent.com"
+BASE_URL = "https://gaming-checkout-3.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 

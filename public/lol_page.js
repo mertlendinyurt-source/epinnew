@@ -1645,14 +1645,14 @@ export default function LolPage() {
                   {/* RP Paketleri */}
                   <div className="mt-8">
                     <h3 className="text-lg font-bold text-white mb-4">RP Paketleri</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                       {[
-                        { amount: '375 RP', description: 'Başlangıç' },
-                        { amount: '825 RP', description: 'Standart' },
-                        { amount: '1700 RP', description: 'Popüler' },
-                        { amount: '2925 RP', description: 'Değerli' },
-                        { amount: '4325 RP', description: 'Premium' },
-                        { amount: '8900 RP', description: 'Mega' }
+                        { amount: '460 RP', description: 'Riot Cash 120 TL' },
+                        { amount: '1005 RP', description: 'Riot Cash 250 TL' },
+                        { amount: '2105 RP', description: 'Riot Cash 500 TL' },
+                        { amount: '3625 RP', description: 'Riot Cash 850 TL' },
+                        { amount: '5295 RP', description: 'Riot Cash 1230 TL' },
+                        { amount: '10875 RP', description: 'Riot Cash 2450 TL' }
                       ].map((pkg, idx) => (
                         <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
                           <div className="text-yellow-400 font-bold text-lg">{pkg.amount}</div>
@@ -1688,7 +1688,7 @@ export default function LolPage() {
                     <div className="space-y-3">
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">RP kodu nasıl kullanılır?</h4>
-                        <p className="text-white/60 text-sm">League of Legends'i açın, mağazaya gidin ve "RP Satın Al" bölümünden "Kodu Kullan" seçeneğini seçin. Aldığınız kodu girerek RP'nizi hesabınıza yükleyin.</p>
+                        <p className="text-white/60 text-sm">Riot Games hesabınıza giriş yapın, ardından kodlar.riotgames.com adresine gidin. "Kodu Kullan" bölümüne Riot Cash kodunuzu girin ve RP'niz hesabınıza yüklenecektir.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">RP kodları hangi bölgelerde geçerli?</h4>
@@ -1696,7 +1696,7 @@ export default function LolPage() {
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">Teslimat ne kadar sürer?</h4>
-                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra RP kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
+                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra Riot Cash kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
                       </div>
                     </div>
                   </div>

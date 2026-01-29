@@ -145,7 +145,7 @@ export default function LolPage() {
       }
       
       // TEK API ÇAĞRISI - Tüm veriler
-      const response = await fetch('/api/homepage?game=valorant')
+      const response = await fetch('/api/homepage?game=lol')
       const data = await response.json()
       
       if (data.success) {

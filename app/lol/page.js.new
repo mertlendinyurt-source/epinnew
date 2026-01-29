@@ -63,7 +63,7 @@ export default function LolPage() {
   const GAME_TYPE = 'lol'
   const GAME_NAME = 'League of Legends'
   const CURRENCY_NAME = 'RP'
-  const THEME_COLOR = 'yellow' // Valorant kırmızı teması
+  const THEME_COLOR = 'yellow' // League of Legends sarı teması
   
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -707,7 +707,7 @@ export default function LolPage() {
   }
 
   const handleCheckout = async () => {
-    // Valorant için Oyuncu ID kontrolü yok - direkt kod teslimi
+    // League of Legends için Oyuncu ID kontrolü yok - direkt kod teslimi
 
     // 1. Check authentication
     const token = localStorage.getItem('userToken')
@@ -750,7 +750,7 @@ export default function LolPage() {
         },
         body: JSON.stringify({
           productId: selectedProduct.id,
-          playerId: 'valorant-direct', // Valorant için oyuncu ID gerekmiyor
+          playerId: 'lol-direct', // Valorant için oyuncu ID gerekmiyor
           playerName: 'League of Legends RP',
           paymentMethod: paymentMethod, // 'card' or 'balance'
           game: GAME_TYPE, // 'valorant'
@@ -928,7 +928,7 @@ export default function LolPage() {
       <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
         <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Bölge</h3>
         <div className="space-y-2">
-          {/* Valorant için sadece Türkiye bölgesi */}
+          {/* League of Legends için sadece Türkiye bölgesi */}
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
             <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
@@ -1280,7 +1280,7 @@ export default function LolPage() {
             )}
             <div>
               <div className="text-xs md:text-sm text-white/60 mb-0.5 md:mb-1">Anasayfa &gt; Oyunlar</div>
-              <h1 className="text-xl md:text-[28px] font-bold text-white">Valorant</h1>
+              <h1 className="text-xl md:text-[28px] font-bold text-white">League of Legends</h1>
               <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
                 <span className="text-yellow-400 text-xs md:text-sm">★★★★★ 5/5</span>
                 <span className="text-white/70 text-xs md:text-sm">(2008) yorum</span>
@@ -1595,17 +1595,17 @@ export default function LolPage() {
           <div className="p-6">
             {activeInfoTab === 'description' && (
               <div className="prose prose-invert max-w-none">
-                {/* Valorant için özel açıklama - gameContent kullanılmıyor */}
+                {/* League of Legends için özel açıklama - gameContent kullanılmıyor */}
                 <div className="space-y-6">
                   {/* Ana Açıklama */}
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-3">Valorant: Oynanış, Tarihçe ve Sistem Gereksinimleri</h3>
+                    <h3 className="text-lg font-bold text-white mb-3">League of Legends: Oynanış, Tarihçe ve Sistem Gereksinimleri</h3>
                     <div className={`text-white/80 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 ${!descriptionExpanded ? 'max-h-32 overflow-hidden' : ''}`}>
-                      <p className="mb-4">Valorant, Riot Games tarafından geliştirilen ve 2020 yılında piyasaya sürülen ücretsiz taktiksel birinci şahıs nişancı (FPS) oyunudur. Oyun, Counter-Strike serisi ile Overwatch'un mekaniklerini birleştirerek benzersiz bir deneyim sunar.</p>
+                      <p className="mb-4">League of Legends, Riot Games tarafından geliştirilen ve 2009 yılında piyasaya sürülen ücretsiz MOBA türündeki dünyanın en popüler oyunudur. Oyun, Dota ve diğer strateji oyunlarının mekaniklerini birleştirerek benzersiz bir deneyim sunar.</p>
                       
-                      <p className="mb-4">5v5 formatında oynanan Valorant'ta, oyuncular farklı yeteneklere sahip "Ajan" karakterlerini seçer. Her ajanın kendine özgü 4 yeteneği vardır: bir imza yeteneği, iki satın alınabilir yetenek ve bir ultimate yeteneği.</p>
+                      <p className="mb-4">5v5 formatında oynanan League of Legends'ta, oyuncular farklı yeteneklere sahip ""Şampiyon" karakterlerini seçer. Her şampiyonun kendine özgü 4 yeteneği vardır: bir imza yeteneği, iki satın alınabilir yetenek ve bir ultimate yeteneği.</p>
                       
-                      <p className="mb-4">Valorant Points (VP), oyun içi premium para birimidir. VP ile şunları satın alabilirsiniz:</p>
+                      <p className="mb-4">Riot Points (RP), oyun içi premium para birimidir. VP ile şunları satın alabilirsiniz:</p>
                       <ul className="list-disc list-inside mb-4 space-y-1">
                         <li>Silah skinleri ve koleksiyonları</li>
                         <li>Battle Pass ve Premium Battle Pass</li>
@@ -1674,7 +1674,7 @@ export default function LolPage() {
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">💳 Kolay Kullanım</h4>
-                      <p className="text-white/60 text-sm">Aldığınız VP kodunu Valorant mağazasında kullanabilirsiniz.</p>
+                      <p className="text-white/60 text-sm">Aldığınız RP kodunu League of Legends mağazasında kullanabilirsiniz.</p>
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">📞 7/24 Destek</h4>
@@ -1688,7 +1688,7 @@ export default function LolPage() {
                     <div className="space-y-3">
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">VP kodu nasıl kullanılır?</h4>
-                        <p className="text-white/60 text-sm">Valorant'ı açın, mağazaya gidin ve "VP Satın Al" bölümünden "Kodu Kullan" seçeneğini seçin. Aldığınız kodu girerek VP'nizi hesabınıza yükleyin.</p>
+                        <p className="text-white/60 text-sm">League of Legends'i açın, mağazaya gidin ve "RP Satın Al" bölümünden "Kodu Kullan" seçeneğini seçin. Aldığınız kodu girerek RP'nizi hesabınıza yükleyin.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">VP kodları hangi bölgelerde geçerli?</h4>
@@ -1815,7 +1815,7 @@ export default function LolPage() {
                   <div className="px-4 py-3.5 rounded bg-yellow-500/15 border border-yellow-500/30">
                     <div className="flex items-center gap-2 text-yellow-400 mb-1 text-xs font-semibold">
                       <Check className="w-4 h-4" />
-                      <span>Valorant RP Kodu</span>
+                      <span>League of Legends RP Kodu</span>
                     </div>
                     <p className="text-white/70 text-sm">Ödeme sonrası RP kodunuz anında e-posta ile gönderilecek ve Siparişlerim bölümünde görüntülenecektir.</p>
                   </div>
@@ -1949,12 +1949,12 @@ export default function LolPage() {
                       <div className="flex items-start gap-2 mb-4">
                         <input
                           type="checkbox"
-                          id="termsCheckboxValorant"
+                          id="termsCheckboxLol"
                           checked={termsAccepted}
                           onChange={(e) => setTermsAccepted(e.target.checked)}
                           className="mt-1 w-4 h-4 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-blue-500/50 cursor-pointer"
                         />
-                        <label htmlFor="termsCheckboxValorant" className="text-xs text-white/50 cursor-pointer">
+                        <label htmlFor="termsCheckboxLol" className="text-xs text-white/50 cursor-pointer">
                           <button 
                             type="button"
                             onClick={(e) => { e.preventDefault(); setTermsModalOpen(true); }}
@@ -2175,7 +2175,7 @@ export default function LolPage() {
                 Popüler Kategoriler
               </h3>
               <ul className="space-y-3">
-                {(footerSettings?.categories || [{ label: 'PUBG UC', url: '/' }, { label: 'League of Legends RP', url: '/valorant' }, { label: 'MLBB Diamonds', url: '/mlbb' }]).map((cat, index) => (
+                {(footerSettings?.categories || [{ label: 'PUBG UC', url: '/' }, { label: 'Valorant VP', url: '/valorant' }, { label: 'MLBB Diamonds', url: '/mlbb' }]).map((cat, index) => (
                   <li key={index}>
                     <a 
                       href={cat.url} 

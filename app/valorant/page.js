@@ -1535,6 +1535,7 @@ export default function ValorantPage() {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
             )}
           </div>

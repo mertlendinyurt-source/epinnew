@@ -1193,13 +1193,12 @@ export default function MLBBPage() {
                         </div>
                         <span className="text-sm text-blue-400">Mobile Legends</span>
                       </a>
-                      <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg opacity-50 cursor-not-allowed">
+                      <a href="/lol" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
                         <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                           <img src="/lol-logo.png" alt="League of Legends" className="w-6 h-6 object-contain" />
                         </div>
-                        <span className="text-sm text-white/50">League of Legends</span>
-                        <span className="text-[9px] px-1.5 py-0.5 bg-white/10 rounded text-white/40 ml-auto">Yakında</span>
-                      </div>
+                        <span className="text-sm text-white/90">League of Legends</span>
+                      </a>
                     </div>
                   </div>
                 </>
@@ -1237,14 +1236,16 @@ export default function MLBBPage() {
               <span className="text-xs md:text-sm font-medium text-blue-400 whitespace-nowrap">Mobile Legends</span>
             </a>
 
-            {/* Coming Soon Games */}
-            <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e]/50 rounded-lg border border-white/5 flex-shrink-0 opacity-60 cursor-not-allowed">
+            {/* League of Legends */}
+            <a 
+              href="/lol" 
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/20 flex-shrink-0 group"
+            >
               <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                 <img src="/lol-logo.png" alt="League of Legends" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
               </div>
-              <span className="text-xs md:text-sm font-medium text-white/50 whitespace-nowrap">League of Legends</span>
-              <span className="text-[9px] md:text-[10px] px-1.5 py-0.5 bg-white/10 rounded text-white/40">Yakında</span>
-            </div>
+              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-yellow-400 transition-colors whitespace-nowrap">League of Legends</span>
+            </a>
           </div>
         </div>
       </div>

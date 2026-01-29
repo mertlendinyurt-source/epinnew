@@ -1179,11 +1179,11 @@ export default function LolPage() {
                         </div>
                         <span className="text-sm text-white/90">Pubg Mobile</span>
                       </a>
-                      <a href="/valorant" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors bg-white/5">
+                      <a href="/valorant" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
                         <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                           <img src="/valorant-logo.png" alt="Valorant" className="w-6 h-6 object-contain" />
                         </div>
-                        <span className="text-sm text-yellow-400">Valorant</span>
+                        <span className="text-sm text-white/90">Valorant</span>
                       </a>
                       <a href="/mlbb" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
                         <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
@@ -1191,11 +1191,11 @@ export default function LolPage() {
                         </div>
                         <span className="text-sm text-white/90">Mobile Legends</span>
                       </a>
-                      <a href="/lol" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                      <a href="/lol" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors bg-white/5">
                         <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                           <img src="/lol-logo.png" alt="League of Legends" className="w-6 h-6 object-contain" />
                         </div>
-                        <span className="text-sm text-white/90">League of Legends</span>
+                        <span className="text-sm text-yellow-400">League of Legends</span>
                       </a>
                     </div>
                   </div>

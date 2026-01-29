@@ -1604,6 +1604,12 @@ async function initializeDb() {
     { $set: { game: 'pubg' } }
   );
   
+  // Migrate existing products: add 'featured' field (default: false)
+  await db.collection('products').updateMany(
+    { featured: { $exists: false } },
+    { $set: { featured: false } }
+  );
+  
   // Check if products exist
   const productsCount = await db.collection('products').countDocuments();
   if (productsCount === 0) {

@@ -1484,15 +1484,8 @@ export default function LolPage() {
                       <span className="text-gray-700 font-bold text-xs md:text-xs">i</span>
                     </div>
 
-                    {/* Image Section - LoL Theme */}
-                    <div className="relative h-[42%] md:h-[55%] bg-gradient-to-br from-[#1a1a3e] via-[#2d1f4e] to-[#1a1a3e] flex items-center justify-center p-2 md:p-4 overflow-hidden">
-                      {/* Background Logo Pattern */}
-                      <div className="absolute inset-0 flex items-center justify-center opacity-10">
-                        <img src="/lol-logo.png" alt="" className="w-32 h-32 object-contain" />
-                      </div>
-                      {/* Decorative Glow */}
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 bg-blue-500/20 rounded-full blur-2xl"></div>
-                      <div className="absolute bottom-0 left-1/4 w-24 h-12 bg-purple-500/15 rounded-full blur-xl"></div>
+                    {/* Image Section */}
+                    <div className="relative h-[42%] md:h-[55%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-2 md:p-4">
                       {/* Flare Effect */}
                       <div className="go-product-shine">
                         <div className="go-product-shine-overlay"></div>

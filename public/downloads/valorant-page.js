@@ -108,6 +108,7 @@ export default function ValorantPage() {
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 })
   const [userBalance, setUserBalance] = useState(0)
   const [paymentMethod, setPaymentMethod] = useState('card') // 'card' or 'balance'
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
 
   // Calculate time remaining until midnight (end of day)
   const calculateTimeToMidnight = () => {
@@ -1134,61 +1135,73 @@ export default function ValorantPage() {
       {/* Category Navigation Bar */}
       <div className="bg-[#0d1117] border-b border-white/5">
         <div className="max-w-[1920px] mx-auto">
-          <div className="flex items-center gap-2 px-4 md:px-6 py-3 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center gap-2 px-4 md:px-6 py-3 overflow-x-auto scrollbar-hide" style={{ overflow: categoryDropdownOpen ? 'visible' : 'auto' }}>
             {/* Kategoriler Dropdown */}
-            <div className="relative group flex-shrink-0">
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 rounded-lg transition-all border border-white/10">
+            <div className="relative flex-shrink-0" style={{ zIndex: 100 }}>
+              <button 
+                onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 rounded-lg transition-all border border-white/10"
+              >
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
                 <span className="text-xs md:text-sm font-medium text-white">Kategoriler</span>
-                <ChevronDown className="w-4 h-4 text-white/60 group-hover:rotate-180 transition-transform" />
+                <ChevronDown className={`w-4 h-4 text-white/60 transition-transform ${categoryDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
               
               {/* Dropdown Menu */}
-              <div className="absolute left-0 top-full mt-2 w-64 bg-[#1a1f2e] rounded-xl shadow-2xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                {/* User Actions */}
-                <div className="p-2 border-b border-white/10">
-                  <a href="/account/orders" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
-                    <span className="text-lg">📦</span>
-                    <span className="text-sm text-white/90">Siparişlerim</span>
-                  </a>
-                  <a href="/account/support/new" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
-                    <span className="text-lg">💬</span>
-                    <span className="text-sm text-white/90">Destek Talebi Oluştur</span>
-                  </a>
-                </div>
-                
-                {/* Game Categories */}
-                <div className="p-2">
-                  <p className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-white/40 font-medium">Oyun Kategorileri</p>
-                  <a href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
-                    <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
-                      <img src="/pubg-logo.png" alt="PUBG" className="w-6 h-6 object-contain" />
+              {categoryDropdownOpen && (
+                <>
+                  {/* Backdrop to close dropdown */}
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setCategoryDropdownOpen(false)}
+                  />
+                  <div className="absolute left-0 top-full mt-2 w-64 bg-[#1a1f2e] rounded-xl shadow-2xl border border-white/10 z-50">
+                    {/* User Actions */}
+                    <div className="p-2 border-b border-white/10">
+                      <a href="/account/orders" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                        <span className="text-lg">📦</span>
+                        <span className="text-sm text-white/90">Siparişlerim</span>
+                      </a>
+                      <a href="/account/support/new" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                        <span className="text-lg">💬</span>
+                        <span className="text-sm text-white/90">Destek Talebi Oluştur</span>
+                      </a>
                     </div>
-                    <span className="text-sm text-white/90">Pubg Mobile</span>
-                  </a>
-                  <a href="/valorant" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors bg-white/5">
-                    <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
-                      <img src="/valorant-logo.png" alt="Valorant" className="w-6 h-6 object-contain" />
+                    
+                    {/* Game Categories */}
+                    <div className="p-2">
+                      <p className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-white/40 font-medium">Oyun Kategorileri</p>
+                      <a href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
+                          <img src="/pubg-logo.png" alt="PUBG" className="w-6 h-6 object-contain" />
+                        </div>
+                        <span className="text-sm text-white/90">Pubg Mobile</span>
+                      </a>
+                      <a href="/valorant" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors bg-white/5">
+                        <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
+                          <img src="/valorant-logo.png" alt="Valorant" className="w-6 h-6 object-contain" />
+                        </div>
+                        <span className="text-sm text-red-400">Valorant</span>
+                      </a>
+                      <a href="/mlbb" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
+                          <img src="/mlbb-logo.png" alt="Mobile Legends" className="w-6 h-6 object-contain" />
+                        </div>
+                        <span className="text-sm text-white/90">Mobile Legends</span>
+                      </a>
+                      <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg opacity-50 cursor-not-allowed">
+                        <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
+                          <img src="/lol-logo.png" alt="League of Legends" className="w-6 h-6 object-contain" />
+                        </div>
+                        <span className="text-sm text-white/50">League of Legends</span>
+                        <span className="text-[9px] px-1.5 py-0.5 bg-white/10 rounded text-white/40 ml-auto">Yakında</span>
+                      </div>
                     </div>
-                    <span className="text-sm text-red-400">Valorant</span>
-                  </a>
-                  <a href="/mlbb" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
-                    <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
-                      <img src="/mlbb-logo.png" alt="Mobile Legends" className="w-6 h-6 object-contain" />
-                    </div>
-                    <span className="text-sm text-white/90">Mobile Legends</span>
-                  </a>
-                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg opacity-50 cursor-not-allowed">
-                    <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
-                      <img src="/lol-logo.png" alt="League of Legends" className="w-6 h-6 object-contain" />
-                    </div>
-                    <span className="text-sm text-white/50">League of Legends</span>
-                    <span className="text-[9px] px-1.5 py-0.5 bg-white/10 rounded text-white/40 ml-auto">Yakında</span>
                   </div>
-                </div>
-              </div>
+                </>
+              )}
             </div>
 
             {/* Game Categories - Horizontal */}

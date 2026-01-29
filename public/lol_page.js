@@ -266,13 +266,13 @@ export default function LolPage() {
       // Find product by slug (e.g., "375vp", "825vp", "1700vp")
       const slug = productParam.toLowerCase().replace('-', '');
       
-      // Try to match by VP amount in title
+      // Try to match by RP amount in title
       const rpAmount = parseInt(slug.replace('vp', '').replace('uc', ''));
       
       let matchedProduct = null;
       
       if (!isNaN(rpAmount)) {
-        // Find product that contains the VP amount in title or rpAmount field
+        // Find product that contains the RP amount in title or rpAmount field
         matchedProduct = products.find(p => {
           // Check rpAmount field first
           if (p.rpAmount && parseInt(p.rpAmount) === rpAmount) {
@@ -678,7 +678,7 @@ export default function LolPage() {
     setPlayerValid(null)
     setTermsAccepted(true) // Terms pre-accepted for new product
     
-    // Update URL with product parameter for Google Ads tracking (VP için)
+    // Update URL with product parameter for Google Ads tracking (RP için)
     const rpAmount = product.title.match(/(\d+)\s*VP/i) || product.rpAmount;
     if (rpAmount) {
       const amount = typeof rpAmount === 'object' ? rpAmount[1] : (product.rpAmount || product.ucAmount);
@@ -1605,7 +1605,7 @@ export default function LolPage() {
                       
                       <p className="mb-4">5v5 formatında oynanan League of Legends'ta, oyuncular farklı yeteneklere sahip ""Şampiyon" karakterlerini seçer. Her şampiyonun kendine özgü 4 yeteneği vardır: bir imza yeteneği, iki satın alınabilir yetenek ve bir ultimate yeteneği.</p>
                       
-                      <p className="mb-4">Riot Points (RP), oyun içi premium para birimidir. VP ile şunları satın alabilirsiniz:</p>
+                      <p className="mb-4">Riot Points (RP), oyun içi premium para birimidir. RP ile şunları satın alabilirsiniz:</p>
                       <ul className="list-disc list-inside mb-4 space-y-1">
                         <li>Silah skinleri ve koleksiyonları</li>
                         <li>Battle Pass ve Premium Battle Pass</li>
@@ -1642,17 +1642,17 @@ export default function LolPage() {
                     )}
                   </button>
 
-                  {/* VP Paketleri */}
+                  {/* RP Paketleri */}
                   <div className="mt-8">
-                    <h3 className="text-lg font-bold text-white mb-4">VP Paketleri</h3>
+                    <h3 className="text-lg font-bold text-white mb-4">RP Paketleri</h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                       {[
-                        { amount: '375 VP', description: 'Başlangıç' },
-                        { amount: '825 VP', description: 'Standart' },
-                        { amount: '1700 VP', description: 'Popüler' },
-                        { amount: '2925 VP', description: 'Değerli' },
-                        { amount: '4325 VP', description: 'Premium' },
-                        { amount: '8900 VP', description: 'Mega' }
+                        { amount: '375 RP', description: 'Başlangıç' },
+                        { amount: '825 RP', description: 'Standart' },
+                        { amount: '1700 RP', description: 'Popüler' },
+                        { amount: '2925 RP', description: 'Değerli' },
+                        { amount: '4325 RP', description: 'Premium' },
+                        { amount: '8900 RP', description: 'Mega' }
                       ].map((pkg, idx) => (
                         <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
                           <div className="text-yellow-400 font-bold text-lg">{pkg.amount}</div>
@@ -1687,12 +1687,12 @@ export default function LolPage() {
                     <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
                     <div className="space-y-3">
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">VP kodu nasıl kullanılır?</h4>
+                        <h4 className="text-white font-medium mb-2">RP kodu nasıl kullanılır?</h4>
                         <p className="text-white/60 text-sm">League of Legends'i açın, mağazaya gidin ve "RP Satın Al" bölümünden "Kodu Kullan" seçeneğini seçin. Aldığınız kodu girerek RP'nizi hesabınıza yükleyin.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">VP kodları hangi bölgelerde geçerli?</h4>
-                        <p className="text-white/60 text-sm">VP kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
+                        <h4 className="text-white font-medium mb-2">RP kodları hangi bölgelerde geçerli?</h4>
+                        <p className="text-white/60 text-sm">RP kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">Teslimat ne kadar sürer?</h4>
@@ -2307,19 +2307,19 @@ export default function LolPage() {
               <h3 className="text-white font-semibold mb-2">2. Ürün Tanımları ve Özel Koşullar</h3>
               <p>Platformumuzda satışa sunulan ürünler farklı kategorilerde olabilir:</p>
               <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
-                <li><strong className="text-white">Standart VP Paketleri:</strong> Belirtilen miktarda VP içerir.</li>
-                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele VP miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, düşük veya yüksek miktarda VP çıkabilir. Bu tür ürünlerde çıkan VP miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
+                <li><strong className="text-white">Standart RP Paketleri:</strong> Belirtilen miktarda RP içerir.</li>
+                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele RP miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, düşük veya yüksek miktarda RP çıkabilir. Bu tür ürünlerde çıkan RP miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
               </ul>
             </section>
 
             <section>
               <h3 className="text-white font-semibold mb-2">3. İade ve İptal Politikası</h3>
-              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan VP miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
+              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan RP miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
             </section>
 
             <section>
               <h3 className="text-white font-semibold mb-2">4. Sorumluluk Reddi</h3>
-              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan VP miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
+              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan RP miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
             </section>
 
             <section>

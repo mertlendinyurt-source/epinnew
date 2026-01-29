@@ -7895,7 +7895,7 @@ export async function POST(request) {
         );
       }
 
-      const { logo, favicon, heroImage, valorantHeroImage, mlbbHeroImage, categoryIcon, siteName, metaTitle, metaDescription, contactEmail, contactPhone, liveSupportEnabled, liveSupportHours, dailyBannerEnabled, dailyBannerTitle, dailyBannerSubtitle, dailyBannerIcon, dailyCountdownEnabled, dailyCountdownLabel } = body;
+      const { logo, favicon, heroImage, valorantHeroImage, mlbbHeroImage, lolHeroImage, categoryIcon, siteName, metaTitle, metaDescription, contactEmail, contactPhone, liveSupportEnabled, liveSupportHours, dailyBannerEnabled, dailyBannerTitle, dailyBannerSubtitle, dailyBannerIcon, dailyCountdownEnabled, dailyCountdownLabel } = body;
 
       // Validation
       if (siteName !== undefined && (!siteName || siteName.trim().length === 0)) {
@@ -7945,6 +7945,7 @@ export async function POST(request) {
         heroImage: heroImage !== undefined ? heroImage : existingSettings?.heroImage || null,
         valorantHeroImage: valorantHeroImage !== undefined ? valorantHeroImage : existingSettings?.valorantHeroImage || null,
         mlbbHeroImage: mlbbHeroImage !== undefined ? mlbbHeroImage : existingSettings?.mlbbHeroImage || null,
+        lolHeroImage: lolHeroImage !== undefined ? lolHeroImage : existingSettings?.lolHeroImage || null,
         categoryIcon: categoryIcon !== undefined ? categoryIcon : existingSettings?.categoryIcon || null,
         siteName: siteName !== undefined ? siteName.trim() : existingSettings?.siteName || 'PINLY',
         metaTitle: metaTitle !== undefined ? metaTitle.trim() : existingSettings?.metaTitle || '',

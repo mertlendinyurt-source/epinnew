@@ -800,7 +800,7 @@ export default function AdminProducts() {
                       <TableRow key={product.id} className="border-slate-800 hover:bg-slate-800/50">
                         <TableCell>
                           <Badge variant={product.game === 'valorant' ? 'destructive' : product.game === 'mlbb' ? 'default' : 'default'} className={product.game === 'valorant' ? 'bg-red-600' : product.game === 'mlbb' ? 'bg-blue-600' : 'bg-yellow-600'}>
-                            {product.game === 'valorant' ? 'Valorant' : product.game === 'mlbb' ? 'MLBB' : 'PUBG'}
+                            {product.game === 'valorant' ? 'Valorant' : product.game === 'mlbb' ? 'MLBB' : product.game === 'lol' ? 'LoL' : 'PUBG'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-white font-medium">{product.title}</TableCell>
@@ -865,7 +865,7 @@ export default function AdminProducts() {
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <Badge variant={product.game === 'valorant' ? 'destructive' : product.game === 'mlbb' ? 'default' : 'default'} className={`text-xs ${product.game === 'valorant' ? 'bg-red-600' : product.game === 'mlbb' ? 'bg-blue-600' : 'bg-yellow-600'}`}>
-                            {product.game === 'valorant' ? 'Valorant' : product.game === 'mlbb' ? 'MLBB' : 'PUBG'}
+                            {product.game === 'valorant' ? 'Valorant' : product.game === 'mlbb' ? 'MLBB' : product.game === 'lol' ? 'LoL' : 'PUBG'}
                           </Badge>
                         </div>
                         <h3 className="text-white font-medium">{product.title}</h3>

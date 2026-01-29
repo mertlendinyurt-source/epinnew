@@ -982,14 +982,6 @@ export default function App() {
               )}
             </a>
 
-            {/* Navigation - Desktop */}
-            <nav className="hidden md:flex items-center gap-6">
-              <a href="/" className="text-sm text-white/90 hover:text-white transition-colors font-medium">PUBG UC</a>
-              <a href="/valorant" className="text-sm text-white/70 hover:text-red-400 transition-colors">Valorant VP</a>
-              <a href="/mlbb" className="text-sm text-white/70 hover:text-blue-400 transition-colors">MLBB Diamonds</a>
-              <a href="/blog" className="text-sm text-white/70 hover:text-white transition-colors">Blog</a>
-            </nav>
-
             {/* Auth Buttons */}
             <div className="flex items-center gap-2 md:gap-3">
               {isAuthenticated ? (
@@ -1148,49 +1140,41 @@ export default function App() {
             {/* Game Categories */}
             <a 
               href="/" 
-              className="flex items-center gap-3 px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/20 flex-shrink-0 group"
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/20 flex-shrink-0 group"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500/20 to-orange-500/20 flex items-center justify-center overflow-hidden">
-                <img src="https://cdn.icon-icons.com/icons2/2699/PNG/512/pubg_logo_icon_171827.png" alt="PUBG" className="w-6 h-6 object-contain" />
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
+                <img src="/pubg-logo.png" alt="PUBG" className="w-6 h-6 md:w-7 md:h-7 object-contain" />
               </div>
-              <span className="text-sm font-medium text-white/90 group-hover:text-yellow-400 transition-colors whitespace-nowrap">Pubg Mobile</span>
+              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-yellow-400 transition-colors whitespace-nowrap">Pubg Mobile</span>
             </a>
 
             <a 
               href="/valorant" 
-              className="flex items-center gap-3 px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-red-500/20 flex-shrink-0 group"
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-red-500/20 flex-shrink-0 group"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500/20 to-pink-500/20 flex items-center justify-center overflow-hidden">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Valorant_logo_-_pink_color_version.svg" alt="Valorant" className="w-6 h-6 object-contain" />
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
+                <img src="/valorant-logo.png" alt="Valorant" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
               </div>
-              <span className="text-sm font-medium text-white/90 group-hover:text-red-400 transition-colors whitespace-nowrap">Valorant</span>
+              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-red-400 transition-colors whitespace-nowrap">Valorant</span>
             </a>
 
             <a 
               href="/mlbb" 
-              className="flex items-center gap-3 px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-blue-500/20 flex-shrink-0 group"
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-blue-500/20 flex-shrink-0 group"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center overflow-hidden">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/4/43/Mobile_Legends_Bang_Bang_logo_%282020%29.png" alt="Mobile Legends" className="w-5 h-5 object-contain" />
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center overflow-hidden">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/43/Mobile_Legends_Bang_Bang_logo_%282020%29.png" alt="Mobile Legends" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
               </div>
-              <span className="text-sm font-medium text-white/90 group-hover:text-blue-400 transition-colors whitespace-nowrap">Mobile Legends</span>
+              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-blue-400 transition-colors whitespace-nowrap">Mobile Legends</span>
             </a>
 
             {/* Coming Soon Games */}
-            <div className="flex items-center gap-3 px-4 py-2 bg-[#1a1f2e]/50 rounded-lg border border-white/5 flex-shrink-0 opacity-60 cursor-not-allowed">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center">
-                <span className="text-lg">🎮</span>
+            <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e]/50 rounded-lg border border-white/5 flex-shrink-0 opacity-60 cursor-not-allowed">
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
+                <img src="/lol-logo.png" alt="League of Legends" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
               </div>
-              <span className="text-sm font-medium text-white/50 whitespace-nowrap">League of Legends</span>
-              <span className="text-[10px] px-1.5 py-0.5 bg-white/10 rounded text-white/40">Yakında</span>
-            </div>
-
-            <div className="flex items-center gap-3 px-4 py-2 bg-[#1a1f2e]/50 rounded-lg border border-white/5 flex-shrink-0 opacity-60 cursor-not-allowed">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center">
-                <span className="text-lg">⚔️</span>
-              </div>
-              <span className="text-sm font-medium text-white/50 whitespace-nowrap">Age of Empires Mobile</span>
-              <span className="text-[10px] px-1.5 py-0.5 bg-white/10 rounded text-white/40">Yakında</span>
+              <span className="text-xs md:text-sm font-medium text-white/50 whitespace-nowrap">League of Legends</span>
+              <span className="text-[9px] md:text-[10px] px-1.5 py-0.5 bg-white/10 rounded text-white/40">Yakında</span>
             </div>
           </div>
         </div>

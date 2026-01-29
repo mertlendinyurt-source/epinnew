@@ -1459,7 +1459,20 @@ export default function App() {
                 <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4">
+              <div className="relative rounded-2xl overflow-hidden">
+                {/* PUBG Theme Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#2a2a1a] via-[#3d3a1a] to-[#2a2a2a]"></div>
+                {/* Logo Pattern */}
+                <div className="absolute inset-0 opacity-[0.07]" style={{
+                  backgroundImage: `url('/pubg-logo.png')`,
+                  backgroundSize: '120px 120px',
+                  backgroundRepeat: 'repeat'
+                }}></div>
+                {/* Glow Effects */}
+                <div className="absolute top-0 left-1/4 w-96 h-48 bg-yellow-500/20 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-0 right-1/4 w-96 h-48 bg-orange-500/15 rounded-full blur-3xl"></div>
+                
+                <div className="relative z-10 p-4 md:p-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4">
                 {products.map((product) => (
                   <div
                     key={product.id}
@@ -1518,6 +1531,7 @@ export default function App() {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
             )}
           </div>

@@ -8022,6 +8022,38 @@ export async function POST(request) {
       });
     }
 
+    // Admin: Toggle Shopinext enabled/disabled
+    if (pathname === '/api/admin/settings/shopinext/toggle') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { isEnabled } = body;
+
+      // Update isEnabled field
+      const result = await db.collection('shopinext_settings').updateOne(
+        { isActive: true },
+        { $set: { isEnabled: !!isEnabled, updatedAt: new Date() } }
+      );
+
+      if (result.matchedCount === 0) {
+        return NextResponse.json(
+          { success: false, error: 'Shopinext ayarları bulunamadı. Önce ayarları kaydedin.' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: isEnabled ? 'Shopinext ödeme seçeneği aktifleştirildi' : 'Shopinext ödeme seçeneği gizlendi',
+        data: { isEnabled: !!isEnabled }
+      });
+    }
+
     // Admin: Save Shopinext payment settings (encrypted)
     if (pathname === '/api/admin/settings/shopinext') {
       const user = verifyAdminToken(request);

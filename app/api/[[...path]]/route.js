@@ -7394,6 +7394,75 @@ export async function POST(request) {
       });
     }
 
+    // Admin: Save Shopinext payment settings (encrypted)
+    if (pathname === '/api/admin/settings/shopinext') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { clientId, clientSecret, domain, ipAddress, mode } = body;
+
+      // Validate required fields
+      if (!clientId || !clientSecret || !domain) {
+        return NextResponse.json(
+          { success: false, error: 'Client ID, Client Secret ve Domain gereklidir' },
+          { status: 400 }
+        );
+      }
+
+      // Rate limiting check (simple implementation - 10 requests per hour)
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const recentUpdates = await db.collection('shopinext_settings')
+        .countDocuments({ updatedAt: { $gte: oneHourAgo } });
+      
+      if (recentUpdates >= 10) {
+        return NextResponse.json(
+          { success: false, error: 'Çok fazla istek. Lütfen daha sonra tekrar deneyin.' },
+          { status: 429 }
+        );
+      }
+
+      // Encrypt sensitive data before storing
+      const encryptedSettings = {
+        clientId: encrypt(clientId),
+        clientSecret: encrypt(clientSecret),
+        domain: domain,
+        ipAddress: ipAddress || '',
+        mode: mode || 'production',
+        isActive: true,
+        updatedBy: user.username || user.email,
+        updatedAt: new Date(),
+        createdAt: new Date()
+      };
+
+      // Deactivate all previous settings
+      await db.collection('shopinext_settings').updateMany(
+        {},
+        { $set: { isActive: false } }
+      );
+
+      // Insert new settings
+      await db.collection('shopinext_settings').insertOne(encryptedSettings);
+
+      // Clear any existing tokens
+      await db.collection('shopinext_tokens').deleteMany({});
+
+      return NextResponse.json({
+        success: true,
+        message: 'Shopinext ayarları başarıyla kaydedildi',
+        data: {
+          domain: encryptedSettings.domain,
+          mode: encryptedSettings.mode,
+          updatedBy: encryptedSettings.updatedBy,
+          updatedAt: encryptedSettings.updatedAt
+        }
+      });
+    }
+
     // Admin: Save Shopier payment settings (encrypted)
     if (pathname === '/api/admin/settings/payments') {
       const user = verifyAdminToken(request);

@@ -9666,6 +9666,69 @@ export async function POST(request) {
         });
       }
 
+      // ============================================
+      // 💳 SHOPINEXT PAYMENT FLOW FOR ACCOUNTS
+      // ============================================
+      if (paymentMethod === 'shopinext') {
+        const shopinextSettings = await db.collection('shopinext_settings').findOne({ isActive: true });
+        
+        if (!shopinextSettings) {
+          return NextResponse.json(
+            { success: false, error: 'Shopinext ödeme sistemi yapılandırılmamış.' },
+            { status: 503 }
+          );
+        }
+
+        // Create pending order
+        const order = {
+          id: uuidv4(),
+          type: 'account',
+          userId: user.id,
+          accountId: accountId,
+          accountTitle: account.title,
+          accountImageUrl: account.imageUrl || null,
+          customer: customerSnapshot,
+          status: 'pending',
+          paymentMethod: 'shopinext',
+          amount: orderAmount,
+          totalAmount: orderAmount,
+          currency: 'TRY',
+          delivery: {
+            status: 'pending',
+            message: 'Ödeme bekleniyor...',
+            credentials: null
+          },
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        await db.collection('orders').insertOne(order);
+
+        // Create Shopinext payment
+        const paymentResult = await createShopinextPayment(db, order, user, account);
+        
+        if (!paymentResult.success) {
+          await db.collection('orders').updateOne(
+            { id: order.id },
+            { $set: { status: 'failed', error: paymentResult.error, updatedAt: new Date() } }
+          );
+          
+          return NextResponse.json(
+            { success: false, error: paymentResult.error || 'Ödeme başlatılamadı' },
+            { status: 400 }
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            orderId: order.id,
+            paymentUrl: paymentResult.redirectUrl,
+            paymentProvider: 'shopinext'
+          }
+        });
+      }
+
       // Card Payment - Shopier
       const shopierSettings = await db.collection('shopier_settings').findOne({ isActive: true });
       if (!shopierSettings) {

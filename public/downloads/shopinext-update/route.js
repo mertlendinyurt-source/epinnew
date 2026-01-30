@@ -2620,6 +2620,72 @@ export async function GET(request) {
       });
     }
 
+    // Admin: Test Shopinext API connection (DEBUG)
+    if (pathname === '/api/admin/settings/shopinext/test') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const settings = await db.collection('shopinext_settings').findOne({ isActive: true });
+      if (!settings) {
+        return NextResponse.json({
+          success: false,
+          error: 'Shopinext ayarları bulunamadı'
+        });
+      }
+
+      try {
+        const clientId = decrypt(settings.clientId);
+        const clientSecret = decrypt(settings.clientSecret);
+        const apiUrl = settings.mode === 'test' ? 'https://apidev.shopinext.com' : 'https://api.shopinext.com';
+        
+        console.log('Testing Shopinext API:', { apiUrl, domain: settings.domain, mode: settings.mode });
+        
+        const response = await fetch(`${apiUrl}/authenticate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Domain': settings.domain
+          },
+          body: JSON.stringify({
+            client_id: clientId,
+            client_secret: clientSecret
+          })
+        });
+        
+        const data = await response.json();
+        console.log('Shopinext API response:', JSON.stringify(data));
+        
+        if (data.status === 1) {
+          return NextResponse.json({
+            success: true,
+            message: 'Shopinext bağlantısı başarılı!',
+            data: {
+              tokenReceived: !!data.access_token,
+              expiresAt: data.access_token_validity
+            }
+          });
+        } else {
+          return NextResponse.json({
+            success: false,
+            error: 'Shopinext API hatası',
+            details: data
+          });
+        }
+      } catch (error) {
+        console.error('Shopinext test error:', error);
+        return NextResponse.json({
+          success: false,
+          error: 'Bağlantı hatası',
+          details: error.message
+        });
+      }
+    }
+
     // Admin: Get all products (including inactive)
     if (pathname === '/api/admin/products') {
       const user = verifyAdminToken(request);

@@ -201,12 +201,7 @@ export default function ShopinextSettingsPage() {
             </div>
           </div>
         )}
-          </div>
-        </div>
-      </div>
 
-      {/* Content */}
-      <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Info Card */}
         <div className="bg-blue-900/30 border border-blue-700 rounded-lg p-4 mb-6">
           <div className="flex items-start space-x-3">

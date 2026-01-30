@@ -443,6 +443,273 @@ async function getDijipinOrderStatus(orderId) {
 }
 
 // ============================================
+// SHOPINEXT API FUNCTIONS
+// ============================================
+
+// Shopinext API Base URLs
+const SHOPINEXT_API_URL = 'https://api.shopinext.com';
+const SHOPINEXT_API_URL_TEST = 'https://apidev.shopinext.com';
+
+// Get or refresh Shopinext access token
+async function getShopinextToken(db) {
+  const settings = await db.collection('shopinext_settings').findOne({ isActive: true });
+  if (!settings) {
+    console.log('Shopinext settings not found');
+    return null;
+  }
+
+  // Check if we have a valid cached token
+  const cachedToken = await db.collection('shopinext_tokens').findOne({ isActive: true });
+  
+  if (cachedToken) {
+    const tokenExpiry = new Date(cachedToken.accessTokenValidity);
+    const now = new Date();
+    
+    // If token is still valid (with 5 min buffer)
+    if (tokenExpiry > new Date(now.getTime() + 5 * 60 * 1000)) {
+      return {
+        accessToken: cachedToken.accessToken,
+        settings
+      };
+    }
+    
+    // Try to refresh token
+    const refreshExpiry = new Date(cachedToken.refreshTokenValidity);
+    if (refreshExpiry > now) {
+      const refreshResult = await refreshShopinextToken(db, settings, cachedToken.refreshToken);
+      if (refreshResult) {
+        return {
+          accessToken: refreshResult.accessToken,
+          settings
+        };
+      }
+    }
+  }
+  
+  // Get new token
+  return await authenticateShopinext(db, settings);
+}
+
+// Authenticate with Shopinext API
+async function authenticateShopinext(db, settings) {
+  try {
+    const clientId = decrypt(settings.clientId);
+    const clientSecret = decrypt(settings.clientSecret);
+    const apiUrl = settings.mode === 'test' ? SHOPINEXT_API_URL_TEST : SHOPINEXT_API_URL;
+    
+    console.log('Shopinext authenticate:', { apiUrl, domain: settings.domain });
+    
+    const response = await fetch(`${apiUrl}/authenticate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Domain': settings.domain
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret
+      })
+    });
+    
+    const data = await response.json();
+    console.log('Shopinext auth response:', JSON.stringify(data));
+    
+    if (data.status === 1) {
+      // Save token to database
+      await db.collection('shopinext_tokens').updateMany({}, { $set: { isActive: false } });
+      await db.collection('shopinext_tokens').insertOne({
+        id: uuidv4(),
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        accessTokenValidity: data.access_token_validity,
+        refreshTokenValidity: data.refresh_token_validity,
+        isActive: true,
+        createdAt: new Date()
+      });
+      
+      return {
+        accessToken: data.access_token,
+        settings
+      };
+    }
+    
+    console.error('Shopinext auth failed:', data);
+    return null;
+  } catch (error) {
+    console.error('Shopinext auth error:', error);
+    return null;
+  }
+}
+
+// Refresh Shopinext token
+async function refreshShopinextToken(db, settings, refreshToken) {
+  try {
+    const apiUrl = settings.mode === 'test' ? SHOPINEXT_API_URL_TEST : SHOPINEXT_API_URL;
+    
+    const response = await fetch(`${apiUrl}/refreshToken`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Domain': settings.domain
+      },
+      body: JSON.stringify({
+        refresh_token: refreshToken
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.status === 1) {
+      // Update token in database
+      await db.collection('shopinext_tokens').updateMany({}, { $set: { isActive: false } });
+      await db.collection('shopinext_tokens').insertOne({
+        id: uuidv4(),
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        accessTokenValidity: data.access_token_validity,
+        refreshTokenValidity: data.refresh_token_validity,
+        isActive: true,
+        createdAt: new Date()
+      });
+      
+      return {
+        accessToken: data.access_token
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Shopinext token refresh error:', error);
+    return null;
+  }
+}
+
+// Create Shopinext payment
+async function createShopinextPayment(db, order, user, product) {
+  const tokenResult = await getShopinextToken(db);
+  
+  if (!tokenResult) {
+    console.error('Failed to get Shopinext token');
+    return { success: false, error: 'Shopinext bağlantısı kurulamadı' };
+  }
+  
+  const { accessToken, settings } = tokenResult;
+  const apiUrl = settings.mode === 'test' ? SHOPINEXT_API_URL_TEST : SHOPINEXT_API_URL;
+  
+  try {
+    // Prepare customer info
+    const firstName = user.firstName || 'Müşteri';
+    const lastName = user.lastName || user.firstName || 'Müşteri';
+    const email = user.email;
+    const phone = (user.phone || '').replace(/[\s\-\(\)\+]/g, '').replace(/^0/, '');
+    
+    // Format phone for Shopinext (remove leading 90 if present)
+    const formattedPhone = phone.startsWith('90') ? phone.substring(2) : phone;
+    
+    // Prepare payment request - Dijital ürün için is_digital: 1
+    const paymentPayload = {
+      firstname: firstName,
+      surname: lastName,
+      email: email,
+      amount: parseFloat(order.amount.toFixed(2)),
+      currency: 'TRY',
+      max_installment: 1,
+      merchant_order_id: order.id,
+      identity_number: '11111111111', // Dijital ürünler için sabit TC
+      company: '',
+      tax_office: '',
+      tax_number: '',
+      is_digital: 1, // Dijital ürün
+      order_products: [{
+        name: product.title,
+        quantity: 1,
+        price: parseFloat(order.amount.toFixed(2)),
+        total: parseFloat(order.amount.toFixed(2))
+      }],
+      billing_info: {
+        billing_firstname: firstName,
+        billing_surname: lastName,
+        billing_address: 'Dijital Ürün',
+        billing_city: 'İstanbul',
+        billing_state: 'İstanbul',
+        billing_postal_code: '34000',
+        billing_country: 'TR',
+        billing_country_code: '+90',
+        billing_phone: formattedPhone
+      },
+      shipping_info: {
+        shipping_firstname: firstName,
+        shipping_surname: lastName,
+        shipping_address: 'Dijital Ürün',
+        shipping_city: 'İstanbul',
+        shipping_state: 'İstanbul',
+        shipping_postal_code: '34000',
+        shipping_country: 'TR',
+        shipping_country_code: '+90',
+        shipping_phone: formattedPhone
+      },
+      success_url: `${BASE_URL}/success?orderId=${order.id}`,
+      fail_url: `${BASE_URL}/failed?orderId=${order.id}`,
+      callback_url: `${BASE_URL}/api/payments/shopinext/callback`,
+      language: 'TR'
+    };
+    
+    console.log('Shopinext payment request:', JSON.stringify({ ...paymentPayload, identity_number: '***' }));
+    
+    const response = await fetch(`${apiUrl}/createPayment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+        'Domain': settings.domain
+      },
+      body: JSON.stringify(paymentPayload)
+    });
+    
+    const data = await response.json();
+    console.log('Shopinext payment response:', JSON.stringify(data));
+    
+    if (data.status === 1 && data.redirect_url) {
+      // Log payment request
+      await db.collection('payment_requests').insertOne({
+        id: uuidv4(),
+        orderId: order.id,
+        provider: 'shopinext',
+        paymentId: data.payment_id,
+        amount: order.amount,
+        status: 'pending',
+        redirectUrl: data.redirect_url,
+        createdAt: new Date()
+      });
+      
+      return {
+        success: true,
+        paymentId: data.payment_id,
+        redirectUrl: data.redirect_url
+      };
+    }
+    
+    console.error('Shopinext payment failed:', data);
+    return { 
+      success: false, 
+      error: data.message || 'Ödeme oluşturulamadı',
+      errorCode: data.error_code
+    };
+  } catch (error) {
+    console.error('Shopinext payment error:', error);
+    return { success: false, error: 'Shopinext bağlantı hatası' };
+  }
+}
+
+// Generate Shopinext callback hash for verification
+// Hash: sha256(client_id + client_secret)
+function generateShopinextHash(clientId, clientSecret) {
+  const crypto = require('crypto');
+  const data = clientId + clientSecret;
+  return crypto.createHash('sha256').update(data).digest('hex');
+}
+
+// ============================================
 // AUDIT LOG FUNCTIONS
 // ============================================
 async function logAuditAction(db, action, actorId, entityType, entityId, request, meta = {}) {

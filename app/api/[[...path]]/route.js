@@ -2600,6 +2600,26 @@ export async function GET(request) {
       });
     }
 
+    // Get available payment methods (PUBLIC - for checkout)
+    if (pathname === '/api/payment-methods') {
+      const shopierSettings = await db.collection('shopier_settings').findOne({ isActive: true });
+      const shopinextSettings = await db.collection('shopinext_settings').findOne({ isActive: true });
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          shopier: {
+            available: !!shopierSettings,
+            name: 'Kredi/Banka Kartı'
+          },
+          shopinext: {
+            available: !!shopinextSettings,
+            name: 'Shopinext ile Öde'
+          }
+        }
+      });
+    }
+
     // Admin: Get all products (including inactive)
     if (pathname === '/api/admin/products') {
       const user = verifyAdminToken(request);

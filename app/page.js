@@ -188,8 +188,22 @@ export default function App() {
       fetchGameContent()
       fetchReviews(1)
       fetchFooterSettings()
+      fetchPaymentMethods()
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Fetch available payment methods
+  const fetchPaymentMethods = async () => {
+    try {
+      const res = await fetch('/api/payment-methods')
+      const data = await res.json()
+      if (data.success) {
+        setPaymentMethods(data.data)
+      }
+    } catch (error) {
+      console.error('Error fetching payment methods:', error)
     }
   }
 

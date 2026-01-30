@@ -352,6 +352,26 @@ export default function PaymentSettingsPage() {
               <li><strong>Önemli:</strong> GERİ DÖNÜŞ URL alanına callback URL'yi ekleyin</li>
             </ol>
           </div>
+
+          {/* Shopinext Link */}
+          <div className="mt-6 pt-6 border-t border-gray-700">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-300 mb-1">
+                  Alternatif Ödeme Sistemi
+                </h3>
+                <p className="text-sm text-gray-400">
+                  Shopinext ödeme sistemini de aktif edebilirsiniz
+                </p>
+              </div>
+              <a
+                href="/admin/settings/shopinext"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                Shopinext Ayarları →
+              </a>
+            </div>
+          </div>
         </div>
       </div>
 

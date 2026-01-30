@@ -1039,62 +1039,77 @@ agent_communication:
 
   - task: "Shopinext Admin Settings GET Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "GET /api/admin/settings/shopinext - Returns masked clientId, domain, ipAddress, mode. Requires admin JWT auth."
+      - working: true
+        agent: "testing"
+        comment: "GET /api/admin/settings/shopinext working correctly. Requires admin JWT authentication (401 without token). Returns isConfigured field and masked settings when configured. When not configured, returns isConfigured: false with appropriate message. All authentication and response structure tests passed."
 
   - task: "Shopinext Admin Settings POST Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/admin/settings/shopinext - Saves encrypted credentials. Validates required fields. Rate limiting (10 req/hour)."
+      - working: true
+        agent: "testing"
+        comment: "POST /api/admin/settings/shopinext working correctly. Requires admin JWT authentication (401 without token). Validates required fields - returns 400 for missing clientId, clientSecret, or domain. Successfully saves settings with AES-256-GCM encryption. Rate limiting implemented (10 req/hour). Settings properly encrypted and stored in database."
 
   - task: "Payment Methods Public Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "GET /api/payment-methods - Returns availability of shopier and shopinext payment methods. No auth required."
+      - working: true
+        agent: "testing"
+        comment: "GET /api/payment-methods working correctly. Public endpoint requires no authentication. Returns both shopier and shopinext availability status with proper structure. After configuring Shopinext settings, endpoint correctly shows shopinext.available: true. Response format matches expected structure with success: true and data containing both payment methods."
 
   - task: "Shopinext Callback Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/payments/shopinext/callback - Handles webhook from Shopinext. Hash validation, status mapping (successful->paid), idempotency protection, stock assignment."
+      - working: true
+        agent: "testing"
+        comment: "POST /api/payments/shopinext/callback working correctly. Webhook endpoint handles all callback scenarios properly: successful status callbacks, unsuccessful status callbacks, idempotency protection (duplicate callbacks handled gracefully), non-existent payment IDs handled gracefully (returns 200 OK to stop retries). Hash validation logic implemented. All callback tests passed with proper 200 OK responses."
 
   - task: "Order Creation with Shopinext Payment"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/orders with paymentMethod='shopinext' - Creates order and initiates Shopinext payment. Returns paymentUrl for redirect."
+      - working: true
+        agent: "testing"
+        comment: "POST /api/orders with paymentMethod='shopinext' working correctly. Requires user JWT authentication. Validates Shopinext settings are configured (returns 503 when not configured). When configured, attempts to create Shopinext payment and fails gracefully with 400 'Shopinext bağlantısı kurulamadı' when using test credentials (expected behavior). Order creation flow, authentication, and error handling all working correctly. The API connection failure is expected with test credentials."
   - agent: "testing"
     message: "PUBG Account Sales API testing COMPLETED. All 7 account sales tasks tested and verified working (100% success rate). CRITICAL FEATURES VERIFIED: ✅ Public endpoints (GET /api/accounts, GET /api/accounts/:id) working correctly with sensitive data hidden, ✅ Admin endpoints require JWT authentication (401 without token), ✅ Account CRUD operations working: create (POST), read (GET), update (PUT), delete (DELETE), ✅ Account creation with discount calculation, validation of required fields (title, price), ✅ Account update with field validation and discount recalculation, ✅ Delete protection for sold accounts (400 error), ✅ Account order creation (POST /api/account-orders) with user authentication, account validation, balance/card payment support, ✅ Order creation changes account status (sold/reserved), ✅ Shopier integration working (fails gracefully when unconfigured). CRITICAL BUG FIXED: Account orders endpoint was incorrectly placed in GET function instead of POST function - moved to correct location. All account sales functionality working correctly and ready for production."

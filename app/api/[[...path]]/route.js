@@ -7364,6 +7364,200 @@ export async function POST(request) {
       });
     }
 
+    // Shopinext callback (Webhook)
+    if (pathname === '/api/payments/shopinext/callback') {
+      const { payment_id, status, hash } = body;
+      
+      console.log('Shopinext callback received:', { payment_id, status });
+      
+      // 1. Find payment request
+      const paymentRequest = await db.collection('payment_requests').findOne({
+        paymentId: payment_id,
+        provider: 'shopinext'
+      });
+      
+      if (!paymentRequest) {
+        console.error(`Shopinext callback: Payment ${payment_id} not found`);
+        return new Response('OK', { status: 200 }); // Always return OK to stop retries
+      }
+      
+      const orderId = paymentRequest.orderId;
+      
+      // 2. Validate order exists
+      const order = await db.collection('orders').findOne({ id: orderId });
+      if (!order) {
+        console.error(`Shopinext callback: Order ${orderId} not found`);
+        return new Response('OK', { status: 200 });
+      }
+      
+      // 3. Check if order is already PAID (idempotency protection)
+      if (order.status === 'paid') {
+        console.log(`Shopinext callback: Order ${orderId} already PAID. Ignoring duplicate callback.`);
+        return new Response('OK', { status: 200 });
+      }
+      
+      // 4. Verify hash (CRITICAL SECURITY)
+      const shopinextSettings = await db.collection('shopinext_settings').findOne({ isActive: true });
+      if (shopinextSettings && hash) {
+        try {
+          const clientId = decrypt(shopinextSettings.clientId);
+          const clientSecret = decrypt(shopinextSettings.clientSecret);
+          const expectedHash = generateShopinextHash(clientId, clientSecret);
+          
+          if (hash !== expectedHash) {
+            console.error('Shopinext callback: Hash mismatch');
+            // Log security event
+            await db.collection('payment_security_logs').insertOne({
+              orderId: orderId,
+              provider: 'shopinext',
+              event: 'hash_mismatch',
+              receivedHash: hash.substring(0, 20) + '...',
+              timestamp: new Date()
+            });
+            return new Response('OK', { status: 200 });
+          }
+        } catch (error) {
+          console.error('Shopinext callback: Hash verification error:', error);
+        }
+      }
+      
+      // 5. Map Shopinext status to application status
+      // Status codes: processing, successful, unsuccessful, cancelled, refunded, partially_refunded
+      let newStatus;
+      if (status === 'successful') {
+        newStatus = 'paid';
+      } else if (status === 'processing') {
+        // Still processing, don't update yet
+        console.log(`Shopinext callback: Order ${orderId} still processing`);
+        return new Response('OK', { status: 200 });
+      } else {
+        newStatus = 'failed';
+      }
+      
+      // 6. Enforce immutable status transitions
+      if (order.status === 'failed' && newStatus === 'paid') {
+        console.error(`Shopinext callback: Cannot change order ${orderId} from FAILED to PAID`);
+        return new Response('OK', { status: 200 });
+      }
+      
+      // 7. Update order status
+      await db.collection('orders').updateOne(
+        { id: orderId },
+        {
+          $set: {
+            status: newStatus,
+            paymentProvider: 'shopinext',
+            paymentId: payment_id,
+            updatedAt: new Date()
+          }
+        }
+      );
+      
+      // 8. Create payment record
+      await db.collection('payments').insertOne({
+        id: uuidv4(),
+        orderId: orderId,
+        provider: 'shopinext',
+        providerTxnId: payment_id,
+        status: newStatus,
+        amount: order.amount,
+        currency: order.currency || 'TRY',
+        hashValidated: !!hash,
+        rawPayload: { payment_id, status },
+        verifiedAt: new Date(),
+        createdAt: new Date()
+      });
+      
+      // Update payment request status
+      await db.collection('payment_requests').updateOne(
+        { paymentId: payment_id },
+        { $set: { status: newStatus, updatedAt: new Date() } }
+      );
+      
+      // 9. PROCESS PAID ORDERS (Stock assignment etc - same as Shopier)
+      if (newStatus === 'paid') {
+        const orderUser = await db.collection('users').findOne({ id: order.userId });
+        const product = await db.collection('products').findOne({ id: order.productId });
+        
+        // Send SMS
+        if (orderUser && orderUser.phone) {
+          const itemTitle = product?.title || 'Sipariş';
+          console.log('Shopinext: Sending payment SMS to', orderUser.phone);
+          sendPaymentSuccessSms(db, order, orderUser, itemTitle).catch(err =>
+            console.error('Shopinext payment SMS failed:', err)
+          );
+        }
+        
+        // Stock assignment (same logic as Shopier)
+        if (product && (!order.delivery || order.delivery.status !== 'delivered')) {
+          try {
+            const assignedStock = await db.collection('stock').findOneAndUpdate(
+              { productId: order.productId, status: 'available' },
+              { 
+                $set: { 
+                  status: 'assigned', 
+                  orderId: orderId,
+                  assignedAt: new Date()
+                } 
+              },
+              { 
+                returnDocument: 'after',
+                sort: { createdAt: 1 }
+              }
+            );
+            
+            if (assignedStock && assignedStock.value) {
+              const stockCode = assignedStock.value;
+              
+              await db.collection('orders').updateOne(
+                { id: orderId },
+                {
+                  $set: {
+                    delivery: {
+                      status: 'delivered',
+                      items: [stockCode],
+                      stockId: assignedStock.id || assignedStock._id,
+                      assignedAt: new Date()
+                    }
+                  }
+                }
+              );
+              console.log(`Shopinext: Stock assigned to order ${orderId}`);
+              
+              // Send delivered email
+              if (orderUser && product) {
+                sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
+                  console.error('Shopinext delivered email failed:', err)
+                );
+              }
+            } else {
+              // No stock available
+              await db.collection('orders').updateOne(
+                { id: orderId },
+                {
+                  $set: {
+                    delivery: {
+                      status: 'pending',
+                      message: 'Stok bekleniyor',
+                      items: []
+                    }
+                  }
+                }
+              );
+              console.log(`Shopinext: No stock for order ${orderId}`);
+            }
+          } catch (stockError) {
+            console.error(`Shopinext stock error for order ${orderId}:`, stockError);
+          }
+        }
+      }
+      
+      console.log(`Shopinext callback: Order ${orderId} status updated to ${newStatus}`);
+      
+      // Return OK to Shopinext
+      return new Response('OK', { status: 200 });
+    }
+
     // Admin: Create product
     if (pathname === '/api/admin/products') {
       const user = verifyAdminToken(request);

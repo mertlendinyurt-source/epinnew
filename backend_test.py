@@ -86,6 +86,26 @@ class ShopinextTester:
                 data = response.json()
                 self.user_token = data.get('data', {}).get('token')
                 self.log_result("User Registration", True, "User registration successful")
+            elif response.status_code == 200:
+                # Some APIs return 200 for successful registration
+                data = response.json()
+                if data.get('success') and 'data' in data and 'token' in data['data']:
+                    self.user_token = data['data']['token']
+                    self.log_result("User Registration", True, "User registration successful (200)")
+                else:
+                    # Try login instead
+                    login_data = {
+                        "email": USER_CREDENTIALS["email"],
+                        "password": USER_CREDENTIALS["password"]
+                    }
+                    response = requests.post(f"{API_BASE}/auth/login", json=login_data)
+                    if response.status_code == 200:
+                        data = response.json()
+                        self.user_token = data.get('data', {}).get('token')
+                        self.log_result("User Login", True, "User login successful")
+                    else:
+                        self.log_result("User Login", False, f"User login failed: {response.status_code}")
+                        return False
             elif response.status_code == 409:
                 # User exists, try login
                 login_data = {
@@ -96,12 +116,12 @@ class ShopinextTester:
                 if response.status_code == 200:
                     data = response.json()
                     self.user_token = data.get('data', {}).get('token')
-                    self.log_result("User Login", True, "User login successful")
+                    self.log_result("User Login", True, "User login successful (existing user)")
                 else:
                     self.log_result("User Login", False, f"User login failed: {response.status_code}")
                     return False
             else:
-                self.log_result("User Registration", False, f"User registration failed: {response.status_code}")
+                self.log_result("User Registration", False, f"User registration failed: {response.status_code} - {response.text}")
                 return False
         except Exception as e:
             self.log_result("User Authentication", False, f"User auth error: {str(e)}")

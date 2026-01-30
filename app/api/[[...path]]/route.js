@@ -2488,6 +2488,48 @@ export async function GET(request) {
       });
     }
 
+    // Admin: Get Shopinext payment settings (masked)
+    if (pathname === '/api/admin/settings/shopinext') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      // Get encrypted settings from database
+      const settings = await db.collection('shopinext_settings').findOne({ isActive: true });
+      
+      if (!settings) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            isConfigured: false,
+            clientId: null,
+            domain: null,
+            ipAddress: null,
+            mode: 'production',
+            message: 'Shopinext ayarları henüz yapılmadı'
+          }
+        });
+      }
+
+      // Return masked values
+      return NextResponse.json({
+        success: true,
+        data: {
+          isConfigured: true,
+          clientId: settings.clientId ? maskSensitiveData(decrypt(settings.clientId)) : null,
+          domain: settings.domain || null,
+          ipAddress: settings.ipAddress || null,
+          mode: settings.mode || 'production',
+          updatedBy: settings.updatedBy,
+          updatedAt: settings.updatedAt
+        }
+      });
+    }
+
     // Admin: Get Shopier payment settings (masked)
     if (pathname === '/api/admin/settings/payments') {
       const user = verifyAdminToken(request);

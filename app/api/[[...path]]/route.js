@@ -2613,7 +2613,8 @@ export async function GET(request) {
             name: 'Kredi/Banka Kartı'
           },
           shopinext: {
-            available: !!shopinextSettings,
+            // isEnabled kontrolü - hem yapılandırılmış hem de aktif olmalı
+            available: !!(shopinextSettings && shopinextSettings.isEnabled),
             name: 'Shopinext ile Öde'
           }
         }

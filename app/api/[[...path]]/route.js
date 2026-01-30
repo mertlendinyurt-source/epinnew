@@ -6534,6 +6534,84 @@ export async function POST(request) {
       }
 
       // ============================================
+      // 💳 SHOPINEXT PAYMENT FLOW
+      // ============================================
+      if (paymentMethod === 'shopinext') {
+        // Get Shopinext settings from database
+        const shopinextSettings = await db.collection('shopinext_settings').findOne({ isActive: true });
+        
+        if (!shopinextSettings) {
+          return NextResponse.json(
+            { success: false, error: 'Shopinext ödeme sistemi yapılandırılmamış.' },
+            { status: 503 }
+          );
+        }
+
+        // Create customer snapshot
+        const customerSnapshot = {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone
+        };
+
+        // Create order with PENDING status
+        const orderAmount = product.discountPrice || product.price || product.finalPrice || product.salePrice || 0;
+        
+        const order = {
+          id: uuidv4(),
+          userId: user.id,
+          productId,
+          productTitle: product.title,
+          productImageUrl: product.imageUrl || null,
+          playerId,
+          playerName,
+          customer: customerSnapshot,
+          status: 'pending',
+          amount: orderAmount,
+          totalAmount: orderAmount,
+          currency: 'TRY',
+          paymentMethod: 'shopinext',
+          termsAccepted: termsAccepted || false,
+          termsAcceptedAt: termsAcceptedAt ? new Date(termsAcceptedAt) : new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        await db.collection('orders').insertOne(order);
+
+        // Send order created email
+        sendOrderCreatedEmail(db, order, user, product).catch(err => 
+          console.error('Order created email failed:', err)
+        );
+
+        // Create Shopinext payment
+        const paymentResult = await createShopinextPayment(db, order, user, product);
+        
+        if (!paymentResult.success) {
+          // Update order to failed
+          await db.collection('orders').updateOne(
+            { id: order.id },
+            { $set: { status: 'failed', error: paymentResult.error, updatedAt: new Date() } }
+          );
+          
+          return NextResponse.json(
+            { success: false, error: paymentResult.error || 'Ödeme başlatılamadı' },
+            { status: 400 }
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            orderId: order.id,
+            paymentUrl: paymentResult.redirectUrl,
+            paymentProvider: 'shopinext'
+          }
+        });
+      }
+
+      // ============================================
       // 💳 CARD PAYMENT FLOW (SHOPIER)
       // ============================================
 

@@ -8,6 +8,7 @@ export default function ShopinextSettingsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [toggling, setToggling] = useState(false);
   const [settings, setSettings] = useState({
     clientId: '',
     clientSecret: '',
@@ -16,6 +17,7 @@ export default function ShopinextSettingsPage() {
     mode: 'production'
   });
   const [isConfigured, setIsConfigured] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
@@ -40,6 +42,7 @@ export default function ShopinextSettingsPage() {
       
       if (data.success) {
         setIsConfigured(data.data.isConfigured);
+        setIsEnabled(data.data.isEnabled || false);
         if (data.data.isConfigured) {
           setSettings({
             clientId: data.data.clientId || '',
@@ -54,6 +57,38 @@ export default function ShopinextSettingsPage() {
       console.error('Settings fetch error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleEnabled = async () => {
+    setToggling(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const res = await fetch('/api/admin/settings/shopinext/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isEnabled: !isEnabled })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setIsEnabled(!isEnabled);
+        setMessage({ 
+          type: 'success', 
+          text: !isEnabled ? 'Shopinext ödeme seçeneği aktifleştirildi!' : 'Shopinext ödeme seçeneği gizlendi!' 
+        });
+      } else {
+        setMessage({ type: 'error', text: data.error || 'İşlem başarısız' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Bağlantı hatası' });
+    } finally {
+      setToggling(false);
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     }
   };
 

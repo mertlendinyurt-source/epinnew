@@ -802,6 +802,12 @@ export default function App() {
           return
         }
 
+        // Shopinext payment - Direct URL redirect
+        if (data.data.paymentProvider === 'shopinext' && data.data.paymentUrl) {
+          window.location.href = data.data.paymentUrl
+          return
+        }
+
         // Card payment - Shopier redirect
         if (data.data.formData && data.data.paymentUrl) {
           // Create a hidden form and submit it with all Shopier fields

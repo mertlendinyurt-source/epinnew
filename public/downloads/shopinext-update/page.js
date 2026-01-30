@@ -169,6 +169,17 @@ export default function App() {
           localStorage.setItem('siteSettingsCache', JSON.stringify(siteSettings))
         }
         
+        // Payment methods'u ayrıca çek (homepage API'sinde yok)
+        try {
+          const pmRes = await fetch('/api/payment-methods')
+          const pmData = await pmRes.json()
+          if (pmData.success) {
+            setPaymentMethods(pmData.data)
+          }
+        } catch (pmError) {
+          console.error('Error fetching payment methods:', pmError)
+        }
+        
         // SEO: GA4 ve GSC
         if (seoSettings) {
           if (seoSettings.ga4MeasurementId) {

@@ -69,7 +69,8 @@ const menuGroups = [
       { href: '/admin/settings/oauth', icon: Globe, label: 'OAuth Ayarları' },
       { href: '/admin/settings/regions', icon: Globe, label: 'Bölge Ayarları' },
       { href: '/admin/settings/footer', icon: FileText, label: 'Footer Ayarları' },
-      { href: '/admin/settings/payments', icon: CreditCard, label: 'Ödeme Ayarları' },
+      { href: '/admin/settings/payments', icon: CreditCard, label: 'Shopier Ayarları' },
+      { href: '/admin/settings/shopinext', icon: CreditCard, label: 'Shopinext Ayarları', color: 'text-purple-400' },
       { href: '/admin/settings/dijipin', icon: CreditCard, label: 'DijiPin Ayarları', color: 'text-yellow-400' },
     ]
   },

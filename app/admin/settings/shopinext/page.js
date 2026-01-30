@@ -164,6 +164,49 @@ export default function ShopinextSettingsPage() {
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-4 py-8">
+        {/* Aktif/Pasif Toggle - EN ÜSTTE */}
+        {isConfigured && (
+          <div className="bg-gray-800 rounded-lg p-6 mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium text-white">Ödeme Seçeneği Durumu</h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  {isEnabled 
+                    ? 'Shopinext ödeme seçeneği checkout sayfasında görünüyor' 
+                    : 'Shopinext ödeme seçeneği checkout sayfasında gizli'}
+                </p>
+              </div>
+              <button
+                onClick={handleToggleEnabled}
+                disabled={toggling}
+                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${
+                  isEnabled ? 'bg-purple-600' : 'bg-gray-600'
+                } ${toggling ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                    isEnabled ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            <div className={`mt-3 px-3 py-2 rounded-lg text-sm ${
+              isEnabled 
+                ? 'bg-green-900/30 border border-green-700 text-green-400' 
+                : 'bg-yellow-900/30 border border-yellow-700 text-yellow-400'
+            }`}>
+              {isEnabled 
+                ? '✓ Aktif - Müşteriler Shopinext ile ödeme yapabilir' 
+                : '⚠ Pasif - Shopinext ödeme seçeneği müşterilere gösterilmiyor'}
+            </div>
+          </div>
+        )}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Info Card */}
         <div className="bg-blue-900/30 border border-blue-700 rounded-lg p-4 mb-6">
           <div className="flex items-start space-x-3">

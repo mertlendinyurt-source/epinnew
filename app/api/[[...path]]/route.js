@@ -2860,6 +2860,7 @@ export async function GET(request) {
           success: true,
           data: {
             isConfigured: false,
+            isEnabled: false,
             clientId: null,
             domain: null,
             ipAddress: null,
@@ -2874,6 +2875,7 @@ export async function GET(request) {
         success: true,
         data: {
           isConfigured: true,
+          isEnabled: settings.isEnabled || false,
           clientId: settings.clientId ? maskSensitiveData(decrypt(settings.clientId)) : null,
           domain: settings.domain || null,
           ipAddress: settings.ipAddress || null,

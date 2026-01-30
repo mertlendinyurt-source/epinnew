@@ -1009,7 +1009,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "PUBG Account Sales API Testing Complete"
+    - "Shopinext Integration Testing Complete"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

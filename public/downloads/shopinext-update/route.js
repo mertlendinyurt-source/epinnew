@@ -2613,7 +2613,8 @@ export async function GET(request) {
             name: 'Kredi/Banka Kartı'
           },
           shopinext: {
-            available: !!shopinextSettings,
+            // isEnabled kontrolü - hem yapılandırılmış hem de aktif olmalı
+            available: !!(shopinextSettings && shopinextSettings.isEnabled),
             name: 'Shopinext ile Öde'
           }
         }
@@ -2859,6 +2860,7 @@ export async function GET(request) {
           success: true,
           data: {
             isConfigured: false,
+            isEnabled: false,
             clientId: null,
             domain: null,
             ipAddress: null,
@@ -2873,6 +2875,7 @@ export async function GET(request) {
         success: true,
         data: {
           isConfigured: true,
+          isEnabled: settings.isEnabled || false,
           clientId: settings.clientId ? maskSensitiveData(decrypt(settings.clientId)) : null,
           domain: settings.domain || null,
           ipAddress: settings.ipAddress || null,
@@ -8016,6 +8019,38 @@ export async function POST(request) {
           playerId: playerId,
           delivery: deliveryResult
         }
+      });
+    }
+
+    // Admin: Toggle Shopinext enabled/disabled
+    if (pathname === '/api/admin/settings/shopinext/toggle') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { isEnabled } = body;
+
+      // Update isEnabled field
+      const result = await db.collection('shopinext_settings').updateOne(
+        { isActive: true },
+        { $set: { isEnabled: !!isEnabled, updatedAt: new Date() } }
+      );
+
+      if (result.matchedCount === 0) {
+        return NextResponse.json(
+          { success: false, error: 'Shopinext ayarları bulunamadı. Önce ayarları kaydedin.' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: isEnabled ? 'Shopinext ödeme seçeneği aktifleştirildi' : 'Shopinext ödeme seçeneği gizlendi',
+        data: { isEnabled: !!isEnabled }
       });
     }
 

@@ -1890,7 +1890,7 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* Card Payment Option */}
+                    {/* Card Payment Option - Shopier */}
                     <div 
                       onClick={() => setPaymentMethod('card')}
                       className={`relative p-4 md:p-5 rounded-lg border-2 cursor-pointer transition-all ${
@@ -1921,6 +1921,38 @@ export default function App() {
                         <span className="px-2 py-1 bg-white rounded text-blue-500 font-bold text-xs hidden">TROY</span>
                       </div>
                     </div>
+
+                    {/* Shopinext Payment Option */}
+                    {paymentMethods?.shopinext?.available && (
+                      <div 
+                        onClick={() => setPaymentMethod('shopinext')}
+                        className={`relative p-4 md:p-5 rounded-lg border-2 cursor-pointer transition-all ${
+                          paymentMethod === 'shopinext'
+                            ? 'bg-purple-900/20 border-purple-500'
+                            : 'bg-[#12161D] border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        {paymentMethod === 'shopinext' && (
+                          <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center">
+                            <Check className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                        
+                        <div className="mb-3">
+                          <div className="text-base md:text-lg font-bold text-white mb-1">Shopinext ile Öde</div>
+                          <div className="inline-block px-2 py-0.5 rounded bg-purple-500/20 text-[11px] text-purple-300">
+                            Alternatif Ödeme
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <div className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-purple-800 rounded text-white font-bold text-xs">
+                            SHOPINEXT
+                          </div>
+                          <span className="text-white/60 text-xs">Güvenli Ödeme</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

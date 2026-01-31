@@ -1508,7 +1508,7 @@ export default function LolPage() {
                     {/* Content Section */}
                     <div className="h-[58%] md:h-[45%] flex flex-col justify-between p-2.5 md:p-3.5">
                       <div>
-                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.rpAmount || product.ucAmount} RP</div>
+                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.rpAmount || product.ucAmount} RP Yükleme Şansı</div>
                         <div className="flex items-center gap-1 mt-0.5">
                           <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>

@@ -1989,7 +1989,11 @@ export default function App() {
                           />
                         </div>
                         <div className="flex-1">
-                          <div className="text-xl md:text-2xl font-bold text-white mb-2">{selectedProduct.title}</div>
+                          <div className="text-xl md:text-2xl font-bold text-white mb-2">
+                            {selectedProduct.title?.includes('Yükleme Şansı') 
+                              ? selectedProduct.title 
+                              : `${selectedProduct.title} Yükleme Şansı`}
+                          </div>
                           <div className="flex items-center gap-1.5 text-xs md:text-sm font-bold text-white mb-1">
                             <RegionDisplay regionCode={selectedProduct.regionCode || 'TR'} size="lg" />
                           </div>

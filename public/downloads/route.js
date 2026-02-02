@@ -452,10 +452,31 @@ const SHOPINEXT_API_URL_TEST = 'https://api.dev.shopinext.com';
 
 // Get or refresh Shopinext access token
 async function getShopinextToken(db) {
-  const settings = await db.collection('shopinext_settings').findOne({ isActive: true });
-  if (!settings) {
-    console.log('Shopinext settings not found in database');
-    return { error: 'Shopinext ayarları bulunamadı. Lütfen admin panelinden ayarları yapın.' };
+  // First try environment variables
+  const envClientId = process.env.SHOPINEXT_CLIENT_ID;
+  const envClientSecret = process.env.SHOPINEXT_CLIENT_SECRET;
+  const envDomain = process.env.SHOPINEXT_DOMAIN;
+  const envMode = process.env.SHOPINEXT_MODE || 'production';
+  
+  let settings;
+  
+  if (envClientId && envClientSecret && envDomain) {
+    // Use environment variables
+    settings = {
+      clientId: envClientId,
+      clientSecret: envClientSecret,
+      domain: envDomain,
+      mode: envMode,
+      fromEnv: true
+    };
+    console.log('Using Shopinext settings from environment variables');
+  } else {
+    // Fall back to database
+    settings = await db.collection('shopinext_settings').findOne({ isActive: true });
+    if (!settings) {
+      console.log('Shopinext settings not found in database or environment');
+      return { error: 'Shopinext ayarları bulunamadı. Lütfen .env dosyasına veya admin panelinden ayarları yapın.' };
+    }
   }
 
   // Check if we have a valid cached token
@@ -497,11 +518,12 @@ async function getShopinextToken(db) {
 // Authenticate with Shopinext API
 async function authenticateShopinext(db, settings) {
   try {
-    const clientId = decrypt(settings.clientId);
-    const clientSecret = decrypt(settings.clientSecret);
+    // Get credentials - from env or decrypt from db
+    const clientId = settings.fromEnv ? settings.clientId : decrypt(settings.clientId);
+    const clientSecret = settings.fromEnv ? settings.clientSecret : decrypt(settings.clientSecret);
     const apiUrl = settings.mode === 'test' ? SHOPINEXT_API_URL_TEST : SHOPINEXT_API_URL;
     
-    console.log('Shopinext authenticate:', { apiUrl, domain: settings.domain, mode: settings.mode });
+    console.log('Shopinext authenticate:', { apiUrl, domain: settings.domain, mode: settings.mode, fromEnv: !!settings.fromEnv });
     
     const response = await fetch(`${apiUrl}/authenticate`, {
       method: 'POST',
@@ -548,8 +570,9 @@ async function authenticateShopinext(db, settings) {
     }
     
     // Log specific error codes
-    if (data.error_code) {
-      console.error('Shopinext auth error code:', data.error_code, '- Message:', data.message);
+    if (data.error_code || data.errorCode) {
+      const errorCode = data.error_code || data.errorCode;
+      console.error('Shopinext auth error code:', errorCode, '- Message:', data.message || data.error);
       // SNE10: IP adresi yetkili değil
       // SNE11: Domain yetkili değil
       // SNE1: Kimlik bilgileri yanlış

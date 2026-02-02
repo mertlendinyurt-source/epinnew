@@ -7625,11 +7625,22 @@ export async function POST(request) {
       }
       
       // 4. Verify hash (CRITICAL SECURITY)
+      // Get credentials from env or database
+      const envClientId = process.env.SHOPINEXT_CLIENT_ID;
+      const envClientSecret = process.env.SHOPINEXT_CLIENT_SECRET;
       const shopinextSettings = await db.collection('shopinext_settings').findOne({ isActive: true });
-      if (shopinextSettings && hash) {
+      
+      let clientId, clientSecret;
+      if (envClientId && envClientSecret) {
+        clientId = envClientId;
+        clientSecret = envClientSecret;
+      } else if (shopinextSettings) {
+        clientId = decrypt(shopinextSettings.clientId);
+        clientSecret = decrypt(shopinextSettings.clientSecret);
+      }
+      
+      if (clientId && clientSecret && hash) {
         try {
-          const clientId = decrypt(shopinextSettings.clientId);
-          const clientSecret = decrypt(shopinextSettings.clientSecret);
           const expectedHash = generateShopinextHash(clientId, clientSecret);
           
           if (hash !== expectedHash) {

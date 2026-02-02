@@ -1,7 +1,7 @@
 # LOL RP Kategorisi Güncelleme Rehberi
 
 ## 📥 İndirme Linki
-**ZIP Dosyası:** https://checkout-update.preview.emergentagent.com/lol_update.zip
+**ZIP Dosyası:** https://user-auth-update-5.preview.emergentagent.com/lol_update.zip
 
 ---
 

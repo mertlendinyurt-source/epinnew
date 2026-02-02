@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://checkout-update.preview.emergentagent.com"
+BASE_URL = "https://user-auth-update-5.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test data for new user to avoid rate limiting

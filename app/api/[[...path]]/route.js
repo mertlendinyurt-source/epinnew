@@ -2686,26 +2686,43 @@ export async function GET(request) {
         );
       }
 
-      const settings = await db.collection('shopinext_settings').findOne({ isActive: true });
-      if (!settings) {
-        return NextResponse.json({
-          success: false,
-          error: 'Shopinext ayarları bulunamadı'
-        });
+      // Check env first, then database
+      const envClientId = process.env.SHOPINEXT_CLIENT_ID;
+      const envClientSecret = process.env.SHOPINEXT_CLIENT_SECRET;
+      const envDomain = process.env.SHOPINEXT_DOMAIN;
+      const envMode = process.env.SHOPINEXT_MODE || 'production';
+      
+      let clientId, clientSecret, domain, mode;
+      
+      if (envClientId && envClientSecret && envDomain) {
+        clientId = envClientId;
+        clientSecret = envClientSecret;
+        domain = envDomain;
+        mode = envMode;
+      } else {
+        const settings = await db.collection('shopinext_settings').findOne({ isActive: true });
+        if (!settings) {
+          return NextResponse.json({
+            success: false,
+            error: 'Shopinext ayarları bulunamadı. .env dosyasına veya admin panelden ayarları girin.'
+          });
+        }
+        clientId = decrypt(settings.clientId);
+        clientSecret = decrypt(settings.clientSecret);
+        domain = settings.domain;
+        mode = settings.mode;
       }
 
       try {
-        const clientId = decrypt(settings.clientId);
-        const clientSecret = decrypt(settings.clientSecret);
-        const apiUrl = settings.mode === 'test' ? 'https://apidev.shopinext.com' : 'https://api.shopinext.com';
+        const apiUrl = mode === 'test' ? SHOPINEXT_API_URL_TEST : SHOPINEXT_API_URL;
         
-        console.log('Testing Shopinext API:', { apiUrl, domain: settings.domain, mode: settings.mode });
+        console.log('Testing Shopinext API:', { apiUrl, domain, mode });
         
         const response = await fetch(`${apiUrl}/authenticate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Domain': settings.domain
+            'Domain': domain
           },
           body: JSON.stringify({
             client_id: clientId,

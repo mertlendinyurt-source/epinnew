@@ -115,6 +115,48 @@ export default function AdminUsersPage() {
     }
   }
 
+  const handlePasswordUpdate = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      toast.error('Şifre en az 6 karakter olmalıdır')
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error('Şifreler eşleşmiyor')
+      return
+    }
+
+    setProcessing(true)
+    try {
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+      const response = await fetch(`/api/admin/users/${selectedUser.id}/password`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          newPassword
+        })
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        toast.success(data.message)
+        setShowPasswordModal(false)
+        setNewPassword('')
+        setConfirmPassword('')
+      } else {
+        toast.error(data.error)
+      }
+    } catch (error) {
+      console.error('Password update error:', error)
+      toast.error('Bir hata oluştu')
+    } finally {
+      setProcessing(false)
+    }
+  }
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('tr-TR', {
       day: '2-digit',

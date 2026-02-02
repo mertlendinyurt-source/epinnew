@@ -454,8 +454,8 @@ const SHOPINEXT_API_URL_TEST = 'https://api.dev.shopinext.com';
 async function getShopinextToken(db) {
   const settings = await db.collection('shopinext_settings').findOne({ isActive: true });
   if (!settings) {
-    console.log('Shopinext settings not found');
-    return null;
+    console.log('Shopinext settings not found in database');
+    return { error: 'Shopinext ayarları bulunamadı. Lütfen admin panelinden ayarları yapın.' };
   }
 
   // Check if we have a valid cached token
@@ -487,7 +487,11 @@ async function getShopinextToken(db) {
   }
   
   // Get new token
-  return await authenticateShopinext(db, settings);
+  const authResult = await authenticateShopinext(db, settings);
+  if (!authResult) {
+    return { error: 'Shopinext kimlik doğrulama başarısız. IP adresi veya domain yetkili olmayabilir.' };
+  }
+  return authResult;
 }
 
 // Authenticate with Shopinext API

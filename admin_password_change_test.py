@@ -73,9 +73,10 @@ class AdminPasswordChangeTester:
             }
             
             response = requests.post(f"{API_BASE}/auth/register", json=user_data)
-            if response.status_code == 201:
+            if response.status_code == 200:
                 data = response.json()
-                self.test_user_id = data.get('user', {}).get('id')
+                user_data_response = data.get('data', {}) if 'data' in data else data
+                self.test_user_id = user_data_response.get('user', {}).get('id')
                 self.test_user_email = user_data['email']
                 self.log_result("Create Test User", True, f"Test user created with ID: {self.test_user_id}")
                 return True

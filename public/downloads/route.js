@@ -2655,6 +2655,11 @@ export async function GET(request) {
       const shopierSettings = await db.collection('shopier_settings').findOne({ isActive: true });
       const shopinextSettings = await db.collection('shopinext_settings').findOne({ isActive: true });
       
+      // Check if Shopinext is configured via environment variables
+      const shopinextFromEnv = process.env.SHOPINEXT_CLIENT_ID && 
+                               process.env.SHOPINEXT_CLIENT_SECRET && 
+                               process.env.SHOPINEXT_DOMAIN;
+      
       return NextResponse.json({
         success: true,
         data: {
@@ -2663,8 +2668,8 @@ export async function GET(request) {
             name: 'Kredi/Banka Kartı'
           },
           shopinext: {
-            // isEnabled kontrolü - hem yapılandırılmış hem de aktif olmalı
-            available: !!(shopinextSettings && shopinextSettings.isEnabled),
+            // Available if configured via env OR (db settings exist AND enabled)
+            available: shopinextFromEnv || !!(shopinextSettings && shopinextSettings.isEnabled),
             name: 'Shopinext ile Öde'
           }
         }
@@ -6676,10 +6681,16 @@ export async function POST(request) {
       // 💳 SHOPINEXT PAYMENT FLOW
       // ============================================
       if (paymentMethod === 'shopinext') {
-        // Get Shopinext settings from database
+        // Check if Shopinext is configured (env or database)
+        const envClientId = process.env.SHOPINEXT_CLIENT_ID;
+        const envClientSecret = process.env.SHOPINEXT_CLIENT_SECRET;
+        const envDomain = process.env.SHOPINEXT_DOMAIN;
+        
         const shopinextSettings = await db.collection('shopinext_settings').findOne({ isActive: true });
         
-        if (!shopinextSettings) {
+        const isConfigured = (envClientId && envClientSecret && envDomain) || shopinextSettings;
+        
+        if (!isConfigured) {
           return NextResponse.json(
             { success: false, error: 'Shopinext ödeme sistemi yapılandırılmamış.' },
             { status: 503 }

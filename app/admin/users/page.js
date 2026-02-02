@@ -593,6 +593,91 @@ export default function AdminUsersPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Password Update Modal */}
+      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-[95vw] sm:max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl md:text-2xl flex items-center gap-2">
+              <KeyRound className="w-5 h-5 md:w-6 md:h-6 text-amber-500" />
+              Şifre Değiştir
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              {selectedUser?.firstName} {selectedUser?.lastName} ({selectedUser?.email})
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedUser && (
+            <div className="space-y-4">
+              {/* Warning */}
+              <Card className="bg-amber-900/20 border-amber-700">
+                <CardContent className="pt-4">
+                  <p className="text-amber-400 text-sm">
+                    ⚠️ Bu işlem kullanıcının mevcut şifresini değiştirecektir. Kullanıcı yeni şifre ile giriş yapmak zorunda kalacaktır.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* New Password */}
+              <div>
+                <label className="text-sm text-slate-400 mb-2 block">Yeni Şifre</label>
+                <Input
+                  type="password"
+                  placeholder="En az 6 karakter"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="bg-slate-800 border-slate-700 text-white"
+                />
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <label className="text-sm text-slate-400 mb-2 block">Şifre Tekrar</label>
+                <Input
+                  type="password"
+                  placeholder="Şifreyi tekrar girin"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="bg-slate-800 border-slate-700 text-white"
+                />
+              </div>
+
+              {/* Validation Feedback */}
+              {newPassword && (
+                <div className="space-y-1">
+                  <p className={`text-xs flex items-center gap-1 ${newPassword.length >= 6 ? 'text-green-400' : 'text-red-400'}`}>
+                    {newPassword.length >= 6 ? '✓' : '✗'} En az 6 karakter
+                  </p>
+                  {confirmPassword && (
+                    <p className={`text-xs flex items-center gap-1 ${newPassword === confirmPassword ? 'text-green-400' : 'text-red-400'}`}>
+                      {newPassword === confirmPassword ? '✓' : '✗'} Şifreler eşleşiyor
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <Button
+                  onClick={handlePasswordUpdate}
+                  disabled={processing || !newPassword || newPassword.length < 6 || newPassword !== confirmPassword}
+                  className="flex-1 bg-amber-600 hover:bg-amber-700"
+                >
+                  {processing ? 'İşleniyor...' : 'Şifreyi Güncelle'}
+                </Button>
+                <Button
+                  onClick={() => setShowPasswordModal(false)}
+                  variant="outline"
+                  disabled={processing}
+                  className="border-slate-700 hover:bg-slate-800"
+                >
+                  İptal
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

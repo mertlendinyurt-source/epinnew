@@ -47,9 +47,13 @@ class AdminPasswordChangeTester:
         """Login as admin to get token"""
         try:
             response = requests.post(f"{API_BASE}/admin/login", json=ADMIN_CREDENTIALS)
+            print(f"DEBUG: Admin login response status: {response.status_code}")
+            print(f"DEBUG: Admin login response: {response.text}")
+            
             if response.status_code == 200:
                 data = response.json()
                 self.admin_token = data.get('token')
+                print(f"DEBUG: Admin token: {self.admin_token[:50]}..." if self.admin_token else "No token found")
                 self.log_result("Admin Login", True, "Admin login successful")
                 return True
             else:

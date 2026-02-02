@@ -610,9 +610,14 @@ async function refreshShopinextToken(db, settings, refreshToken) {
 async function createShopinextPayment(db, order, user, product) {
   const tokenResult = await getShopinextToken(db);
   
-  if (!tokenResult) {
-    console.error('Failed to get Shopinext token');
-    return { success: false, error: 'Shopinext bağlantısı kurulamadı' };
+  if (!tokenResult || tokenResult.error) {
+    console.error('Failed to get Shopinext token:', tokenResult?.error);
+    return { success: false, error: tokenResult?.error || 'Shopinext bağlantısı kurulamadı' };
+  }
+  
+  if (!tokenResult.accessToken) {
+    console.error('No access token in result');
+    return { success: false, error: 'Shopinext token alınamadı' };
   }
   
   const { accessToken, settings } = tokenResult;

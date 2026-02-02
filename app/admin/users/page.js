@@ -403,20 +403,35 @@ export default function AdminUsersPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-slate-500 text-xs">{formatDate(user.createdAt)}</span>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUser(user)
-                          setShowBalanceModal(true)
-                          setBalanceAction('add')
-                          setBalanceAmount('')
-                          setBalanceNote('')
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 h-8 text-xs"
-                      >
-                        <Wallet className="w-3 h-3 mr-1" />
-                        Bakiye Düzenle
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedUser(user)
+                            setShowPasswordModal(true)
+                            setNewPassword('')
+                            setConfirmPassword('')
+                          }}
+                          className="border-amber-600 text-amber-400 hover:bg-amber-600 hover:text-white h-8"
+                        >
+                          <KeyRound className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(user)
+                            setShowBalanceModal(true)
+                            setBalanceAction('add')
+                            setBalanceAmount('')
+                            setBalanceNote('')
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700 h-8 text-xs"
+                        >
+                          <Wallet className="w-3 h-3 mr-1" />
+                          Bakiye
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}

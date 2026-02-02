@@ -518,11 +518,12 @@ async function getShopinextToken(db) {
 // Authenticate with Shopinext API
 async function authenticateShopinext(db, settings) {
   try {
-    const clientId = decrypt(settings.clientId);
-    const clientSecret = decrypt(settings.clientSecret);
+    // Get credentials - from env or decrypt from db
+    const clientId = settings.fromEnv ? settings.clientId : decrypt(settings.clientId);
+    const clientSecret = settings.fromEnv ? settings.clientSecret : decrypt(settings.clientSecret);
     const apiUrl = settings.mode === 'test' ? SHOPINEXT_API_URL_TEST : SHOPINEXT_API_URL;
     
-    console.log('Shopinext authenticate:', { apiUrl, domain: settings.domain, mode: settings.mode });
+    console.log('Shopinext authenticate:', { apiUrl, domain: settings.domain, mode: settings.mode, fromEnv: !!settings.fromEnv });
     
     const response = await fetch(`${apiUrl}/authenticate`, {
       method: 'POST',
@@ -569,8 +570,9 @@ async function authenticateShopinext(db, settings) {
     }
     
     // Log specific error codes
-    if (data.error_code) {
-      console.error('Shopinext auth error code:', data.error_code, '- Message:', data.message);
+    if (data.error_code || data.errorCode) {
+      const errorCode = data.error_code || data.errorCode;
+      console.error('Shopinext auth error code:', errorCode, '- Message:', data.message || data.error);
       // SNE10: IP adresi yetkili değil
       // SNE11: Domain yetkili değil
       // SNE1: Kimlik bilgileri yanlış

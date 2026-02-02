@@ -201,7 +201,9 @@ class AdminPasswordChangeTester:
             
             if response.status_code == 200:
                 data = response.json()
-                if data.get('token'):
+                # Handle both direct token and nested data.token formats
+                token = data.get('token') or data.get('data', {}).get('token')
+                if token:
                     self.log_result("Verify New Password", True, "Successfully logged in with new password")
                     return True
                 else:

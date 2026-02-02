@@ -2314,12 +2314,11 @@ export default function App() {
               </p>
               
               {/* Payment Method Logos */}
-              <div className="flex items-center justify-center overflow-hidden">
+              <div className="flex items-center justify-center">
                 <img 
                   src="/payment-logos.png" 
-                  alt="Mastercard, Visa, American Express, Troy"
+                  alt="Akbank, Mastercard, Visa, American Express, Troy"
                   className="h-8 md:h-10 w-auto object-contain opacity-80"
-                  style={{ marginLeft: '-90px', clipPath: 'inset(0 0 0 90px)' }}
                 />
               </div>
               

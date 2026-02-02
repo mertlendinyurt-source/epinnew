@@ -448,14 +448,14 @@ async function getDijipinOrderStatus(orderId) {
 
 // Shopinext API Base URLs
 const SHOPINEXT_API_URL = 'https://api.shopinext.com';
-const SHOPINEXT_API_URL_TEST = 'https://apidev.shopinext.com';
+const SHOPINEXT_API_URL_TEST = 'https://api.dev.shopinext.com';
 
 // Get or refresh Shopinext access token
 async function getShopinextToken(db) {
   const settings = await db.collection('shopinext_settings').findOne({ isActive: true });
   if (!settings) {
-    console.log('Shopinext settings not found');
-    return null;
+    console.log('Shopinext settings not found in database');
+    return { error: 'Shopinext ayarları bulunamadı. Lütfen admin panelinden ayarları yapın.' };
   }
 
   // Check if we have a valid cached token
@@ -487,7 +487,11 @@ async function getShopinextToken(db) {
   }
   
   // Get new token
-  return await authenticateShopinext(db, settings);
+  const authResult = await authenticateShopinext(db, settings);
+  if (!authResult) {
+    return { error: 'Shopinext kimlik doğrulama başarısız. IP adresi veya domain yetkili olmayabilir.' };
+  }
+  return authResult;
 }
 
 // Authenticate with Shopinext API
@@ -497,7 +501,7 @@ async function authenticateShopinext(db, settings) {
     const clientSecret = decrypt(settings.clientSecret);
     const apiUrl = settings.mode === 'test' ? SHOPINEXT_API_URL_TEST : SHOPINEXT_API_URL;
     
-    console.log('Shopinext authenticate:', { apiUrl, domain: settings.domain });
+    console.log('Shopinext authenticate:', { apiUrl, domain: settings.domain, mode: settings.mode });
     
     const response = await fetch(`${apiUrl}/authenticate`, {
       method: 'POST',
@@ -511,7 +515,17 @@ async function authenticateShopinext(db, settings) {
       })
     });
     
-    const data = await response.json();
+    const responseText = await response.text();
+    console.log('Shopinext auth raw response:', responseText);
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Shopinext auth response parse error:', e.message);
+      return null;
+    }
+    
     console.log('Shopinext auth response:', JSON.stringify(data));
     
     if (data.status === 1) {
@@ -533,10 +547,18 @@ async function authenticateShopinext(db, settings) {
       };
     }
     
+    // Log specific error codes
+    if (data.error_code) {
+      console.error('Shopinext auth error code:', data.error_code, '- Message:', data.message);
+      // SNE10: IP adresi yetkili değil
+      // SNE11: Domain yetkili değil
+      // SNE1: Kimlik bilgileri yanlış
+    }
+    
     console.error('Shopinext auth failed:', data);
     return null;
   } catch (error) {
-    console.error('Shopinext auth error:', error);
+    console.error('Shopinext auth error:', error.message);
     return null;
   }
 }
@@ -588,9 +610,14 @@ async function refreshShopinextToken(db, settings, refreshToken) {
 async function createShopinextPayment(db, order, user, product) {
   const tokenResult = await getShopinextToken(db);
   
-  if (!tokenResult) {
-    console.error('Failed to get Shopinext token');
-    return { success: false, error: 'Shopinext bağlantısı kurulamadı' };
+  if (!tokenResult || tokenResult.error) {
+    console.error('Failed to get Shopinext token:', tokenResult?.error);
+    return { success: false, error: tokenResult?.error || 'Shopinext bağlantısı kurulamadı' };
+  }
+  
+  if (!tokenResult.accessToken) {
+    console.error('No access token in result');
+    return { success: false, error: 'Shopinext token alınamadı' };
   }
   
   const { accessToken, settings } = tokenResult;

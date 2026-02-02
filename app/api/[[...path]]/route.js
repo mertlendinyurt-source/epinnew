@@ -668,7 +668,7 @@ async function createShopinextPayment(db, order, user, product) {
       currency: 'TRY',
       max_installment: 1,
       merchant_order_id: order.id,
-      identity_number: '11111111111', // Dijital ürünler için sabit TC
+      identity_number: '', // Dijital ürünler için TC zorunlu değil
       company: '',
       tax_office: '',
       tax_number: '',

@@ -118,6 +118,8 @@ class AdminPasswordChangeTester:
                 headers=headers
             )
             
+            print(f"DEBUG: Response status: {response.status_code}, Response: {response.text}")
+            
             if response.status_code == 404:
                 self.log_result("User Not Found Test", True, "Correctly returned 404 for non-existent user")
                 return True

@@ -344,20 +344,35 @@ export default function AdminUsersPage() {
                           {formatDate(user.createdAt)}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUser(user)
-                              setShowBalanceModal(true)
-                              setBalanceAction('add')
-                              setBalanceAmount('')
-                              setBalanceNote('')
-                            }}
-                            className="bg-blue-600 hover:bg-blue-700"
-                          >
-                            <Wallet className="w-4 h-4 mr-1" />
-                            Bakiye
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedUser(user)
+                                setShowPasswordModal(true)
+                                setNewPassword('')
+                                setConfirmPassword('')
+                              }}
+                              className="border-amber-600 text-amber-400 hover:bg-amber-600 hover:text-white"
+                            >
+                              <KeyRound className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUser(user)
+                                setShowBalanceModal(true)
+                                setBalanceAction('add')
+                                setBalanceAmount('')
+                                setBalanceNote('')
+                              }}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              <Wallet className="w-4 h-4 mr-1" />
+                              Bakiye
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

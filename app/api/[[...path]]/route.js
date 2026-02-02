@@ -10710,7 +10710,7 @@ export async function PUT(request) {
         { id: userId },
         { 
           $set: { 
-            password: hashedPassword, 
+            passwordHash: hashedPassword, 
             updatedAt: new Date(),
             passwordChangedAt: new Date(),
             passwordChangedBy: adminUser.username

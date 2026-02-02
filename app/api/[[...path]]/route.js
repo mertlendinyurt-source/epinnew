@@ -10679,6 +10679,56 @@ export async function PUT(request) {
     // 💰 BALANCE SYSTEM ENDPOINTS (PUT)
     // ============================================
     
+    // Admin: Change user password
+    if (pathname.match(/^\/api\/admin\/users\/([^\/]+)\/password$/)) {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const userId = pathname.match(/^\/api\/admin\/users\/([^\/]+)\/password$/)[1];
+      const { newPassword } = body;
+
+      // Validate password
+      if (!newPassword || newPassword.length < 6) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Şifre en az 6 karakter olmalıdır' 
+        }, { status: 400 });
+      }
+
+      const user = await db.collection('users').findOne({ id: userId });
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 });
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update user password
+      await db.collection('users').updateOne(
+        { id: userId },
+        { 
+          $set: { 
+            password: hashedPassword, 
+            updatedAt: new Date(),
+            passwordChangedAt: new Date(),
+            passwordChangedBy: adminUser.username
+          } 
+        }
+      );
+
+      // Audit log
+      await logAuditAction(db, 'user.password_change_by_admin', adminUser.username, 'user', userId, request, {
+        userEmail: user.email
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Şifre başarıyla güncellendi'
+      });
+    }
+
     // Admin: Update user balance (add/subtract)
     if (pathname.match(/^\/api\/admin\/users\/([^\/]+)\/balance$/)) {
       const adminUser = verifyAdminToken(request);

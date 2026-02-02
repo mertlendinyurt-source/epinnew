@@ -497,7 +497,7 @@ async function authenticateShopinext(db, settings) {
     const clientSecret = decrypt(settings.clientSecret);
     const apiUrl = settings.mode === 'test' ? SHOPINEXT_API_URL_TEST : SHOPINEXT_API_URL;
     
-    console.log('Shopinext authenticate:', { apiUrl, domain: settings.domain });
+    console.log('Shopinext authenticate:', { apiUrl, domain: settings.domain, mode: settings.mode });
     
     const response = await fetch(`${apiUrl}/authenticate`, {
       method: 'POST',
@@ -511,7 +511,17 @@ async function authenticateShopinext(db, settings) {
       })
     });
     
-    const data = await response.json();
+    const responseText = await response.text();
+    console.log('Shopinext auth raw response:', responseText);
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Shopinext auth response parse error:', e.message);
+      return null;
+    }
+    
     console.log('Shopinext auth response:', JSON.stringify(data));
     
     if (data.status === 1) {
@@ -533,10 +543,18 @@ async function authenticateShopinext(db, settings) {
       };
     }
     
+    // Log specific error codes
+    if (data.error_code) {
+      console.error('Shopinext auth error code:', data.error_code, '- Message:', data.message);
+      // SNE10: IP adresi yetkili değil
+      // SNE11: Domain yetkili değil
+      // SNE1: Kimlik bilgileri yanlış
+    }
+    
     console.error('Shopinext auth failed:', data);
     return null;
   } catch (error) {
-    console.error('Shopinext auth error:', error);
+    console.error('Shopinext auth error:', error.message);
     return null;
   }
 }

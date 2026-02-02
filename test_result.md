@@ -897,6 +897,18 @@ backend:
         agent: "testing"
         comment: "POST /api/account-orders working correctly. Requires user JWT authentication (401 without token, AUTH_REQUIRED code). Validates required fields (accountId). Validates account exists and is available (404 for invalid/unavailable accounts). Handles insufficient balance correctly (400 error). Card payment integration with Shopier working (fails gracefully when unconfigured with 520/503). Account status changes to 'sold' for balance payments and 'reserved' for card payments. Order creation with type='account' working correctly. FIXED: Endpoint was incorrectly placed in GET function, moved to POST function."
 
+  - task: "Admin User Password Change Endpoint"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PUT /api/admin/users/{userId}/password working correctly. All 5 test scenarios passed: (1) Authentication Test - Returns 401 without admin token, (2) User Not Found Test - Returns 404 for non-existent userId, (3) Short Password Test - Returns 400 with error 'Şifre en az 6 karakter olmalıdır' for passwords < 6 chars, (4) Successful Password Change - Returns 200 with success message 'Şifre başarıyla güncellendi', (5) Verify New Password Works - User can login with new password after change. FIXED: Updated password field from 'password' to 'passwordHash' to match user login expectations. Endpoint requires admin JWT authentication, validates password length, handles user not found scenarios, and successfully updates user passwords with proper audit logging."
+
 frontend:
   - task: "Auth Modal (Register + Login)"
     implemented: true

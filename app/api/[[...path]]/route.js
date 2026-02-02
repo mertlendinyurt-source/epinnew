@@ -6676,10 +6676,16 @@ export async function POST(request) {
       // 💳 SHOPINEXT PAYMENT FLOW
       // ============================================
       if (paymentMethod === 'shopinext') {
-        // Get Shopinext settings from database
+        // Check if Shopinext is configured (env or database)
+        const envClientId = process.env.SHOPINEXT_CLIENT_ID;
+        const envClientSecret = process.env.SHOPINEXT_CLIENT_SECRET;
+        const envDomain = process.env.SHOPINEXT_DOMAIN;
+        
         const shopinextSettings = await db.collection('shopinext_settings').findOne({ isActive: true });
         
-        if (!shopinextSettings) {
+        const isConfigured = (envClientId && envClientSecret && envDomain) || shopinextSettings;
+        
+        if (!isConfigured) {
           return NextResponse.json(
             { success: false, error: 'Shopinext ödeme sistemi yapılandırılmamış.' },
             { status: 503 }

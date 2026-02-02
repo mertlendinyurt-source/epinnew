@@ -2313,13 +2313,12 @@ export default function App() {
                 © 2026 {siteSettings?.siteName || 'PINLY'}. Tüm hakları saklıdır.
               </p>
               
-              {/* Payment Method Logos - iyzico */}
-              <div className="flex items-center justify-center">
-                <img 
-                  src="/payment-logos.png" 
-                  alt="iyzico, Mastercard, Visa, American Express, Troy"
-                  className="h-8 md:h-10 w-auto object-contain opacity-80"
-                />
+              {/* Payment Method Logos */}
+              <div className="flex items-center justify-center gap-3">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-6 md:h-8 w-auto object-contain opacity-80" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-5 md:h-6 w-auto object-contain opacity-80" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/American_Express_logo_%282018%29.svg" alt="American Express" className="h-6 md:h-8 w-auto object-contain opacity-80" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/64/Troy_logo.svg" alt="Troy" className="h-5 md:h-7 w-auto object-contain opacity-80" />
               </div>
               
               <p className="text-white/20 text-xs text-center md:text-right">

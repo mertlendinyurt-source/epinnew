@@ -701,8 +701,8 @@ async function createShopinextPayment(db, order, user, product) {
         shipping_country_code: '+90',
         shipping_phone: shippingPhone
       },
-      success_url: `${BASE_URL}/success?orderId=${order.id}`,
-      fail_url: `${BASE_URL}/failed?orderId=${order.id}`,
+      success_url: `${BASE_URL}/payment/success?orderId=${order.id}`,
+      fail_url: `${BASE_URL}/payment/failed?orderId=${order.id}`,
       callback_url: `${BASE_URL}/api/payments/shopinext/callback`,
       language: 'TR'
     };

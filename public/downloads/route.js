@@ -653,8 +653,11 @@ async function createShopinextPayment(db, order, user, product) {
     const email = user.email;
     const phone = (user.phone || '').replace(/[\s\-\(\)\+]/g, '').replace(/^0/, '');
     
-    // Format phone for Shopinext (remove leading 90 if present)
-    const formattedPhone = phone.startsWith('90') ? phone.substring(2) : phone;
+    // Format phone for Shopinext
+    // billing_phone: without country code (5445553366)
+    // shipping_phone: with country code (905445553366)
+    const billingPhone = phone.startsWith('90') ? phone.substring(2) : phone;
+    const shippingPhone = phone.startsWith('90') ? phone : '90' + phone;
     
     // Prepare payment request - Dijital ürün için is_digital: 1
     const paymentPayload = {
@@ -685,7 +688,7 @@ async function createShopinextPayment(db, order, user, product) {
         billing_postal_code: '34000',
         billing_country: 'TR',
         billing_country_code: '+90',
-        billing_phone: formattedPhone
+        billing_phone: billingPhone
       },
       shipping_info: {
         shipping_firstname: firstName,
@@ -696,7 +699,7 @@ async function createShopinextPayment(db, order, user, product) {
         shipping_postal_code: '34000',
         shipping_country: 'TR',
         shipping_country_code: '+90',
-        shipping_phone: formattedPhone
+        shipping_phone: shippingPhone
       },
       success_url: `${BASE_URL}/success?orderId=${order.id}`,
       fail_url: `${BASE_URL}/failed?orderId=${order.id}`,

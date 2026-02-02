@@ -452,10 +452,31 @@ const SHOPINEXT_API_URL_TEST = 'https://api.dev.shopinext.com';
 
 // Get or refresh Shopinext access token
 async function getShopinextToken(db) {
-  const settings = await db.collection('shopinext_settings').findOne({ isActive: true });
-  if (!settings) {
-    console.log('Shopinext settings not found in database');
-    return { error: 'Shopinext ayarları bulunamadı. Lütfen admin panelinden ayarları yapın.' };
+  // First try environment variables
+  const envClientId = process.env.SHOPINEXT_CLIENT_ID;
+  const envClientSecret = process.env.SHOPINEXT_CLIENT_SECRET;
+  const envDomain = process.env.SHOPINEXT_DOMAIN;
+  const envMode = process.env.SHOPINEXT_MODE || 'production';
+  
+  let settings;
+  
+  if (envClientId && envClientSecret && envDomain) {
+    // Use environment variables
+    settings = {
+      clientId: envClientId,
+      clientSecret: envClientSecret,
+      domain: envDomain,
+      mode: envMode,
+      fromEnv: true
+    };
+    console.log('Using Shopinext settings from environment variables');
+  } else {
+    // Fall back to database
+    settings = await db.collection('shopinext_settings').findOne({ isActive: true });
+    if (!settings) {
+      console.log('Shopinext settings not found in database or environment');
+      return { error: 'Shopinext ayarları bulunamadı. Lütfen .env dosyasına veya admin panelinden ayarları yapın.' };
+    }
   }
 
   // Check if we have a valid cached token

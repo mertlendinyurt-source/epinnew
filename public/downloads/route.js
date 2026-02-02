@@ -443,6 +443,273 @@ async function getDijipinOrderStatus(orderId) {
 }
 
 // ============================================
+// SHOPINEXT API FUNCTIONS
+// ============================================
+
+// Shopinext API Base URLs
+const SHOPINEXT_API_URL = 'https://api.shopinext.com';
+const SHOPINEXT_API_URL_TEST = 'https://apidev.shopinext.com';
+
+// Get or refresh Shopinext access token
+async function getShopinextToken(db) {
+  const settings = await db.collection('shopinext_settings').findOne({ isActive: true });
+  if (!settings) {
+    console.log('Shopinext settings not found');
+    return null;
+  }
+
+  // Check if we have a valid cached token
+  const cachedToken = await db.collection('shopinext_tokens').findOne({ isActive: true });
+  
+  if (cachedToken) {
+    const tokenExpiry = new Date(cachedToken.accessTokenValidity);
+    const now = new Date();
+    
+    // If token is still valid (with 5 min buffer)
+    if (tokenExpiry > new Date(now.getTime() + 5 * 60 * 1000)) {
+      return {
+        accessToken: cachedToken.accessToken,
+        settings
+      };
+    }
+    
+    // Try to refresh token
+    const refreshExpiry = new Date(cachedToken.refreshTokenValidity);
+    if (refreshExpiry > now) {
+      const refreshResult = await refreshShopinextToken(db, settings, cachedToken.refreshToken);
+      if (refreshResult) {
+        return {
+          accessToken: refreshResult.accessToken,
+          settings
+        };
+      }
+    }
+  }
+  
+  // Get new token
+  return await authenticateShopinext(db, settings);
+}
+
+// Authenticate with Shopinext API
+async function authenticateShopinext(db, settings) {
+  try {
+    const clientId = decrypt(settings.clientId);
+    const clientSecret = decrypt(settings.clientSecret);
+    const apiUrl = settings.mode === 'test' ? SHOPINEXT_API_URL_TEST : SHOPINEXT_API_URL;
+    
+    console.log('Shopinext authenticate:', { apiUrl, domain: settings.domain });
+    
+    const response = await fetch(`${apiUrl}/authenticate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Domain': settings.domain
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret
+      })
+    });
+    
+    const data = await response.json();
+    console.log('Shopinext auth response:', JSON.stringify(data));
+    
+    if (data.status === 1) {
+      // Save token to database
+      await db.collection('shopinext_tokens').updateMany({}, { $set: { isActive: false } });
+      await db.collection('shopinext_tokens').insertOne({
+        id: uuidv4(),
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        accessTokenValidity: data.access_token_validity,
+        refreshTokenValidity: data.refresh_token_validity,
+        isActive: true,
+        createdAt: new Date()
+      });
+      
+      return {
+        accessToken: data.access_token,
+        settings
+      };
+    }
+    
+    console.error('Shopinext auth failed:', data);
+    return null;
+  } catch (error) {
+    console.error('Shopinext auth error:', error);
+    return null;
+  }
+}
+
+// Refresh Shopinext token
+async function refreshShopinextToken(db, settings, refreshToken) {
+  try {
+    const apiUrl = settings.mode === 'test' ? SHOPINEXT_API_URL_TEST : SHOPINEXT_API_URL;
+    
+    const response = await fetch(`${apiUrl}/refreshToken`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Domain': settings.domain
+      },
+      body: JSON.stringify({
+        refresh_token: refreshToken
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.status === 1) {
+      // Update token in database
+      await db.collection('shopinext_tokens').updateMany({}, { $set: { isActive: false } });
+      await db.collection('shopinext_tokens').insertOne({
+        id: uuidv4(),
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        accessTokenValidity: data.access_token_validity,
+        refreshTokenValidity: data.refresh_token_validity,
+        isActive: true,
+        createdAt: new Date()
+      });
+      
+      return {
+        accessToken: data.access_token
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Shopinext token refresh error:', error);
+    return null;
+  }
+}
+
+// Create Shopinext payment
+async function createShopinextPayment(db, order, user, product) {
+  const tokenResult = await getShopinextToken(db);
+  
+  if (!tokenResult) {
+    console.error('Failed to get Shopinext token');
+    return { success: false, error: 'Shopinext bağlantısı kurulamadı' };
+  }
+  
+  const { accessToken, settings } = tokenResult;
+  const apiUrl = settings.mode === 'test' ? SHOPINEXT_API_URL_TEST : SHOPINEXT_API_URL;
+  
+  try {
+    // Prepare customer info
+    const firstName = user.firstName || 'Müşteri';
+    const lastName = user.lastName || user.firstName || 'Müşteri';
+    const email = user.email;
+    const phone = (user.phone || '').replace(/[\s\-\(\)\+]/g, '').replace(/^0/, '');
+    
+    // Format phone for Shopinext (remove leading 90 if present)
+    const formattedPhone = phone.startsWith('90') ? phone.substring(2) : phone;
+    
+    // Prepare payment request - Dijital ürün için is_digital: 1
+    const paymentPayload = {
+      firstname: firstName,
+      surname: lastName,
+      email: email,
+      amount: parseFloat(order.amount.toFixed(2)),
+      currency: 'TRY',
+      max_installment: 1,
+      merchant_order_id: order.id,
+      identity_number: '11111111111', // Dijital ürünler için sabit TC
+      company: '',
+      tax_office: '',
+      tax_number: '',
+      is_digital: 1, // Dijital ürün
+      order_products: [{
+        name: product.title,
+        quantity: 1,
+        price: parseFloat(order.amount.toFixed(2)),
+        total: parseFloat(order.amount.toFixed(2))
+      }],
+      billing_info: {
+        billing_firstname: firstName,
+        billing_surname: lastName,
+        billing_address: 'Dijital Ürün',
+        billing_city: 'İstanbul',
+        billing_state: 'İstanbul',
+        billing_postal_code: '34000',
+        billing_country: 'TR',
+        billing_country_code: '+90',
+        billing_phone: formattedPhone
+      },
+      shipping_info: {
+        shipping_firstname: firstName,
+        shipping_surname: lastName,
+        shipping_address: 'Dijital Ürün',
+        shipping_city: 'İstanbul',
+        shipping_state: 'İstanbul',
+        shipping_postal_code: '34000',
+        shipping_country: 'TR',
+        shipping_country_code: '+90',
+        shipping_phone: formattedPhone
+      },
+      success_url: `${BASE_URL}/success?orderId=${order.id}`,
+      fail_url: `${BASE_URL}/failed?orderId=${order.id}`,
+      callback_url: `${BASE_URL}/api/payments/shopinext/callback`,
+      language: 'TR'
+    };
+    
+    console.log('Shopinext payment request:', JSON.stringify({ ...paymentPayload, identity_number: '***' }));
+    
+    const response = await fetch(`${apiUrl}/createPayment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+        'Domain': settings.domain
+      },
+      body: JSON.stringify(paymentPayload)
+    });
+    
+    const data = await response.json();
+    console.log('Shopinext payment response:', JSON.stringify(data));
+    
+    if (data.status === 1 && data.redirect_url) {
+      // Log payment request
+      await db.collection('payment_requests').insertOne({
+        id: uuidv4(),
+        orderId: order.id,
+        provider: 'shopinext',
+        paymentId: data.payment_id,
+        amount: order.amount,
+        status: 'pending',
+        redirectUrl: data.redirect_url,
+        createdAt: new Date()
+      });
+      
+      return {
+        success: true,
+        paymentId: data.payment_id,
+        redirectUrl: data.redirect_url
+      };
+    }
+    
+    console.error('Shopinext payment failed:', data);
+    return { 
+      success: false, 
+      error: data.message || 'Ödeme oluşturulamadı',
+      errorCode: data.error_code
+    };
+  } catch (error) {
+    console.error('Shopinext payment error:', error);
+    return { success: false, error: 'Shopinext bağlantı hatası' };
+  }
+}
+
+// Generate Shopinext callback hash for verification
+// Hash: sha256(client_id + client_secret)
+function generateShopinextHash(clientId, clientSecret) {
+  const crypto = require('crypto');
+  const data = clientId + clientSecret;
+  return crypto.createHash('sha256').update(data).digest('hex');
+}
+
+// ============================================
 // AUDIT LOG FUNCTIONS
 // ============================================
 async function logAuditAction(db, action, actorId, entityType, entityId, request, meta = {}) {
@@ -1849,6 +2116,7 @@ export async function GET(request) {
             heroImage: siteSettings?.heroImage || null,
             valorantHeroImage: siteSettings?.valorantHeroImage || null,
             mlbbHeroImage: siteSettings?.mlbbHeroImage || null,
+            lolHeroImage: siteSettings?.lolHeroImage || null,
             categoryIcon: siteSettings?.categoryIcon || null,
             siteName: siteSettings?.siteName || 'PINLY',
             metaTitle: siteSettings?.metaTitle || 'PINLY – Dijital Kod ve Oyun Satış Platformu',
@@ -2332,6 +2600,93 @@ export async function GET(request) {
       });
     }
 
+    // Get available payment methods (PUBLIC - for checkout)
+    if (pathname === '/api/payment-methods') {
+      const shopierSettings = await db.collection('shopier_settings').findOne({ isActive: true });
+      const shopinextSettings = await db.collection('shopinext_settings').findOne({ isActive: true });
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          shopier: {
+            available: !!shopierSettings,
+            name: 'Kredi/Banka Kartı'
+          },
+          shopinext: {
+            // isEnabled kontrolü - hem yapılandırılmış hem de aktif olmalı
+            available: !!(shopinextSettings && shopinextSettings.isEnabled),
+            name: 'Shopinext ile Öde'
+          }
+        }
+      });
+    }
+
+    // Admin: Test Shopinext API connection (DEBUG)
+    if (pathname === '/api/admin/settings/shopinext/test') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const settings = await db.collection('shopinext_settings').findOne({ isActive: true });
+      if (!settings) {
+        return NextResponse.json({
+          success: false,
+          error: 'Shopinext ayarları bulunamadı'
+        });
+      }
+
+      try {
+        const clientId = decrypt(settings.clientId);
+        const clientSecret = decrypt(settings.clientSecret);
+        const apiUrl = settings.mode === 'test' ? 'https://apidev.shopinext.com' : 'https://api.shopinext.com';
+        
+        console.log('Testing Shopinext API:', { apiUrl, domain: settings.domain, mode: settings.mode });
+        
+        const response = await fetch(`${apiUrl}/authenticate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Domain': settings.domain
+          },
+          body: JSON.stringify({
+            client_id: clientId,
+            client_secret: clientSecret
+          })
+        });
+        
+        const data = await response.json();
+        console.log('Shopinext API response:', JSON.stringify(data));
+        
+        if (data.status === 1) {
+          return NextResponse.json({
+            success: true,
+            message: 'Shopinext bağlantısı başarılı!',
+            data: {
+              tokenReceived: !!data.access_token,
+              expiresAt: data.access_token_validity
+            }
+          });
+        } else {
+          return NextResponse.json({
+            success: false,
+            error: 'Shopinext API hatası',
+            details: data
+          });
+        }
+      } catch (error) {
+        console.error('Shopinext test error:', error);
+        return NextResponse.json({
+          success: false,
+          error: 'Bağlantı hatası',
+          details: error.message
+        });
+      }
+    }
+
     // Admin: Get all products (including inactive)
     if (pathname === '/api/admin/products') {
       const user = verifyAdminToken(request);
@@ -2483,6 +2838,50 @@ export async function GET(request) {
             openTickets
           },
           status: 'healthy'
+        }
+      });
+    }
+
+    // Admin: Get Shopinext payment settings (masked)
+    if (pathname === '/api/admin/settings/shopinext') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      // Get encrypted settings from database
+      const settings = await db.collection('shopinext_settings').findOne({ isActive: true });
+      
+      if (!settings) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            isConfigured: false,
+            isEnabled: false,
+            clientId: null,
+            domain: null,
+            ipAddress: null,
+            mode: 'production',
+            message: 'Shopinext ayarları henüz yapılmadı'
+          }
+        });
+      }
+
+      // Return masked values
+      return NextResponse.json({
+        success: true,
+        data: {
+          isConfigured: true,
+          isEnabled: settings.isEnabled || false,
+          clientId: settings.clientId ? maskSensitiveData(decrypt(settings.clientId)) : null,
+          domain: settings.domain || null,
+          ipAddress: settings.ipAddress || null,
+          mode: settings.mode || 'production',
+          updatedBy: settings.updatedBy,
+          updatedAt: settings.updatedAt
         }
       });
     }
@@ -2949,6 +3348,7 @@ export async function GET(request) {
           heroImage: settings?.heroImage || null,
           valorantHeroImage: settings?.valorantHeroImage || null,
           mlbbHeroImage: settings?.mlbbHeroImage || null,
+          lolHeroImage: settings?.lolHeroImage || null,
           categoryIcon: settings?.categoryIcon || null,
           siteName: settings?.siteName || 'PINLY',
           metaTitle: settings?.metaTitle || 'PINLY – Dijital Kod ve Oyun Satış Platformu',
@@ -6223,6 +6623,84 @@ export async function POST(request) {
       }
 
       // ============================================
+      // 💳 SHOPINEXT PAYMENT FLOW
+      // ============================================
+      if (paymentMethod === 'shopinext') {
+        // Get Shopinext settings from database
+        const shopinextSettings = await db.collection('shopinext_settings').findOne({ isActive: true });
+        
+        if (!shopinextSettings) {
+          return NextResponse.json(
+            { success: false, error: 'Shopinext ödeme sistemi yapılandırılmamış.' },
+            { status: 503 }
+          );
+        }
+
+        // Create customer snapshot
+        const customerSnapshot = {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone
+        };
+
+        // Create order with PENDING status
+        const orderAmount = product.discountPrice || product.price || product.finalPrice || product.salePrice || 0;
+        
+        const order = {
+          id: uuidv4(),
+          userId: user.id,
+          productId,
+          productTitle: product.title,
+          productImageUrl: product.imageUrl || null,
+          playerId,
+          playerName,
+          customer: customerSnapshot,
+          status: 'pending',
+          amount: orderAmount,
+          totalAmount: orderAmount,
+          currency: 'TRY',
+          paymentMethod: 'shopinext',
+          termsAccepted: termsAccepted || false,
+          termsAcceptedAt: termsAcceptedAt ? new Date(termsAcceptedAt) : new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        await db.collection('orders').insertOne(order);
+
+        // Send order created email
+        sendOrderCreatedEmail(db, order, user, product).catch(err => 
+          console.error('Order created email failed:', err)
+        );
+
+        // Create Shopinext payment
+        const paymentResult = await createShopinextPayment(db, order, user, product);
+        
+        if (!paymentResult.success) {
+          // Update order to failed
+          await db.collection('orders').updateOne(
+            { id: order.id },
+            { $set: { status: 'failed', error: paymentResult.error, updatedAt: new Date() } }
+          );
+          
+          return NextResponse.json(
+            { success: false, error: paymentResult.error || 'Ödeme başlatılamadı' },
+            { status: 400 }
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            orderId: order.id,
+            paymentUrl: paymentResult.redirectUrl,
+            paymentProvider: 'shopinext'
+          }
+        });
+      }
+
+      // ============================================
       // 💳 CARD PAYMENT FLOW (SHOPIER)
       // ============================================
 
@@ -7053,6 +7531,200 @@ export async function POST(request) {
       });
     }
 
+    // Shopinext callback (Webhook)
+    if (pathname === '/api/payments/shopinext/callback') {
+      const { payment_id, status, hash } = body;
+      
+      console.log('Shopinext callback received:', { payment_id, status });
+      
+      // 1. Find payment request
+      const paymentRequest = await db.collection('payment_requests').findOne({
+        paymentId: payment_id,
+        provider: 'shopinext'
+      });
+      
+      if (!paymentRequest) {
+        console.error(`Shopinext callback: Payment ${payment_id} not found`);
+        return new Response('OK', { status: 200 }); // Always return OK to stop retries
+      }
+      
+      const orderId = paymentRequest.orderId;
+      
+      // 2. Validate order exists
+      const order = await db.collection('orders').findOne({ id: orderId });
+      if (!order) {
+        console.error(`Shopinext callback: Order ${orderId} not found`);
+        return new Response('OK', { status: 200 });
+      }
+      
+      // 3. Check if order is already PAID (idempotency protection)
+      if (order.status === 'paid') {
+        console.log(`Shopinext callback: Order ${orderId} already PAID. Ignoring duplicate callback.`);
+        return new Response('OK', { status: 200 });
+      }
+      
+      // 4. Verify hash (CRITICAL SECURITY)
+      const shopinextSettings = await db.collection('shopinext_settings').findOne({ isActive: true });
+      if (shopinextSettings && hash) {
+        try {
+          const clientId = decrypt(shopinextSettings.clientId);
+          const clientSecret = decrypt(shopinextSettings.clientSecret);
+          const expectedHash = generateShopinextHash(clientId, clientSecret);
+          
+          if (hash !== expectedHash) {
+            console.error('Shopinext callback: Hash mismatch');
+            // Log security event
+            await db.collection('payment_security_logs').insertOne({
+              orderId: orderId,
+              provider: 'shopinext',
+              event: 'hash_mismatch',
+              receivedHash: hash.substring(0, 20) + '...',
+              timestamp: new Date()
+            });
+            return new Response('OK', { status: 200 });
+          }
+        } catch (error) {
+          console.error('Shopinext callback: Hash verification error:', error);
+        }
+      }
+      
+      // 5. Map Shopinext status to application status
+      // Status codes: processing, successful, unsuccessful, cancelled, refunded, partially_refunded
+      let newStatus;
+      if (status === 'successful') {
+        newStatus = 'paid';
+      } else if (status === 'processing') {
+        // Still processing, don't update yet
+        console.log(`Shopinext callback: Order ${orderId} still processing`);
+        return new Response('OK', { status: 200 });
+      } else {
+        newStatus = 'failed';
+      }
+      
+      // 6. Enforce immutable status transitions
+      if (order.status === 'failed' && newStatus === 'paid') {
+        console.error(`Shopinext callback: Cannot change order ${orderId} from FAILED to PAID`);
+        return new Response('OK', { status: 200 });
+      }
+      
+      // 7. Update order status
+      await db.collection('orders').updateOne(
+        { id: orderId },
+        {
+          $set: {
+            status: newStatus,
+            paymentProvider: 'shopinext',
+            paymentId: payment_id,
+            updatedAt: new Date()
+          }
+        }
+      );
+      
+      // 8. Create payment record
+      await db.collection('payments').insertOne({
+        id: uuidv4(),
+        orderId: orderId,
+        provider: 'shopinext',
+        providerTxnId: payment_id,
+        status: newStatus,
+        amount: order.amount,
+        currency: order.currency || 'TRY',
+        hashValidated: !!hash,
+        rawPayload: { payment_id, status },
+        verifiedAt: new Date(),
+        createdAt: new Date()
+      });
+      
+      // Update payment request status
+      await db.collection('payment_requests').updateOne(
+        { paymentId: payment_id },
+        { $set: { status: newStatus, updatedAt: new Date() } }
+      );
+      
+      // 9. PROCESS PAID ORDERS (Stock assignment etc - same as Shopier)
+      if (newStatus === 'paid') {
+        const orderUser = await db.collection('users').findOne({ id: order.userId });
+        const product = await db.collection('products').findOne({ id: order.productId });
+        
+        // Send SMS
+        if (orderUser && orderUser.phone) {
+          const itemTitle = product?.title || 'Sipariş';
+          console.log('Shopinext: Sending payment SMS to', orderUser.phone);
+          sendPaymentSuccessSms(db, order, orderUser, itemTitle).catch(err =>
+            console.error('Shopinext payment SMS failed:', err)
+          );
+        }
+        
+        // Stock assignment (same logic as Shopier)
+        if (product && (!order.delivery || order.delivery.status !== 'delivered')) {
+          try {
+            const assignedStock = await db.collection('stock').findOneAndUpdate(
+              { productId: order.productId, status: 'available' },
+              { 
+                $set: { 
+                  status: 'assigned', 
+                  orderId: orderId,
+                  assignedAt: new Date()
+                } 
+              },
+              { 
+                returnDocument: 'after',
+                sort: { createdAt: 1 }
+              }
+            );
+            
+            if (assignedStock && assignedStock.value) {
+              const stockCode = assignedStock.value;
+              
+              await db.collection('orders').updateOne(
+                { id: orderId },
+                {
+                  $set: {
+                    delivery: {
+                      status: 'delivered',
+                      items: [stockCode],
+                      stockId: assignedStock.id || assignedStock._id,
+                      assignedAt: new Date()
+                    }
+                  }
+                }
+              );
+              console.log(`Shopinext: Stock assigned to order ${orderId}`);
+              
+              // Send delivered email
+              if (orderUser && product) {
+                sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
+                  console.error('Shopinext delivered email failed:', err)
+                );
+              }
+            } else {
+              // No stock available
+              await db.collection('orders').updateOne(
+                { id: orderId },
+                {
+                  $set: {
+                    delivery: {
+                      status: 'pending',
+                      message: 'Stok bekleniyor',
+                      items: []
+                    }
+                  }
+                }
+              );
+              console.log(`Shopinext: No stock for order ${orderId}`);
+            }
+          } catch (stockError) {
+            console.error(`Shopinext stock error for order ${orderId}:`, stockError);
+          }
+        }
+      }
+      
+      console.log(`Shopinext callback: Order ${orderId} status updated to ${newStatus}`);
+      
+      // Return OK to Shopinext
+      return new Response('OK', { status: 200 });
+    }
+
     // Admin: Create product
     if (pathname === '/api/admin/products') {
       const user = verifyAdminToken(request);
@@ -7346,6 +8018,107 @@ export async function POST(request) {
           product: product.title,
           playerId: playerId,
           delivery: deliveryResult
+        }
+      });
+    }
+
+    // Admin: Toggle Shopinext enabled/disabled
+    if (pathname === '/api/admin/settings/shopinext/toggle') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { isEnabled } = body;
+
+      // Update isEnabled field
+      const result = await db.collection('shopinext_settings').updateOne(
+        { isActive: true },
+        { $set: { isEnabled: !!isEnabled, updatedAt: new Date() } }
+      );
+
+      if (result.matchedCount === 0) {
+        return NextResponse.json(
+          { success: false, error: 'Shopinext ayarları bulunamadı. Önce ayarları kaydedin.' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: isEnabled ? 'Shopinext ödeme seçeneği aktifleştirildi' : 'Shopinext ödeme seçeneği gizlendi',
+        data: { isEnabled: !!isEnabled }
+      });
+    }
+
+    // Admin: Save Shopinext payment settings (encrypted)
+    if (pathname === '/api/admin/settings/shopinext') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { clientId, clientSecret, domain, ipAddress, mode } = body;
+
+      // Validate required fields
+      if (!clientId || !clientSecret || !domain) {
+        return NextResponse.json(
+          { success: false, error: 'Client ID, Client Secret ve Domain gereklidir' },
+          { status: 400 }
+        );
+      }
+
+      // Rate limiting check (simple implementation - 10 requests per hour)
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const recentUpdates = await db.collection('shopinext_settings')
+        .countDocuments({ updatedAt: { $gte: oneHourAgo } });
+      
+      if (recentUpdates >= 10) {
+        return NextResponse.json(
+          { success: false, error: 'Çok fazla istek. Lütfen daha sonra tekrar deneyin.' },
+          { status: 429 }
+        );
+      }
+
+      // Encrypt sensitive data before storing
+      const encryptedSettings = {
+        clientId: encrypt(clientId),
+        clientSecret: encrypt(clientSecret),
+        domain: domain,
+        ipAddress: ipAddress || '',
+        mode: mode || 'production',
+        isActive: true,
+        updatedBy: user.username || user.email,
+        updatedAt: new Date(),
+        createdAt: new Date()
+      };
+
+      // Deactivate all previous settings
+      await db.collection('shopinext_settings').updateMany(
+        {},
+        { $set: { isActive: false } }
+      );
+
+      // Insert new settings
+      await db.collection('shopinext_settings').insertOne(encryptedSettings);
+
+      // Clear any existing tokens
+      await db.collection('shopinext_tokens').deleteMany({});
+
+      return NextResponse.json({
+        success: true,
+        message: 'Shopinext ayarları başarıyla kaydedildi',
+        data: {
+          domain: encryptedSettings.domain,
+          mode: encryptedSettings.mode,
+          updatedBy: encryptedSettings.updatedBy,
+          updatedAt: encryptedSettings.updatedAt
         }
       });
     }
@@ -7893,7 +8666,7 @@ export async function POST(request) {
         );
       }
 
-      const { logo, favicon, heroImage, valorantHeroImage, mlbbHeroImage, categoryIcon, siteName, metaTitle, metaDescription, contactEmail, contactPhone, liveSupportEnabled, liveSupportHours, dailyBannerEnabled, dailyBannerTitle, dailyBannerSubtitle, dailyBannerIcon, dailyCountdownEnabled, dailyCountdownLabel } = body;
+      const { logo, favicon, heroImage, valorantHeroImage, mlbbHeroImage, lolHeroImage, categoryIcon, siteName, metaTitle, metaDescription, contactEmail, contactPhone, liveSupportEnabled, liveSupportHours, dailyBannerEnabled, dailyBannerTitle, dailyBannerSubtitle, dailyBannerIcon, dailyCountdownEnabled, dailyCountdownLabel } = body;
 
       // Validation
       if (siteName !== undefined && (!siteName || siteName.trim().length === 0)) {
@@ -7943,6 +8716,7 @@ export async function POST(request) {
         heroImage: heroImage !== undefined ? heroImage : existingSettings?.heroImage || null,
         valorantHeroImage: valorantHeroImage !== undefined ? valorantHeroImage : existingSettings?.valorantHeroImage || null,
         mlbbHeroImage: mlbbHeroImage !== undefined ? mlbbHeroImage : existingSettings?.mlbbHeroImage || null,
+        lolHeroImage: lolHeroImage !== undefined ? lolHeroImage : existingSettings?.lolHeroImage || null,
         categoryIcon: categoryIcon !== undefined ? categoryIcon : existingSettings?.categoryIcon || null,
         siteName: siteName !== undefined ? siteName.trim() : existingSettings?.siteName || 'PINLY',
         metaTitle: metaTitle !== undefined ? metaTitle.trim() : existingSettings?.metaTitle || '',
@@ -9013,6 +9787,69 @@ export async function POST(request) {
         });
       }
 
+      // ============================================
+      // 💳 SHOPINEXT PAYMENT FLOW FOR ACCOUNTS
+      // ============================================
+      if (paymentMethod === 'shopinext') {
+        const shopinextSettings = await db.collection('shopinext_settings').findOne({ isActive: true });
+        
+        if (!shopinextSettings) {
+          return NextResponse.json(
+            { success: false, error: 'Shopinext ödeme sistemi yapılandırılmamış.' },
+            { status: 503 }
+          );
+        }
+
+        // Create pending order
+        const order = {
+          id: uuidv4(),
+          type: 'account',
+          userId: user.id,
+          accountId: accountId,
+          accountTitle: account.title,
+          accountImageUrl: account.imageUrl || null,
+          customer: customerSnapshot,
+          status: 'pending',
+          paymentMethod: 'shopinext',
+          amount: orderAmount,
+          totalAmount: orderAmount,
+          currency: 'TRY',
+          delivery: {
+            status: 'pending',
+            message: 'Ödeme bekleniyor...',
+            credentials: null
+          },
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        await db.collection('orders').insertOne(order);
+
+        // Create Shopinext payment
+        const paymentResult = await createShopinextPayment(db, order, user, account);
+        
+        if (!paymentResult.success) {
+          await db.collection('orders').updateOne(
+            { id: order.id },
+            { $set: { status: 'failed', error: paymentResult.error, updatedAt: new Date() } }
+          );
+          
+          return NextResponse.json(
+            { success: false, error: paymentResult.error || 'Ödeme başlatılamadı' },
+            { status: 400 }
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            orderId: order.id,
+            paymentUrl: paymentResult.redirectUrl,
+            paymentProvider: 'shopinext'
+          }
+        });
+      }
+
       // Card Payment - Shopier
       const shopierSettings = await db.collection('shopier_settings').findOne({ isActive: true });
       if (!shopierSettings) {
@@ -9842,6 +10679,56 @@ export async function PUT(request) {
     // 💰 BALANCE SYSTEM ENDPOINTS (PUT)
     // ============================================
     
+    // Admin: Change user password
+    if (pathname.match(/^\/api\/admin\/users\/([^\/]+)\/password$/)) {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const userId = pathname.match(/^\/api\/admin\/users\/([^\/]+)\/password$/)[1];
+      const { newPassword } = body;
+
+      // Validate password
+      if (!newPassword || newPassword.length < 6) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Şifre en az 6 karakter olmalıdır' 
+        }, { status: 400 });
+      }
+
+      const user = await db.collection('users').findOne({ id: userId });
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 });
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update user password
+      await db.collection('users').updateOne(
+        { id: userId },
+        { 
+          $set: { 
+            passwordHash: hashedPassword, 
+            updatedAt: new Date(),
+            passwordChangedAt: new Date(),
+            passwordChangedBy: adminUser.username
+          } 
+        }
+      );
+
+      // Audit log
+      await logAuditAction(db, 'user.password_change_by_admin', adminUser.username, 'user', userId, request, {
+        userEmail: user.email
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Şifre başarıyla güncellendi'
+      });
+    }
+
     // Admin: Update user balance (add/subtract)
     if (pathname.match(/^\/api\/admin\/users\/([^\/]+)\/balance$/)) {
       const adminUser = verifyAdminToken(request);

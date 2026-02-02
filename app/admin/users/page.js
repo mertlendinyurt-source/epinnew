@@ -22,9 +22,12 @@ export default function AdminUsersPage() {
   const [dateFilter, setDateFilter] = useState('all')
   const [selectedUser, setSelectedUser] = useState(null)
   const [showBalanceModal, setShowBalanceModal] = useState(false)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [balanceAction, setBalanceAction] = useState('add')
   const [balanceAmount, setBalanceAmount] = useState('')
   const [balanceNote, setBalanceNote] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [processing, setProcessing] = useState(false)
   
   const [stats, setStats] = useState({

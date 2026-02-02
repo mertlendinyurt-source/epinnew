@@ -448,7 +448,7 @@ async function getDijipinOrderStatus(orderId) {
 
 // Shopinext API Base URLs
 const SHOPINEXT_API_URL = 'https://api.shopinext.com';
-const SHOPINEXT_API_URL_TEST = 'https://apidev.shopinext.com';
+const SHOPINEXT_API_URL_TEST = 'https://api.dev.shopinext.com';
 
 // Get or refresh Shopinext access token
 async function getShopinextToken(db) {

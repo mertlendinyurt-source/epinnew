@@ -658,11 +658,22 @@ async function createShopinextPayment(db, order, user, product) {
     // shipping_phone: with country code (905445553366)
     const billingPhone = phone.startsWith('90') ? phone.substring(2) : phone;
     const shippingPhone = phone.startsWith('90') ? phone : '90' + phone;
+    // Mask email with "+" method to prevent Shopinext emails reaching customers
+    // test@gmail.com → test+sn1234@gmail.com (still valid but different for Shopinext)
+    const maskEmailForShopinext = (email) => {
+      if (!email || typeof email !== 'string') return email;
+      const parts = email.split('@');
+      if (parts.length !== 2) return email;
+      const randomId = Math.random().toString(36).substring(2, 6); // 4 karakter random
+      return `${parts[0]}+sn${randomId}@${parts[1]}`;
+    };
+    const maskedEmail = maskEmailForShopinext(email);
+    
     // Prepare payment request - Dijital ürün için is_digital: 1
     const paymentPayload = {
       firstname: firstName,
       surname: lastName,
-      email: email,
+      email: maskedEmail,
       amount: parseFloat(order.amount.toFixed(2)),
       currency: 'TRY',
       max_installment: 1,

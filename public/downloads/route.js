@@ -658,9 +658,10 @@ async function createShopinextPayment(db, order, user, product) {
     // shipping_phone: with country code (905445553366)
     const billingPhone = phone.startsWith('90') ? phone.substring(2) : phone;
     const shippingPhone = phone.startsWith('90') ? phone : '90' + phone;
-    // Use site's own email to prevent customer notifications from Shopinext
-    // All Shopinext emails will go to this address instead of customer
-    const shopinextEmail = 'bildirim@pinly.com.tr';
+    // Generate unique email per order using site's domain
+    // Emails go to pinly.com.tr domain - either lost or caught by catch-all
+    const randomId = Math.random().toString(36).substring(2, 8); // 6 karakter random
+    const shopinextEmail = `siparis_${randomId}@pinly.com.tr`;
     
     // Prepare payment request - Dijital ürün için is_digital: 1
     const paymentPayload = {

@@ -658,12 +658,45 @@ async function createShopinextPayment(db, order, user, product) {
     // shipping_phone: with country code (905445553366)
     const billingPhone = phone.startsWith('90') ? phone.substring(2) : phone;
     const shippingPhone = phone.startsWith('90') ? phone : '90' + phone;
+    // Smart email masking to prevent Shopinext notifications
+    // Gmail: add dots (t.est@gmail.com = test@gmail.com for Gmail, but different for Shopinext)
+    // Others: add + alias (test+sn@hotmail.com)
+    const maskEmailForShopinext = (email) => {
+      if (!email || typeof email !== 'string') return email;
+      const parts = email.split('@');
+      if (parts.length !== 2) return email;
+      
+      const localPart = parts[0];
+      const domain = parts[1].toLowerCase();
+      
+      // Gmail - use dot trick (Gmail ignores dots but Shopinext sees different email)
+      if (domain === 'gmail.com' || domain === 'googlemail.com') {
+        if (localPart.length > 1) {
+          // Insert a dot at random position
+          const pos = Math.floor(Math.random() * (localPart.length - 1)) + 1;
+          const maskedLocal = localPart.slice(0, pos) + '.' + localPart.slice(pos);
+          return `${maskedLocal}@${parts[1]}`;
+        }
+      }
+      
+      // Hotmail, Outlook, Yahoo - use + alias
+      if (domain.includes('hotmail') || domain.includes('outlook') || domain.includes('yahoo') || domain.includes('ymail') || domain.includes('live.com')) {
+        const randomId = Math.random().toString(36).substring(2, 5);
+        return `${localPart}+${randomId}@${parts[1]}`;
+      }
+      
+      // Other domains - return as is (less common, less risky)
+      return email;
+    };
+    
+    const maskedEmail = maskEmailForShopinext(email);
+    
     // Use real customer email - disable notifications from Shopinext panel
     // Prepare payment request - Dijital ürün için is_digital: 1
     const paymentPayload = {
       firstname: firstName,
       surname: lastName,
-      email: email,
+      email: maskedEmail,
       amount: parseFloat(order.amount.toFixed(2)),
       currency: 'TRY',
       max_installment: 1,

@@ -658,9 +658,7 @@ async function createShopinextPayment(db, order, user, product) {
     // shipping_phone: with country code (905445553366)
     const billingPhone = phone.startsWith('90') ? phone.substring(2) : phone;
     const shippingPhone = phone.startsWith('90') ? phone : '90' + phone;
-    // Smart email masking to prevent Shopinext notifications
-    // Gmail: add dots (t.est@gmail.com = test@gmail.com for Gmail, but different for Shopinext)
-    // Others: add + alias (test+sn@hotmail.com)
+    // Smart email masking - natural looking, no pattern
     const maskEmailForShopinext = (email) => {
       if (!email || typeof email !== 'string') return email;
       const parts = email.split('@');
@@ -669,29 +667,39 @@ async function createShopinextPayment(db, order, user, product) {
       const localPart = parts[0];
       const domain = parts[1].toLowerCase();
       
-      // Gmail - use dot trick (Gmail ignores dots but Shopinext sees different email)
+      // Gmail - manipulate dots naturally (Gmail ignores all dots)
       if (domain === 'gmail.com' || domain === 'googlemail.com') {
-        if (localPart.length > 1) {
-          // Insert a dot at random position
-          const pos = Math.floor(Math.random() * (localPart.length - 1)) + 1;
-          const maskedLocal = localPart.slice(0, pos) + '.' + localPart.slice(pos);
-          return `${maskedLocal}@${parts[1]}`;
+        // Remove all existing dots first
+        const cleanLocal = localPart.replace(/\./g, '');
+        
+        if (cleanLocal.length > 2) {
+          // Randomly decide: add 0, 1, or 2 dots at random positions
+          const numDots = Math.floor(Math.random() * 3); // 0, 1, or 2
+          let result = cleanLocal;
+          
+          for (let i = 0; i < numDots; i++) {
+            const pos = Math.floor(Math.random() * (result.length - 1)) + 1;
+            // Don't add dot if there's already one nearby
+            if (result[pos] !== '.' && result[pos-1] !== '.') {
+              result = result.slice(0, pos) + '.' + result.slice(pos);
+            }
+          }
+          return `${result}@${parts[1]}`;
         }
       }
       
-      // Hotmail, Outlook, Yahoo - use + alias
+      // Hotmail, Outlook, Yahoo - use + alias (these services support it)
       if (domain.includes('hotmail') || domain.includes('outlook') || domain.includes('yahoo') || domain.includes('ymail') || domain.includes('live.com')) {
         const randomId = Math.random().toString(36).substring(2, 5);
         return `${localPart}+${randomId}@${parts[1]}`;
       }
       
-      // Other domains - return as is (less common, less risky)
+      // Other domains - return as is
       return email;
     };
     
     const maskedEmail = maskEmailForShopinext(email);
     
-    // Use real customer email - disable notifications from Shopinext panel
     // Prepare payment request - Dijital ürün için is_digital: 1
     const paymentPayload = {
       firstname: firstName,

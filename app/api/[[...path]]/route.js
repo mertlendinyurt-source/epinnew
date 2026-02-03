@@ -2675,7 +2675,7 @@ export async function GET(request) {
           shopinext: {
             // Available if configured via env OR (db settings exist AND enabled)
             available: shopinextFromEnv || !!(shopinextSettings && shopinextSettings.isEnabled),
-            name: 'Shopinext ile Öde'
+            name: 'Kredi / Banka Kartı'
           }
         }
       });

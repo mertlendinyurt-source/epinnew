@@ -748,8 +748,9 @@ async function createShopinextPayment(db, order, user, product) {
     console.error('Shopinext payment failed:', data);
     return { 
       success: false, 
-      error: data.message || 'Ödeme oluşturulamadı',
-      errorCode: data.error_code
+      error: data.message || data.error || 'Ödeme oluşturulamadı',
+      errorCode: data.error_code || data.errorCode,
+      details: JSON.stringify(data)
     };
   } catch (error) {
     console.error('Shopinext payment error:', error);

@@ -2667,6 +2667,19 @@ export async function GET(request) {
                                process.env.SHOPINEXT_CLIENT_SECRET && 
                                process.env.SHOPINEXT_DOMAIN;
       
+      // Shopinext available only if:
+      // 1. DB settings exist AND isEnabled is true, OR
+      // 2. ENV configured AND no DB settings exist (fallback), OR
+      // 3. ENV configured AND DB settings exist with isEnabled true
+      let shopinextAvailable = false;
+      if (shopinextSettings) {
+        // If DB settings exist, respect isEnabled flag
+        shopinextAvailable = shopinextSettings.isEnabled === true;
+      } else if (shopinextFromEnv) {
+        // If no DB settings but ENV configured, show it
+        shopinextAvailable = true;
+      }
+      
       return NextResponse.json({
         success: true,
         data: {
@@ -2675,8 +2688,7 @@ export async function GET(request) {
             name: 'Kredi/Banka Kartı'
           },
           shopinext: {
-            // Available if configured via env OR (db settings exist AND enabled)
-            available: shopinextFromEnv || !!(shopinextSettings && shopinextSettings.isEnabled),
+            available: shopinextAvailable,
             name: 'Kredi / Banka Kartı'
           }
         }

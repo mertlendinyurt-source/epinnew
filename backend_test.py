@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://user-auth-update-5.preview.emergentagent.com"
+BASE_URL = "https://code-marketplace-12.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test data

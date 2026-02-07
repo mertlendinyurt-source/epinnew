@@ -23,6 +23,7 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState(null)
   const [showBalanceModal, setShowBalanceModal] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [balanceAction, setBalanceAction] = useState('add')
   const [balanceAmount, setBalanceAmount] = useState('')
   const [balanceNote, setBalanceNote] = useState('')

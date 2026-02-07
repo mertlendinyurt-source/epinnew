@@ -11396,6 +11396,70 @@ export async function DELETE(request) {
 
     // Account orders endpoint moved to POST function
 
+    // ============================================
+    // 👤 ADMIN: DELETE USER ACCOUNT
+    // ============================================
+    if (pathname.match(/^\/api\/admin\/users\/([^\/]+)$/)) {
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const userId = pathname.match(/^\/api\/admin\/users\/([^\/]+)$/)[1];
+      
+      // Find user
+      const userToDelete = await db.collection('users').findOne({ id: userId });
+      if (!userToDelete) {
+        return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 });
+      }
+
+      // Prevent deleting admin accounts
+      if (userToDelete.role === 'admin') {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Admin hesabı silinemez' 
+        }, { status: 400 });
+      }
+
+      // Check if user has pending orders
+      const pendingOrders = await db.collection('orders').countDocuments({ 
+        userId: userId, 
+        status: 'pending' 
+      });
+      if (pendingOrders > 0) {
+        return NextResponse.json({ 
+          success: false, 
+          error: `Bu kullanıcının ${pendingOrders} adet bekleyen siparişi var. Önce siparişleri tamamlayın veya iptal edin.` 
+        }, { status: 400 });
+      }
+
+      // Delete user
+      await db.collection('users').deleteOne({ id: userId });
+
+      // Delete user's balance transactions
+      await db.collection('balance_transactions').deleteMany({ userId: userId });
+
+      // Delete user's support tickets and messages
+      const userTickets = await db.collection('support_tickets').find({ userId: userId }).toArray();
+      const ticketIds = userTickets.map(t => t.id);
+      if (ticketIds.length > 0) {
+        await db.collection('ticket_messages').deleteMany({ ticketId: { $in: ticketIds } });
+        await db.collection('support_tickets').deleteMany({ userId: userId });
+      }
+
+      // Audit log
+      await logAuditAction(db, 'user.delete', adminUser.username, 'user', userId, request, {
+        deletedUserEmail: userToDelete.email,
+        deletedUserName: `${userToDelete.firstName || ''} ${userToDelete.lastName || ''}`.trim(),
+        deletedUserPhone: userToDelete.phone
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Kullanıcı hesabı başarıyla silindi'
+      });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

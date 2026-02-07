@@ -908,6 +908,18 @@ backend:
       - working: true
         agent: "testing"
         comment: "PUT /api/admin/users/{userId}/password working correctly. All 5 test scenarios passed: (1) Authentication Test - Returns 401 without admin token, (2) User Not Found Test - Returns 404 for non-existent userId, (3) Short Password Test - Returns 400 with error 'Şifre en az 6 karakter olmalıdır' for passwords < 6 chars, (4) Successful Password Change - Returns 200 with success message 'Şifre başarıyla güncellendi', (5) Verify New Password Works - User can login with new password after change. FIXED: Updated password field from 'password' to 'passwordHash' to match user login expectations. Endpoint requires admin JWT authentication, validates password length, handles user not found scenarios, and successfully updates user passwords with proper audit logging."
+  - task: "Admin Delete User Account Endpoint"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "DELETE /api/admin/users/{userId} working correctly. All 7 test scenarios passed (100% success rate): (1) Authentication Test - Returns 401 with 'Yetkisiz erişim' without admin token, (2) User Not Found Test - Returns 404 with 'Kullanıcı bulunamadı' for non-existent userId, (3) Successful Delete Test - Returns 200 with 'Kullanıcı hesabı başarıyla silindi', (4) User Verification - Confirmed user no longer exists after deletion, (5) Login Test - Deleted user cannot login (401). Additional protections verified: prevents deletion of admin accounts (400 error), checks for pending orders before deletion. Endpoint includes comprehensive cleanup: deletes user record, balance transactions, support tickets and messages. Audit logging implemented with admin username, deleted user details. Full user deletion workflow working correctly."
+
 
 frontend:
   - task: "Auth Modal (Register + Login)"

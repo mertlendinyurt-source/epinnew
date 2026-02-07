@@ -1026,10 +1026,10 @@ frontend:
 
 metadata:
   created_by: "testing_agent"
-  version: "6.0"
-  test_sequence: 6
+  version: "6.1"
+  test_sequence: 7
   run_ui: true
-  last_updated: "2025-12-27 21:40:00"
+  last_updated: "2025-12-28 00:45:00"
 
 test_plan:
   current_focus:

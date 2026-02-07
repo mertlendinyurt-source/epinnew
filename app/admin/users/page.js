@@ -460,6 +460,7 @@ export default function AdminUsersPage() {
                             setConfirmPassword('')
                           }}
                           className="border-amber-600 text-amber-400 hover:bg-amber-600 hover:text-white h-8"
+                          title="Şifre Değiştir"
                         >
                           <KeyRound className="w-3 h-3" />
                         </Button>
@@ -473,9 +474,22 @@ export default function AdminUsersPage() {
                             setBalanceNote('')
                           }}
                           className="bg-blue-600 hover:bg-blue-700 h-8 text-xs"
+                          title="Bakiye Düzenle"
                         >
                           <Wallet className="w-3 h-3 mr-1" />
                           Bakiye
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedUser(user)
+                            setShowDeleteModal(true)
+                          }}
+                          className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white h-8"
+                          title="Hesabı Sil"
+                        >
+                          <Trash2 className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>

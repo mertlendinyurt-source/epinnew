@@ -158,6 +158,37 @@ export default function AdminUsersPage() {
     }
   }
 
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return
+
+    setProcessing(true)
+    try {
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken')
+      const response = await fetch(`/api/admin/users/${selectedUser.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        toast.success(data.message)
+        setShowDeleteModal(false)
+        setSelectedUser(null)
+        fetchUsers()
+      } else {
+        toast.error(data.error)
+      }
+    } catch (error) {
+      console.error('Delete user error:', error)
+      toast.error('Bir hata oluştu')
+    } finally {
+      setProcessing(false)
+    }
+  }
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('tr-TR', {
       day: '2-digit',

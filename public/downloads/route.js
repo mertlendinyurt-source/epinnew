@@ -11421,18 +11421,6 @@ export async function DELETE(request) {
         }, { status: 400 });
       }
 
-      // Check if user has pending orders
-      const pendingOrders = await db.collection('orders').countDocuments({ 
-        userId: userId, 
-        status: 'pending' 
-      });
-      if (pendingOrders > 0) {
-        return NextResponse.json({ 
-          success: false, 
-          error: `Bu kullanıcının ${pendingOrders} adet bekleyen siparişi var. Önce siparişleri tamamlayın veya iptal edin.` 
-        }, { status: 400 });
-      }
-
       // Delete user
       await db.collection('users').deleteOne({ id: userId });
 

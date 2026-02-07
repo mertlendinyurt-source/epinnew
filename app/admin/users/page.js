@@ -738,6 +738,75 @@ export default function AdminUsersPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete User Modal */}
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-[95vw] sm:max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl md:text-2xl flex items-center gap-2">
+              <Trash2 className="w-5 h-5 md:w-6 md:h-6 text-red-500" />
+              Hesabı Sil
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Bu işlem geri alınamaz!
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedUser && (
+            <div className="space-y-4">
+              {/* User Info */}
+              <Card className="bg-slate-800 border-slate-700">
+                <CardContent className="pt-4">
+                  <p className="text-slate-400 text-sm mb-2">Silinecek Kullanıcı</p>
+                  <p className="text-lg font-bold text-white">
+                    {selectedUser.firstName} {selectedUser.lastName}
+                  </p>
+                  <p className="text-slate-300">{selectedUser.email}</p>
+                  {selectedUser.phone && (
+                    <p className="text-slate-400 text-sm">{selectedUser.phone}</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Warning */}
+              <Card className="bg-red-900/20 border-red-700">
+                <CardContent className="pt-4">
+                  <p className="text-red-400 text-sm">
+                    ⚠️ <strong>DİKKAT:</strong> Bu kullanıcı hesabı kalıcı olarak silinecektir. Bu işlem:
+                  </p>
+                  <ul className="text-red-400 text-sm mt-2 space-y-1 list-disc list-inside">
+                    <li>Kullanıcının tüm bilgilerini silecek</li>
+                    <li>Bakiye işlem geçmişini silecek</li>
+                    <li>Destek taleplerini silecek</li>
+                  </ul>
+                  <p className="text-red-300 text-sm mt-3 font-semibold">
+                    Siparişler korunacak ancak kullanıcı ile bağlantısı kaldırılacaktır.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <Button
+                  onClick={handleDeleteUser}
+                  disabled={processing}
+                  className="flex-1 bg-red-600 hover:bg-red-700"
+                >
+                  {processing ? 'Siliniyor...' : 'Evet, Hesabı Sil'}
+                </Button>
+                <Button
+                  onClick={() => setShowDeleteModal(false)}
+                  variant="outline"
+                  disabled={processing}
+                  className="border-slate-700 hover:bg-slate-800"
+                >
+                  İptal
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -88,9 +88,18 @@ export default function AdminOrders() {
       )
     }
     
+    // PUBG ID (Oyuncu ID) ile arama
+    if (playerIdSearch.trim()) {
+      const searchTerm = playerIdSearch.trim()
+      filtered = filtered.filter(order => 
+        order.playerId?.includes(searchTerm) ||
+        order.player?.id?.includes(searchTerm)
+      )
+    }
+    
     setFilteredOrders(filtered)
     setCurrentPage(1) // Reset to first page when filter changes
-  }, [statusFilter, riskFilter, orders, emailSearch, phoneSearch, orderIdSearch])
+  }, [statusFilter, riskFilter, orders, emailSearch, phoneSearch, orderIdSearch, playerIdSearch])
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage)

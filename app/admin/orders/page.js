@@ -540,7 +540,7 @@ export default function AdminOrders() {
             </div>
             
             {/* Aktif Filtre Göstergesi */}
-            {(emailSearch || phoneSearch || orderIdSearch) && (
+            {(emailSearch || phoneSearch || orderIdSearch || playerIdSearch) && (
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span className="text-slate-400 text-xs md:text-sm">Aktif filtreler:</span>
                 {emailSearch && (
@@ -561,8 +561,14 @@ export default function AdminOrders() {
                     <button onClick={() => setOrderIdSearch('')} className="ml-1 hover:text-purple-200">×</button>
                   </Badge>
                 )}
+                {playerIdSearch && (
+                  <Badge variant="secondary" className="bg-orange-500/20 text-orange-400 text-xs">
+                    PUBG ID: {playerIdSearch}
+                    <button onClick={() => setPlayerIdSearch('')} className="ml-1 hover:text-orange-200">×</button>
+                  </Badge>
+                )}
                 <button 
-                  onClick={() => { setEmailSearch(''); setPhoneSearch(''); setOrderIdSearch(''); }}
+                  onClick={() => { setEmailSearch(''); setPhoneSearch(''); setOrderIdSearch(''); setPlayerIdSearch(''); }}
                   className="text-slate-500 hover:text-slate-300 text-xs ml-2"
                 >
                   Temizle

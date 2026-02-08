@@ -500,7 +500,7 @@ export default function AdminOrders() {
             </div>
             
             {/* Arama Filtreleri */}
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <Input
@@ -519,12 +519,21 @@ export default function AdminOrders() {
                   className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-sm"
                 />
               </div>
-              <div className="relative sm:col-span-2 lg:col-span-1">
+              <div className="relative">
                 <Package className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <Input
                   placeholder="Sipariş ID ile ara..."
                   value={orderIdSearch}
                   onChange={(e) => setOrderIdSearch(e.target.value)}
+                  className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-sm"
+                />
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Input
+                  placeholder="PUBG ID ile ara..."
+                  value={playerIdSearch}
+                  onChange={(e) => setPlayerIdSearch(e.target.value)}
                   className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-sm"
                 />
               </div>

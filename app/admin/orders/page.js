@@ -34,6 +34,7 @@ export default function AdminOrders() {
   const [emailSearch, setEmailSearch] = useState('')
   const [phoneSearch, setPhoneSearch] = useState('')
   const [orderIdSearch, setOrderIdSearch] = useState('')
+  const [playerIdSearch, setPlayerIdSearch] = useState('')
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)

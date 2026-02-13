@@ -2228,25 +2228,61 @@ export default function LolPage() {
             </div>
           </div>
 
-          {/* Bottom Bar */}
-          <div className="mt-12 pt-8 border-t border-white/10">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-white/30 text-sm">
-                © 2026 {siteSettings?.siteName || 'PINLY'}. Tüm hakları saklıdır.
+          {/* Kurumsal Bilgiler Bölümü */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mt-12 pt-8 border-t border-white/10">
+            {/* Vergi / Ticaret Sicil */}
+            <div className="space-y-2">
+              <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Ticaret Sicil No</h4>
+              <p className="text-white/80 text-sm font-semibold">541409</p>
+              <p className="text-white/50 text-xs">Vergi No: 7300897060</p>
+              <p className="text-white/50 text-xs">Mersis No: 0730089706000001</p>
+            </div>
+
+            {/* Unvan */}
+            <div className="space-y-2">
+              <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Unvan</h4>
+              <p className="text-white/80 text-sm font-semibold leading-snug">
+                PİNLY ELEKTRONİK HİZMETLER<br/>TİCARET ANONİM ŞİRKETİ
               </p>
-              
-              {/* Payment Method Logos */}
-              <div className="flex items-center justify-center">
-                <img 
-                  src="/payment-logos.png" 
-                  alt="Akbank, Mastercard, Visa, American Express, Troy"
-                  className="h-8 md:h-10 w-auto object-contain opacity-80"
-                />
+            </div>
+
+            {/* Adres */}
+            <div className="space-y-2">
+              <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Adres</h4>
+              <p className="text-white/80 text-sm leading-snug">
+                Kızılırmak Mah. Dumlupınar Bul.<br/>
+                No: 3C-1 İç Kapı No: 160<br/>
+                Çankaya / ANKARA
+              </p>
+            </div>
+
+            {/* İletişim */}
+            <div className="space-y-2">
+              <h4 className="text-cyan-400 text-xs font-medium tracking-wide">İletişim</h4>
+              <div className="space-y-1">
+                <p className="text-white/80 text-sm">info@pinly.com.tr</p>
               </div>
-              
-              <p className="text-white/20 text-xs text-center md:text-right">
-                PINLY üzerinden oyun içi kodlar ve dijital pinler anında teslim edilir.
-              </p>
+            </div>
+          </div>
+
+          {/* Ödeme Yöntemleri */}
+          <div className="mt-8 pt-8 border-t border-white/10">
+            <p className="text-white/30 text-xs text-center mb-4 tracking-widest">ÖDEME YÖNTEMLERİ</p>
+            <div className="flex items-center justify-center">
+              <img 
+                src="/payment-logos.png" 
+                alt="SSL, BKM, iyzico, Mastercard, Visa, American Express, Troy"
+                className="h-8 md:h-10 w-auto object-contain opacity-80"
+              />
+            </div>
+          </div>
+
+          {/* Copyright */}
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-white/30 text-xs">© 2026 PINLY. Tüm hakları saklıdır.</p>
+              <p className="text-white/30 text-xs text-center">PİNLY ELEKTRONİK HİZMETLER TİCARET A.Ş.</p>
+              <p className="text-white/30 text-xs text-right">PINLY üzerinden oyun içi kodlar ve dijital pinler anında teslim edilir.</p>
             </div>
           </div>
         </div>

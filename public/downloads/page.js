@@ -2275,6 +2275,7 @@ export default function App() {
                 Kurumsal/Künye
               </h3>
               <ul className="space-y-3">
+                <li><a href="/legal/hakkimizda" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Hakkımızda</a></li>
                 <li><a href="/legal/gizlilik-politikasi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Gizlilik Politikası</a></li>
                 <li><a href="/legal/kullanici-sozlesmesi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Kullanıcı Sözleşmesi</a></li>
                 <li><a href="/legal/satis-sozlesmesi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Mesafeli Satış Sözleşmesi</a></li>

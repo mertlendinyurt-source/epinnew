@@ -2306,21 +2306,81 @@ export default function App() {
             </div>
           </div>
 
-          {/* Bottom Bar */}
+          {/* Kurumsal Bilgiler Bölümü - DijiPin Style */}
           <div className="mt-12 pt-8 border-t border-white/10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+              {/* Vergi / Ticaret Sicil */}
+              <div className="space-y-2">
+                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Ticaret Sicil No</h4>
+                <p className="text-white/80 text-sm font-semibold">541409</p>
+                <p className="text-white/50 text-xs">Mersis No: 0730089706000001</p>
+              </div>
+
+              {/* Unvan */}
+              <div className="space-y-2">
+                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Unvan</h4>
+                <p className="text-white/80 text-sm font-semibold leading-snug">
+                  PİNLY ELEKTRONİK HİZMETLER TİCARET ANONİM ŞİRKETİ
+                </p>
+              </div>
+
+              {/* Adres */}
+              <div className="space-y-2">
+                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Adres</h4>
+                <p className="text-white/80 text-sm leading-snug">
+                  Kızılırmak Mah. Dumlupınar Bul.<br/>
+                  No: 3C-1 İç Kapı No: 160<br/>
+                  Çankaya / ANKARA
+                </p>
+              </div>
+
+              {/* İletişim */}
+              <div className="space-y-2">
+                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">İletişim</h4>
+                <div className="space-y-1">
+                  {siteSettings?.contactEmail && (
+                    <p className="text-white/80 text-sm">
+                      <span className="text-white/50">E-Posta: </span>
+                      <a href={`mailto:${siteSettings.contactEmail}`} className="hover:text-cyan-400 transition-colors">
+                        {siteSettings.contactEmail}
+                      </a>
+                    </p>
+                  )}
+                  {siteSettings?.contactPhone && (
+                    <p className="text-white/80 text-sm">
+                      <span className="text-white/50">Tel: </span>
+                      <a href={`tel:${siteSettings.contactPhone.replace(/\s/g, '')}`} className="hover:text-cyan-400 transition-colors">
+                        {siteSettings.contactPhone}
+                      </a>
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Ödeme Yöntemleri */}
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <p className="text-center text-white/40 text-xs mb-4 uppercase tracking-wider">Ödeme Yöntemleri</p>
+            <div className="flex items-center justify-center">
+              <img 
+                src="/payment-logos.png" 
+                alt="BKM, Visa, Mastercard, Troy"
+                className="h-10 md:h-12 w-auto object-contain"
+              />
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="mt-8 pt-6 border-t border-white/10">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-white/30 text-sm">
                 © 2026 {siteSettings?.siteName || 'PINLY'}. Tüm hakları saklıdır.
               </p>
               
-              {/* Payment Method Logos */}
-              <div className="flex items-center justify-center">
-                <img 
-                  src="/payment-logos.png" 
-                  alt="Akbank, Mastercard, Visa, American Express, Troy"
-                  className="h-8 md:h-10 w-auto object-contain opacity-80"
-                />
-              </div>
+              <p className="text-white/40 text-xs text-center">
+                PİNLY ELEKTRONİK HİZMETLER TİCARET A.Ş.
+              </p>
               
               <p className="text-white/20 text-xs text-center md:text-right">
                 PINLY üzerinden oyun içi kodlar ve dijital pinler anında teslim edilir.

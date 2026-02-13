@@ -7,7 +7,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://legal-pages-2.preview.emergentagent.com"
+BASE_URL = "https://turkiye-lokasyon.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 

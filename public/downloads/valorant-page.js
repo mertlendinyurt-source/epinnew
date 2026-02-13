@@ -2194,33 +2194,13 @@ export default function ValorantPage() {
                 Kurumsal/Künye
               </h3>
               <ul className="space-y-3">
-                {(footerSettings?.corporateLinks || []).length > 0 ? (
-                  footerSettings.corporateLinks.map((link, index) => (
-                    <li key={index}>
-                      <a 
-                        href={`/legal/${link.slug}`} 
-                        className="text-white/50 hover:text-white hover:underline text-sm transition-colors"
-                      >
-                        {link.label}
-                      </a>
-                    </li>
-                  ))
-                ) : (
-                  // Fallback if no footer settings
-                  <>
-                    <li><a href="/legal/hizmet-sartlari" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Hizmet Şartları</a></li>
-                    <li><a href="/legal/kullanici-sozlesmesi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Kullanıcı Sözleşmesi</a></li>
-                    <li><a href="/legal/acceptable-use-conduct-policy" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Kullanım Politikası ve Davranış İlkeleri</a></li>
-                    <li><a href="/legal/gizlilik-politikasi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Gizlilik Politikası</a></li>
-                    <li><a href="/legal/cookie-policy" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Çerez Politikası</a></li>
-                    <li><a href="/legal/kvkk" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">KVKK Aydınlatma Metni</a></li>
-                    <li><a href="/legal/iade-politikasi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">İade Politikası</a></li>
-                    <li><a href="/legal/kara-para" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Kara Paranın Aklanmasının Önlenmesi Politikası</a></li>
-                    <li><a href="/legal/legal-disclaimer" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Yasal Bildirim ve Sorumluluk Reddi</a></li>
-                    <li><a href="/legal/about-us" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Hakkımızda</a></li>
-                    <li><a href="/legal/contact" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">İletişim</a></li>
-                  </>
-                )}
+                <li><a href="/legal/hakkimizda" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Hakkımızda</a></li>
+                <li><a href="/legal/gizlilik-politikasi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Gizlilik Politikası</a></li>
+                <li><a href="/legal/kullanici-sozlesmesi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Kullanıcı Sözleşmesi</a></li>
+                <li><a href="/legal/satis-sozlesmesi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Mesafeli Satış Sözleşmesi</a></li>
+                <li><a href="/legal/iptal-iade" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">İptal ve İade Koşulları</a></li>
+                <li><a href="/legal/kvkk" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">KVKK Aydınlatma Metni</a></li>
+                <li><a href="/legal/cerez-politikasi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Çerez Politikası</a></li>
               </ul>
             </div>
           </div>

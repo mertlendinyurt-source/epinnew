@@ -1191,13 +1191,12 @@ export default function ValorantPage() {
                         </div>
                         <span className="text-sm text-white/90">Mobile Legends</span>
                       </a>
-                      <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg opacity-50 cursor-not-allowed">
+                      <a href="/lol" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
                         <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                           <img src="/lol-logo.png" alt="League of Legends" className="w-6 h-6 object-contain" />
                         </div>
-                        <span className="text-sm text-white/50">League of Legends</span>
-                        <span className="text-[9px] px-1.5 py-0.5 bg-white/10 rounded text-white/40 ml-auto">Yakında</span>
-                      </div>
+                        <span className="text-sm text-white/90">League of Legends</span>
+                      </a>
                     </div>
                   </div>
                 </>
@@ -1235,14 +1234,16 @@ export default function ValorantPage() {
               <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-blue-400 transition-colors whitespace-nowrap">Mobile Legends</span>
             </a>
 
-            {/* Coming Soon Games */}
-            <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e]/50 rounded-lg border border-white/5 flex-shrink-0 opacity-60 cursor-not-allowed">
+            {/* League of Legends */}
+            <a 
+              href="/lol" 
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/20 flex-shrink-0 group"
+            >
               <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                 <img src="/lol-logo.png" alt="League of Legends" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
               </div>
-              <span className="text-xs md:text-sm font-medium text-white/50 whitespace-nowrap">League of Legends</span>
-              <span className="text-[9px] md:text-[10px] px-1.5 py-0.5 bg-white/10 rounded text-white/40">Yakında</span>
-            </div>
+              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-yellow-400 transition-colors whitespace-nowrap">League of Legends</span>
+            </a>
           </div>
         </div>
       </div>
@@ -1485,7 +1486,7 @@ export default function ValorantPage() {
 
                     {/* Image Section */}
                     <div className="relative h-[42%] md:h-[55%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-2 md:p-4">
-                      {/* Flare Effect - PLYR Style */}
+                      {/* Flare Effect */}
                       <div className="go-product-shine">
                         <div className="go-product-shine-overlay"></div>
                         <img className="go-flare" src="/flare.png" alt="" />
@@ -1503,7 +1504,7 @@ export default function ValorantPage() {
                     {/* Content Section */}
                     <div className="h-[58%] md:h-[45%] flex flex-col justify-between p-2.5 md:p-3.5">
                       <div>
-                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.vpAmount || product.ucAmount} VP</div>
+                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.vpAmount || product.ucAmount} VP Yükleme Şansı</div>
                         <div className="flex items-center gap-1 mt-0.5">
                           <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>
@@ -2224,25 +2225,61 @@ export default function ValorantPage() {
             </div>
           </div>
 
-          {/* Bottom Bar */}
-          <div className="mt-12 pt-8 border-t border-white/10">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-white/30 text-sm">
-                © 2026 {siteSettings?.siteName || 'PINLY'}. Tüm hakları saklıdır.
+          {/* Kurumsal Bilgiler Bölümü */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mt-12 pt-8 border-t border-white/10">
+            {/* Vergi / Ticaret Sicil */}
+            <div className="space-y-2">
+              <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Ticaret Sicil No</h4>
+              <p className="text-white/80 text-sm font-semibold">541409</p>
+              <p className="text-white/50 text-xs">Vergi No: 7300897060</p>
+              <p className="text-white/50 text-xs">Mersis No: 0730089706000001</p>
+            </div>
+
+            {/* Unvan */}
+            <div className="space-y-2">
+              <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Unvan</h4>
+              <p className="text-white/80 text-sm font-semibold leading-snug">
+                PİNLY ELEKTRONİK HİZMETLER<br/>TİCARET ANONİM ŞİRKETİ
               </p>
-              
-              {/* Payment Method Logos - iyzico */}
-              <div className="flex items-center justify-center">
-                <img 
-                  src="/payment-logos.png" 
-                  alt="iyzico, Mastercard, Visa, American Express, Troy"
-                  className="h-8 md:h-10 w-auto object-contain opacity-80"
-                />
+            </div>
+
+            {/* Adres */}
+            <div className="space-y-2">
+              <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Adres</h4>
+              <p className="text-white/80 text-sm leading-snug">
+                Kızılırmak Mah. Dumlupınar Bul.<br/>
+                No: 3C-1 İç Kapı No: 160<br/>
+                Çankaya / ANKARA
+              </p>
+            </div>
+
+            {/* İletişim */}
+            <div className="space-y-2">
+              <h4 className="text-cyan-400 text-xs font-medium tracking-wide">İletişim</h4>
+              <div className="space-y-1">
+                <p className="text-white/80 text-sm">info@pinly.com.tr</p>
               </div>
-              
-              <p className="text-white/20 text-xs text-center md:text-right">
-                PINLY üzerinden oyun içi kodlar ve dijital pinler anında teslim edilir.
-              </p>
+            </div>
+          </div>
+
+          {/* Ödeme Yöntemleri */}
+          <div className="mt-8 pt-8 border-t border-white/10">
+            <p className="text-white/30 text-xs text-center mb-4 tracking-widest">ÖDEME YÖNTEMLERİ</p>
+            <div className="flex items-center justify-center">
+              <img 
+                src="/payment-logos.png" 
+                alt="SSL, BKM, iyzico, Mastercard, Visa, American Express, Troy"
+                className="h-8 md:h-10 w-auto object-contain opacity-80"
+              />
+            </div>
+          </div>
+
+          {/* Copyright */}
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-white/30 text-xs">© 2026 PINLY. Tüm hakları saklıdır.</p>
+              <p className="text-white/30 text-xs text-center">PİNLY ELEKTRONİK HİZMETLER TİCARET A.Ş.</p>
+              <p className="text-white/30 text-xs text-right">PINLY üzerinden oyun içi kodlar ve dijital pinler anında teslim edilir.</p>
             </div>
           </div>
         </div>

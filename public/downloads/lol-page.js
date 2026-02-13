@@ -25,13 +25,13 @@ function BannerIcon({ icon, size }) {
   };
 
   const colors = {
-    fire: { from: 'from-orange-500/20', to: 'to-red-500/20', border: 'border-orange-500/30', text: 'text-orange-500', shadow: 'shadow-orange-500/10' },
+    fire: { from: 'from-orange-500/20', to: 'to-yellow-500/20', border: 'border-orange-500/30', text: 'text-orange-500', shadow: 'shadow-orange-500/10' },
     bolt: { from: 'from-yellow-500/20', to: 'to-amber-500/20', border: 'border-yellow-500/30', text: 'text-yellow-500', shadow: 'shadow-yellow-500/10' },
     star: { from: 'from-yellow-500/20', to: 'to-amber-500/20', border: 'border-yellow-500/30', text: 'text-yellow-500', shadow: 'shadow-yellow-500/10' },
     gift: { from: 'from-pink-500/20', to: 'to-rose-500/20', border: 'border-pink-500/30', text: 'text-pink-500', shadow: 'shadow-pink-500/10' },
     sparkles: { from: 'from-purple-500/20', to: 'to-violet-500/20', border: 'border-purple-500/30', text: 'text-purple-500', shadow: 'shadow-purple-500/10' },
     tag: { from: 'from-green-500/20', to: 'to-emerald-500/20', border: 'border-green-500/30', text: 'text-green-500', shadow: 'shadow-green-500/10' },
-    percent: { from: 'from-red-500/20', to: 'to-rose-500/20', border: 'border-red-500/30', text: 'text-red-500', shadow: 'shadow-red-500/10' },
+    percent: { from: 'from-yellow-500/20', to: 'to-rose-500/20', border: 'border-yellow-500/30', text: 'text-yellow-500', shadow: 'shadow-red-500/10' },
     clock: { from: 'from-blue-500/20', to: 'to-cyan-500/20', border: 'border-blue-500/30', text: 'text-blue-500', shadow: 'shadow-blue-500/10' },
   };
 
@@ -58,12 +58,12 @@ function BannerIcon({ icon, size }) {
   );
 }
 
-export default function MLBBPage() {
-  // 🎮 MOBILE LEGENDS PAGE CONFIGURATION
-  const GAME_TYPE = 'mlbb'
-  const GAME_NAME = 'Mobile Legends'
-  const CURRENCY_NAME = 'Diamonds'
-  const THEME_COLOR = 'blue' // MLBB mavi teması
+export default function LolPage() {
+  // 🎮 VALORANT PAGE CONFIGURATION
+  const GAME_TYPE = 'lol'
+  const GAME_NAME = 'League of Legends'
+  const CURRENCY_NAME = 'RP'
+  const THEME_COLOR = 'yellow' // League of Legends sarı teması
   
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -144,8 +144,8 @@ export default function MLBBPage() {
         }
       }
       
-      // TEK API ÇAĞRISI - Tüm veriler (sadece MLBB ürünleri)
-      const response = await fetch('/api/homepage?game=mlbb')
+      // TEK API ÇAĞRISI - Tüm veriler
+      const response = await fetch('/api/homepage?game=lol')
       const data = await response.json()
       
       if (data.success) {
@@ -263,26 +263,30 @@ export default function MLBBPage() {
     const productParam = urlParams.get('product');
     
     if (productParam) {
-      // Find product by slug (e.g., "86diamonds", "172diamonds")
+      // Find product by slug (e.g., "460rp", "1005rp", "2105rp")
       const slug = productParam.toLowerCase().replace('-', '');
       
-      // Try to match by Diamonds amount
-      const diamondsAmount = parseInt(slug.replace('diamonds', '').replace('vp', '').replace('uc', ''));
+      // Try to match by RP amount in title
+      const rpAmount = parseInt(slug.replace('rp', '').replace('uc', ''));
       
       let matchedProduct = null;
       
-      if (!isNaN(diamondsAmount)) {
-        // Find product that contains the Diamonds amount
+      if (!isNaN(rpAmount)) {
+        // Find product that contains the RP amount in title or rpAmount field
         matchedProduct = products.find(p => {
-          // Check diamondsAmount field first
-          if (p.diamondsAmount && parseInt(p.diamondsAmount) === diamondsAmount) {
+          // Check rpAmount field first
+          if (p.rpAmount && parseInt(p.rpAmount) === rpAmount) {
+            return true;
+          }
+          // Check ucAmount as fallback
+          if (p.ucAmount && parseInt(p.ucAmount) === rpAmount) {
             return true;
           }
           // Check title
           const title = p.title.toLowerCase();
-          const matches = title.match(/(\d+)/);
+          const matches = title.match(/(\d+)\s*rp/i);
           if (matches) {
-            return parseInt(matches[1]) === diamondsAmount;
+            return parseInt(matches[1]) === rpAmount;
           }
           return false;
         });
@@ -678,10 +682,11 @@ export default function MLBBPage() {
     setPlayerValid(null)
     setTermsAccepted(true) // Terms pre-accepted for new product
     
-    // Update URL with product parameter for Google Ads tracking (Diamonds için)
-    const diamondsAmount = product.diamondsAmount || product.title.match(/(\d+)/)?.[1];
-    if (diamondsAmount) {
-      const productSlug = diamondsAmount + 'diamonds';
+    // Update URL with product parameter for Google Ads tracking (RP için)
+    const rpAmount = product.title.match(/(\d+)\s*RP/i) || product.rpAmount;
+    if (rpAmount) {
+      const amount = typeof rpAmount === 'object' ? rpAmount[1] : (product.rpAmount || product.ucAmount);
+      const productSlug = amount + 'rp';
       window.history.pushState({}, '', `?product=${productSlug}`);
     }
     
@@ -706,11 +711,7 @@ export default function MLBBPage() {
   }
 
   const handleCheckout = async () => {
-    // MLBB için ID ve Server ID kontrolü
-    if (!playerId || !playerName) {
-      toast.error('Lütfen MLBB ID ve Server ID bilgilerinizi girin')
-      return
-    }
+    // League of Legends için Oyuncu ID kontrolü yok - direkt kod teslimi
 
     // 1. Check authentication
     const token = localStorage.getItem('userToken')
@@ -753,10 +754,10 @@ export default function MLBBPage() {
         },
         body: JSON.stringify({
           productId: selectedProduct.id,
-          playerId: playerId, // MLBB ID
-          playerName: playerName, // Server ID
+          playerId: 'lol-direct', // Valorant için oyuncu ID gerekmiyor
+          playerName: 'League of Legends RP',
           paymentMethod: paymentMethod, // 'card' or 'balance'
-          game: GAME_TYPE, // 'mlbb'
+          game: GAME_TYPE, // 'valorant'
           termsAccepted: termsAccepted,
           termsAcceptedAt: new Date().toISOString()
         })
@@ -923,7 +924,7 @@ export default function MLBBPage() {
         <div className="space-y-2">
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
-            <span className="text-sm text-white/70 group-hover:text-white transition-colors">Mobile Legends</span>
+            <span className="text-sm text-white/70 group-hover:text-white transition-colors">League of Legends</span>
           </label>
         </div>
       </div>
@@ -931,7 +932,7 @@ export default function MLBBPage() {
       <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
         <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Bölge</h3>
         <div className="space-y-2">
-          {/* MLBB için sadece Türkiye bölgesi */}
+          {/* League of Legends için sadece Türkiye bölgesi */}
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
             <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
@@ -1069,7 +1070,7 @@ export default function MLBBPage() {
                       )}
                       <button 
                         onClick={handleLogout}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-white/5 rounded-md transition-colors w-full text-left"
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-yellow-400 hover:text-red-300 hover:bg-white/5 rounded-md transition-colors w-full text-left"
                       >
                         🚪 Çıkış Yap
                       </button>
@@ -1104,6 +1105,7 @@ export default function MLBBPage() {
         </div>
       </header>
 
+      {/* Trust Bar */}
       {/* Mobile Trust Badges */}
       <div className="md:hidden bg-[#12151a] border-b border-white/5">
         <div className="flex items-center justify-center gap-3 px-4 py-2 overflow-x-auto scrollbar-hide">
@@ -1187,17 +1189,17 @@ export default function MLBBPage() {
                         </div>
                         <span className="text-sm text-white/90">Valorant</span>
                       </a>
-                      <a href="/mlbb" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors bg-white/5">
+                      <a href="/mlbb" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
                         <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                           <img src="/mlbb-logo.png" alt="Mobile Legends" className="w-6 h-6 object-contain" />
                         </div>
-                        <span className="text-sm text-blue-400">Mobile Legends</span>
+                        <span className="text-sm text-white/90">Mobile Legends</span>
                       </a>
-                      <a href="/lol" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                      <a href="/lol" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors bg-white/5">
                         <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                           <img src="/lol-logo.png" alt="League of Legends" className="w-6 h-6 object-contain" />
                         </div>
-                        <span className="text-sm text-white/90">League of Legends</span>
+                        <span className="text-sm text-yellow-400">League of Legends</span>
                       </a>
                     </div>
                   </div>
@@ -1228,23 +1230,23 @@ export default function MLBBPage() {
 
             <a 
               href="/mlbb" 
-              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-blue-500/30 ring-1 ring-blue-500/30 flex-shrink-0 group"
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-blue-500/20 flex-shrink-0 group"
             >
               <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                 <img src="/mlbb-logo.png" alt="Mobile Legends" className="w-6 h-6 md:w-7 md:h-7 object-contain" />
               </div>
-              <span className="text-xs md:text-sm font-medium text-blue-400 whitespace-nowrap">Mobile Legends</span>
+              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-blue-400 transition-colors whitespace-nowrap">Mobile Legends</span>
             </a>
 
-            {/* League of Legends */}
+            {/* League of Legends - Active */}
             <a 
               href="/lol" 
-              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/20 flex-shrink-0 group"
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/30 ring-1 ring-yellow-500/30 flex-shrink-0 group"
             >
               <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                 <img src="/lol-logo.png" alt="League of Legends" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
               </div>
-              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-yellow-400 transition-colors whitespace-nowrap">League of Legends</span>
+              <span className="text-xs md:text-sm font-medium text-yellow-400 whitespace-nowrap">League of Legends</span>
             </a>
           </div>
         </div>
@@ -1254,11 +1256,11 @@ export default function MLBBPage() {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: siteSettings?.mlbbHeroImage 
-              ? `url(${siteSettings.mlbbHeroImage})`
+            backgroundImage: siteSettings?.lolHeroImage 
+              ? `url(${siteSettings.lolHeroImage})`
               : siteSettings?.heroImage 
                 ? `url(${siteSettings.heroImage})`
-                : 'url(https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1920&q=80)'
+                : 'url(https://images.contentstack.io/v3/assets/blt731acb42bb3d1659/bltf8be62f1eb58b34c/5ef1134fa8a14a6c8c81b71e/LOL_PROMOART_14.jpg)'
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-[#1a1a1a]" />
@@ -1282,9 +1284,9 @@ export default function MLBBPage() {
             )}
             <div>
               <div className="text-xs md:text-sm text-white/60 mb-0.5 md:mb-1">Anasayfa &gt; Oyunlar</div>
-              <h1 className="text-xl md:text-[28px] font-bold text-white">Mobile Legends: Bang Bang</h1>
+              <h1 className="text-xl md:text-[28px] font-bold text-white">League of Legends</h1>
               <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
-                <span className="text-blue-400 text-xs md:text-sm">★★★★★ 5/5</span>
+                <span className="text-yellow-400 text-xs md:text-sm">★★★★★ 5/5</span>
                 <span className="text-white/70 text-xs md:text-sm">(2008) yorum</span>
               </div>
             </div>
@@ -1350,7 +1352,7 @@ export default function MLBBPage() {
                     className={`flex items-center gap-1 md:gap-1.5 font-mono text-lg md:text-xl lg:text-2xl font-bold tracking-wider transition-colors duration-500 ${
                       countdown.hours === 0 && countdown.minutes < 10
                         ? countdown.minutes < 5
-                          ? 'text-red-400'
+                          ? 'text-yellow-400'
                           : 'text-orange-400'
                         : 'text-cyan-400'
                     }`}
@@ -1367,7 +1369,7 @@ export default function MLBBPage() {
                       <div className={`px-2 py-1 md:px-2.5 md:py-1.5 rounded-md bg-black/40 border ${
                         countdown.hours === 0 && countdown.minutes < 10
                           ? countdown.minutes < 5
-                            ? 'border-red-500/40'
+                            ? 'border-yellow-500/40'
                             : 'border-orange-500/40'
                           : 'border-cyan-500/30'
                       }`}>
@@ -1381,7 +1383,7 @@ export default function MLBBPage() {
                     <span className={`animate-pulse ${
                       countdown.hours === 0 && countdown.minutes < 10
                         ? countdown.minutes < 5
-                          ? 'text-red-400'
+                          ? 'text-yellow-400'
                           : 'text-orange-400'
                         : 'text-cyan-400/80'
                     }`}>:</span>
@@ -1391,7 +1393,7 @@ export default function MLBBPage() {
                       <div className={`px-2 py-1 md:px-2.5 md:py-1.5 rounded-md bg-black/40 border ${
                         countdown.hours === 0 && countdown.minutes < 10
                           ? countdown.minutes < 5
-                            ? 'border-red-500/40'
+                            ? 'border-yellow-500/40'
                             : 'border-orange-500/40'
                           : 'border-cyan-500/30'
                       }`}>
@@ -1405,7 +1407,7 @@ export default function MLBBPage() {
                     <span className={`animate-pulse ${
                       countdown.hours === 0 && countdown.minutes < 10
                         ? countdown.minutes < 5
-                          ? 'text-red-400'
+                          ? 'text-yellow-400'
                           : 'text-orange-400'
                         : 'text-cyan-400/80'
                     }`}>:</span>
@@ -1415,7 +1417,7 @@ export default function MLBBPage() {
                       <div className={`px-2 py-1 md:px-2.5 md:py-1.5 rounded-md bg-black/40 border ${
                         countdown.hours === 0 && countdown.minutes < 10
                           ? countdown.minutes < 5
-                            ? 'border-red-500/40'
+                            ? 'border-yellow-500/40'
                             : 'border-orange-500/40'
                           : 'border-cyan-500/30'
                       }`}>
@@ -1506,8 +1508,7 @@ export default function MLBBPage() {
                     {/* Content Section */}
                     <div className="h-[58%] md:h-[45%] flex flex-col justify-between p-2.5 md:p-3.5">
                       <div>
-                        <div className="text-[10px] md:text-[10px] text-white/60 font-bold uppercase">MOBİLE</div>
-                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.diamondsAmount || product.vpAmount || product.ucAmount} 💎 Yükleme Şansı</div>
+                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.rpAmount || product.ucAmount} RP Yükleme Şansı</div>
                         <div className="flex items-center gap-1 mt-0.5">
                           <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>
@@ -1515,7 +1516,7 @@ export default function MLBBPage() {
                       </div>
                       <div className="mt-1">
                         {product.discountPrice < product.price && (
-                          <div className="text-[11px] md:text-[9px] text-red-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
+                          <div className="text-[11px] md:text-[9px] text-yellow-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
                         )}
                         <div className="text-[18px] md:text-[15px] font-bold text-white">₺ {product.discountPrice.toFixed(2).replace('.', ',')}</div>
                         {product.discountPercent > 0 && (
@@ -1598,31 +1599,31 @@ export default function MLBBPage() {
           <div className="p-6">
             {activeInfoTab === 'description' && (
               <div className="prose prose-invert max-w-none">
-                {/* MLBB için özel açıklama - gameContent kullanılmıyor */}
+                {/* League of Legends için özel açıklama - gameContent kullanılmıyor */}
                 <div className="space-y-6">
                   {/* Ana Açıklama */}
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-3">Mobile Legends: Bang Bang - Oynanış ve Diamonds Rehberi</h3>
+                    <h3 className="text-lg font-bold text-white mb-3">League of Legends: Oynanış, Tarihçe ve Sistem Gereksinimleri</h3>
                     <div className={`text-white/80 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 ${!descriptionExpanded ? 'max-h-32 overflow-hidden' : ''}`}>
-                      <p className="mb-4">Mobile Legends: Bang Bang (MLBB), Moonton tarafından geliştirilen ve dünya genelinde milyonlarca oyuncu tarafından oynanan popüler bir mobil MOBA oyunudur. 5v5 formatında gerçek zamanlı strateji ve takım çalışması gerektiren heyecan verici maçlar sunar.</p>
+                      <p className="mb-4">League of Legends, Riot Games tarafından geliştirilen ve 2009 yılında piyasaya sürülen ücretsiz MOBA türündeki dünyanın en popüler oyunudur. Oyun, Dota ve diğer strateji oyunlarının mekaniklerini birleştirerek benzersiz bir deneyim sunar.</p>
                       
-                      <p className="mb-4">Oyunda 100'den fazla kahraman bulunmakta ve her kahramanın kendine özgü yetenekleri vardır. Tank, Fighter, Assassin, Mage, Marksman ve Support gibi farklı roller arasından seçim yapabilirsiniz.</p>
+                      <p className="mb-4">5v5 formatında oynanan League of Legends'ta, oyuncular farklı yeteneklere sahip ""Şampiyon" karakterlerini seçer. Her şampiyonun kendine özgü 4 yeteneği vardır: bir imza yeteneği, iki satın alınabilir yetenek ve bir ultimate yeteneği.</p>
                       
-                      <p className="mb-4">Diamonds (💎), oyun içi premium para birimidir. Diamonds ile şunları satın alabilirsiniz:</p>
+                      <p className="mb-4">Riot Points (RP), oyun içi premium para birimidir. RP ile şunları satın alabilirsiniz:</p>
                       <ul className="list-disc list-inside mb-4 space-y-1">
-                        <li>Yeni kahramanlar ve özel skinler</li>
-                        <li>Starlight üyeliği</li>
-                        <li>Özel efektler ve emote'lar</li>
-                        <li>Battle Pass ve etkinlik ödülleri</li>
-                        <li>Lucky Box ve özel çekiliş hakları</li>
+                        <li>Silah skinleri ve koleksiyonları</li>
+                        <li>Battle Pass ve Premium Battle Pass</li>
+                        <li>Ajan kostümleri ve aksesuarları</li>
+                        <li>Radianite Points (skin yükseltmeleri için)</li>
+                        <li>Spray'ler, kartlar ve başlıklar</li>
                       </ul>
                       
-                      <p className="font-semibold text-white mb-2">Cihaz Gereksinimleri:</p>
+                      <p className="font-semibold text-white mb-2">Sistem Gereksinimleri (Minimum):</p>
                       <ul className="list-disc list-inside mb-4 space-y-1">
-                        <li>Android 4.1+ veya iOS 9.0+</li>
-                        <li>RAM: 2 GB (önerilen 3 GB+)</li>
-                        <li>Depolama: 3 GB boş alan</li>
-                        <li>İnternet bağlantısı gereklidir</li>
+                        <li>İşletim Sistemi: Windows 7/8/10 64-bit</li>
+                        <li>RAM: 4 GB</li>
+                        <li>VRAM: 1 GB</li>
+                        <li>İşlemci: Intel Core 2 Duo E8400</li>
                       </ul>
                     </div>
                   </div>
@@ -1630,7 +1631,7 @@ export default function MLBBPage() {
                   {/* Show More/Less Button */}
                   <button
                     onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                    className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+                    className="flex items-center gap-2 text-yellow-400 hover:text-red-300 text-sm font-medium transition-colors"
                   >
                     {descriptionExpanded ? (
                       <>
@@ -1645,21 +1646,20 @@ export default function MLBBPage() {
                     )}
                   </button>
 
-                  {/* Diamonds Paketleri */}
+                  {/* RP Paketleri */}
                   <div className="mt-8">
-                    <h3 className="text-lg font-bold text-white mb-4">Diamonds Paketleri</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    <h3 className="text-lg font-bold text-white mb-4">RP Paketleri</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                       {[
-                        { amount: '86 💎', description: 'Başlangıç' },
-                        { amount: '172 💎', description: 'Küçük' },
-                        { amount: '257 💎', description: 'Standart' },
-                        { amount: '514 💎', description: 'Popüler' },
-                        { amount: '1050 💎', description: 'Değerli' },
-                        { amount: '2195 💎', description: 'Premium' }
+                        { amount: '460 RP' },
+                        { amount: '1005 RP' },
+                        { amount: '2105 RP' },
+                        { amount: '3625 RP' },
+                        { amount: '5295 RP' },
+                        { amount: '10875 RP' }
                       ].map((pkg, idx) => (
                         <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
-                          <div className="text-blue-400 font-bold text-lg">{pkg.amount}</div>
-                          <div className="text-white/50 text-xs">{pkg.description}</div>
+                          <div className="text-yellow-400 font-bold text-lg">{pkg.amount}</div>
                         </div>
                       ))}
                     </div>
@@ -1669,7 +1669,7 @@ export default function MLBBPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">🚀 Anında Teslimat</h4>
-                      <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra Diamonds kodunuz anında iletilir ve siparişleriniz bölümünde görüntülenir.</p>
+                      <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra RP kodunuz anında iletilir ve siparişleriniz bölümünde görüntülenir.</p>
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">🔒 Güvenli Ödeme</h4>
@@ -1677,7 +1677,7 @@ export default function MLBBPage() {
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">💳 Kolay Kullanım</h4>
-                      <p className="text-white/60 text-sm">Aldığınız kodu oyun içi mağazada kullanarak Diamonds'larınızı yükleyebilirsiniz.</p>
+                      <p className="text-white/60 text-sm">Aldığınız RP kodunu League of Legends mağazasında kullanabilirsiniz.</p>
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">📞 7/24 Destek</h4>
@@ -1690,16 +1690,16 @@ export default function MLBBPage() {
                     <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
                     <div className="space-y-3">
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">Diamonds kodu nasıl kullanılır?</h4>
-                        <p className="text-white/60 text-sm">Mobile Legends oyununu açın, mağazaya gidin ve "Redeem" veya "Kod Kullan" bölümünden aldığınız kodu girerek Diamonds'larınızı hesabınıza yükleyin.</p>
+                        <h4 className="text-white font-medium mb-2">RP kodu nasıl kullanılır?</h4>
+                        <p className="text-white/60 text-sm">Riot Games hesabınıza giriş yapın, ardından kodlar.riotgames.com adresine gidin. "Kodu Kullan" bölümüne Riot Cash kodunuzu girin ve RP'niz hesabınıza yüklenecektir.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">Diamonds kodları hangi bölgelerde geçerli?</h4>
-                        <p className="text-white/60 text-sm">Diamonds kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
+                        <h4 className="text-white font-medium mb-2">RP kodları hangi bölgelerde geçerli?</h4>
+                        <p className="text-white/60 text-sm">RP kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">Teslimat ne kadar sürer?</h4>
-                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra Diamonds kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
+                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra Riot Cash kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
                       </div>
                     </div>
                   </div>
@@ -1814,32 +1814,13 @@ export default function MLBBPage() {
             <div className="overflow-y-auto flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
-                  {/* MLBB ID ve Server ID girme alanı */}
-                  <div>
-                    <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">MLBB Hesap Bilgileri</Label>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-white/60 text-xs mb-1 block">MLBB ID (Oyuncu ID)</label>
-                        <input
-                          type="text"
-                          value={playerId}
-                          onChange={(e) => setPlayerId(e.target.value)}
-                          placeholder="Örn: 123456789"
-                          className="w-full px-4 py-3 rounded-lg bg-[#12161D] border border-white/10 text-white placeholder-white/30 focus:border-blue-500 focus:outline-none transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-white/60 text-xs mb-1 block">Server ID</label>
-                        <input
-                          type="text"
-                          value={playerName}
-                          onChange={(e) => setPlayerName(e.target.value)}
-                          placeholder="Örn: 1234"
-                          className="w-full px-4 py-3 rounded-lg bg-[#12161D] border border-white/10 text-white placeholder-white/30 focus:border-blue-500 focus:outline-none transition-colors"
-                        />
-                      </div>
-                      <p className="text-white/50 text-xs">* MLBB ID ve Server ID bilgilerinizi oyun içi profilinizden bulabilirsiniz.</p>
+                  {/* League of Legends RP - Oyuncu ID gerekmez, direkt kod teslimi */}
+                  <div className="px-4 py-3.5 rounded bg-yellow-500/15 border border-yellow-500/30">
+                    <div className="flex items-center gap-2 text-yellow-400 mb-1 text-xs font-semibold">
+                      <Check className="w-4 h-4" />
+                      <span>League of Legends RP Kodu</span>
                     </div>
+                    <p className="text-white/70 text-sm">Ödeme sonrası RP kodunuz anında e-posta ile gönderilecek ve Siparişlerim bölümünde görüntülenecektir.</p>
                   </div>
 
                   <div>
@@ -1971,12 +1952,12 @@ export default function MLBBPage() {
                       <div className="flex items-start gap-2 mb-4">
                         <input
                           type="checkbox"
-                          id="termsCheckboxMLBB"
+                          id="termsCheckboxLol"
                           checked={termsAccepted}
                           onChange={(e) => setTermsAccepted(e.target.checked)}
                           className="mt-1 w-4 h-4 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-blue-500/50 cursor-pointer"
                         />
-                        <label htmlFor="termsCheckboxMLBB" className="text-xs text-white/50 cursor-pointer">
+                        <label htmlFor="termsCheckboxLol" className="text-xs text-white/50 cursor-pointer">
                           <button 
                             type="button"
                             onClick={(e) => { e.preventDefault(); setTermsModalOpen(true); }}
@@ -2038,7 +2019,7 @@ export default function MLBBPage() {
           {/* Content - relative z-10 to stay above background */}
           <div className="relative z-10 bg-[#1e2229]/90 backdrop-blur-sm rounded-lg">
             {playerIdError && (
-              <div className="px-5 py-3 bg-red-600 flex items-start gap-3 rounded-t-lg">
+              <div className="px-5 py-3 bg-yellow-600 flex items-start gap-3 rounded-t-lg">
                 <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span className="text-red-600 font-bold text-sm">!</span>
                 </div>
@@ -2365,19 +2346,19 @@ export default function MLBBPage() {
               <h3 className="text-white font-semibold mb-2">2. Ürün Tanımları ve Özel Koşullar</h3>
               <p>Platformumuzda satışa sunulan ürünler farklı kategorilerde olabilir:</p>
               <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
-                <li><strong className="text-white">Standart Diamonds Paketleri:</strong> Belirtilen miktarda Diamonds içerir.</li>
-                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele Diamonds miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, düşük veya yüksek miktarda Diamonds çıkabilir. Bu tür ürünlerde çıkan Diamonds miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
+                <li><strong className="text-white">Standart RP Paketleri:</strong> Belirtilen miktarda RP içerir.</li>
+                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele RP miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, düşük veya yüksek miktarda RP çıkabilir. Bu tür ürünlerde çıkan RP miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
               </ul>
             </section>
 
             <section>
               <h3 className="text-white font-semibold mb-2">3. İade ve İptal Politikası</h3>
-              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan Diamonds miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
+              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan RP miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
             </section>
 
             <section>
               <h3 className="text-white font-semibold mb-2">4. Sorumluluk Reddi</h3>
-              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan Diamonds miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
+              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan RP miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
             </section>
 
             <section>
@@ -2390,8 +2371,8 @@ export default function MLBBPage() {
               <p>Bu koşullar PINLY tarafından önceden haber verilmeksizin güncellenebilir.</p>
             </div>
 
-            <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <h4 className="text-red-400 font-semibold text-sm mb-2">⚠️ Yasal Uyarı</h4>
+            <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <h4 className="text-yellow-400 font-semibold text-sm mb-2">⚠️ Yasal Uyarı</h4>
               <p className="text-white/60 text-xs leading-relaxed">
                 İşbu satış koşullarını okuyarak ve onay kutusunu işaretleyerek, tüm maddeleri kabul ettiğinizi hukuken beyan etmiş bulunmaktasınız. Bu onay sonrasında, satış koşullarında belirtilen hususlara ilişkin şikayet, itiraz veya iade talep hakkınız bulunmamaktadır.
               </p>

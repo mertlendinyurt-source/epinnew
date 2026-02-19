@@ -156,7 +156,7 @@ def test_payyeen_admin_settings_post(admin_token):
         else:
             log_test("Payyeen POST - Validation", False, f"Expected 400, got {response.status_code}")
         
-        # Test successful save
+        # Test successful save - need full settings first, not just toggle
         payyeen_settings = {
             "apiKey": TEST_PAYYEEN_API_KEY,
             "isEnabled": True

@@ -107,7 +107,8 @@ export default function MLBBPage() {
   const [todayDate, setTodayDate] = useState('')
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 })
   const [userBalance, setUserBalance] = useState(0)
-  const [paymentMethod, setPaymentMethod] = useState('card') // 'card' or 'balance'
+  const [paymentMethod, setPaymentMethod] = useState('card') // 'card', 'payyeen', or 'balance'
+  const [paymentMethods, setPaymentMethods] = useState({ payyeen: { available: false } })
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
 
   // Calculate time remaining until midnight (end of day)
@@ -794,6 +795,23 @@ export default function MLBBPage() {
           setTimeout(() => {
             window.location.href = `/account/orders/${data.data.orderId}`
           }, 2000)
+          return
+        }
+
+        // Payyeen payment - Form POST redirect
+        if (data.data.paymentProvider === 'payyeen' && data.data.formData && data.data.paymentUrl) {
+          const form = document.createElement('form')
+          form.method = 'POST'
+          form.action = data.data.paymentUrl
+          Object.entries(data.data.formData).forEach(([key, value]) => {
+            const input = document.createElement('input')
+            input.type = 'hidden'
+            input.name = key
+            input.value = value
+            form.appendChild(input)
+          })
+          document.body.appendChild(form)
+          form.submit()
           return
         }
 
@@ -1915,6 +1933,40 @@ export default function MLBBPage() {
                         <span className="px-2 py-1 bg-white rounded text-blue-500 font-bold text-xs hidden">TROY</span>
                       </div>
                     </div>
+
+                    {/* Payyeen Payment Option */}
+                    {paymentMethods?.payyeen?.available && (
+                      <div 
+                        onClick={() => setPaymentMethod('payyeen')}
+                        className={`relative p-4 md:p-5 rounded-lg border-2 cursor-pointer transition-all mt-3 ${
+                          paymentMethod === 'payyeen'
+                            ? 'bg-blue-900/20 border-blue-500'
+                            : 'bg-[#12161D] border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        {paymentMethod === 'payyeen' && (
+                          <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                            <Check className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                        
+                        <div className="mb-3">
+                          <div className="text-base md:text-lg font-bold text-white mb-1">Kredi / Banka Kartı</div>
+                          <div className="inline-block px-2 py-0.5 rounded bg-white/10 text-[11px] text-white/70">
+                            Anında teslimat
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <img src="/uploads/cards/visa.svg" alt="VISA" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                          <span className="px-2 py-1 bg-white rounded text-blue-600 font-bold text-xs hidden">VISA</span>
+                          <img src="/uploads/cards/mastercard.svg" alt="Mastercard" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                          <span className="px-2 py-1 bg-white rounded text-red-600 font-bold text-xs hidden">MC</span>
+                          <img src="/uploads/cards/troy.svg" alt="Troy" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                          <span className="px-2 py-1 bg-white rounded text-blue-500 font-bold text-xs hidden">TROY</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

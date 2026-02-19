@@ -212,6 +212,10 @@ export default function App() {
       const data = await res.json()
       if (data.success) {
         setPaymentMethods(data.data)
+        // Auto-select first available payment method
+        if (data.data?.shopier?.available) setPaymentMethod('card')
+        else if (data.data?.payyeen?.available) setPaymentMethod('payyeen')
+        else if (data.data?.shopinext?.available) setPaymentMethod('shopinext')
       }
     } catch (error) {
       console.error('Error fetching payment methods:', error)

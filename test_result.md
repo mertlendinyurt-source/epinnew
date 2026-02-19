@@ -937,15 +937,18 @@ backend:
 
   - task: "Payyeen Admin Settings - POST"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/admin/settings/payyeen implemented. Saves API key with AES-256-GCM encryption. Supports toggle (isEnabled only) and full save. Rate limited (10/hr). Requires admin JWT auth."
+      - working: true
+        agent: "testing"
+        comment: "POST /api/admin/settings/payyeen working correctly. Requires admin JWT authentication (401 without token). Validates required fields (apiKey required, returns 400). Saves API key with AES-256-GCM encryption. Toggle support working: POST with just {isEnabled: false} toggles visibility. Rate limiting implemented (10/hr). Full save and toggle functionality tested successfully."
 
   - task: "Payyeen Payment Methods Integration"
     implemented: true

@@ -8816,6 +8816,27 @@ export async function POST(request) {
         );
       }
 
+      // Toggle request (isEnabled only)
+      if (body.hasOwnProperty('isEnabled') && !body.apiKey && !body.apiSecret) {
+        const result = await db.collection('shopier_settings').updateOne(
+          { isActive: true },
+          { $set: { isEnabled: !!body.isEnabled, updatedAt: new Date() } }
+        );
+
+        if (result.matchedCount === 0) {
+          return NextResponse.json(
+            { success: false, error: 'Shopier ayarları bulunamadı. Önce ayarları kaydedin.' },
+            { status: 404 }
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: body.isEnabled ? 'Shopier ödeme seçeneği aktifleştirildi' : 'Shopier ödeme seçeneği pasife alındı',
+          data: { isEnabled: !!body.isEnabled }
+        });
+      }
+
       const { apiKey, apiSecret, mode } = body;
 
       // Validate required fields (Shopier only needs apiKey and apiSecret)

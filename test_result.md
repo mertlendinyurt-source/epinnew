@@ -997,15 +997,18 @@ backend:
 
   - task: "Payyeen Webhook Callback"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/payment/payyeen/callback webhook handler. Extracts orderId from description (PINLY-{orderId}), maps payment.success/failed events, idempotency protection, immutable status transitions, stock assignment, account credential delivery, email notifications."
+      - working: true
+        agent: "testing"
+        comment: "POST /api/payment/payyeen/callback working correctly. Accepts Payyeen webhook payload with all required fields (event, transaction_id, amount, currency, status, description, created_at). Extracts orderId from description (PINLY-{orderId} format). Updates order status to 'paid' on payment.success. Idempotency protection working: duplicate callbacks for already PAID orders return 200 OK without reprocessing. Creates payment record in payments collection. Stock assignment attempted (no stock available scenario handled gracefully). Returns plain text 'OK' response to Payyeen. Full webhook flow tested successfully."
 
 
 frontend:

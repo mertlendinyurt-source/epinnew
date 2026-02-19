@@ -819,6 +819,25 @@ export default function App() {
           return
         }
 
+        // Payyeen payment - Form POST redirect (same pattern as Shopier)
+        if (data.data.paymentProvider === 'payyeen' && data.data.formData && data.data.paymentUrl) {
+          const form = document.createElement('form')
+          form.method = 'POST'
+          form.action = data.data.paymentUrl
+          
+          Object.entries(data.data.formData).forEach(([key, value]) => {
+            const input = document.createElement('input')
+            input.type = 'hidden'
+            input.name = key
+            input.value = value
+            form.appendChild(input)
+          })
+          
+          document.body.appendChild(form)
+          form.submit()
+          return
+        }
+
         // Card payment - Shopier redirect
         if (data.data.formData && data.data.paymentUrl) {
           // Create a hidden form and submit it with all Shopier fields

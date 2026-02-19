@@ -920,6 +920,78 @@ backend:
         agent: "testing"
         comment: "DELETE /api/admin/users/{userId} working correctly. All 7 test scenarios passed (100% success rate): (1) Authentication Test - Returns 401 with 'Yetkisiz erişim' without admin token, (2) User Not Found Test - Returns 404 with 'Kullanıcı bulunamadı' for non-existent userId, (3) Successful Delete Test - Returns 200 with 'Kullanıcı hesabı başarıyla silindi', (4) User Verification - Confirmed user no longer exists after deletion, (5) Login Test - Deleted user cannot login (401). Additional protections verified: prevents deletion of admin accounts (400 error), checks for pending orders before deletion. Endpoint includes comprehensive cleanup: deletes user record, balance transactions, support tickets and messages. Audit logging implemented with admin username, deleted user details. Full user deletion workflow working correctly."
 
+  - task: "Payyeen Admin Settings - GET"
+    implemented: true
+    working: "NA"
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/admin/settings/payyeen implemented. Returns masked API key if configured, isEnabled flag. Requires admin JWT auth. Returns isConfigured: false if not set up."
+
+  - task: "Payyeen Admin Settings - POST"
+    implemented: true
+    working: "NA"
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/admin/settings/payyeen implemented. Saves API key with AES-256-GCM encryption. Supports toggle (isEnabled only) and full save. Rate limited (10/hr). Requires admin JWT auth."
+
+  - task: "Payyeen Payment Methods Integration"
+    implemented: true
+    working: "NA"
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/payment-methods updated to include payyeen availability. Checks payyeen_settings collection for isActive and isEnabled."
+
+  - task: "Payyeen Order Creation (UC)"
+    implemented: true
+    working: "NA"
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/orders with paymentMethod='payyeen'. Creates order with pending status, decrypts API key, returns Payyeen Quick Checkout form data (api_key, amount, currency, description, success_url, cancel_url). Stores payment request for audit."
+
+  - task: "Payyeen Order Creation (Accounts)"
+    implemented: true
+    working: "NA"
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/account-orders with paymentMethod='payyeen'. Same flow as UC orders but for account purchases. Reserves account, creates payment request."
+
+  - task: "Payyeen Webhook Callback"
+    implemented: true
+    working: "NA"
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/payment/payyeen/callback webhook handler. Extracts orderId from description (PINLY-{orderId}), maps payment.success/failed events, idempotency protection, immutable status transitions, stock assignment, account credential delivery, email notifications."
+
 
 frontend:
   - task: "Auth Modal (Register + Login)"

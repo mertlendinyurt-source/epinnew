@@ -101,7 +101,7 @@ export default function App() {
   const [todayDate, setTodayDate] = useState('')
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 })
   const [userBalance, setUserBalance] = useState(0)
-  const [paymentMethod, setPaymentMethod] = useState('card') // 'card', 'shopinext', 'payyeen', or 'balance'
+  const [paymentMethod, setPaymentMethod] = useState(null) // 'card', 'shopinext', 'payyeen', or 'balance'
   const [paymentMethods, setPaymentMethods] = useState({ shopier: { available: false }, shopinext: { available: false }, payyeen: { available: false } })
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
 
@@ -709,7 +709,10 @@ export default function App() {
     if (isAuthenticated && userBalance >= product.discountPrice) {
       setPaymentMethod('balance') // Sufficient balance - default to balance
     } else {
-      setPaymentMethod('card') // Insufficient or no balance - default to card
+      // Auto-select first available card payment
+      if (paymentMethods?.shopier?.available) setPaymentMethod('card')
+      else if (paymentMethods?.payyeen?.available) setPaymentMethod('payyeen')
+      else if (paymentMethods?.shopinext?.available) setPaymentMethod('shopinext')
     }
     
     // GA4 view_item event
@@ -726,6 +729,12 @@ export default function App() {
   }
 
   const handleCheckout = async () => {
+    // 0. Check payment method selected
+    if (!paymentMethod) {
+      toast.error('Lütfen bir ödeme yöntemi seçin')
+      return
+    }
+
     // 1. Check player ID first
     if (!playerValid || !playerName) {
       setPlayerIdModalOpen(true)

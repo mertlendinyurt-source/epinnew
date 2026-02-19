@@ -107,7 +107,7 @@ export default function LolPage() {
   const [todayDate, setTodayDate] = useState('')
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 })
   const [userBalance, setUserBalance] = useState(0)
-  const [paymentMethod, setPaymentMethod] = useState('card') // 'card', 'payyeen', or 'balance'
+  const [paymentMethod, setPaymentMethod] = useState(null) // 'card', 'payyeen', or 'balance'
   const [paymentMethods, setPaymentMethods] = useState({ payyeen: { available: false } })
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
 
@@ -706,7 +706,10 @@ export default function LolPage() {
     if (isAuthenticated && userBalance >= product.discountPrice) {
       setPaymentMethod('balance') // Sufficient balance - default to balance
     } else {
-      setPaymentMethod('card') // Insufficient or no balance - default to card
+      // Auto-select first available card payment
+      if (paymentMethods?.shopier?.available) setPaymentMethod('card')
+      else if (paymentMethods?.payyeen?.available) setPaymentMethod('payyeen')
+      else if (paymentMethods?.shopinext?.available) setPaymentMethod('shopinext')
     }
     
     // GA4 view_item event
@@ -723,6 +726,12 @@ export default function LolPage() {
   }
 
   const handleCheckout = async () => {
+    // 0. Check payment method selected
+    if (!paymentMethod) {
+      toast.error('Lütfen bir ödeme yöntemi seçin')
+      return
+    }
+
     // League of Legends için Oyuncu ID kontrolü yok - direkt kod teslimi
 
     // 1. Check authentication

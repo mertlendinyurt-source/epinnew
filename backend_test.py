@@ -232,18 +232,23 @@ def test_payment_methods_payyeen():
         response = requests.get(f"{API_BASE}/payment-methods")
         
         if response.status_code == 200:
-            data = response.json()
-            if 'payyeen' in data:
-                payyeen_info = data['payyeen']
-                if isinstance(payyeen_info, dict) and 'available' in payyeen_info:
-                    available = payyeen_info['available']
-                    log_test("Payment Methods - Payyeen", True, f"Payyeen available: {available}")
-                    return True
+            result = response.json()
+            if result.get('success') and 'data' in result:
+                data = result['data']
+                if 'payyeen' in data:
+                    payyeen_info = data['payyeen']
+                    if isinstance(payyeen_info, dict) and 'available' in payyeen_info:
+                        available = payyeen_info['available']
+                        log_test("Payment Methods - Payyeen", True, f"Payyeen available: {available}")
+                        return True
+                    else:
+                        log_test("Payment Methods - Payyeen", False, f"Invalid payyeen structure: {payyeen_info}")
+                        return False
                 else:
-                    log_test("Payment Methods - Payyeen", False, f"Invalid payyeen structure: {payyeen_info}")
+                    log_test("Payment Methods - Payyeen", False, f"Payyeen not found in response: {list(data.keys())}")
                     return False
             else:
-                log_test("Payment Methods - Payyeen", False, f"Payyeen not found in response: {list(data.keys())}")
+                log_test("Payment Methods - Payyeen", False, f"Invalid response structure: {result}")
                 return False
         else:
             log_test("Payment Methods - Request", False, f"HTTP {response.status_code}: {response.text}")

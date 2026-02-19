@@ -2757,7 +2757,7 @@ export async function GET(request) {
           );
         }
         
-        return NextResponse.redirect(new URL(`/payment/failed?orderId=${orderId}`, request.url));
+        return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}`);
       }
       
       // Success redirect
@@ -2767,19 +2767,19 @@ export async function GET(request) {
         
         if (!order) {
           console.error(`Payyeen return: Order ${orderId} not found`);
-          return NextResponse.redirect(new URL(`/payment/failed?orderId=${orderId}&error=order_not_found`, request.url));
+          return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}&error=order_not_found`);
         }
         
         // Already processed (idempotency)
         if (order.status === 'paid') {
           console.log(`Payyeen return: Order ${orderId} already PAID`);
-          return NextResponse.redirect(new URL(`/payment/success?orderId=${orderId}`, request.url));
+          return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
         }
         
         // Immutable status check
         if (order.status === 'failed') {
           console.error(`Payyeen return: Cannot change order ${orderId} from FAILED to PAID`);
-          return NextResponse.redirect(new URL(`/payment/failed?orderId=${orderId}`, request.url));
+          return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}`);
         }
         
         // ✅ UPDATE ORDER TO PAID
@@ -2920,12 +2920,12 @@ export async function GET(request) {
         }
         
         console.log(`Payyeen return: Order ${orderId} processed successfully, redirecting to success page`);
-        return NextResponse.redirect(new URL(`/payment/success?orderId=${orderId}`, request.url));
+        return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
       }
       
       // Unknown status - redirect to success page and let it handle
       console.log(`Payyeen return: Unknown status '${status}' for order ${orderId}`);
-      return NextResponse.redirect(new URL(`/payment/success?orderId=${orderId}`, request.url));
+      return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
     }
 
     // Admin: Test Shopinext API connection (DEBUG)

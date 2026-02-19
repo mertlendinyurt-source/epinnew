@@ -6847,6 +6847,100 @@ export async function POST(request) {
       }
 
       // ============================================
+      // 💳 PAYYEEN PAYMENT FLOW
+      // ============================================
+      if (paymentMethod === 'payyeen') {
+        const payeenSettings = await db.collection('payyeen_settings').findOne({ isActive: true });
+        
+        if (!payeenSettings) {
+          return NextResponse.json(
+            { success: false, error: 'Payyeen ödeme sistemi yapılandırılmamış.' },
+            { status: 503 }
+          );
+        }
+
+        // Decrypt API key
+        let payeenApiKey;
+        try {
+          payeenApiKey = decrypt(payeenSettings.apiKey);
+        } catch (error) {
+          console.error('Payyeen settings decryption failed');
+          return NextResponse.json(
+            { success: false, error: 'Ödeme sistemi yapılandırma hatası' },
+            { status: 500 }
+          );
+        }
+
+        // Create customer snapshot
+        const customerSnapshot = {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone
+        };
+
+        const orderAmount = product.discountPrice || product.price || product.finalPrice || product.salePrice || 0;
+
+        const order = {
+          id: uuidv4(),
+          userId: user.id,
+          productId,
+          productTitle: product.title,
+          productImageUrl: product.imageUrl || null,
+          playerId,
+          playerName,
+          customer: customerSnapshot,
+          status: 'pending',
+          amount: orderAmount,
+          totalAmount: orderAmount,
+          currency: 'TRY',
+          paymentMethod: 'payyeen',
+          termsAccepted: termsAccepted || false,
+          termsAcceptedAt: termsAcceptedAt ? new Date(termsAcceptedAt) : new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        await db.collection('orders').insertOne(order);
+
+        // Send order created email
+        sendOrderCreatedEmail(db, order, user, product).catch(err => 
+          console.error('Order created email failed:', err)
+        );
+
+        // Build Payyeen Quick Checkout form data
+        const payeenFormData = {
+          api_key: payeenApiKey,
+          amount: orderAmount.toFixed(2),
+          currency: 'TRY',
+          description: `PINLY-${order.id}`,
+          success_url: `${BASE_URL}/payment/success?orderId=${order.id}`,
+          cancel_url: `${BASE_URL}/payment/failed?orderId=${order.id}`
+        };
+
+        // Store payment request for audit trail
+        await db.collection('payment_requests').insertOne({
+          orderId: order.id,
+          provider: 'payyeen',
+          description: payeenFormData.description,
+          amount: orderAmount,
+          currency: 'TRY',
+          apiKey: '***MASKED***',
+          createdAt: new Date()
+        });
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            orderId: order.id,
+            paymentUrl: 'https://payyeen.com/checkout/quick',
+            formData: payeenFormData,
+            paymentProvider: 'payyeen'
+          }
+        });
+      }
+
+      // ============================================
       // 💳 CARD PAYMENT FLOW (SHOPIER)
       // ============================================
 

@@ -1105,11 +1105,15 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Shopinext Integration Testing Complete"
+    - "Payyeen Admin Settings - GET"
+    - "Payyeen Admin Settings - POST"
+    - "Payyeen Payment Methods Integration"
+    - "Payyeen Order Creation (UC)"
+    - "Payyeen Order Creation (Accounts)"
+    - "Payyeen Webhook Callback"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
-  completed: true
 
 agent_communication:
   - agent: "main"

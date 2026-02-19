@@ -107,7 +107,7 @@ export default function ValorantPage() {
   const [todayDate, setTodayDate] = useState('')
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 })
   const [userBalance, setUserBalance] = useState(0)
-  const [paymentMethod, setPaymentMethod] = useState('card') // 'card', 'payyeen', or 'balance'
+  const [paymentMethod, setPaymentMethod] = useState(null) // 'card', 'payyeen', or 'balance'
   const [paymentMethods, setPaymentMethods] = useState({ payyeen: { available: false } })
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
 

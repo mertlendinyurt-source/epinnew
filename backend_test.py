@@ -39,13 +39,17 @@ def test_admin_login():
         response = requests.post(f"{API_BASE}/admin/login", json=ADMIN_CREDENTIALS)
         
         if response.status_code == 200:
-            data = response.json()
-            token = data.get('token')
-            if token:
-                log_test("Admin Login", True, f"Token obtained successfully")
-                return token
+            result = response.json()
+            if result.get('success') and 'data' in result:
+                token = result['data'].get('token')
+                if token:
+                    log_test("Admin Login", True, f"Token obtained successfully")
+                    return token
+                else:
+                    log_test("Admin Login", False, "No token in data")
+                    return None
             else:
-                log_test("Admin Login", False, "No token in response")
+                log_test("Admin Login", False, f"Unexpected response structure: {result}")
                 return None
         else:
             log_test("Admin Login", False, f"HTTP {response.status_code}: {response.text}")

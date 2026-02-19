@@ -422,6 +422,27 @@ export default function HesapDetayPage() {
                       )}
                     </button>
 
+                    {/* Payyeen Payment */}
+                    {paymentMethods?.payyeen?.available && (
+                      <button
+                        onClick={() => setPaymentMethod('payyeen')}
+                        className={`w-full p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${paymentMethod === 'payyeen' ? 'border-blue-500 bg-blue-500/10' : 'border-white/10 hover:border-white/20'}`}
+                      >
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${paymentMethod === 'payyeen' ? 'bg-blue-500' : 'bg-white/10'}`}>
+                          <CreditCard className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <div className="text-white font-medium">Kredi / Banka Kartı</div>
+                          <div className="text-white/50 text-sm">Anında teslimat</div>
+                        </div>
+                        {paymentMethod === 'payyeen' && (
+                          <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                            <Check className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                      </button>
+                    )}
+
                     {/* Balance Payment */}
                     {isAuthenticated && (
                       <button

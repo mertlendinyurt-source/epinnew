@@ -2876,10 +2876,11 @@ export async function GET(request) {
         }
         
         // ============================================
-        // NORMAL FLOW - Orders < 3000 TL with RISK CHECK
+        // NORMAL FLOW - Orders < 3000 TL
+        // Risk puanı hesapla ve kaydet, ama stok her zaman ata
         // ============================================
         
-        // Calculate risk score (same as Shopier)
+        // Calculate risk score (sadece kayıt için - teslimatı engellemez)
         const riskResult = await calculateOrderRisk(db, order, orderUser, request);
         
         // Update order with risk information
@@ -2894,135 +2895,95 @@ export async function GET(request) {
           }
         );
         
-        // Get risk settings
-        let riskSettings = await db.collection('risk_settings').findOne({ id: 'main' });
-        if (!riskSettings) {
-          riskSettings = DEFAULT_RISK_SETTINGS;
+        console.log(`Payyeen return: Risk score ${riskResult.score} for order ${orderId}. Proceeding with delivery.`);
+        
+        // Send payment success email
+        if (orderUser && product) {
+          sendPaymentSuccessEmail(db, order, orderUser, product).catch(err =>
+            console.error('Payyeen payment success email failed:', err)
+          );
         }
         
-        // Determine delivery behavior based on risk
-        const actualStatus = riskResult.actualStatus || riskResult.status;
-        const shouldHoldDelivery = 
-          actualStatus === 'FLAGGED' || 
-          actualStatus === 'BLOCKED' ||
-          (actualStatus === 'SUSPICIOUS' && !riskSettings.suspiciousAutoApprove);
-        
-        if (shouldHoldDelivery && !riskSettings.isTestMode) {
-          // RISKY ORDER - hold for review
-          await db.collection('orders').updateOne(
-            { id: orderId },
-            {
-              $set: {
-                delivery: {
-                  status: 'hold',
-                  message: actualStatus === 'BLOCKED' ? 'Sipariş engellendi' : 
-                           actualStatus === 'FLAGGED' ? 'Sipariş kontrol altında - Riskli' :
-                           'Sipariş kontrol altında - Şüpheli',
-                  holdReason: actualStatus === 'BLOCKED' ? 'risk_blocked' : 
-                              actualStatus === 'FLAGGED' ? 'risk_flagged' : 'risk_suspicious',
-                  items: []
+        // ✅ ALWAYS DELIVER - Stock assignment regardless of risk
+        // Check if this is an account order
+        if (order.type === 'account' && order.accountId && account) {
+          if (account.credentials) {
+            await db.collection('orders').updateOne(
+              { id: orderId },
+              {
+                $set: {
+                  delivery: {
+                    status: 'delivered',
+                    credentials: account.credentials,
+                    deliveredAt: new Date()
+                  }
                 }
               }
-            }
-          );
-          
-          console.log(`Payyeen return: Order ${orderId} ${actualStatus} with risk score ${riskResult.score}. Delivery on HOLD.`);
-          
-          // Send payment success email
-          if (orderUser && product) {
-            sendPaymentSuccessEmail(db, order, orderUser, product).catch(err =>
-              console.error('Payyeen payment success email failed:', err)
             );
-          }
-        } else {
-          // CLEAR risk - proceed with stock/delivery
-          // Send payment success email
-          if (orderUser && product) {
-            sendPaymentSuccessEmail(db, order, orderUser, product).catch(err =>
-              console.error('Payyeen payment success email failed:', err)
+            await db.collection('accounts').updateOne(
+              { id: order.accountId },
+              { $set: { status: 'sold', soldAt: new Date(), soldToOrderId: orderId } }
             );
+            console.log(`Payyeen return: Account credentials delivered for order ${orderId}`);
           }
-          
-          // Check if this is an account order
-          if (order.type === 'account' && order.accountId && account) {
-            if (account.credentials) {
+        } else if (product) {
+          // UC order - Stock assignment (FIFO)
+          try {
+            const assignedStock = await db.collection('stock').findOneAndUpdate(
+              { productId: order.productId, status: 'available' },
+              { 
+                $set: { 
+                  status: 'assigned', 
+                  orderId: orderId,
+                  assignedAt: new Date()
+                } 
+              },
+              { 
+                returnDocument: 'after',
+                sort: { createdAt: 1 }
+              }
+            );
+            
+            if (assignedStock && assignedStock.value) {
+              const stockCode = assignedStock.value;
+              
               await db.collection('orders').updateOne(
                 { id: orderId },
                 {
                   $set: {
                     delivery: {
                       status: 'delivered',
-                      credentials: account.credentials,
-                      deliveredAt: new Date()
+                      items: [stockCode],
+                      stockId: assignedStock.id || assignedStock._id,
+                      assignedAt: new Date()
                     }
                   }
                 }
               );
-              await db.collection('accounts').updateOne(
-                { id: order.accountId },
-                { $set: { status: 'sold', soldAt: new Date(), soldToOrderId: orderId } }
-              );
-              console.log(`Payyeen return: Account credentials delivered for order ${orderId}`);
-            }
-          } else if (product) {
-            // UC order - Stock assignment (FIFO)
-            try {
-              const assignedStock = await db.collection('stock').findOneAndUpdate(
-                { productId: order.productId, status: 'available' },
-                { 
-                  $set: { 
-                    status: 'assigned', 
-                    orderId: orderId,
-                    assignedAt: new Date()
-                  } 
-                },
-                { 
-                  returnDocument: 'after',
-                  sort: { createdAt: 1 }
-                }
-              );
+              console.log(`Payyeen return: Stock assigned to order ${orderId}: ${stockCode}`);
               
-              if (assignedStock && assignedStock.value) {
-                const stockCode = assignedStock.value;
-                
-                await db.collection('orders').updateOne(
-                  { id: orderId },
-                  {
-                    $set: {
-                      delivery: {
-                        status: 'delivered',
-                        items: [stockCode],
-                        stockId: assignedStock.id || assignedStock._id,
-                        assignedAt: new Date()
-                      }
-                    }
-                  }
+              if (orderUser && product) {
+                sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
+                  console.error('Payyeen return delivered email failed:', err)
                 );
-                console.log(`Payyeen return: Stock assigned to order ${orderId}: ${stockCode}`);
-                
-                if (orderUser && product) {
-                  sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
-                    console.error('Payyeen return delivered email failed:', err)
-                  );
-                }
-              } else {
-                await db.collection('orders').updateOne(
-                  { id: orderId },
-                  {
-                    $set: {
-                      delivery: {
-                        status: 'pending',
-                        message: 'Stok bekleniyor',
-                        items: []
-                      }
-                    }
-                  }
-                );
-                console.log(`Payyeen return: No stock for order ${orderId}`);
               }
-            } catch (stockError) {
-              console.error(`Payyeen return stock error for order ${orderId}:`, stockError);
+            } else {
+              await db.collection('orders').updateOne(
+                { id: orderId },
+                {
+                  $set: {
+                    delivery: {
+                      status: 'pending',
+                      message: 'Stok bekleniyor',
+                      items: []
+                    }
+                  }
+                }
+              );
+              console.log(`Payyeen return: No stock for order ${orderId}`);
             }
+          } catch (stockError) {
+            console.error(`Payyeen return stock error for order ${orderId}:`, stockError);
           }
         }
         

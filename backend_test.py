@@ -305,40 +305,45 @@ def test_payyeen_order_creation_uc(user_token):
         response = requests.post(f"{API_BASE}/orders", json=order_data, headers=headers)
         
         if response.status_code == 200:
-            data = response.json()
-            
-            # Check required fields
-            required_fields = ['orderId', 'paymentUrl', 'formData', 'paymentProvider']
-            missing_fields = [field for field in required_fields if field not in data]
-            
-            if not missing_fields:
-                # Verify specific Payyeen values
-                if (data['paymentUrl'] == 'https://payyeen.com/checkout/quick' and 
-                    data['paymentProvider'] == 'payyeen'):
-                    
-                    form_data = data['formData']
-                    form_required = ['api_key', 'amount', 'currency', 'description', 'success_url', 'cancel_url']
-                    missing_form = [field for field in form_required if field not in form_data]
-                    
-                    if not missing_form:
-                        # Check description format (should contain PINLY-{orderId})
-                        description = form_data['description']
-                        order_id = data['orderId']
+            result = response.json()
+            if result.get('success') and 'data' in result:
+                data = result['data']
+                
+                # Check required fields
+                required_fields = ['orderId', 'paymentUrl', 'formData', 'paymentProvider']
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    # Verify specific Payyeen values
+                    if (data['paymentUrl'] == 'https://payyeen.com/checkout/quick' and 
+                        data['paymentProvider'] == 'payyeen'):
                         
-                        if f'PINLY-{order_id}' in description:
-                            log_test("Payyeen UC Orders - Create Order", True, f"Order created: {order_id}")
-                            return True, order_id
+                        form_data = data['formData']
+                        form_required = ['api_key', 'amount', 'currency', 'description', 'success_url', 'cancel_url']
+                        missing_form = [field for field in form_required if field not in form_data]
+                        
+                        if not missing_form:
+                            # Check description format (should contain PINLY-{orderId})
+                            description = form_data['description']
+                            order_id = data['orderId']
+                            
+                            if f'PINLY-{order_id}' in description:
+                                log_test("Payyeen UC Orders - Create Order", True, f"Order created: {order_id}")
+                                return True, order_id
+                            else:
+                                log_test("Payyeen UC Orders - Description Format", False, f"Invalid description: {description}")
+                                return False, None
                         else:
-                            log_test("Payyeen UC Orders - Description Format", False, f"Invalid description: {description}")
+                            log_test("Payyeen UC Orders - Form Data", False, f"Missing form fields: {missing_form}")
                             return False, None
                     else:
-                        log_test("Payyeen UC Orders - Form Data", False, f"Missing form fields: {missing_form}")
+                        log_test("Payyeen UC Orders - Payment Details", False, f"Invalid payment details: URL={data.get('paymentUrl')}, Provider={data.get('paymentProvider')}")
                         return False, None
                 else:
-                    log_test("Payyeen UC Orders - Payment Details", False, f"Invalid payment details: URL={data.get('paymentUrl')}, Provider={data.get('paymentProvider')}")
+                    log_test("Payyeen UC Orders - Response Fields", False, f"Missing fields: {missing_fields}")
                     return False, None
             else:
-                log_test("Payyeen UC Orders - Response Fields", False, f"Missing fields: {missing_fields}")
+                log_test("Payyeen UC Orders - Response Structure", False, f"Invalid response structure: {result}")
                 return False, None
         elif response.status_code == 503:
             log_test("Payyeen UC Orders - Not Configured", True, "Returns 503 when not configured")

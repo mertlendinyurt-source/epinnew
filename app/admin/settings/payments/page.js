@@ -120,6 +120,33 @@ export default function PaymentSettingsPage() {
     setTimeout(() => setShowToast(false), 3000);
   };
 
+  const handleToggle = async () => {
+    if (!settings?.isConfigured) {
+      toast('Önce Shopier ayarlarını kaydedin', 'error');
+      return;
+    }
+    setToggling(true);
+    try {
+      const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken');
+      const res = await fetch('/api/admin/settings/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ isEnabled: !isEnabled })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsEnabled(!isEnabled);
+        toast(data.message, 'success');
+      } else {
+        toast(data.error || 'İşlem başarısız', 'error');
+      }
+    } catch (error) {
+      toast('Bağlantı hatası', 'error');
+    } finally {
+      setToggling(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('userToken');

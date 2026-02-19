@@ -2706,6 +2706,222 @@ export async function GET(request) {
       });
     }
 
+    // ============================================
+    // 💳 PAYYEEN RETURN URL HANDLER (GET)
+    // Payyeen ödeme sonrası kullanıcıyı buraya yönlendirir
+    // Sipariş durumunu günceller, stok atar, sonra success/failed sayfasına redirect eder
+    // ============================================
+    if (pathname === '/api/payment/payyeen/return') {
+      const url = new URL(request.url);
+      const orderId = url.searchParams.get('orderId');
+      const status = url.searchParams.get('status');
+      const transactionId = url.searchParams.get('transaction_id');
+      const epin = url.searchParams.get('epin');
+      const errorMessage = url.searchParams.get('message');
+      
+      console.log('Payyeen return:', { orderId, status, transactionId, epin });
+      
+      if (!orderId) {
+        return NextResponse.redirect(new URL('/payment/failed?error=missing_order', request.url));
+      }
+      
+      // Error/cancel redirect
+      if (status === 'error' || status === 'cancel' || status === 'cancelled') {
+        console.log(`Payyeen return: Payment failed/cancelled for order ${orderId}: ${errorMessage}`);
+        
+        // Update order to failed
+        await db.collection('orders').updateOne(
+          { id: orderId, status: 'pending' },
+          { 
+            $set: { 
+              status: 'failed', 
+              paymentProvider: 'payyeen',
+              failReason: errorMessage || 'Ödeme iptal edildi',
+              updatedAt: new Date() 
+            } 
+          }
+        );
+        
+        // Release reserved account if applicable
+        const failedOrder = await db.collection('orders').findOne({ id: orderId });
+        if (failedOrder && failedOrder.type === 'account' && failedOrder.accountId) {
+          await db.collection('accounts').updateOne(
+            { id: failedOrder.accountId, status: 'reserved', reservedByOrderId: orderId },
+            { $set: { status: 'available', reservedAt: null, reservedByOrderId: null } }
+          );
+        }
+        
+        return NextResponse.redirect(new URL(`/payment/failed?orderId=${orderId}`, request.url));
+      }
+      
+      // Success redirect
+      if (status === 'success') {
+        // Find the order
+        const order = await db.collection('orders').findOne({ id: orderId });
+        
+        if (!order) {
+          console.error(`Payyeen return: Order ${orderId} not found`);
+          return NextResponse.redirect(new URL(`/payment/failed?orderId=${orderId}&error=order_not_found`, request.url));
+        }
+        
+        // Already processed (idempotency)
+        if (order.status === 'paid') {
+          console.log(`Payyeen return: Order ${orderId} already PAID`);
+          return NextResponse.redirect(new URL(`/payment/success?orderId=${orderId}`, request.url));
+        }
+        
+        // Immutable status check
+        if (order.status === 'failed') {
+          console.error(`Payyeen return: Cannot change order ${orderId} from FAILED to PAID`);
+          return NextResponse.redirect(new URL(`/payment/failed?orderId=${orderId}`, request.url));
+        }
+        
+        // ✅ UPDATE ORDER TO PAID
+        await db.collection('orders').updateOne(
+          { id: orderId },
+          {
+            $set: {
+              status: 'paid',
+              paymentProvider: 'payyeen',
+              paymentId: transactionId || null,
+              updatedAt: new Date()
+            }
+          }
+        );
+        
+        // Create payment record
+        await db.collection('payments').insertOne({
+          id: uuidv4(),
+          orderId: orderId,
+          provider: 'payyeen',
+          providerTxnId: transactionId || null,
+          status: 'paid',
+          amount: order.amount,
+          currency: order.currency || 'TRY',
+          source: 'return_url',
+          rawPayload: { status, transactionId, epin },
+          verifiedAt: new Date(),
+          createdAt: new Date()
+        });
+        
+        // Update payment request
+        await db.collection('payment_requests').updateOne(
+          { orderId: orderId, provider: 'payyeen' },
+          { $set: { status: 'paid', transactionId: transactionId, updatedAt: new Date() } }
+        );
+        
+        // ✅ STOCK ASSIGNMENT / DELIVERY (same as Shopier callback)
+        const orderUser = await db.collection('users').findOne({ id: order.userId });
+        const product = order.productId ? await db.collection('products').findOne({ id: order.productId }) : null;
+        
+        // Send SMS
+        if (orderUser && orderUser.phone) {
+          const itemTitle = product?.title || order.accountTitle || 'Sipariş';
+          sendPaymentSuccessSms(db, order, orderUser, itemTitle).catch(err =>
+            console.error('Payyeen return payment SMS failed:', err)
+          );
+        }
+        
+        // Check if this is an account order
+        if (order.type === 'account' && order.accountId) {
+          const account = await db.collection('accounts').findOne({ id: order.accountId });
+          if (account && account.credentials) {
+            await db.collection('orders').updateOne(
+              { id: orderId },
+              {
+                $set: {
+                  delivery: {
+                    status: 'delivered',
+                    credentials: account.credentials,
+                    deliveredAt: new Date()
+                  }
+                }
+              }
+            );
+            await db.collection('accounts').updateOne(
+              { id: order.accountId },
+              { $set: { status: 'sold', soldAt: new Date(), soldToOrderId: orderId } }
+            );
+            console.log(`Payyeen return: Account credentials delivered for order ${orderId}`);
+          }
+        } else if (product) {
+          // UC order - Stock assignment (FIFO - oldest first)
+          try {
+            const assignedStock = await db.collection('stock').findOneAndUpdate(
+              { productId: order.productId, status: 'available' },
+              { 
+                $set: { 
+                  status: 'assigned', 
+                  orderId: orderId,
+                  assignedAt: new Date()
+                } 
+              },
+              { 
+                returnDocument: 'after',
+                sort: { createdAt: 1 }
+              }
+            );
+            
+            if (assignedStock && assignedStock.value) {
+              const stockCode = assignedStock.value;
+              
+              await db.collection('orders').updateOne(
+                { id: orderId },
+                {
+                  $set: {
+                    delivery: {
+                      status: 'delivered',
+                      items: [stockCode],
+                      stockId: assignedStock.id || assignedStock._id,
+                      assignedAt: new Date()
+                    }
+                  }
+                }
+              );
+              console.log(`Payyeen return: Stock assigned to order ${orderId}: ${stockCode}`);
+              
+              // Send delivered email
+              if (orderUser && product) {
+                sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
+                  console.error('Payyeen return delivered email failed:', err)
+                );
+              }
+            } else {
+              await db.collection('orders').updateOne(
+                { id: orderId },
+                {
+                  $set: {
+                    delivery: {
+                      status: 'pending',
+                      message: 'Stok bekleniyor',
+                      items: []
+                    }
+                  }
+                }
+              );
+              console.log(`Payyeen return: No stock for order ${orderId}`);
+            }
+          } catch (stockError) {
+            console.error(`Payyeen return stock error for order ${orderId}:`, stockError);
+          }
+        }
+        
+        // Send payment success email
+        if (orderUser && product) {
+          sendPaymentSuccessEmail(db, order, orderUser, product).catch(err =>
+            console.error('Payyeen return payment success email failed:', err)
+          );
+        }
+        
+        console.log(`Payyeen return: Order ${orderId} processed successfully, redirecting to success page`);
+        return NextResponse.redirect(new URL(`/payment/success?orderId=${orderId}`, request.url));
+      }
+      
+      // Unknown status - redirect to success page and let it handle
+      console.log(`Payyeen return: Unknown status '${status}' for order ${orderId}`);
+      return NextResponse.redirect(new URL(`/payment/success?orderId=${orderId}`, request.url));
+    }
+
     // Admin: Test Shopinext API connection (DEBUG)
     if (pathname === '/api/admin/settings/shopinext/test') {
       const user = verifyAdminToken(request);

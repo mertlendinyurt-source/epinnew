@@ -52,6 +52,7 @@ export default function PaymentSettingsPage() {
       const result = await response.json();
       if (result.success) {
         setSettings(result.data);
+        setIsEnabled(result.data.isEnabled !== false);
       }
     } catch (error) {
       console.error('Failed to load settings:', error);

@@ -952,15 +952,18 @@ backend:
 
   - task: "Payyeen Payment Methods Integration"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "GET /api/payment-methods updated to include payyeen availability. Checks payyeen_settings collection for isActive and isEnabled."
+      - working: true
+        agent: "testing"
+        comment: "GET /api/payment-methods working correctly. Public endpoint requires no authentication. Includes payyeen field with available boolean and name. Response structure: {payyeen: {available: false, name: 'Kredi / Banka Kartı'}}. Integration working as expected."
 
   - task: "Payyeen Order Creation (UC)"
     implemented: true

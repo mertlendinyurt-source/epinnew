@@ -101,8 +101,8 @@ export default function App() {
   const [todayDate, setTodayDate] = useState('')
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 })
   const [userBalance, setUserBalance] = useState(0)
-  const [paymentMethod, setPaymentMethod] = useState('card') // 'card', 'shopinext', or 'balance'
-  const [paymentMethods, setPaymentMethods] = useState({ shopier: { available: true }, shopinext: { available: false } })
+  const [paymentMethod, setPaymentMethod] = useState('card') // 'card', 'shopinext', 'payyeen', or 'balance'
+  const [paymentMethods, setPaymentMethods] = useState({ shopier: { available: true }, shopinext: { available: false }, payyeen: { available: false } })
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
 
   // Calculate time remaining until midnight (end of day)

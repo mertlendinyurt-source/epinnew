@@ -3026,6 +3026,44 @@ export async function GET(request) {
       });
     }
 
+    // Admin: Get Payyeen payment settings (masked)
+    if (pathname === '/api/admin/settings/payyeen') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const settings = await db.collection('payyeen_settings').findOne({ isActive: true });
+      
+      if (!settings) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            isConfigured: false,
+            isEnabled: false,
+            apiKey: null,
+            mode: 'production',
+            message: 'Payyeen ayarları henüz yapılmadı'
+          }
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          isConfigured: true,
+          isEnabled: settings.isEnabled !== false,
+          apiKey: settings.apiKey ? maskSensitiveData(decrypt(settings.apiKey)) : null,
+          mode: settings.mode || 'production',
+          updatedBy: settings.updatedBy,
+          updatedAt: settings.updatedAt
+        }
+      });
+    }
+
     // Admin: Get Google OAuth Settings (GET)
     if (pathname === '/api/admin/settings/oauth/google') {
       const user = verifyAdminToken(request);

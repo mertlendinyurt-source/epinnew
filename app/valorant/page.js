@@ -207,7 +207,15 @@ export default function ValorantPage() {
     checkAuth()
     
     // Fetch payment methods for Payyeen
-    fetch('/api/payment-methods').then(r => r.json()).then(d => { if(d.success) setPaymentMethods(d.data) }).catch(e => console.error('PM error:', e))
+    fetch('/api/payment-methods').then(r => r.json()).then(d => {
+      if(d.success) {
+        setPaymentMethods(d.data)
+        // Auto-select first available payment method
+        if (d.data?.shopier?.available) setPaymentMethod('card')
+        else if (d.data?.payyeen?.available) setPaymentMethod('payyeen')
+        else if (d.data?.shopinext?.available) setPaymentMethod('shopinext')
+      }
+    }).catch(e => console.error('PM error:', e))
     
     // OAuth callback ve redirect işlemleri
     handleGoogleAuthCallback()

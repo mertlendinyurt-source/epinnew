@@ -271,7 +271,12 @@ def test_payyeen_order_creation_uc(user_token):
             log_test("Payyeen UC Orders - Get Products", False, f"Failed to get products: {products_response.status_code}")
             return False, None
             
-        products = products_response.json()
+        products_result = products_response.json()
+        if not products_result.get('success') or 'data' not in products_result:
+            log_test("Payyeen UC Orders - Get Products", False, f"Invalid products response: {products_result}")
+            return False, None
+            
+        products = products_result['data']
         if not products:
             log_test("Payyeen UC Orders - Get Products", False, "No products available")
             return False, None

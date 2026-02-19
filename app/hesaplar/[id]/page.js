@@ -20,6 +20,7 @@ export default function HesapDetayPage() {
   const [user, setUser] = useState(null)
   const [userBalance, setUserBalance] = useState(0)
   const [paymentMethod, setPaymentMethod] = useState('card')
+  const [paymentMethods, setPaymentMethods] = useState({ payyeen: { available: false } })
   const [orderProcessing, setOrderProcessing] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalTab, setAuthModalTab] = useState('login')

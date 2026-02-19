@@ -967,15 +967,18 @@ backend:
 
   - task: "Payyeen Order Creation (UC)"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/orders with paymentMethod='payyeen'. Creates order with pending status, decrypts API key, returns Payyeen Quick Checkout form data (api_key, amount, currency, description, success_url, cancel_url). Stores payment request for audit."
+      - working: true
+        agent: "testing"
+        comment: "POST /api/orders with paymentMethod='payyeen' working correctly. Requires user JWT authentication (401 without token, AUTH_REQUIRED code). Creates order with status 'pending', paymentMethod 'payyeen'. Returns correct structure: orderId, paymentUrl ('https://payyeen.com/checkout/quick'), formData with all required fields (api_key, amount, currency, description, success_url, cancel_url), paymentProvider 'payyeen'. Description format correct (PINLY-{orderId}). Full flow tested successfully."
 
   - task: "Payyeen Order Creation (Accounts)"
     implemented: true

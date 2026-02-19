@@ -7,6 +7,8 @@ export default function PaymentSettingsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [toggling, setToggling] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(true);
   const [settings, setSettings] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');

@@ -1,359 +1,499 @@
 #!/usr/bin/env python3
 """
-Backend API Testing Script for DELETE /api/admin/users/{userId} endpoint
-Tests user deletion functionality according to the review request
+PINLY Backend Test Suite for Payyeen Payment Integration
+Tests all 6 Payyeen backend tasks from test_result.md
 """
 
 import requests
 import json
 import time
-import uuid
 from datetime import datetime
 
-# Configuration
+# Test Configuration
 BASE_URL = "http://localhost:3000"
 API_BASE = f"{BASE_URL}/api"
 
-# Test credentials
+# Admin credentials
 ADMIN_CREDENTIALS = {
     "username": "admin",
     "password": "admin123"
 }
 
-# Test user data
-TEST_USER_DATA = {
-    "email": f"test_delete_user_{uuid.uuid4().hex[:8]}@example.com",
-    "password": "testpass123",
-    "firstName": "Delete",
-    "lastName": "TestUser",
-    "phone": "5551234567"
-}
+# Test data
+TEST_PAYYEEN_API_KEY = "test_pk_12345abcdef67890"
 
-class UserDeletionTester:
-    def __init__(self):
-        self.admin_token = None
-        self.test_user_id = None
-        self.test_results = []
-        
-    def log_result(self, test_name, success, message, details=None):
-        """Log test result"""
-        result = {
-            "test": test_name,
-            "success": success,
-            "message": message,
-            "timestamp": datetime.now().isoformat(),
-            "details": details
-        }
-        self.test_results.append(result)
-        status = "✅ PASS" if success else "❌ FAIL"
-        print(f"{status}: {test_name} - {message}")
-        if details:
-            print(f"   Details: {details}")
-        print()
+def log_test(test_name, success, details=""):
+    """Log test results with timestamp"""
+    timestamp = datetime.now().strftime('%H:%M:%S')
+    status = "✅ PASS" if success else "❌ FAIL"
+    print(f"[{timestamp}] {status} {test_name}")
+    if details:
+        print(f"    → {details}")
+    print()
 
-    def setup_authentication(self):
-        """Setup admin authentication"""
-        print("=== SETTING UP ADMIN AUTHENTICATION ===")
+def test_admin_login():
+    """Get admin JWT token for authenticated requests"""
+    print("🔑 Getting admin authentication token...")
+    
+    try:
+        response = requests.post(f"{API_BASE}/admin/login", json=ADMIN_CREDENTIALS)
         
-        try:
-            response = requests.post(f"{API_BASE}/admin/login", json=ADMIN_CREDENTIALS)
-            if response.status_code == 200:
-                data = response.json()
-                self.admin_token = data.get('data', {}).get('token')
-                self.log_result("Admin Login", True, "Admin authentication successful")
+        if response.status_code == 200:
+            data = response.json()
+            token = data.get('token')
+            if token:
+                log_test("Admin Login", True, f"Token obtained successfully")
+                return token
+            else:
+                log_test("Admin Login", False, "No token in response")
+                return None
+        else:
+            log_test("Admin Login", False, f"HTTP {response.status_code}: {response.text}")
+            return None
+            
+    except Exception as e:
+        log_test("Admin Login", False, f"Exception: {str(e)}")
+        return None
+
+def create_test_user():
+    """Create a test user for order testing"""
+    print("👤 Creating test user...")
+    
+    timestamp = int(time.time())
+    test_user = {
+        "firstName": "Payyeen",
+        "lastName": "Test",
+        "email": f"payyeen{timestamp}@test.com",
+        "phone": "5551234567",
+        "password": "test123456",
+        "confirmPassword": "test123456"
+    }
+    
+    try:
+        response = requests.post(f"{API_BASE}/auth/register", json=test_user)
+        
+        if response.status_code == 201:
+            data = response.json()
+            token = data.get('token')
+            if token:
+                log_test("User Registration", True, f"User created: {test_user['email']}")
+                return token, test_user
+            else:
+                log_test("User Registration", False, "No token in response")
+                return None, None
+        else:
+            log_test("User Registration", False, f"HTTP {response.status_code}: {response.text}")
+            return None, None
+            
+    except Exception as e:
+        log_test("User Registration", False, f"Exception: {str(e)}")
+        return None, None
+
+def test_payyeen_admin_settings_get(admin_token):
+    """Test GET /api/admin/settings/payyeen"""
+    print("📋 Testing Payyeen Admin Settings - GET...")
+    
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    
+    try:
+        # Test without auth first
+        response = requests.get(f"{API_BASE}/admin/settings/payyeen")
+        if response.status_code == 401:
+            log_test("Payyeen GET - Auth Check", True, "Returns 401 without admin token")
+        else:
+            log_test("Payyeen GET - Auth Check", False, f"Expected 401, got {response.status_code}")
+        
+        # Test with auth - should return unconfigured state initially
+        response = requests.get(f"{API_BASE}/admin/settings/payyeen", headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('isConfigured') == False:
+                log_test("Payyeen GET - Unconfigured", True, "Returns isConfigured: false initially")
                 return True
             else:
-                self.log_result("Admin Login", False, f"Admin login failed: {response.status_code}")
+                log_test("Payyeen GET - Unconfigured", False, f"Unexpected response: {data}")
                 return False
-        except Exception as e:
-            self.log_result("Admin Login", False, f"Admin login error: {str(e)}")
+        else:
+            log_test("Payyeen GET - Request", False, f"HTTP {response.status_code}: {response.text}")
             return False
+            
+    except Exception as e:
+        log_test("Payyeen GET - Exception", False, f"Exception: {str(e)}")
+        return False
 
-    def create_test_user(self):
-        """Create a test user for deletion testing"""
-        print("=== CREATING TEST USER ===")
+def test_payyeen_admin_settings_post(admin_token):
+    """Test POST /api/admin/settings/payyeen"""
+    print("💾 Testing Payyeen Admin Settings - POST...")
+    
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    
+    try:
+        # Test without auth first
+        response = requests.post(f"{API_BASE}/admin/settings/payyeen", json={"apiKey": "test"})
+        if response.status_code == 401:
+            log_test("Payyeen POST - Auth Check", True, "Returns 401 without admin token")
+        else:
+            log_test("Payyeen POST - Auth Check", False, f"Expected 401, got {response.status_code}")
         
-        try:
-            response = requests.post(f"{API_BASE}/auth/register", json=TEST_USER_DATA)
-            if response.status_code in [200, 201]:
-                data = response.json()
-                if data.get('success') and 'data' in data and 'user' in data['data']:
-                    self.test_user_id = data['data']['user']['id']
-                    self.log_result("Create Test User", True, f"Test user created successfully", f"User ID: {self.test_user_id}")
-                    return True
+        # Test validation - missing apiKey
+        response = requests.post(f"{API_BASE}/admin/settings/payyeen", json={}, headers=headers)
+        if response.status_code == 400:
+            log_test("Payyeen POST - Validation", True, "Returns 400 for missing apiKey")
+        else:
+            log_test("Payyeen POST - Validation", False, f"Expected 400, got {response.status_code}")
+        
+        # Test successful save
+        payyeen_settings = {
+            "apiKey": TEST_PAYYEEN_API_KEY,
+            "isEnabled": True
+        }
+        
+        response = requests.post(f"{API_BASE}/admin/settings/payyeen", json=payyeen_settings, headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('success'):
+                log_test("Payyeen POST - Save Settings", True, "Settings saved successfully")
+                
+                # Verify settings are saved with GET
+                get_response = requests.get(f"{API_BASE}/admin/settings/payyeen", headers=headers)
+                if get_response.status_code == 200:
+                    get_data = get_response.json()
+                    if get_data.get('isConfigured') == True and 'apiKey' in get_data:
+                        # Check if API key is masked
+                        masked_key = get_data['apiKey']
+                        if '***' in masked_key or '*' in masked_key:
+                            log_test("Payyeen POST - Masked Key", True, f"API key properly masked: {masked_key}")
+                        else:
+                            log_test("Payyeen POST - Masked Key", False, f"API key not masked: {masked_key}")
+                        return True
+                    else:
+                        log_test("Payyeen POST - Verify Save", False, f"Settings not properly saved: {get_data}")
+                        return False
                 else:
-                    self.log_result("Create Test User", False, "Invalid response structure", str(data))
+                    log_test("Payyeen POST - Verify Save", False, f"GET request failed: {get_response.status_code}")
                     return False
             else:
-                self.log_result("Create Test User", False, f"User registration failed: {response.status_code}", response.text)
+                log_test("Payyeen POST - Save Settings", False, f"Save failed: {data}")
                 return False
-        except Exception as e:
-            self.log_result("Create Test User", False, f"User creation error: {str(e)}")
+        else:
+            log_test("Payyeen POST - Save Settings", False, f"HTTP {response.status_code}: {response.text}")
             return False
-
-    def test_delete_user_without_token(self):
-        """Test DELETE /api/admin/users/{userId} without admin token (should return 401)"""
-        print("=== TESTING DELETE USER WITHOUT TOKEN ===")
-        
-        if not self.test_user_id:
-            self.log_result("DELETE User (No Auth)", False, "No test user ID available")
-            return False
-        
-        try:
-            response = requests.delete(f"{API_BASE}/admin/users/{self.test_user_id}")
             
-            if response.status_code == 401:
-                data = response.json()
-                if data.get('error') == 'Yetkisiz erişim':
-                    self.log_result(
-                        "DELETE User (No Auth)",
-                        True,
-                        "Correctly returned 401 with Turkish error message",
-                        f"Error: {data.get('error')}"
-                    )
-                    return True
-                else:
-                    self.log_result(
-                        "DELETE User (No Auth)", 
-                        False, 
-                        "Got 401 but wrong error message",
-                        str(data)
-                    )
-            else:
-                self.log_result(
-                    "DELETE User (No Auth)",
-                    False,
-                    f"Expected 401, got {response.status_code}",
-                    response.text
-                )
-        except Exception as e:
-            self.log_result("DELETE User (No Auth)", False, f"Request error: {str(e)}")
+        # Test toggle functionality
+        toggle_data = {"isEnabled": False}
+        response = requests.post(f"{API_BASE}/admin/settings/payyeen", json=toggle_data, headers=headers)
         
+        if response.status_code == 200:
+            log_test("Payyeen POST - Toggle", True, "Toggle functionality working")
+            return True
+        else:
+            log_test("Payyeen POST - Toggle", False, f"Toggle failed: {response.status_code}")
+            return False
+            
+    except Exception as e:
+        log_test("Payyeen POST - Exception", False, f"Exception: {str(e)}")
         return False
 
-    def test_delete_nonexistent_user(self):
-        """Test DELETE /api/admin/users/{userId} with non-existent user (should return 404)"""
-        print("=== TESTING DELETE NON-EXISTENT USER ===")
+def test_payment_methods_payyeen():
+    """Test GET /api/payment-methods includes Payyeen"""
+    print("💳 Testing Payment Methods with Payyeen...")
+    
+    try:
+        response = requests.get(f"{API_BASE}/payment-methods")
         
-        if not self.admin_token:
-            self.log_result("DELETE Non-existent User", False, "No admin token available")
-            return False
-        
-        try:
-            fake_user_id = f"nonexistent_{uuid.uuid4().hex[:8]}"
-            headers = {"Authorization": f"Bearer {self.admin_token}"}
-            response = requests.delete(f"{API_BASE}/admin/users/{fake_user_id}", headers=headers)
-            
-            if response.status_code == 404:
-                data = response.json()
-                if data.get('error') == 'Kullanıcı bulunamadı':
-                    self.log_result(
-                        "DELETE Non-existent User",
-                        True,
-                        "Correctly returned 404 with Turkish error message",
-                        f"Error: {data.get('error')}"
-                    )
+        if response.status_code == 200:
+            data = response.json()
+            if 'payyeen' in data:
+                payyeen_info = data['payyeen']
+                if isinstance(payyeen_info, dict) and 'available' in payyeen_info:
+                    available = payyeen_info['available']
+                    log_test("Payment Methods - Payyeen", True, f"Payyeen available: {available}")
                     return True
                 else:
-                    self.log_result(
-                        "DELETE Non-existent User",
-                        False,
-                        "Got 404 but wrong error message",
-                        str(data)
-                    )
+                    log_test("Payment Methods - Payyeen", False, f"Invalid payyeen structure: {payyeen_info}")
+                    return False
             else:
-                self.log_result(
-                    "DELETE Non-existent User",
-                    False,
-                    f"Expected 404, got {response.status_code}",
-                    response.text
-                )
-        except Exception as e:
-            self.log_result("DELETE Non-existent User", False, f"Request error: {str(e)}")
-        
+                log_test("Payment Methods - Payyeen", False, f"Payyeen not found in response: {list(data.keys())}")
+                return False
+        else:
+            log_test("Payment Methods - Request", False, f"HTTP {response.status_code}: {response.text}")
+            return False
+            
+    except Exception as e:
+        log_test("Payment Methods - Exception", False, f"Exception: {str(e)}")
         return False
 
-    def test_delete_user_successfully(self):
-        """Test DELETE /api/admin/users/{userId} with valid user (should return 200)"""
-        print("=== TESTING DELETE USER SUCCESSFULLY ===")
-        
-        if not self.admin_token:
-            self.log_result("DELETE User (Success)", False, "No admin token available")
-            return False
-        
-        if not self.test_user_id:
-            self.log_result("DELETE User (Success)", False, "No test user ID available")
-            return False
-        
-        try:
-            headers = {"Authorization": f"Bearer {self.admin_token}"}
-            response = requests.delete(f"{API_BASE}/admin/users/{self.test_user_id}", headers=headers)
+def test_payyeen_order_creation_uc(user_token):
+    """Test POST /api/orders with paymentMethod: 'payyeen'"""
+    print("🛒 Testing Payyeen Order Creation (UC)...")
+    
+    headers = {"Authorization": f"Bearer {user_token}"}
+    
+    try:
+        # First get a product ID
+        products_response = requests.get(f"{API_BASE}/products")
+        if products_response.status_code != 200:
+            log_test("Payyeen UC Orders - Get Products", False, f"Failed to get products: {products_response.status_code}")
+            return False, None
             
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('success') and data.get('message') == 'Kullanıcı hesabı başarıyla silindi':
-                    self.log_result(
-                        "DELETE User (Success)",
-                        True,
-                        "User deleted successfully with correct Turkish message",
-                        f"Message: {data.get('message')}"
-                    )
-                    return True
+        products = products_response.json()
+        if not products:
+            log_test("Payyeen UC Orders - Get Products", False, "No products available")
+            return False, None
+            
+        test_product = products[0]
+        product_id = test_product['id']
+        
+        # Test without auth first
+        order_data = {
+            "productId": product_id,
+            "playerId": "123456789",
+            "playerName": "TestPlayer",
+            "paymentMethod": "payyeen"
+        }
+        
+        response = requests.post(f"{API_BASE}/orders", json=order_data)
+        if response.status_code == 401:
+            response_data = response.json()
+            if response_data.get('code') == 'AUTH_REQUIRED':
+                log_test("Payyeen UC Orders - Auth Check", True, "Returns 401 with AUTH_REQUIRED code")
+            else:
+                log_test("Payyeen UC Orders - Auth Check", False, f"Missing AUTH_REQUIRED code: {response_data}")
+        else:
+            log_test("Payyeen UC Orders - Auth Check", False, f"Expected 401, got {response.status_code}")
+        
+        # Test with auth - should create order
+        response = requests.post(f"{API_BASE}/orders", json=order_data, headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Check required fields
+            required_fields = ['orderId', 'paymentUrl', 'formData', 'paymentProvider']
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if not missing_fields:
+                # Verify specific Payyeen values
+                if (data['paymentUrl'] == 'https://payyeen.com/checkout/quick' and 
+                    data['paymentProvider'] == 'payyeen'):
+                    
+                    form_data = data['formData']
+                    form_required = ['api_key', 'amount', 'currency', 'description', 'success_url', 'cancel_url']
+                    missing_form = [field for field in form_required if field not in form_data]
+                    
+                    if not missing_form:
+                        # Check description format (should contain PINLY-{orderId})
+                        description = form_data['description']
+                        order_id = data['orderId']
+                        
+                        if f'PINLY-{order_id}' in description:
+                            log_test("Payyeen UC Orders - Create Order", True, f"Order created: {order_id}")
+                            return True, order_id
+                        else:
+                            log_test("Payyeen UC Orders - Description Format", False, f"Invalid description: {description}")
+                            return False, None
+                    else:
+                        log_test("Payyeen UC Orders - Form Data", False, f"Missing form fields: {missing_form}")
+                        return False, None
                 else:
-                    self.log_result(
-                        "DELETE User (Success)",
-                        False,
-                        "Got 200 but unexpected response structure",
-                        str(data)
-                    )
+                    log_test("Payyeen UC Orders - Payment Details", False, f"Invalid payment details: URL={data.get('paymentUrl')}, Provider={data.get('paymentProvider')}")
+                    return False, None
             else:
-                self.log_result(
-                    "DELETE User (Success)",
-                    False,
-                    f"Expected 200, got {response.status_code}",
-                    response.text
-                )
-        except Exception as e:
-            self.log_result("DELETE User (Success)", False, f"Request error: {str(e)}")
-        
-        return False
-
-    def test_verify_user_deleted(self):
-        """Test to verify the user no longer exists after deletion"""
-        print("=== VERIFYING USER IS DELETED ===")
-        
-        if not self.admin_token:
-            self.log_result("Verify User Deleted", False, "No admin token available")
-            return False
-        
-        if not self.test_user_id:
-            self.log_result("Verify User Deleted", False, "No test user ID available")
-            return False
-        
-        try:
-            headers = {"Authorization": f"Bearer {self.admin_token}"}
-            # Try to get the deleted user (should fail)
-            response = requests.delete(f"{API_BASE}/admin/users/{self.test_user_id}", headers=headers)
+                log_test("Payyeen UC Orders - Response Fields", False, f"Missing fields: {missing_fields}")
+                return False, None
+        elif response.status_code == 503:
+            log_test("Payyeen UC Orders - Not Configured", True, "Returns 503 when not configured")
+            return True, None
+        else:
+            log_test("Payyeen UC Orders - Request", False, f"HTTP {response.status_code}: {response.text}")
+            return False, None
             
-            if response.status_code == 404:
-                data = response.json()
-                if data.get('error') == 'Kullanıcı bulunamadı':
-                    self.log_result(
-                        "Verify User Deleted",
-                        True,
-                        "User successfully deleted - no longer exists in database",
-                        f"Error: {data.get('error')}"
-                    )
-                    return True
-                else:
-                    self.log_result(
-                        "Verify User Deleted",
-                        False,
-                        "Got 404 but wrong error message",
-                        str(data)
-                    )
-            else:
-                self.log_result(
-                    "Verify User Deleted",
-                    False,
-                    f"Expected 404 for deleted user, got {response.status_code}",
-                    response.text
-                )
-        except Exception as e:
-            self.log_result("Verify User Deleted", False, f"Request error: {str(e)}")
-        
-        return False
+    except Exception as e:
+        log_test("Payyeen UC Orders - Exception", False, f"Exception: {str(e)}")
+        return False, None
 
-    def test_try_login_with_deleted_user(self):
-        """Test that deleted user cannot login"""
-        print("=== TESTING LOGIN WITH DELETED USER ===")
-        
-        try:
-            login_data = {
-                "email": TEST_USER_DATA["email"],
-                "password": TEST_USER_DATA["password"]
-            }
-            response = requests.post(f"{API_BASE}/auth/login", json=login_data)
+def test_payyeen_order_creation_accounts(user_token):
+    """Test POST /api/account-orders with paymentMethod: 'payyeen'"""
+    print("🏪 Testing Payyeen Order Creation (Accounts)...")
+    
+    headers = {"Authorization": f"Bearer {user_token}"}
+    
+    try:
+        # Get accounts first
+        accounts_response = requests.get(f"{API_BASE}/accounts")
+        if accounts_response.status_code != 200:
+            log_test("Payyeen Account Orders - Get Accounts", False, f"Failed to get accounts: {accounts_response.status_code}")
+            return False
             
-            if response.status_code == 401:
-                self.log_result(
-                    "Login with Deleted User",
-                    True,
-                    "Deleted user cannot login (401 response)",
-                    "User credentials no longer valid"
-                )
+        accounts = accounts_response.json()
+        if not accounts:
+            log_test("Payyeen Account Orders - No Accounts", True, "No accounts available (expected)")
+            return True
+            
+        # If accounts exist, test with first account
+        test_account = accounts[0]
+        account_id = test_account['id']
+        
+        order_data = {
+            "accountId": account_id,
+            "paymentMethod": "payyeen"
+        }
+        
+        response = requests.post(f"{API_BASE}/account-orders", json=order_data, headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if 'orderId' in data and 'paymentUrl' in data:
+                log_test("Payyeen Account Orders - Create Order", True, f"Account order created: {data['orderId']}")
                 return True
             else:
-                self.log_result(
-                    "Login with Deleted User",
-                    False,
-                    f"Expected 401, got {response.status_code}",
-                    response.text
-                )
-        except Exception as e:
-            self.log_result("Login with Deleted User", False, f"Request error: {str(e)}")
-        
+                log_test("Payyeen Account Orders - Response", False, f"Invalid response: {data}")
+                return False
+        elif response.status_code == 503:
+            log_test("Payyeen Account Orders - Not Configured", True, "Returns 503 when not configured")
+            return True
+        else:
+            log_test("Payyeen Account Orders - Request", False, f"HTTP {response.status_code}: {response.text}")
+            return False
+            
+    except Exception as e:
+        log_test("Payyeen Account Orders - Exception", False, f"Exception: {str(e)}")
         return False
 
-    def run_all_tests(self):
-        """Run all user deletion tests"""
-        print("🚀 STARTING DELETE USER ENDPOINT TESTS")
-        print("=" * 60)
+def test_payyeen_webhook_callback(order_id):
+    """Test POST /api/payment/payyeen/callback"""
+    print("🔄 Testing Payyeen Webhook Callback...")
+    
+    if not order_id:
+        log_test("Payyeen Webhook - Skip", True, "No order ID available (expected if not configured)")
+        return True
+    
+    try:
+        # Test successful payment webhook
+        success_payload = {
+            "event": "payment.success",
+            "transaction_id": f"TXN{int(time.time())}",
+            "amount": 19.99,
+            "currency": "TRY",
+            "status": "success",
+            "description": f"PINLY-{order_id}",
+            "created_at": datetime.now().isoformat() + "Z"
+        }
         
-        # Setup
-        if not self.setup_authentication():
-            print("❌ Authentication setup failed. Aborting tests.")
-            return
+        response = requests.post(f"{API_BASE}/payment/payyeen/callback", json=success_payload)
         
-        # Create test user
-        if not self.create_test_user():
-            print("❌ Test user creation failed. Aborting tests.")
-            return
+        if response.status_code == 200:
+            data = response.json()
+            log_test("Payyeen Webhook - Success Payment", True, f"Webhook processed: {data}")
+            
+            # Test idempotency - send same webhook again
+            response2 = requests.post(f"{API_BASE}/payment/payyeen/callback", json=success_payload)
+            if response2.status_code == 200:
+                log_test("Payyeen Webhook - Idempotency", True, "Duplicate webhook handled correctly")
+            else:
+                log_test("Payyeen Webhook - Idempotency", False, f"Duplicate handling failed: {response2.status_code}")
+            
+            return True
+        else:
+            log_test("Payyeen Webhook - Success Payment", False, f"HTTP {response.status_code}: {response.text}")
+            return False
+            
+        # Test failed payment webhook
+        failed_payload = {
+            "event": "payment.failed",
+            "transaction_id": f"TXN{int(time.time())}FAIL",
+            "amount": 19.99,
+            "currency": "TRY", 
+            "status": "failed",
+            "description": f"PINLY-{order_id}",
+            "created_at": datetime.now().isoformat() + "Z"
+        }
         
-        # Test cases as specified in the review request
-        test_methods = [
-            self.test_delete_user_without_token,
-            self.test_delete_nonexistent_user,
-            self.test_delete_user_successfully,
-            self.test_verify_user_deleted,
-            self.test_try_login_with_deleted_user
-        ]
+        response = requests.post(f"{API_BASE}/payment/payyeen/callback", json=failed_payload)
         
-        # Run tests
-        for test_method in test_methods:
-            try:
-                test_method()
-                time.sleep(0.5)  # Small delay between tests
-            except Exception as e:
-                self.log_result(test_method.__name__, False, f"Test execution error: {str(e)}")
-        
-        # Summary
-        self.print_summary()
+        if response.status_code == 200:
+            log_test("Payyeen Webhook - Failed Payment", True, "Failed payment webhook processed")
+            return True
+        else:
+            log_test("Payyeen Webhook - Failed Payment", False, f"HTTP {response.status_code}: {response.text}")
+            return False
+            
+    except Exception as e:
+        log_test("Payyeen Webhook - Exception", False, f"Exception: {str(e)}")
+        return False
 
-    def print_summary(self):
-        """Print test summary"""
-        print("=" * 60)
-        print("📊 TEST SUMMARY")
-        print("=" * 60)
-        
-        total_tests = len(self.test_results)
-        passed_tests = sum(1 for result in self.test_results if result['success'])
-        failed_tests = total_tests - passed_tests
-        
-        print(f"Total Tests: {total_tests}")
-        print(f"Passed: {passed_tests} ✅")
-        print(f"Failed: {failed_tests} ❌")
-        print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
-        print()
-        
-        if failed_tests > 0:
-            print("❌ FAILED TESTS:")
-            for result in self.test_results:
-                if not result['success']:
-                    print(f"  - {result['test']}: {result['message']}")
-        
-        print("\n🎯 DELETE USER ENDPOINT TEST COMPLETED")
+def main():
+    """Run all Payyeen backend tests"""
+    print("🚀 Starting Payyeen Payment Integration Backend Tests")
+    print("=" * 60)
+    print()
+    
+    # Track results
+    results = {
+        "payyeen_admin_get": False,
+        "payyeen_admin_post": False, 
+        "payment_methods": False,
+        "uc_orders": False,
+        "account_orders": False,
+        "webhook_callback": False
+    }
+    
+    # Step 1: Get admin token
+    admin_token = test_admin_login()
+    if not admin_token:
+        print("❌ Cannot proceed without admin token")
+        return
+    
+    # Step 2: Create test user
+    user_token, test_user = create_test_user()
+    if not user_token:
+        print("❌ Cannot proceed without user token")
+        return
+    
+    # Step 3: Test Payyeen Admin Settings GET
+    results["payyeen_admin_get"] = test_payyeen_admin_settings_get(admin_token)
+    
+    # Step 4: Test Payyeen Admin Settings POST  
+    results["payyeen_admin_post"] = test_payyeen_admin_settings_post(admin_token)
+    
+    # Step 5: Test Payment Methods includes Payyeen
+    results["payment_methods"] = test_payment_methods_payyeen()
+    
+    # Step 6: Test Payyeen UC Order Creation
+    uc_success, order_id = test_payyeen_order_creation_uc(user_token)
+    results["uc_orders"] = uc_success
+    
+    # Step 7: Test Payyeen Account Order Creation
+    results["account_orders"] = test_payyeen_order_creation_accounts(user_token)
+    
+    # Step 8: Test Payyeen Webhook Callback
+    results["webhook_callback"] = test_payyeen_webhook_callback(order_id)
+    
+    # Print Results Summary
+    print("\n" + "=" * 60)
+    print("📊 PAYYEEN BACKEND TEST RESULTS SUMMARY")
+    print("=" * 60)
+    
+    passed = sum(1 for success in results.values() if success)
+    total = len(results)
+    
+    print(f"✅ Passed: {passed}/{total} tests ({passed/total*100:.1f}%)")
+    print()
+    
+    for test_name, success in results.items():
+        status = "✅ PASS" if success else "❌ FAIL" 
+        task_name = test_name.replace("_", " ").title()
+        print(f"{status} {task_name}")
+    
+    if passed == total:
+        print(f"\n🎉 All Payyeen backend tests passed! Integration ready for production.")
+    else:
+        failed = total - passed
+        print(f"\n⚠️  {failed} test(s) failed. Check implementation before proceeding.")
+    
+    print("\n" + "=" * 60)
 
 if __name__ == "__main__":
-    tester = UserDeletionTester()
-    tester.run_all_tests()
+    main()

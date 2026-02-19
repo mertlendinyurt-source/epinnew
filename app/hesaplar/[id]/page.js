@@ -31,7 +31,20 @@ export default function HesapDetayPage() {
     }
     fetchSiteSettings()
     checkAuth()
+    fetchPaymentMethods()
   }, [params.id])
+
+  const fetchPaymentMethods = async () => {
+    try {
+      const res = await fetch('/api/payment-methods')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) setPaymentMethods(data.data)
+      }
+    } catch (error) {
+      console.error('Error fetching payment methods:', error)
+    }
+  }
 
   const checkAuth = async () => {
     const token = localStorage.getItem('userToken')

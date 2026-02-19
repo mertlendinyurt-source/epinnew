@@ -2661,6 +2661,7 @@ export async function GET(request) {
     if (pathname === '/api/payment-methods') {
       const shopierSettings = await db.collection('shopier_settings').findOne({ isActive: true });
       const shopinextSettings = await db.collection('shopinext_settings').findOne({ isActive: true });
+      const payeenSettings = await db.collection('payyeen_settings').findOne({ isActive: true });
       
       // Check if Shopinext is configured via environment variables
       const shopinextFromEnv = process.env.SHOPINEXT_CLIENT_ID && 
@@ -2679,6 +2680,12 @@ export async function GET(request) {
         // If no DB settings but ENV configured, show it
         shopinextAvailable = true;
       }
+
+      // Payyeen available if settings exist and isEnabled
+      let payeenAvailable = false;
+      if (payeenSettings) {
+        payeenAvailable = payeenSettings.isEnabled !== false; // default true if settings exist
+      }
       
       return NextResponse.json({
         success: true,
@@ -2689,6 +2696,10 @@ export async function GET(request) {
           },
           shopinext: {
             available: shopinextAvailable,
+            name: 'Kredi / Banka Kartı'
+          },
+          payyeen: {
+            available: payeenAvailable,
             name: 'Kredi / Banka Kartı'
           }
         }

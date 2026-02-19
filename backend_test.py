@@ -115,12 +115,17 @@ def test_payyeen_admin_settings_get(admin_token):
         response = requests.get(f"{API_BASE}/admin/settings/payyeen", headers=headers)
         
         if response.status_code == 200:
-            data = response.json()
-            if data.get('isConfigured') == False:
-                log_test("Payyeen GET - Unconfigured", True, "Returns isConfigured: false initially")
-                return True
+            result = response.json()
+            if result.get('success') and 'data' in result:
+                data = result['data']
+                if data.get('isConfigured') == False:
+                    log_test("Payyeen GET - Unconfigured", True, "Returns isConfigured: false initially")
+                    return True
+                else:
+                    log_test("Payyeen GET - Unconfigured", False, f"Unexpected response: {data}")
+                    return False
             else:
-                log_test("Payyeen GET - Unconfigured", False, f"Unexpected response: {data}")
+                log_test("Payyeen GET - Unconfigured", False, f"Unexpected response structure: {result}")
                 return False
         else:
             log_test("Payyeen GET - Request", False, f"HTTP {response.status_code}: {response.text}")

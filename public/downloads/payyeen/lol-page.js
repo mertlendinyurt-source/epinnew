@@ -207,7 +207,15 @@ export default function LolPage() {
     checkAuth()
     
     // Fetch payment methods for Payyeen
-    fetch('/api/payment-methods').then(r => r.json()).then(d => { if(d.success) setPaymentMethods(d.data) }).catch(e => console.error('PM error:', e))
+    fetch('/api/payment-methods').then(r => r.json()).then(d => {
+      if(d.success) {
+        setPaymentMethods(d.data)
+        // Auto-select first available payment method
+        if (d.data?.shopier?.available) setPaymentMethod('card')
+        else if (d.data?.payyeen?.available) setPaymentMethod('payyeen')
+        else if (d.data?.shopinext?.available) setPaymentMethod('shopinext')
+      }
+    }).catch(e => console.error('PM error:', e))
     
     // OAuth callback ve redirect işlemleri
     handleGoogleAuthCallback()
@@ -1886,7 +1894,8 @@ export default function LolPage() {
                       </div>
                     )}
 
-                    {/* Card Payment Option */}
+                    {/* Card Payment Option - Shopier */}
+                    {paymentMethods?.shopier?.available && (
                     <div 
                       onClick={() => setPaymentMethod('card')}
                       className={`relative p-4 md:p-5 rounded-lg border-2 cursor-pointer transition-all ${
@@ -1917,6 +1926,7 @@ export default function LolPage() {
                         <span className="px-2 py-1 bg-white rounded text-blue-500 font-bold text-xs hidden">TROY</span>
                       </div>
                     </div>
+                    )}
 
                     {/* Payyeen Payment Option */}
                     {paymentMethods?.payyeen?.available && (

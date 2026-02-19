@@ -721,6 +721,12 @@ export default function MLBBPage() {
   }
 
   const handleCheckout = async () => {
+    // 0. Check payment method selected
+    if (!paymentMethod) {
+      toast.error('Lütfen bir ödeme yöntemi seçin')
+      return
+    }
+
     // MLBB için ID ve Server ID kontrolü
     if (!playerId || !playerName) {
       toast.error('Lütfen MLBB ID ve Server ID bilgilerinizi girin')

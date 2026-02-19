@@ -726,6 +726,12 @@ export default function LolPage() {
   }
 
   const handleCheckout = async () => {
+    // 0. Check payment method selected
+    if (!paymentMethod) {
+      toast.error('Lütfen bir ödeme yöntemi seçin')
+      return
+    }
+
     // League of Legends için Oyuncu ID kontrolü yok - direkt kod teslimi
 
     // 1. Check authentication

@@ -729,6 +729,12 @@ export default function App() {
   }
 
   const handleCheckout = async () => {
+    // 0. Check payment method selected
+    if (!paymentMethod) {
+      toast.error('Lütfen bir ödeme yöntemi seçin')
+      return
+    }
+
     // 1. Check player ID first
     if (!playerValid || !playerName) {
       setPlayerIdModalOpen(true)

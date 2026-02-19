@@ -1883,7 +1883,8 @@ export default function ValorantPage() {
                       </div>
                     )}
 
-                    {/* Card Payment Option */}
+                    {/* Card Payment Option - Shopier */}
+                    {paymentMethods?.shopier?.available && (
                     <div 
                       onClick={() => setPaymentMethod('card')}
                       className={`relative p-4 md:p-5 rounded-lg border-2 cursor-pointer transition-all ${
@@ -1914,6 +1915,7 @@ export default function ValorantPage() {
                         <span className="px-2 py-1 bg-white rounded text-blue-500 font-bold text-xs hidden">TROY</span>
                       </div>
                     </div>
+                    )}
 
                     {/* Payyeen Payment Option */}
                     {paymentMethods?.payyeen?.available && (

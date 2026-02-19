@@ -102,7 +102,7 @@ export default function App() {
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 })
   const [userBalance, setUserBalance] = useState(0)
   const [paymentMethod, setPaymentMethod] = useState('card') // 'card', 'shopinext', 'payyeen', or 'balance'
-  const [paymentMethods, setPaymentMethods] = useState({ shopier: { available: true }, shopinext: { available: false }, payyeen: { available: false } })
+  const [paymentMethods, setPaymentMethods] = useState({ shopier: { available: false }, shopinext: { available: false }, payyeen: { available: false } })
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
 
   // Calculate time remaining until midnight (end of day)
@@ -1927,6 +1927,7 @@ export default function App() {
                     )}
 
                     {/* Card Payment Option - Shopier */}
+                    {paymentMethods?.shopier?.available && (
                     <div 
                       onClick={() => setPaymentMethod('card')}
                       className={`relative p-4 md:p-5 rounded-lg border-2 cursor-pointer transition-all ${
@@ -1957,6 +1958,7 @@ export default function App() {
                         <span className="px-2 py-1 bg-white rounded text-blue-500 font-bold text-xs hidden">TROY</span>
                       </div>
                     </div>
+                    )}
 
                     {/* Shopinext Payment Option */}
                     {paymentMethods?.shopinext?.available && (

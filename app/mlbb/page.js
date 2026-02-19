@@ -206,6 +206,9 @@ export default function MLBBPage() {
     // Kullanıcı auth kontrolü (ayrı kalmalı - token gerektiriyor)
     checkAuth()
     
+    // Fetch payment methods for Payyeen
+    fetch('/api/payment-methods').then(r => r.json()).then(d => { if(d.success) setPaymentMethods(d.data) }).catch(e => console.error('PM error:', e))
+    
     // OAuth callback ve redirect işlemleri
     handleGoogleAuthCallback()
     handleLoginRedirect()

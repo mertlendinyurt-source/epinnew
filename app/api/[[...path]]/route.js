@@ -10392,6 +10392,97 @@ export async function POST(request) {
         });
       }
 
+      // ============================================
+      // 💳 PAYYEEN PAYMENT FLOW FOR ACCOUNTS
+      // ============================================
+      if (paymentMethod === 'payyeen') {
+        const payeenSettings = await db.collection('payyeen_settings').findOne({ isActive: true });
+        
+        if (!payeenSettings) {
+          return NextResponse.json(
+            { success: false, error: 'Payyeen ödeme sistemi yapılandırılmamış.' },
+            { status: 503 }
+          );
+        }
+
+        // Decrypt API key
+        let payeenApiKey;
+        try {
+          payeenApiKey = decrypt(payeenSettings.apiKey);
+        } catch (error) {
+          console.error('Payyeen settings decryption failed');
+          return NextResponse.json(
+            { success: false, error: 'Ödeme sistemi yapılandırma hatası' },
+            { status: 500 }
+          );
+        }
+
+        // Create pending order
+        const order = {
+          id: uuidv4(),
+          type: 'account',
+          userId: user.id,
+          accountId: accountId,
+          accountTitle: account.title,
+          accountImageUrl: account.imageUrl || null,
+          customer: customerSnapshot,
+          status: 'pending',
+          paymentMethod: 'payyeen',
+          amount: orderAmount,
+          totalAmount: orderAmount,
+          currency: 'TRY',
+          delivery: {
+            status: 'pending',
+            message: 'Ödeme bekleniyor...',
+            credentials: null
+          },
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        await db.collection('orders').insertOne(order);
+
+        // Reserve account
+        if (!account.unlimited) {
+          await db.collection('accounts').updateOne(
+            { id: accountId },
+            { $set: { status: 'reserved', reservedAt: new Date(), reservedByOrderId: order.id } }
+          );
+        }
+
+        // Build Payyeen Quick Checkout form data
+        const payeenFormData = {
+          api_key: payeenApiKey,
+          amount: orderAmount.toFixed(2),
+          currency: 'TRY',
+          description: `PINLY-${order.id}`,
+          success_url: `${BASE_URL}/payment/success?orderId=${order.id}`,
+          cancel_url: `${BASE_URL}/payment/failed?orderId=${order.id}`
+        };
+
+        // Store payment request for audit trail
+        await db.collection('payment_requests').insertOne({
+          orderId: order.id,
+          type: 'account',
+          provider: 'payyeen',
+          description: payeenFormData.description,
+          amount: orderAmount,
+          currency: 'TRY',
+          apiKey: '***MASKED***',
+          createdAt: new Date()
+        });
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            orderId: order.id,
+            paymentUrl: 'https://payyeen.com/checkout/quick',
+            formData: payeenFormData,
+            paymentProvider: 'payyeen'
+          }
+        });
+      }
+
       // Card Payment - Shopier
       const shopierSettings = await db.collection('shopier_settings').findOne({ isActive: true });
       if (!shopierSettings) {

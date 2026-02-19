@@ -152,7 +152,12 @@ export default function HesapDetayPage() {
           return
         }
 
-        // Card payment - Shopier redirect
+        // Card payment - Shopier/Payyeen/Shopinext redirect
+        if (data.data.paymentProvider === 'shopinext' && data.data.paymentUrl) {
+          window.location.href = data.data.paymentUrl
+          return
+        }
+        
         if (data.data.formData && data.data.paymentUrl) {
           const form = document.createElement('form')
           form.method = 'POST'

@@ -702,7 +702,10 @@ export default function ValorantPage() {
     if (isAuthenticated && userBalance >= product.discountPrice) {
       setPaymentMethod('balance') // Sufficient balance - default to balance
     } else {
-      setPaymentMethod('card') // Insufficient or no balance - default to card
+      // Auto-select first available card payment
+      if (paymentMethods?.shopier?.available) setPaymentMethod('card')
+      else if (paymentMethods?.payyeen?.available) setPaymentMethod('payyeen')
+      else if (paymentMethods?.shopinext?.available) setPaymentMethod('shopinext')
     }
     
     // GA4 view_item event

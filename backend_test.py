@@ -60,20 +60,37 @@ def test_admin_login():
         return None
 
 def create_test_user():
-    """Create a test user for order testing"""
-    print("👤 Creating test user...")
+    """Create a test user for order testing or use existing"""
+    print("👤 Getting test user...")
     
-    timestamp = int(time.time())
-    test_user = {
-        "firstName": "Payyeen",
-        "lastName": "Test",
-        "email": f"payyeen{timestamp}@test.com",
-        "phone": "5551234567",
-        "password": "test123456",
-        "confirmPassword": "test123456"
+    # First try to login with existing test user
+    existing_user = {
+        "email": "testuser@example.com",
+        "password": "test123456"
     }
     
     try:
+        # Try login first
+        response = requests.post(f"{API_BASE}/auth/login", json=existing_user)
+        if response.status_code == 200:
+            result = response.json()
+            if result.get('success') and 'data' in result:
+                token = result['data'].get('token')
+                if token:
+                    log_test("User Login", True, f"Using existing user: {existing_user['email']}")
+                    return token, existing_user
+        
+        # If login failed, try to register new user
+        timestamp = int(time.time())
+        test_user = {
+            "firstName": "Payyeen",
+            "lastName": "Test", 
+            "email": f"payyeen{timestamp}@test.com",
+            "phone": "5551234567",
+            "password": "test123456",
+            "confirmPassword": "test123456"
+        }
+        
         response = requests.post(f"{API_BASE}/auth/register", json=test_user)
         
         if response.status_code in [200, 201]:
@@ -94,7 +111,7 @@ def create_test_user():
             return None, None
             
     except Exception as e:
-        log_test("User Registration", False, f"Exception: {str(e)}")
+        log_test("User Authentication", False, f"Exception: {str(e)}")
         return None, None
 
 def test_payyeen_admin_settings_get(admin_token):

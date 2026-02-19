@@ -212,12 +212,30 @@ export default function PaymentSettingsPage() {
         {/* Current Status Card */}
         {settings && (
           <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
-            <h2 className="text-lg font-semibold text-white mb-4">Mevcut Durum</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-white">Mevcut Durum</h2>
+              {settings.isConfigured && (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-gray-400">{isEnabled ? 'Aktif' : 'Pasif'}</span>
+                  <button
+                    onClick={handleToggle}
+                    disabled={toggling}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                      isEnabled ? 'bg-green-500' : 'bg-gray-600'
+                    }`}
+                  >
+                    <span className={`inline-block h-5 w-5 rounded-full bg-white transform transition-transform ${
+                      isEnabled ? 'translate-x-6' : 'translate-x-1'
+                    }`} />
+                  </button>
+                </div>
+              )}
+            </div>
             {settings.isConfigured ? (
               <div className="space-y-2 text-gray-300">
                 <p className="flex items-center gap-2">
-                  <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                  Shopier entegrasyonu aktif
+                  <span className={`w-3 h-3 rounded-full ${isEnabled ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                  {isEnabled ? 'Shopier entegrasyonu aktif' : 'Shopier entegrasyonu pasif'}
                 </p>
                 <p className="text-sm text-gray-400">
                   API Kullanıcı: <span className="font-mono">{settings.apiKey}</span>

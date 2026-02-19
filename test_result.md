@@ -922,15 +922,18 @@ backend:
 
   - task: "Payyeen Admin Settings - GET"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "GET /api/admin/settings/payyeen implemented. Returns masked API key if configured, isEnabled flag. Requires admin JWT auth. Returns isConfigured: false if not set up."
+      - working: true
+        agent: "testing"
+        comment: "GET /api/admin/settings/payyeen working correctly. Requires admin JWT authentication (401 without token). Returns settings with proper structure: isConfigured, isEnabled, masked apiKey, mode, updatedBy, updatedAt. API key properly masked (test****************7890). Authentication and response structure working as expected."
 
   - task: "Payyeen Admin Settings - POST"
     implemented: true

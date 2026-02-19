@@ -2691,7 +2691,7 @@ export async function GET(request) {
         success: true,
         data: {
           shopier: {
-            available: !!shopierSettings,
+            available: !!shopierSettings && shopierSettings.isEnabled !== false,
             name: 'Kredi/Banka Kartı'
           },
           shopinext: {
@@ -3228,6 +3228,7 @@ export async function GET(request) {
           success: true,
           data: {
             isConfigured: false,
+            isEnabled: false,
             apiKey: null,
             mode: 'production',
             message: 'Shopier ayarları henüz yapılmadı'
@@ -3240,6 +3241,7 @@ export async function GET(request) {
         success: true,
         data: {
           isConfigured: true,
+          isEnabled: settings.isEnabled !== false,
           apiKey: settings.apiKey ? maskSensitiveData(decrypt(settings.apiKey)) : null,
           mode: settings.mode || 'production',
           updatedBy: settings.updatedBy,
@@ -8812,6 +8814,27 @@ export async function POST(request) {
           { success: false, error: 'Yetkisiz erişim' },
           { status: 401 }
         );
+      }
+
+      // Toggle request (isEnabled only)
+      if (body.hasOwnProperty('isEnabled') && !body.apiKey && !body.apiSecret) {
+        const result = await db.collection('shopier_settings').updateOne(
+          { isActive: true },
+          { $set: { isEnabled: !!body.isEnabled, updatedAt: new Date() } }
+        );
+
+        if (result.matchedCount === 0) {
+          return NextResponse.json(
+            { success: false, error: 'Shopier ayarları bulunamadı. Önce ayarları kaydedin.' },
+            { status: 404 }
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: body.isEnabled ? 'Shopier ödeme seçeneği aktifleştirildi' : 'Shopier ödeme seçeneği pasife alındı',
+          data: { isEnabled: !!body.isEnabled }
+        });
       }
 
       const { apiKey, apiSecret, mode } = body;

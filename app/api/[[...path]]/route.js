@@ -2719,10 +2719,16 @@ export async function GET(request) {
       const epin = url.searchParams.get('epin');
       const errorMessage = url.searchParams.get('message');
       
-      console.log('Payyeen return:', { orderId, status, transactionId, epin });
+      // Doğru base URL'yi belirle (localhost yerine gerçek domain kullan)
+      const host = request.headers.get('host');
+      const protoHeader = request.headers.get('x-forwarded-proto') || 'https';
+      const protocol = protoHeader.split(',')[0].trim();
+      const publicBaseUrl = host ? `${protocol}://${host}` : BASE_URL;
+      
+      console.log('Payyeen return:', { orderId, status, transactionId, epin, publicBaseUrl });
       
       if (!orderId) {
-        return NextResponse.redirect(new URL('/payment/failed?error=missing_order', request.url));
+        return NextResponse.redirect(`${publicBaseUrl}/payment/failed?error=missing_order`);
       }
       
       // Error/cancel redirect

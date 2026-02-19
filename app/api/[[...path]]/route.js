@@ -6909,13 +6909,14 @@ export async function POST(request) {
         );
 
         // Build Payyeen Quick Checkout form data
+        // success/cancel URL'ler /api/payment/payyeen/return'e gider, oradan sipariş işlenir ve success sayfasına yönlendirilir
         const payeenFormData = {
           api_key: payeenApiKey,
           amount: orderAmount.toFixed(2),
           currency: 'TRY',
           description: `PINLY-${order.id}`,
-          success_url: `${BASE_URL}/payment/success?orderId=${order.id}`,
-          cancel_url: `${BASE_URL}/payment/failed?orderId=${order.id}`
+          success_url: `${BASE_URL}/api/payment/payyeen/return?orderId=${order.id}`,
+          cancel_url: `${BASE_URL}/api/payment/payyeen/return?orderId=${order.id}`
         };
 
         // Store payment request for audit trail

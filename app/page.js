@@ -1970,6 +1970,40 @@ export default function App() {
                         </div>
                       </div>
                     )}
+
+                    {/* Payyeen Payment Option */}
+                    {paymentMethods?.payyeen?.available && (
+                      <div 
+                        onClick={() => setPaymentMethod('payyeen')}
+                        className={`relative p-4 md:p-5 rounded-lg border-2 cursor-pointer transition-all mt-3 ${
+                          paymentMethod === 'payyeen'
+                            ? 'bg-blue-900/20 border-blue-500'
+                            : 'bg-[#12161D] border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        {paymentMethod === 'payyeen' && (
+                          <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                            <Check className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                        
+                        <div className="mb-3">
+                          <div className="text-base md:text-lg font-bold text-white mb-1">Kredi / Banka Kartı</div>
+                          <div className="inline-block px-2 py-0.5 rounded bg-white/10 text-[11px] text-white/70">
+                            Anında teslimat
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <img src="/uploads/cards/visa.svg" alt="VISA" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                          <span className="px-2 py-1 bg-white rounded text-blue-600 font-bold text-xs hidden">VISA</span>
+                          <img src="/uploads/cards/mastercard.svg" alt="Mastercard" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                          <span className="px-2 py-1 bg-white rounded text-red-600 font-bold text-xs hidden">MC</span>
+                          <img src="/uploads/cards/troy.svg" alt="Troy" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                          <span className="px-2 py-1 bg-white rounded text-blue-500 font-bold text-xs hidden">TROY</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

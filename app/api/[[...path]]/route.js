@@ -8644,6 +8644,90 @@ export async function POST(request) {
       });
     }
 
+    // Admin: Save Payyeen payment settings (encrypted)
+    if (pathname === '/api/admin/settings/payyeen') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      // Check if this is a toggle request (isEnabled only)
+      if (body.hasOwnProperty('isEnabled') && Object.keys(body).length <= 2) {
+        const result = await db.collection('payyeen_settings').updateOne(
+          { isActive: true },
+          { $set: { isEnabled: !!body.isEnabled, updatedAt: new Date() } }
+        );
+
+        if (result.matchedCount === 0) {
+          return NextResponse.json(
+            { success: false, error: 'Payyeen ayarları bulunamadı. Önce ayarları kaydedin.' },
+            { status: 404 }
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: body.isEnabled ? 'Payyeen ödeme seçeneği aktifleştirildi' : 'Payyeen ödeme seçeneği gizlendi',
+          data: { isEnabled: !!body.isEnabled }
+        });
+      }
+
+      const { apiKey } = body;
+
+      // Validate required fields
+      if (!apiKey) {
+        return NextResponse.json(
+          { success: false, error: 'API Key gereklidir' },
+          { status: 400 }
+        );
+      }
+
+      // Rate limiting check (10 requests per hour)
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const recentUpdates = await db.collection('payyeen_settings')
+        .countDocuments({ updatedAt: { $gte: oneHourAgo } });
+      
+      if (recentUpdates >= 10) {
+        return NextResponse.json(
+          { success: false, error: 'Çok fazla istek. Lütfen daha sonra tekrar deneyin.' },
+          { status: 429 }
+        );
+      }
+
+      // Encrypt sensitive data before storing
+      const encryptedSettings = {
+        apiKey: encrypt(apiKey),
+        isActive: true,
+        isEnabled: true,
+        mode: body.mode || 'production',
+        updatedBy: user.username || user.email,
+        updatedAt: new Date(),
+        createdAt: new Date()
+      };
+
+      // Deactivate all previous settings
+      await db.collection('payyeen_settings').updateMany(
+        {},
+        { $set: { isActive: false } }
+      );
+
+      // Insert new settings
+      await db.collection('payyeen_settings').insertOne(encryptedSettings);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Payyeen ayarları başarıyla kaydedildi',
+        data: {
+          mode: encryptedSettings.mode,
+          updatedBy: encryptedSettings.updatedBy,
+          updatedAt: encryptedSettings.updatedAt
+        }
+      });
+    }
+
     // Admin: Save SEO Settings (POST)
     if (pathname === '/api/admin/settings/seo') {
       const user = verifyAdminToken(request);

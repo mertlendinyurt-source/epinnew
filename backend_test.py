@@ -165,30 +165,45 @@ def test_payyeen_admin_settings_post(admin_token):
         response = requests.post(f"{API_BASE}/admin/settings/payyeen", json=payyeen_settings, headers=headers)
         
         if response.status_code == 200:
-            data = response.json()
-            if data.get('success'):
+            result = response.json()
+            if result.get('success'):
                 log_test("Payyeen POST - Save Settings", True, "Settings saved successfully")
                 
                 # Verify settings are saved with GET
                 get_response = requests.get(f"{API_BASE}/admin/settings/payyeen", headers=headers)
                 if get_response.status_code == 200:
-                    get_data = get_response.json()
-                    if get_data.get('isConfigured') == True and 'apiKey' in get_data:
-                        # Check if API key is masked
-                        masked_key = get_data['apiKey']
-                        if '***' in masked_key or '*' in masked_key:
-                            log_test("Payyeen POST - Masked Key", True, f"API key properly masked: {masked_key}")
+                    get_result = get_response.json()
+                    if get_result.get('success') and 'data' in get_result:
+                        get_data = get_result['data']
+                        if get_data.get('isConfigured') == True and 'apiKey' in get_data:
+                            # Check if API key is masked
+                            masked_key = get_data['apiKey']
+                            if '***' in masked_key or '*' in masked_key:
+                                log_test("Payyeen POST - Masked Key", True, f"API key properly masked: {masked_key}")
+                            else:
+                                log_test("Payyeen POST - Masked Key", False, f"API key not masked: {masked_key}")
+                            
+                            # Test toggle functionality
+                            toggle_data = {"isEnabled": False}
+                            toggle_response = requests.post(f"{API_BASE}/admin/settings/payyeen", json=toggle_data, headers=headers)
+                            
+                            if toggle_response.status_code == 200:
+                                log_test("Payyeen POST - Toggle", True, "Toggle functionality working")
+                                return True
+                            else:
+                                log_test("Payyeen POST - Toggle", False, f"Toggle failed: {toggle_response.status_code}")
+                                return False
                         else:
-                            log_test("Payyeen POST - Masked Key", False, f"API key not masked: {masked_key}")
-                        return True
+                            log_test("Payyeen POST - Verify Save", False, f"Settings not properly saved: {get_data}")
+                            return False
                     else:
-                        log_test("Payyeen POST - Verify Save", False, f"Settings not properly saved: {get_data}")
+                        log_test("Payyeen POST - Verify Save", False, f"Invalid GET response: {get_result}")
                         return False
                 else:
                     log_test("Payyeen POST - Verify Save", False, f"GET request failed: {get_response.status_code}")
                     return False
             else:
-                log_test("Payyeen POST - Save Settings", False, f"Save failed: {data}")
+                log_test("Payyeen POST - Save Settings", False, f"Save failed: {result}")
                 return False
         else:
             log_test("Payyeen POST - Save Settings", False, f"HTTP {response.status_code}: {response.text}")

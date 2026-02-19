@@ -365,7 +365,13 @@ def test_payyeen_order_creation_accounts(user_token):
             log_test("Payyeen Account Orders - Get Accounts", False, f"Failed to get accounts: {accounts_response.status_code}")
             return False
             
-        accounts = accounts_response.json()
+        accounts_result = accounts_response.json()
+        if accounts_result.get('success') and 'data' in accounts_result:
+            accounts = accounts_result['data']
+        else:
+            log_test("Payyeen Account Orders - Get Accounts", False, f"Invalid accounts response: {accounts_result}")
+            return False
+            
         if not accounts:
             log_test("Payyeen Account Orders - No Accounts", True, "No accounts available (expected)")
             return True

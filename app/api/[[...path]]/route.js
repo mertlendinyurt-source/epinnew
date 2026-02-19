@@ -2691,7 +2691,7 @@ export async function GET(request) {
         success: true,
         data: {
           shopier: {
-            available: !!shopierSettings,
+            available: !!shopierSettings && shopierSettings.isEnabled !== false,
             name: 'Kredi/Banka Kartı'
           },
           shopinext: {

@@ -76,14 +76,18 @@ def create_test_user():
     try:
         response = requests.post(f"{API_BASE}/auth/register", json=test_user)
         
-        if response.status_code == 201:
-            data = response.json()
-            token = data.get('token')
-            if token:
-                log_test("User Registration", True, f"User created: {test_user['email']}")
-                return token, test_user
+        if response.status_code in [200, 201]:
+            result = response.json()
+            if result.get('success') and 'data' in result:
+                token = result['data'].get('token')
+                if token:
+                    log_test("User Registration", True, f"User created: {test_user['email']}")
+                    return token, test_user
+                else:
+                    log_test("User Registration", False, "No token in data")
+                    return None, None
             else:
-                log_test("User Registration", False, "No token in response")
+                log_test("User Registration", False, f"Unexpected response: {result}")
                 return None, None
         else:
             log_test("User Registration", False, f"HTTP {response.status_code}: {response.text}")

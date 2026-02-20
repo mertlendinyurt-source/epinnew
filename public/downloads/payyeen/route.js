@@ -9647,6 +9647,14 @@ export async function POST(request) {
 
       await db.collection('site_settings').insertOne(settings);
 
+      // Clear homepage cache so new settings take effect immediately
+      clearCache('homepage_pubg');
+      clearCache('homepage_valorant');
+      clearCache('homepage_mlbb');
+      clearCache('homepage_lol');
+      clearCache('homepage_roblox');
+      clearCache('site_settings_public');
+
       return NextResponse.json({
         success: true,
         message: 'Site ayarları güncellendi',

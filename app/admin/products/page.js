@@ -799,12 +799,12 @@ export default function AdminProducts() {
                     {products.map((product) => (
                       <TableRow key={product.id} className="border-slate-800 hover:bg-slate-800/50">
                         <TableCell>
-                          <Badge variant={product.game === 'valorant' ? 'destructive' : product.game === 'mlbb' ? 'default' : 'default'} className={product.game === 'valorant' ? 'bg-red-600' : product.game === 'mlbb' ? 'bg-blue-600' : 'bg-yellow-600'}>
-                            {product.game === 'valorant' ? 'Valorant' : product.game === 'mlbb' ? 'MLBB' : product.game === 'lol' ? 'LoL' : 'PUBG'}
+                          <Badge variant={product.game === 'valorant' ? 'destructive' : product.game === 'mlbb' ? 'default' : 'default'} className={product.game === 'valorant' ? 'bg-red-600' : product.game === 'mlbb' ? 'bg-blue-600' : product.game === 'roblox' ? 'bg-green-600' : 'bg-yellow-600'}>
+                            {product.game === 'valorant' ? 'Valorant' : product.game === 'mlbb' ? 'MLBB' : product.game === 'lol' ? 'LoL' : product.game === 'roblox' ? 'Roblox' : 'PUBG'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-white font-medium">{product.title}</TableCell>
-                        <TableCell className="text-slate-400">{product.ucAmount || product.vpAmount || product.diamondsAmount} {product.game === 'valorant' ? 'VP' : product.game === 'mlbb' ? '💎' : 'UC'}</TableCell>
+                        <TableCell className="text-slate-400">{product.ucAmount || product.vpAmount || product.diamondsAmount} {product.game === 'valorant' ? 'VP' : product.game === 'mlbb' ? '💎' : product.game === 'roblox' ? 'Robux' : product.game === 'lol' ? 'RP' : 'UC'}</TableCell>
                         <TableCell className="text-white">{product.price.toFixed(2)} ₺</TableCell>
                         <TableCell className="text-green-400 font-semibold">
                           {product.discountPrice.toFixed(2)} ₺
@@ -864,12 +864,12 @@ export default function AdminProducts() {
                     <div className="flex items-start justify-between">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <Badge variant={product.game === 'valorant' ? 'destructive' : product.game === 'mlbb' ? 'default' : 'default'} className={`text-xs ${product.game === 'valorant' ? 'bg-red-600' : product.game === 'mlbb' ? 'bg-blue-600' : 'bg-yellow-600'}`}>
-                            {product.game === 'valorant' ? 'Valorant' : product.game === 'mlbb' ? 'MLBB' : product.game === 'lol' ? 'LoL' : 'PUBG'}
+                          <Badge variant={product.game === 'valorant' ? 'destructive' : product.game === 'mlbb' ? 'default' : 'default'} className={`text-xs ${product.game === 'valorant' ? 'bg-red-600' : product.game === 'mlbb' ? 'bg-blue-600' : product.game === 'roblox' ? 'bg-green-600' : 'bg-yellow-600'}`}>
+                            {product.game === 'valorant' ? 'Valorant' : product.game === 'mlbb' ? 'MLBB' : product.game === 'lol' ? 'LoL' : product.game === 'roblox' ? 'Roblox' : 'PUBG'}
                           </Badge>
                         </div>
                         <h3 className="text-white font-medium">{product.title}</h3>
-                        <p className="text-slate-500 text-sm">{product.ucAmount || product.vpAmount || product.diamondsAmount} {product.game === 'valorant' ? 'VP' : product.game === 'mlbb' ? '💎' : 'UC'}</p>
+                        <p className="text-slate-500 text-sm">{product.ucAmount || product.vpAmount || product.diamondsAmount} {product.game === 'valorant' ? 'VP' : product.game === 'mlbb' ? '💎' : product.game === 'roblox' ? 'Robux' : product.game === 'lol' ? 'RP' : 'UC'}</p>
                       </div>
                       <Badge variant={product.active ? 'default' : 'secondary'}>
                         {product.active ? 'Aktif' : 'Pasif'}
@@ -1032,6 +1032,20 @@ export default function AdminProducts() {
                       <span className={`font-medium ${formData.game === 'lol' ? 'text-yellow-400' : 'text-white'}`}>LoL RP</span>
                     </div>
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, game: 'roblox' })}
+                    className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                      formData.game === 'roblox' 
+                        ? 'border-green-500 bg-green-500/10' 
+                        : 'border-slate-700 bg-slate-800 hover:border-slate-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-lg">🟩</span>
+                      <span className={`font-medium ${formData.game === 'roblox' ? 'text-green-400' : 'text-white'}`}>Roblox</span>
+                    </div>
+                  </button>
                 </div>
               </div>
               
@@ -1042,12 +1056,12 @@ export default function AdminProducts() {
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     className="bg-slate-800 border-slate-700 text-white h-11"
-                    placeholder={formData.game === 'valorant' ? 'Örn: 475 VP' : formData.game === 'mlbb' ? 'Örn: 86 Diamonds' : formData.game === 'lol' ? 'Örn: 650 RP' : 'Örn: 60 UC'}
+                    placeholder={formData.game === 'valorant' ? 'Örn: 475 VP' : formData.game === 'mlbb' ? 'Örn: 86 Diamonds' : formData.game === 'lol' ? 'Örn: 650 RP' : formData.game === 'roblox' ? 'Örn: 800 Robux' : 'Örn: 60 UC'}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-slate-300 text-sm">{formData.game === 'valorant' ? 'VP Miktarı' : formData.game === 'mlbb' ? 'Diamonds Miktarı' : formData.game === 'lol' ? 'RP Miktarı' : 'UC Miktarı'}</Label>
+                  <Label className="text-slate-300 text-sm">{formData.game === 'valorant' ? 'VP Miktarı' : formData.game === 'mlbb' ? 'Diamonds Miktarı' : formData.game === 'lol' ? 'RP Miktarı' : formData.game === 'roblox' ? 'Robux Miktarı' : 'UC Miktarı'}</Label>
                   <div className="relative">
                     <Input
                       type="number"
@@ -1056,7 +1070,7 @@ export default function AdminProducts() {
                       className="bg-slate-800 border-slate-700 text-white h-11 pr-12"
                       placeholder={formData.game === 'valorant' ? '475' : formData.game === 'mlbb' ? '86' : formData.game === 'lol' ? '650' : '60'}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">{formData.game === 'valorant' ? 'VP' : formData.game === 'mlbb' ? '💎' : formData.game === 'lol' ? 'RP' : 'UC'}</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">{formData.game === 'valorant' ? 'VP' : formData.game === 'mlbb' ? '💎' : formData.game === 'lol' ? 'RP' : formData.game === 'roblox' ? 'Robux' : 'UC'}</span>
                   </div>
                 </div>
               </div>
@@ -1450,7 +1464,7 @@ export default function AdminProducts() {
           <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between">
             <div>
               <DialogTitle className="text-xl font-bold text-white">Yeni Ürün Ekle</DialogTitle>
-              <p className="text-sm text-slate-400 mt-1">{addFormData.game === 'valorant' ? 'Yeni VP paketi ekleyin' : 'Yeni UC paketi ekleyin'}</p>
+              <p className="text-sm text-slate-400 mt-1">{addFormData.game === 'valorant' ? 'Yeni VP paketi ekleyin' : addFormData.game === 'roblox' ? 'Yeni Robux paketi ekleyin' : 'Yeni UC paketi ekleyin'}</p>
             </div>
           </div>
           
@@ -1532,21 +1546,21 @@ export default function AdminProducts() {
                     value={addFormData.title}
                     onChange={(e) => setAddFormData({ ...addFormData, title: e.target.value })}
                     className="bg-slate-800 border-slate-700 text-white h-11"
-                    placeholder={addFormData.game === 'valorant' ? 'Örn: 475 VP' : addFormData.game === 'mlbb' ? 'Örn: 86 Diamonds' : addFormData.game === 'lol' ? 'Örn: 650 RP' : 'Örn: 60 UC'}
+                    placeholder={addFormData.game === 'valorant' ? 'Örn: 475 VP' : addFormData.game === 'mlbb' ? 'Örn: 86 Diamonds' : addFormData.game === 'lol' ? 'Örn: 650 RP' : addFormData.game === 'roblox' ? 'Örn: 800 Robux' : 'Örn: 60 UC'}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-slate-300 text-sm">{addFormData.game === 'valorant' ? 'VP Miktarı *' : addFormData.game === 'mlbb' ? 'Diamonds Miktarı *' : addFormData.game === 'lol' ? 'RP Miktarı *' : 'UC Miktarı *'}</Label>
+                  <Label className="text-slate-300 text-sm">{addFormData.game === 'valorant' ? 'VP Miktarı *' : addFormData.game === 'mlbb' ? 'Diamonds Miktarı *' : addFormData.game === 'lol' ? 'RP Miktarı *' : addFormData.game === 'roblox' ? 'Robux Miktarı *' : 'UC Miktarı *'}</Label>
                   <div className="relative">
                     <Input
                       type="number"
                       value={addFormData.ucAmount}
                       onChange={(e) => setAddFormData({ ...addFormData, ucAmount: e.target.value })}
                       className="bg-slate-800 border-slate-700 text-white h-11 pr-12"
-                      placeholder={addFormData.game === 'valorant' ? '475' : addFormData.game === 'mlbb' ? '86' : addFormData.game === 'lol' ? '650' : '60'}
+                      placeholder={addFormData.game === 'valorant' ? '475' : addFormData.game === 'mlbb' ? '86' : addFormData.game === 'lol' ? '650' : addFormData.game === 'roblox' ? '800' : '60'}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">{addFormData.game === 'valorant' ? 'VP' : addFormData.game === 'mlbb' ? '💎' : addFormData.game === 'lol' ? 'RP' : 'UC'}</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">{addFormData.game === 'valorant' ? 'VP' : addFormData.game === 'mlbb' ? '💎' : addFormData.game === 'lol' ? 'RP' : addFormData.game === 'roblox' ? 'Robux' : 'UC'}</span>
                   </div>
                 </div>
               </div>

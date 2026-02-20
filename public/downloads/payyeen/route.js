@@ -1663,6 +1663,38 @@ async function sendDeliveredEmail(db, order, user, product, codes) {
   return sendEmail(db, 'delivered', user.email, content, user.id, order.id);
 }
 
+async function sendPaymentFailedEmail(db, order, user) {
+  const productTitle = order.productTitle || order.accountTitle || 'Ürün';
+  const content = {
+    subject: `Ödeme başarısız - ${order.id.slice(-8)}`,
+    title: 'Ödeme Tamamlanamadı',
+    body: `
+      <p>Merhaba ${user.firstName},</p>
+      <p>Siparişiniz için yapılan ödeme işlemi başarısız oldu.</p>
+      
+      <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:16px;margin:20px 0;">
+        <p style="margin:0 0 8px 0;font-weight:bold;color:#856404;">⚠️ Garanti Bankası Kartları</p>
+        <p style="margin:0;color:#856404;font-size:14px;">Garanti bankası sanal kart ve banka kartları ile ödeme yapılamamaktadır. Lütfen <strong>başka bir banka kartı</strong> ile tekrar deneyin.</p>
+      </div>
+      
+      <p style="margin-top:20px;"><strong>Sipariş Bilgileri:</strong></p>
+      <ul>
+        <li>Sipariş No: ${order.id.slice(-8)}</li>
+        <li>Ürün: ${productTitle}</li>
+        <li>Tutar: ${(order.amount || 0).toFixed(2)} TL</li>
+      </ul>
+      
+      <p style="margin-top:16px;">Farklı bir kart ile tekrar ödeme yapmayı deneyebilirsiniz.</p>
+    `,
+    cta: {
+      text: 'Tekrar Dene',
+      url: `${BASE_URL}`
+    }
+  };
+  
+  return sendEmail(db, 'payment_failed', user.email, content, user.id, order.id);
+}
+
 async function sendPendingStockEmail(db, order, user, product, message) {
   const content = {
     subject: `Stok bekleniyor - ${order.id.slice(-8)}`,
@@ -2756,6 +2788,16 @@ export async function GET(request) {
             { id: failedOrder.accountId, status: 'reserved', reservedByOrderId: orderId },
             { $set: { status: 'available', reservedAt: null, reservedByOrderId: null } }
           );
+        }
+        
+        // Send payment failed email
+        if (failedOrder && failedOrder.userId) {
+          const failedUser = await db.collection('users').findOne({ id: failedOrder.userId });
+          if (failedUser && failedUser.email) {
+            sendPaymentFailedEmail(db, failedOrder, failedUser).catch(err =>
+              console.error('Payment failed email error:', err)
+            );
+          }
         }
         
         return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}`);

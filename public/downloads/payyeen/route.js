@@ -2495,24 +2495,6 @@ export async function GET(request) {
         
         console.log('PUBG API response:', JSON.stringify(apiData));
         
-        // Check if player was found - more flexible check
-        const hasPlayerData = apiData.data && (apiData.data.username || apiData.data.nickname || apiData.data.name);
-        const isFound = apiData.msg === 'id_found' || hasPlayerData;
-        
-        if (!isFound) {
-          // API couldn't find the player - but don't block the user
-          // Accept with fallback name instead of returning error
-          console.log(`PUBG API: Player ${playerId} not found by API, using fallback name`);
-          return NextResponse.json({
-            success: true,
-            data: {
-              playerId,
-              playerName: `Player#${playerId.slice(-4)}`,
-              verified: false
-            }
-          });
-        }
-
         // Check if account is banned
         if (apiData.data && apiData.data.is_ban === 1) {
           return NextResponse.json({
@@ -2521,8 +2503,11 @@ export async function GET(request) {
           }, { status: 400 });
         }
         
-        // Extract player name from API response (try multiple fields)
-        const playerName = apiData.data?.username || apiData.data?.nickname || apiData.data?.name || `Player#${playerId.slice(-4)}`;
+        // Extract player name - try multiple fields, fallback to Player#XXXX
+        const playerName = (apiData.data?.username && apiData.data.username.trim()) 
+          || (apiData.data?.nickname && apiData.data.nickname.trim()) 
+          || (apiData.data?.name && apiData.data.name.trim()) 
+          || `Player#${playerId.slice(-4)}`;
         
         return NextResponse.json({
           success: true,

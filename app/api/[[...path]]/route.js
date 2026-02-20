@@ -2790,6 +2790,16 @@ export async function GET(request) {
           );
         }
         
+        // Send payment failed email
+        if (failedOrder && failedOrder.userId) {
+          const failedUser = await db.collection('users').findOne({ id: failedOrder.userId });
+          if (failedUser && failedUser.email) {
+            sendPaymentFailedEmail(db, failedOrder, failedUser).catch(err =>
+              console.error('Payment failed email error:', err)
+            );
+          }
+        }
+        
         return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}`);
       }
       

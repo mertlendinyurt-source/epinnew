@@ -2810,6 +2810,11 @@ export async function GET(request) {
               console.error('Payment failed email error:', err)
             );
           }
+          if (failedUser && failedUser.phone) {
+            sendPaymentFailedSms(db, failedOrder, failedUser).catch(err =>
+              console.error('Payment failed SMS error:', err)
+            );
+          }
         }
         
         return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}`);

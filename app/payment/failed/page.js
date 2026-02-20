@@ -33,6 +33,11 @@ export default function PaymentFailed() {
             <p className="text-xs">Lütfen ödeme bilgilerinizi kontrol edip tekrar deneyin.</p>
           </div>
 
+          <div className="p-4 rounded-lg bg-amber-900/20 border border-amber-700 text-sm text-amber-400">
+            <p className="font-semibold mb-1">⚠️ Garanti Bankası Kartları</p>
+            <p className="text-xs">Garanti bankası sanal kart ve banka kartları ile ödeme yapılamamaktadır. Lütfen başka bir banka kartı ile tekrar deneyin.</p>
+          </div>
+
           <div className="space-y-2">
             <Button
               onClick={() => window.location.href = '/'}

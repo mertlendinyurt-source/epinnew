@@ -70,6 +70,7 @@ export default function SiteSettingsPage() {
           valorantHeroImage: result.data.valorantHeroImage,
           mlbbHeroImage: result.data.mlbbHeroImage,
           lolHeroImage: result.data.lolHeroImage,
+          robloxHeroImage: result.data.robloxHeroImage,
           categoryIcon: result.data.categoryIcon
         });
       }

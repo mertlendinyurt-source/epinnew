@@ -2748,82 +2748,116 @@ export async function GET(request) {
       });
     }
 
+
     // ============================================
-    // 💳 PAYYEEN RETURN URL HANDLER (GET)
-    // Payyeen ödeme sonrası kullanıcıyı buraya yönlendirir
-    // Sipariş durumunu günceller, stok atar, sonra success/failed sayfasına redirect eder
+    // 💳 PAYYEEN SUCCESS HANDLER - Ödeme başarılı
+    // URL: /api/payment/payyeen/success/{orderId}?transaction_id=xxx
     // ============================================
-    if (pathname.startsWith('/api/payment/payyeen/return')) {
-      const url = new URL(request.url);
-      const fullUrl = request.url;
-      
-      // orderId'yi path'den veya query'den al
-      // Path format: /api/payment/payyeen/return/{orderId}?status=success
-      // Query format: /api/payment/payyeen/return?orderId=xxx&status=success (eski format)
+    if (pathname.startsWith('/api/payment/payyeen/success/')) {
       const pathParts = pathname.split('/');
-      const pathOrderId = pathParts.length > 5 ? pathParts[5] : null; // /api/payment/payyeen/return/{orderId}
+      const orderId = pathParts[5];
+      const url = new URL(request.url);
+      const transactionId = url.searchParams.get('transaction_id');
+      const epin = url.searchParams.get('epin');
       
-      let orderId = pathOrderId || url.searchParams.get('orderId');
-      let status = url.searchParams.get('status');
-      let transactionId = url.searchParams.get('transaction_id');
-      let epin = url.searchParams.get('epin');
-      let errorMessage = url.searchParams.get('message');
-      
-      // Eğer orderId içinde ? varsa, Payyeen URL'i bozmuş demek - düzelt
-      if (orderId && orderId.includes('?')) {
-        const parts = orderId.split('?');
-        orderId = parts[0];
-        const extraParams = new URLSearchParams(parts[1]);
-        if (!status) status = extraParams.get('status');
-        if (!transactionId) transactionId = extraParams.get('transaction_id');
-        if (!epin) epin = extraParams.get('epin');
-        if (!errorMessage) errorMessage = extraParams.get('message');
-      }
-      
-      // Fallback: URL'den regex ile parametreleri bul
-      if (!status) {
-        const statusMatch = fullUrl.match(/[?&]status=([^&]+)/g);
-        if (statusMatch) {
-          const lastMatch = statusMatch[statusMatch.length - 1];
-          status = lastMatch.replace(/.*status=/, '');
-        }
-      }
-      if (!transactionId) {
-        const txMatch = fullUrl.match(/transaction_id=([^&]+)/);
-        if (txMatch) transactionId = txMatch[1];
-      }
-      
-      // Doğru base URL'yi belirle (localhost yerine gerçek domain kullan)
       const host = request.headers.get('host');
       const protoHeader = request.headers.get('x-forwarded-proto') || 'https';
       const protocol = protoHeader.split(',')[0].trim();
       const publicBaseUrl = host ? `${protocol}://${host}` : BASE_URL;
       
-      console.log('Payyeen return RAW URL:', fullUrl);
-      console.log('Payyeen return PARSED:', { orderId, status, transactionId, epin, publicBaseUrl });
+      console.log('Payyeen SUCCESS:', { orderId, transactionId });
       
-      if (!orderId) {
-        return NextResponse.redirect(`${publicBaseUrl}/payment/failed?error=missing_order`);
+      if (!orderId) return NextResponse.redirect(`${publicBaseUrl}/payment/failed?error=missing_order`);
+      
+      const order = await db.collection('orders').findOne({ id: orderId });
+      if (!order) return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}&error=order_not_found`);
+      if (order.status === 'paid') return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
+      if (order.status === 'failed') return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}`);
+      
+      // UPDATE ORDER TO PAID
+      await db.collection('orders').updateOne(
+        { id: orderId },
+        { $set: { status: 'paid', paymentProvider: 'payyeen', paymentId: transactionId || null, updatedAt: new Date() } }
+      );
+      
+      await db.collection('payments').insertOne({
+        id: uuidv4(), orderId, provider: 'payyeen', providerTxnId: transactionId || null,
+        status: 'paid', amount: order.amount, currency: order.currency || 'TRY',
+        source: 'success_url', rawPayload: { transactionId, epin }, verifiedAt: new Date(), createdAt: new Date()
+      });
+      
+      await db.collection('payment_requests').updateOne(
+        { orderId, provider: 'payyeen' },
+        { $set: { status: 'paid', transactionId, updatedAt: new Date() } }
+      );
+      
+      const orderUser = await db.collection('users').findOne({ id: order.userId });
+      const product = order.productId ? await db.collection('products').findOne({ id: order.productId }) : null;
+      const account = (order.type === 'account' && order.accountId) ? await db.collection('accounts').findOne({ id: order.accountId }) : null;
+      
+      if (orderUser && orderUser.phone) {
+        sendPaymentSuccessSms(db, order, orderUser, product?.title || order.accountTitle || 'Sipariş').catch(err => console.error('SMS err:', err));
       }
       
-      // Error/cancel redirect
-      if (status === 'error' || status === 'cancel' || status === 'cancelled') {
-        console.log(`Payyeen return: Payment failed/cancelled for order ${orderId}: ${errorMessage}`);
-        
-        // Update order to failed
+      const orderAmount = order.amount || order.totalAmount || 0;
+      if (orderAmount >= 3000) {
+        await db.collection('orders').updateOne({ id: orderId }, { $set: {
+          verification: { required: true, status: 'pending', identityPhoto: null, paymentReceipt: null, submittedAt: null, reviewedAt: null, reviewedBy: null, rejectionReason: null },
+          delivery: { status: 'verification_required', message: 'Yüksek tutarlı sipariş - Doğrulama gerekli', items: [] }
+        }});
+        if (orderUser && product) sendVerificationRequiredEmail(db, order, orderUser, product).catch(err => console.error('Verif email err:', err));
+        return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
+      }
+      
+      const riskResult = await calculateOrderRisk(db, order, orderUser, request);
+      await db.collection('orders').updateOne({ id: orderId }, { $set: { risk: riskResult, 'meta.ip': getClientIP(request), 'meta.userAgent': request.headers.get('user-agent')?.substring(0, 500) || '' } });
+      
+      if (orderUser && product) sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => console.error('Email err:', err));
+      
+      if (order.type === 'account' && account && account.credentials) {
+        await db.collection('orders').updateOne({ id: orderId }, { $set: { delivery: { status: 'delivered', credentials: account.credentials, deliveredAt: new Date() } } });
+        await db.collection('accounts').updateOne({ id: order.accountId }, { $set: { status: 'sold', soldAt: new Date(), soldToOrderId: orderId } });
+      } else if (product) {
+        try {
+          const assignedStock = await db.collection('stock').findOneAndUpdate(
+            { productId: order.productId, status: 'available' },
+            { $set: { status: 'assigned', orderId, assignedAt: new Date() } },
+            { returnDocument: 'after', sort: { createdAt: 1 } }
+          );
+          if (assignedStock && assignedStock.value) {
+            await db.collection('orders').updateOne({ id: orderId }, { $set: { delivery: { status: 'delivered', items: [assignedStock.value], stockId: assignedStock.id || assignedStock._id, assignedAt: new Date() } } });
+            if (orderUser) sendDeliveredEmail(db, order, orderUser, product, [assignedStock.value]).catch(err => console.error('Del email err:', err));
+          } else {
+            await db.collection('orders').updateOne({ id: orderId }, { $set: { delivery: { status: 'pending', message: 'Stok bekleniyor', items: [] } } });
+          }
+        } catch (e) { console.error('Stock error:', e); }
+      }
+      
+      return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
+    }
+
+    // ============================================
+    // 💳 PAYYEEN FAIL HANDLER - Ödeme başarısız
+    // URL: /api/payment/payyeen/fail/{orderId}?message=xxx
+    // ============================================
+    if (pathname.startsWith('/api/payment/payyeen/fail/')) {
+      const pathParts = pathname.split('/');
+      const orderId = pathParts[5];
+      const url = new URL(request.url);
+      const errorMessage = url.searchParams.get('message');
+      
+      const host = request.headers.get('host');
+      const protoHeader = request.headers.get('x-forwarded-proto') || 'https';
+      const protocol = protoHeader.split(',')[0].trim();
+      const publicBaseUrl = host ? `${protocol}://${host}` : BASE_URL;
+      
+      console.log('Payyeen FAIL:', { orderId, errorMessage });
+      
+      if (orderId) {
         await db.collection('orders').updateOne(
           { id: orderId, status: 'pending' },
-          { 
-            $set: { 
-              status: 'failed', 
-              paymentProvider: 'payyeen',
-              failReason: errorMessage || 'Ödeme iptal edildi',
-              updatedAt: new Date() 
-            } 
-          }
+          { $set: { status: 'failed', paymentProvider: 'payyeen', failReason: errorMessage || 'Ödeme başarısız', updatedAt: new Date() } }
         );
-        
-        // Release reserved account if applicable
         const failedOrder = await db.collection('orders').findOne({ id: orderId });
         if (failedOrder && failedOrder.type === 'account' && failedOrder.accountId) {
           await db.collection('accounts').updateOne(
@@ -2831,338 +2865,14 @@ export async function GET(request) {
             { $set: { status: 'available', reservedAt: null, reservedByOrderId: null } }
           );
         }
-        
-        // Send payment failed email
         if (failedOrder && failedOrder.userId) {
           const failedUser = await db.collection('users').findOne({ id: failedOrder.userId });
-          if (failedUser && failedUser.email) {
-            sendPaymentFailedEmail(db, failedOrder, failedUser).catch(err =>
-              console.error('Payment failed email error:', err)
-            );
-          }
-          if (failedUser && failedUser.phone) {
-            sendPaymentFailedSms(db, failedOrder, failedUser).catch(err =>
-              console.error('Payment failed SMS error:', err)
-            );
-          }
-        }
-        
-        return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}`);
-      }
-      
-      // Success redirect
-      if (status === 'success') {
-        // Find the order
-        const order = await db.collection('orders').findOne({ id: orderId });
-        
-        if (!order) {
-          console.error(`Payyeen return: Order ${orderId} not found`);
-          return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}&error=order_not_found`);
-        }
-        
-        // Already processed (idempotency)
-        if (order.status === 'paid') {
-          console.log(`Payyeen return: Order ${orderId} already PAID`);
-          return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
-        }
-        
-        // Immutable status check
-        if (order.status === 'failed') {
-          console.error(`Payyeen return: Cannot change order ${orderId} from FAILED to PAID`);
-          return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}`);
-        }
-        
-        // ✅ UPDATE ORDER TO PAID
-        await db.collection('orders').updateOne(
-          { id: orderId },
-          {
-            $set: {
-              status: 'paid',
-              paymentProvider: 'payyeen',
-              paymentId: transactionId || null,
-              updatedAt: new Date()
-            }
-          }
-        );
-        
-        // Create payment record
-        await db.collection('payments').insertOne({
-          id: uuidv4(),
-          orderId: orderId,
-          provider: 'payyeen',
-          providerTxnId: transactionId || null,
-          status: 'paid',
-          amount: order.amount,
-          currency: order.currency || 'TRY',
-          source: 'return_url',
-          rawPayload: { status, transactionId, epin },
-          verifiedAt: new Date(),
-          createdAt: new Date()
-        });
-        
-        // Update payment request
-        await db.collection('payment_requests').updateOne(
-          { orderId: orderId, provider: 'payyeen' },
-          { $set: { status: 'paid', transactionId: transactionId, updatedAt: new Date() } }
-        );
-        
-        // ✅ STOCK ASSIGNMENT / DELIVERY (same as Shopier callback)
-        const orderUser = await db.collection('users').findOne({ id: order.userId });
-        const product = order.productId ? await db.collection('products').findOne({ id: order.productId }) : null;
-        const account = (order.type === 'account' && order.accountId) ? await db.collection('accounts').findOne({ id: order.accountId }) : null;
-        
-        // Send SMS
-        if (orderUser && orderUser.phone) {
-          const itemTitle = product?.title || order.accountTitle || 'Sipariş';
-          sendPaymentSuccessSms(db, order, orderUser, itemTitle).catch(err =>
-            console.error('Payyeen return payment SMS failed:', err)
-          );
-        }
-        
-        // ============================================
-        // 🔐 HIGH-VALUE ORDER CHECK (>= 3000 TL) - Same as Shopier
-        // ============================================
-        const productPrice = product ? (product.discountPrice || product.price || 0) : 0;
-        const orderAmount = order.amount || order.totalAmount || productPrice || 0;
-        
-        if (orderAmount >= 3000) {
-          // HIGH VALUE ORDER - REQUIRES VERIFICATION
-          await db.collection('orders').updateOne(
-            { id: orderId },
-            {
-              $set: {
-                amount: orderAmount,
-                totalAmount: orderAmount,
-                verification: {
-                  required: true,
-                  status: 'pending',
-                  identityPhoto: null,
-                  paymentReceipt: null,
-                  submittedAt: null,
-                  reviewedAt: null,
-                  reviewedBy: null,
-                  rejectionReason: null
-                },
-                delivery: {
-                  status: 'verification_required',
-                  message: 'Yüksek tutarlı sipariş - Kimlik ve ödeme dekontu doğrulaması gerekli',
-                  items: []
-                }
-              }
-            }
-          );
-          
-          console.log(`Payyeen return: Order ${orderId} marked for VERIFICATION (${orderAmount} TL >= 3000 TL)`);
-          
-          // Send verification required email
-          if (orderUser && product) {
-            sendVerificationRequiredEmail(db, order, orderUser, product).catch(err => 
-              console.error('Payyeen verification required email failed:', err)
-            );
-          }
-          
-          // Redirect to success page (verification page will be shown)
-          return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
-        }
-        
-        // ============================================
-        // NORMAL FLOW - Orders < 3000 TL
-        // Risk puanı hesapla ve kaydet, ama stok her zaman ata
-        // ============================================
-        
-        // Calculate risk score (sadece kayıt için - teslimatı engellemez)
-        const riskResult = await calculateOrderRisk(db, order, orderUser, request);
-        
-        // Update order with risk information
-        await db.collection('orders').updateOne(
-          { id: orderId },
-          {
-            $set: {
-              risk: riskResult,
-              'meta.ip': getClientIP(request),
-              'meta.userAgent': request.headers.get('user-agent')?.substring(0, 500) || ''
-            }
-          }
-        );
-        
-        console.log(`Payyeen return: Risk score ${riskResult.score} for order ${orderId}. Proceeding with delivery.`);
-        
-        // Send payment success email
-        if (orderUser && product) {
-          sendPaymentSuccessEmail(db, order, orderUser, product).catch(err =>
-            console.error('Payyeen payment success email failed:', err)
-          );
-        }
-        
-        // ✅ ALWAYS DELIVER - Stock assignment regardless of risk
-        // Check if this is an account order
-        if (order.type === 'account' && order.accountId && account) {
-          if (account.credentials) {
-            await db.collection('orders').updateOne(
-              { id: orderId },
-              {
-                $set: {
-                  delivery: {
-                    status: 'delivered',
-                    credentials: account.credentials,
-                    deliveredAt: new Date()
-                  }
-                }
-              }
-            );
-            await db.collection('accounts').updateOne(
-              { id: order.accountId },
-              { $set: { status: 'sold', soldAt: new Date(), soldToOrderId: orderId } }
-            );
-            console.log(`Payyeen return: Account credentials delivered for order ${orderId}`);
-          }
-        } else if (product) {
-          // UC order - Stock assignment (FIFO)
-          try {
-            const assignedStock = await db.collection('stock').findOneAndUpdate(
-              { productId: order.productId, status: 'available' },
-              { 
-                $set: { 
-                  status: 'assigned', 
-                  orderId: orderId,
-                  assignedAt: new Date()
-                } 
-              },
-              { 
-                returnDocument: 'after',
-                sort: { createdAt: 1 }
-              }
-            );
-            
-            if (assignedStock && assignedStock.value) {
-              const stockCode = assignedStock.value;
-              
-              await db.collection('orders').updateOne(
-                { id: orderId },
-                {
-                  $set: {
-                    delivery: {
-                      status: 'delivered',
-                      items: [stockCode],
-                      stockId: assignedStock.id || assignedStock._id,
-                      assignedAt: new Date()
-                    }
-                  }
-                }
-              );
-              console.log(`Payyeen return: Stock assigned to order ${orderId}: ${stockCode}`);
-              
-              if (orderUser && product) {
-                sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
-                  console.error('Payyeen return delivered email failed:', err)
-                );
-              }
-            } else {
-              await db.collection('orders').updateOne(
-                { id: orderId },
-                {
-                  $set: {
-                    delivery: {
-                      status: 'pending',
-                      message: 'Stok bekleniyor',
-                      items: []
-                    }
-                  }
-                }
-              );
-              console.log(`Payyeen return: No stock for order ${orderId}`);
-            }
-          } catch (stockError) {
-            console.error(`Payyeen return stock error for order ${orderId}:`, stockError);
-          }
-        }
-        
-        console.log(`Payyeen return: Order ${orderId} processed successfully, redirecting to success page`);
-        return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
-      }
-      
-      // Unknown status or no status - treat as SUCCESS (Payyeen success_url'ye yönlendirdiyse ödeme başarılıdır)
-      // Status gelmemiş olabilir çünkü Payyeen URL parametrelerini farklı ekleyebilir
-      console.log(`Payyeen return: Status='${status}' for order ${orderId}, treating as SUCCESS`);
-      
-      // Find the order and process as success
-      const unknownOrder = await db.collection('orders').findOne({ id: orderId });
-      if (unknownOrder && unknownOrder.status === 'pending') {
-        // Process as successful payment
-        await db.collection('orders').updateOne(
-          { id: orderId },
-          {
-            $set: {
-              status: 'paid',
-              paymentProvider: 'payyeen',
-              paymentId: transactionId || null,
-              updatedAt: new Date()
-            }
-          }
-        );
-        
-        // Create payment record
-        await db.collection('payments').insertOne({
-          id: uuidv4(),
-          orderId: orderId,
-          provider: 'payyeen',
-          providerTxnId: transactionId || null,
-          status: 'paid',
-          amount: unknownOrder.amount,
-          currency: unknownOrder.currency || 'TRY',
-          source: 'return_url_fallback',
-          rawPayload: { status, transactionId, epin, rawUrl: fullUrl },
-          verifiedAt: new Date(),
-          createdAt: new Date()
-        });
-        
-        // Process delivery (same logic as success block)
-        const fallbackUser = await db.collection('users').findOne({ id: unknownOrder.userId });
-        const fallbackProduct = unknownOrder.productId ? await db.collection('products').findOne({ id: unknownOrder.productId }) : null;
-        
-        if (fallbackUser && fallbackUser.phone) {
-          const itemTitle = fallbackProduct?.title || unknownOrder.accountTitle || 'Sipariş';
-          sendPaymentSuccessSms(db, unknownOrder, fallbackUser, itemTitle).catch(err =>
-            console.error('Payyeen fallback SMS failed:', err)
-          );
-        }
-        
-        const fallbackAmount = unknownOrder.amount || unknownOrder.totalAmount || 0;
-        
-        if (fallbackAmount >= 3000) {
-          await db.collection('orders').updateOne(
-            { id: orderId },
-            {
-              $set: {
-                verification: { required: true, status: 'pending', identityPhoto: null, paymentReceipt: null, submittedAt: null, reviewedAt: null, reviewedBy: null, rejectionReason: null },
-                delivery: { status: 'verification_required', message: 'Yüksek tutarlı sipariş - Kimlik ve ödeme dekontu doğrulaması gerekli', items: [] }
-              }
-            }
-          );
-        } else if (fallbackProduct) {
-          // Stock assignment
-          try {
-            const assignedStock = await db.collection('stock').findOneAndUpdate(
-              { productId: unknownOrder.productId, status: 'available' },
-              { $set: { status: 'assigned', orderId: orderId, assignedAt: new Date() } },
-              { returnDocument: 'after', sort: { createdAt: 1 } }
-            );
-            if (assignedStock && assignedStock.value) {
-              await db.collection('orders').updateOne(
-                { id: orderId },
-                { $set: { delivery: { status: 'delivered', items: [assignedStock.value], stockId: assignedStock.id || assignedStock._id, assignedAt: new Date() } } }
-              );
-            } else {
-              await db.collection('orders').updateOne(
-                { id: orderId },
-                { $set: { delivery: { status: 'pending', message: 'Stok bekleniyor', items: [] } } }
-              );
-            }
-          } catch (e) { console.error('Fallback stock error:', e); }
+          if (failedUser && failedUser.email) sendPaymentFailedEmail(db, failedOrder, failedUser).catch(err => console.error('Fail email err:', err));
+          if (failedUser && failedUser.phone) sendPaymentFailedSms(db, failedOrder, failedUser).catch(err => console.error('Fail SMS err:', err));
         }
       }
       
-      return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
+      return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId || ''}`);
     }
 
     // Admin: Test Shopinext API connection (DEBUG)
@@ -7426,8 +7136,8 @@ export async function POST(request) {
           amount: orderAmount.toFixed(2),
           currency: 'TRY',
           description: `PINLY-${order.id}`,
-          success_url: `${BASE_URL}/api/payment/payyeen/return/${order.id}`,
-          cancel_url: `${BASE_URL}/api/payment/payyeen/return/${order.id}`
+          success_url: `${BASE_URL}/api/payment/payyeen/success/${order.id}`,
+          cancel_url: `${BASE_URL}/api/payment/payyeen/fail/${order.id}`
         };
 
         // Store payment request for audit trail
@@ -11036,8 +10746,8 @@ export async function POST(request) {
           amount: orderAmount.toFixed(2),
           currency: 'TRY',
           description: `PINLY-${order.id}`,
-          success_url: `${BASE_URL}/api/payment/payyeen/return/${order.id}`,
-          cancel_url: `${BASE_URL}/api/payment/payyeen/return/${order.id}`
+          success_url: `${BASE_URL}/api/payment/payyeen/success/${order.id}`,
+          cancel_url: `${BASE_URL}/api/payment/payyeen/fail/${order.id}`
         };
 
         // Store payment request for audit trail

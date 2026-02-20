@@ -2493,8 +2493,14 @@ export async function GET(request) {
 
         const apiData = await response.json();
         
-        // Check if player was found
-        if (apiData.error || apiData.msg !== 'id_found') {
+        console.log('PUBG API response:', JSON.stringify(apiData));
+        
+        // Check if player was found - more flexible check
+        // Accept if: data.username exists OR msg is 'id_found'
+        const hasPlayerData = apiData.data && (apiData.data.username || apiData.data.nickname || apiData.data.name);
+        const isFound = apiData.msg === 'id_found' || hasPlayerData;
+        
+        if (apiData.error || !isFound) {
           return NextResponse.json({
             success: false,
             error: 'Oyuncu ID bulunamadı. Lütfen geçerli bir PUBG Mobile Global ID girin.'
@@ -2502,15 +2508,15 @@ export async function GET(request) {
         }
 
         // Check if account is banned
-        if (apiData.data.is_ban === 1) {
+        if (apiData.data && apiData.data.is_ban === 1) {
           return NextResponse.json({
             success: false,
             error: 'Bu hesap yasaklanmış (banned). UC yüklenemez.'
           }, { status: 400 });
         }
         
-        // Extract player name from API response
-        const playerName = apiData.data.username || `Player#${playerId.slice(-4)}`;
+        // Extract player name from API response (try multiple fields)
+        const playerName = apiData.data?.username || apiData.data?.nickname || apiData.data?.name || `Player#${playerId.slice(-4)}`;
         
         return NextResponse.json({
           success: true,

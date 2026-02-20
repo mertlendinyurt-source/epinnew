@@ -2174,6 +2174,7 @@ export async function GET(request) {
             valorantHeroImage: siteSettings?.valorantHeroImage || null,
             mlbbHeroImage: siteSettings?.mlbbHeroImage || null,
             lolHeroImage: siteSettings?.lolHeroImage || null,
+            robloxHeroImage: siteSettings?.robloxHeroImage || null,
             categoryIcon: siteSettings?.categoryIcon || null,
             siteName: siteSettings?.siteName || 'PINLY',
             metaTitle: siteSettings?.metaTitle || 'PINLY – Dijital Kod ve Oyun Satış Platformu',

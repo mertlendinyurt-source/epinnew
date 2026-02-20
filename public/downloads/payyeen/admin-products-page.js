@@ -1536,6 +1536,20 @@ export default function AdminProducts() {
                       <span className={`font-medium ${addFormData.game === 'lol' ? 'text-yellow-400' : 'text-white'}`}>LoL RP</span>
                     </div>
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddFormData({ ...addFormData, game: 'roblox' })}
+                    className={`flex-1 py-3 px-4 rounded-lg border transition-all ${
+                      addFormData.game === 'roblox' 
+                        ? 'border-green-500 bg-green-500/10' 
+                        : 'border-slate-700 bg-slate-800 hover:border-slate-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-lg">🟩</span>
+                      <span className={`font-medium ${addFormData.game === 'roblox' ? 'text-green-400' : 'text-white'}`}>Roblox</span>
+                    </div>
+                  </button>
                 </div>
               </div>
               

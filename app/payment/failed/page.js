@@ -4,8 +4,9 @@ import { useSearchParams } from 'next/navigation'
 import { XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Suspense } from 'react'
 
-export default function PaymentFailed() {
+function PaymentFailedContent() {
   const searchParams = useSearchParams()
   const orderId = searchParams.get('orderId')
 
@@ -56,5 +57,17 @@ export default function PaymentFailed() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function PaymentFailed() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center">
+        <div className="text-white">Yükleniyor...</div>
+      </div>
+    }>
+      <PaymentFailedContent />
+    </Suspense>
   )
 }

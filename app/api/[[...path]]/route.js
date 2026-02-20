@@ -7426,8 +7426,8 @@ export async function POST(request) {
           amount: orderAmount.toFixed(2),
           currency: 'TRY',
           description: `PINLY-${order.id}`,
-          success_url: `${BASE_URL}/api/payment/payyeen/return/${order.id}`,
-          cancel_url: `${BASE_URL}/api/payment/payyeen/return/${order.id}`
+          success_url: `${BASE_URL}/api/payment/payyeen/success/${order.id}`,
+          cancel_url: `${BASE_URL}/api/payment/payyeen/fail/${order.id}`
         };
 
         // Store payment request for audit trail
@@ -11036,8 +11036,8 @@ export async function POST(request) {
           amount: orderAmount.toFixed(2),
           currency: 'TRY',
           description: `PINLY-${order.id}`,
-          success_url: `${BASE_URL}/api/payment/payyeen/return/${order.id}`,
-          cancel_url: `${BASE_URL}/api/payment/payyeen/return/${order.id}`
+          success_url: `${BASE_URL}/api/payment/payyeen/success/${order.id}`,
+          cancel_url: `${BASE_URL}/api/payment/payyeen/fail/${order.id}`
         };
 
         // Store payment request for audit trail

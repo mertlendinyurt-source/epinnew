@@ -4092,6 +4092,31 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: content });
     }
 
+    // Admin: Get Roblox content (GET)
+    if (pathname === '/api/admin/content/roblox') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      let content = await db.collection('game_content').findOne({ game: 'roblox' });
+      
+      if (!content) {
+        content = {
+          game: 'roblox',
+          title: 'Roblox',
+          description: '',
+          defaultRating: 5.0,
+          defaultReviewCount: 1500
+        };
+      }
+
+      return NextResponse.json({ success: true, data: content });
+    }
+
     // Admin: Get email settings
     if (pathname === '/api/admin/email/settings') {
       const user = verifyAdminToken(request);

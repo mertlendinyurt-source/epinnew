@@ -53,8 +53,7 @@ const menuGroups = [
     items: [
       { href: '/admin/blog', icon: Newspaper, label: 'Blog / Haberler' },
       { href: '/admin/content/legal', icon: Briefcase, label: 'Kurumsal Sayfalar' },
-      { href: '/admin/content/pubg', icon: Gamepad2, label: 'PUBG İçerik' },
-      { href: '/admin/content/roblox', icon: Gamepad2, label: 'Roblox İçerik', color: 'text-green-400' },
+      { href: '/admin/content/pubg', icon: Gamepad2, label: 'Oyun İçeriği' },
       { href: '/admin/reviews', icon: Star, label: 'Değerlendirmeler', color: 'text-yellow-400' },
     ]
   },

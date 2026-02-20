@@ -10086,6 +10086,44 @@ export async function POST(request) {
       });
     }
 
+    // Admin: Save Roblox content
+    if (pathname === '/api/admin/content/roblox') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { title, description, defaultRating, defaultReviewCount } = body;
+
+      await db.collection('game_content').updateOne(
+        { game: 'roblox' },
+        {
+          $set: {
+            game: 'roblox',
+            title: title || 'Roblox',
+            description: description || '',
+            defaultRating: defaultRating || 5.0,
+            defaultReviewCount: defaultReviewCount || 0,
+            updatedBy: user.username,
+            updatedAt: new Date()
+          }
+        },
+        { upsert: true }
+      );
+
+      const robloxContent = await db.collection('game_content').findOne({ game: 'roblox' });
+      clearCache('content_roblox');
+
+      return NextResponse.json({
+        success: true,
+        message: 'Roblox içeriği güncellendi',
+        data: robloxContent
+      });
+    }
+
     // Admin: Add review
     if (pathname === '/api/admin/reviews') {
       const user = verifyAdminToken(request);

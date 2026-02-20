@@ -558,6 +558,20 @@ export default function SiteSettingsPage() {
                 large
               />
             </div>
+
+            <div className="pt-4 border-t border-slate-800">
+              <UploadBox
+                type="robloxHeroImage"
+                title="Roblox Hero Banner"
+                description="Roblox sayfası üst görseli"
+                uploads={uploads}
+                previews={previews}
+                handleFileSelect={handleFileSelect}
+                handleUploadAndSave={handleUploadAndSave}
+                saving={saving}
+                large
+              />
+            </div>
           </div>
 
           {/* SEO Preview */}

@@ -2753,13 +2753,43 @@ export async function GET(request) {
     // Payyeen ödeme sonrası kullanıcıyı buraya yönlendirir
     // Sipariş durumunu günceller, stok atar, sonra success/failed sayfasına redirect eder
     // ============================================
-    if (pathname === '/api/payment/payyeen/return') {
+    if (pathname.startsWith('/api/payment/payyeen/return')) {
       const url = new URL(request.url);
-      const orderId = url.searchParams.get('orderId');
-      const status = url.searchParams.get('status');
-      const transactionId = url.searchParams.get('transaction_id');
-      const epin = url.searchParams.get('epin');
-      const errorMessage = url.searchParams.get('message');
+      const fullUrl = request.url;
+      
+      // Payyeen URL'e ?status=success ekleyebilir, bu da ?orderId=xxx?status=success olur
+      // Bu durumda status parametresi düzgün parse edilemez
+      // Hem normal hem de bozuk URL formatını destekle
+      let orderId = url.searchParams.get('orderId');
+      let status = url.searchParams.get('status');
+      let transactionId = url.searchParams.get('transaction_id');
+      let epin = url.searchParams.get('epin');
+      let errorMessage = url.searchParams.get('message');
+      
+      // Eğer orderId içinde ? varsa, Payyeen URL'i bozmuş demek - düzelt
+      if (orderId && orderId.includes('?')) {
+        const parts = orderId.split('?');
+        orderId = parts[0];
+        // Parse the rest as additional params
+        const extraParams = new URLSearchParams(parts[1]);
+        if (!status) status = extraParams.get('status');
+        if (!transactionId) transactionId = extraParams.get('transaction_id');
+        if (!epin) epin = extraParams.get('epin');
+        if (!errorMessage) errorMessage = extraParams.get('message');
+      }
+      
+      // Fallback: URL'den regex ile status parametresini bul
+      if (!status) {
+        const statusMatch = fullUrl.match(/[?&]status=([^&]+)/g);
+        if (statusMatch) {
+          const lastMatch = statusMatch[statusMatch.length - 1];
+          status = lastMatch.replace(/.*status=/, '');
+        }
+      }
+      if (!transactionId) {
+        const txMatch = fullUrl.match(/transaction_id=([^&]+)/);
+        if (txMatch) transactionId = txMatch[1];
+      }
       
       // Doğru base URL'yi belirle (localhost yerine gerçek domain kullan)
       const host = request.headers.get('host');
@@ -2767,7 +2797,8 @@ export async function GET(request) {
       const protocol = protoHeader.split(',')[0].trim();
       const publicBaseUrl = host ? `${protocol}://${host}` : BASE_URL;
       
-      console.log('Payyeen return:', { orderId, status, transactionId, epin, publicBaseUrl });
+      console.log('Payyeen return RAW URL:', fullUrl);
+      console.log('Payyeen return PARSED:', { orderId, status, transactionId, epin, publicBaseUrl });
       
       if (!orderId) {
         return NextResponse.redirect(`${publicBaseUrl}/payment/failed?error=missing_order`);

@@ -25,13 +25,13 @@ function BannerIcon({ icon, size }) {
   };
 
   const colors = {
-    fire: { from: 'from-orange-500/20', to: 'to-yellow-500/20', border: 'border-orange-500/30', text: 'text-orange-500', shadow: 'shadow-orange-500/10' },
+    fire: { from: 'from-orange-500/20', to: 'to-red-500/20', border: 'border-orange-500/30', text: 'text-orange-500', shadow: 'shadow-orange-500/10' },
     bolt: { from: 'from-yellow-500/20', to: 'to-amber-500/20', border: 'border-yellow-500/30', text: 'text-yellow-500', shadow: 'shadow-yellow-500/10' },
     star: { from: 'from-yellow-500/20', to: 'to-amber-500/20', border: 'border-yellow-500/30', text: 'text-yellow-500', shadow: 'shadow-yellow-500/10' },
     gift: { from: 'from-pink-500/20', to: 'to-rose-500/20', border: 'border-pink-500/30', text: 'text-pink-500', shadow: 'shadow-pink-500/10' },
     sparkles: { from: 'from-purple-500/20', to: 'to-violet-500/20', border: 'border-purple-500/30', text: 'text-purple-500', shadow: 'shadow-purple-500/10' },
     tag: { from: 'from-green-500/20', to: 'to-emerald-500/20', border: 'border-green-500/30', text: 'text-green-500', shadow: 'shadow-green-500/10' },
-    percent: { from: 'from-yellow-500/20', to: 'to-rose-500/20', border: 'border-yellow-500/30', text: 'text-yellow-500', shadow: 'shadow-red-500/10' },
+    percent: { from: 'from-red-500/20', to: 'to-rose-500/20', border: 'border-red-500/30', text: 'text-red-500', shadow: 'shadow-red-500/10' },
     clock: { from: 'from-blue-500/20', to: 'to-cyan-500/20', border: 'border-blue-500/30', text: 'text-blue-500', shadow: 'shadow-blue-500/10' },
   };
 
@@ -58,12 +58,12 @@ function BannerIcon({ icon, size }) {
   );
 }
 
-export default function LolPage() {
-  // 🎮 VALORANT PAGE CONFIGURATION
-  const GAME_TYPE = 'lol'
-  const GAME_NAME = 'League of Legends'
-  const CURRENCY_NAME = 'RP'
-  const THEME_COLOR = 'yellow' // League of Legends sarı teması
+export default function RobloxPage() {
+  // 🎮 ROBLOX PAGE CONFIGURATION
+  const GAME_TYPE = 'roblox'
+  const GAME_NAME = 'Roblox'
+  const CURRENCY_NAME = 'Robux'
+  const THEME_COLOR = 'green' // Roblox yeşil teması
   
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -146,7 +146,7 @@ export default function LolPage() {
       }
       
       // TEK API ÇAĞRISI - Tüm veriler
-      const response = await fetch('/api/homepage?game=lol')
+      const response = await fetch('/api/homepage?game=roblox')
       const data = await response.json()
       
       if (data.success) {
@@ -275,30 +275,26 @@ export default function LolPage() {
     const productParam = urlParams.get('product');
     
     if (productParam) {
-      // Find product by slug (e.g., "460rp", "1005rp", "2105rp")
+      // Find product by slug (e.g., "375vp", "825vp", "1700vp")
       const slug = productParam.toLowerCase().replace('-', '');
       
-      // Try to match by RP amount in title
-      const rpAmount = parseInt(slug.replace('rp', '').replace('uc', ''));
+      // Try to match by Robux amount in title
+      const vpAmount = parseInt(slug.replace('robux', '').replace('vp', '').replace('uc', ''));
       
       let matchedProduct = null;
       
-      if (!isNaN(rpAmount)) {
-        // Find product that contains the RP amount in title or rpAmount field
+      if (!isNaN(vpAmount)) {
+        // Find product that contains the VP amount in title or vpAmount field
         matchedProduct = products.find(p => {
-          // Check rpAmount field first
-          if (p.rpAmount && parseInt(p.rpAmount) === rpAmount) {
-            return true;
-          }
-          // Check ucAmount as fallback
-          if (p.ucAmount && parseInt(p.ucAmount) === rpAmount) {
+          // Check vpAmount field first
+          if (p.vpAmount && parseInt(p.vpAmount) === vpAmount) {
             return true;
           }
           // Check title
           const title = p.title.toLowerCase();
-          const matches = title.match(/(\d+)\s*rp/i);
+          const matches = title.match(/(\d+)\s*robux/i) || title.match(/(\d+)\s*vp/i);
           if (matches) {
-            return parseInt(matches[1]) === rpAmount;
+            return parseInt(matches[1]) === vpAmount;
           }
           return false;
         });
@@ -694,11 +690,11 @@ export default function LolPage() {
     setPlayerValid(null)
     setTermsAccepted(true) // Terms pre-accepted for new product
     
-    // Update URL with product parameter for Google Ads tracking (RP için)
-    const rpAmount = product.title.match(/(\d+)\s*RP/i) || product.rpAmount;
-    if (rpAmount) {
-      const amount = typeof rpAmount === 'object' ? rpAmount[1] : (product.rpAmount || product.ucAmount);
-      const productSlug = amount + 'rp';
+    // Update URL with product parameter for Google Ads tracking (VP için)
+    const vpAmount = product.title.match(/(\d+)\s*Robux/i) || product.title.match(/(\d+)\s*VP/i) || product.vpAmount;
+    if (vpAmount) {
+      const amount = typeof vpAmount === 'object' ? vpAmount[1] : (product.vpAmount || product.ucAmount);
+      const productSlug = amount + 'robux';
       window.history.pushState({}, '', `?product=${productSlug}`);
     }
     
@@ -732,7 +728,7 @@ export default function LolPage() {
       return
     }
 
-    // League of Legends için Oyuncu ID kontrolü yok - direkt kod teslimi
+    // Roblox için Oyuncu ID kontrolü yok - direkt kod teslimi
 
     // 1. Check authentication
     const token = localStorage.getItem('userToken')
@@ -775,10 +771,10 @@ export default function LolPage() {
         },
         body: JSON.stringify({
           productId: selectedProduct.id,
-          playerId: 'lol-direct', // Valorant için oyuncu ID gerekmiyor
-          playerName: 'League of Legends RP',
+          playerId: 'roblox-direct', // Valorant için oyuncu ID gerekmiyor
+          playerName: 'Roblox Robux',
           paymentMethod: paymentMethod, // 'card' or 'balance'
-          game: GAME_TYPE, // 'valorant'
+          game: GAME_TYPE, // 'roblox'
           termsAccepted: termsAccepted,
           termsAcceptedAt: new Date().toISOString()
         })
@@ -962,7 +958,7 @@ export default function LolPage() {
         <div className="space-y-2">
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
-            <span className="text-sm text-white/70 group-hover:text-white transition-colors">League of Legends</span>
+            <span className="text-sm text-white/70 group-hover:text-white transition-colors">Roblox</span>
           </label>
         </div>
       </div>
@@ -970,7 +966,7 @@ export default function LolPage() {
       <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
         <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Bölge</h3>
         <div className="space-y-2">
-          {/* League of Legends için sadece Türkiye bölgesi */}
+          {/* Valorant için sadece Türkiye bölgesi */}
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
             <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
@@ -1108,7 +1104,7 @@ export default function LolPage() {
                       )}
                       <button 
                         onClick={handleLogout}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-yellow-400 hover:text-red-300 hover:bg-white/5 rounded-md transition-colors w-full text-left"
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-white/5 rounded-md transition-colors w-full text-left"
                       >
                         🚪 Çıkış Yap
                       </button>
@@ -1233,17 +1229,17 @@ export default function LolPage() {
                         </div>
                         <span className="text-sm text-white/90">Mobile Legends</span>
                       </a>
-                      <a href="/lol" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors bg-white/5">
+                      <a href="/lol" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
                         <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                           <img src="/lol-logo.png" alt="League of Legends" className="w-6 h-6 object-contain" />
                         </div>
-                        <span className="text-sm text-yellow-400">League of Legends</span>
+                        <span className="text-sm text-white/90">League of Legends</span>
                       </a>
-                      <a href="/roblox" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                      <a href="/roblox" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors bg-white/5">
                         <div className="w-8 h-8 rounded-lg bg-green-900 flex items-center justify-center overflow-hidden">
                           <span className="text-white font-bold text-xs">R</span>
                         </div>
-                        <span className="text-sm text-white/90">Roblox</span>
+                        <span className="text-sm text-green-400">Roblox</span>
                       </a>
                     </div>
                   </div>
@@ -1282,25 +1278,26 @@ export default function LolPage() {
               <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-blue-400 transition-colors whitespace-nowrap">Mobile Legends</span>
             </a>
 
-            {/* League of Legends - Active */}
+            {/* League of Legends */}
             <a 
               href="/lol" 
-              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/30 ring-1 ring-yellow-500/30 flex-shrink-0 group"
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-yellow-500/20 flex-shrink-0 group"
             >
               <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                 <img src="/lol-logo.png" alt="League of Legends" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
               </div>
-              <span className="text-xs md:text-sm font-medium text-yellow-400 whitespace-nowrap">League of Legends</span>
+              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-yellow-400 transition-colors whitespace-nowrap">League of Legends</span>
             </a>
-          {/* Roblox */}
+
+            {/* Roblox */}
             <a 
               href="/roblox" 
-              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-green-500/20 flex-shrink-0 group"
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-green-500/30 ring-1 ring-green-500/30 flex-shrink-0 group"
             >
               <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-green-900 flex items-center justify-center overflow-hidden">
                 <span className="text-white font-bold text-xs">R</span>
               </div>
-              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-green-400 transition-colors whitespace-nowrap">Roblox</span>
+              <span className="text-xs md:text-sm font-medium text-green-400 whitespace-nowrap">Roblox</span>
             </a>
           </div>
         </div>
@@ -1310,11 +1307,11 @@ export default function LolPage() {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: siteSettings?.lolHeroImage 
-              ? `url(${siteSettings.lolHeroImage})`
+            backgroundImage: siteSettings?.valorantHeroImage 
+              ? `url(${siteSettings.valorantHeroImage})`
               : siteSettings?.heroImage 
                 ? `url(${siteSettings.heroImage})`
-                : 'url(https://images.contentstack.io/v3/assets/blt731acb42bb3d1659/bltf8be62f1eb58b34c/5ef1134fa8a14a6c8c81b71e/LOL_PROMOART_14.jpg)'
+                : 'url(https://images.contentstack.io/v3/assets/bltb6530b271fddd0b1/blt81a85f0d04358da3/5eb7cdc19df5cf37047009d1/Valorant_VALORANT_Background.jpg)'
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-[#1a1a1a]" />
@@ -1338,9 +1335,9 @@ export default function LolPage() {
             )}
             <div>
               <div className="text-xs md:text-sm text-white/60 mb-0.5 md:mb-1">Anasayfa &gt; Oyunlar</div>
-              <h1 className="text-xl md:text-[28px] font-bold text-white">League of Legends</h1>
+              <h1 className="text-xl md:text-[28px] font-bold text-white">Valorant</h1>
               <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
-                <span className="text-yellow-400 text-xs md:text-sm">★★★★★ 5/5</span>
+                <span className="text-red-400 text-xs md:text-sm">★★★★★ 5/5</span>
                 <span className="text-white/70 text-xs md:text-sm">(2008) yorum</span>
               </div>
             </div>
@@ -1406,7 +1403,7 @@ export default function LolPage() {
                     className={`flex items-center gap-1 md:gap-1.5 font-mono text-lg md:text-xl lg:text-2xl font-bold tracking-wider transition-colors duration-500 ${
                       countdown.hours === 0 && countdown.minutes < 10
                         ? countdown.minutes < 5
-                          ? 'text-yellow-400'
+                          ? 'text-red-400'
                           : 'text-orange-400'
                         : 'text-cyan-400'
                     }`}
@@ -1423,7 +1420,7 @@ export default function LolPage() {
                       <div className={`px-2 py-1 md:px-2.5 md:py-1.5 rounded-md bg-black/40 border ${
                         countdown.hours === 0 && countdown.minutes < 10
                           ? countdown.minutes < 5
-                            ? 'border-yellow-500/40'
+                            ? 'border-red-500/40'
                             : 'border-orange-500/40'
                           : 'border-cyan-500/30'
                       }`}>
@@ -1437,7 +1434,7 @@ export default function LolPage() {
                     <span className={`animate-pulse ${
                       countdown.hours === 0 && countdown.minutes < 10
                         ? countdown.minutes < 5
-                          ? 'text-yellow-400'
+                          ? 'text-red-400'
                           : 'text-orange-400'
                         : 'text-cyan-400/80'
                     }`}>:</span>
@@ -1447,7 +1444,7 @@ export default function LolPage() {
                       <div className={`px-2 py-1 md:px-2.5 md:py-1.5 rounded-md bg-black/40 border ${
                         countdown.hours === 0 && countdown.minutes < 10
                           ? countdown.minutes < 5
-                            ? 'border-yellow-500/40'
+                            ? 'border-red-500/40'
                             : 'border-orange-500/40'
                           : 'border-cyan-500/30'
                       }`}>
@@ -1461,7 +1458,7 @@ export default function LolPage() {
                     <span className={`animate-pulse ${
                       countdown.hours === 0 && countdown.minutes < 10
                         ? countdown.minutes < 5
-                          ? 'text-yellow-400'
+                          ? 'text-red-400'
                           : 'text-orange-400'
                         : 'text-cyan-400/80'
                     }`}>:</span>
@@ -1471,7 +1468,7 @@ export default function LolPage() {
                       <div className={`px-2 py-1 md:px-2.5 md:py-1.5 rounded-md bg-black/40 border ${
                         countdown.hours === 0 && countdown.minutes < 10
                           ? countdown.minutes < 5
-                            ? 'border-yellow-500/40'
+                            ? 'border-red-500/40'
                             : 'border-orange-500/40'
                           : 'border-cyan-500/30'
                       }`}>
@@ -1562,7 +1559,7 @@ export default function LolPage() {
                     {/* Content Section */}
                     <div className="h-[58%] md:h-[45%] flex flex-col justify-between p-2.5 md:p-3.5">
                       <div>
-                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.rpAmount || product.ucAmount} RP Yükleme Şansı</div>
+                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.vpAmount || product.ucAmount} VP Yükleme Şansı</div>
                         <div className="flex items-center gap-1 mt-0.5">
                           <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>
@@ -1570,7 +1567,7 @@ export default function LolPage() {
                       </div>
                       <div className="mt-1">
                         {product.discountPrice < product.price && (
-                          <div className="text-[11px] md:text-[9px] text-yellow-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
+                          <div className="text-[11px] md:text-[9px] text-red-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
                         )}
                         <div className="text-[18px] md:text-[15px] font-bold text-white">₺ {product.discountPrice.toFixed(2).replace('.', ',')}</div>
                         {product.discountPercent > 0 && (
@@ -1653,17 +1650,17 @@ export default function LolPage() {
           <div className="p-6">
             {activeInfoTab === 'description' && (
               <div className="prose prose-invert max-w-none">
-                {/* League of Legends için özel açıklama - gameContent kullanılmıyor */}
+                {/* Valorant için özel açıklama - gameContent kullanılmıyor */}
                 <div className="space-y-6">
                   {/* Ana Açıklama */}
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-3">League of Legends: Oynanış, Tarihçe ve Sistem Gereksinimleri</h3>
+                    <h3 className="text-lg font-bold text-white mb-3">Valorant: Oynanış, Tarihçe ve Sistem Gereksinimleri</h3>
                     <div className={`text-white/80 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 ${!descriptionExpanded ? 'max-h-32 overflow-hidden' : ''}`}>
-                      <p className="mb-4">League of Legends, Riot Games tarafından geliştirilen ve 2009 yılında piyasaya sürülen ücretsiz MOBA türündeki dünyanın en popüler oyunudur. Oyun, Dota ve diğer strateji oyunlarının mekaniklerini birleştirerek benzersiz bir deneyim sunar.</p>
+                      <p className="mb-4">Valorant, Riot Games tarafından geliştirilen ve 2020 yılında piyasaya sürülen ücretsiz taktiksel birinci şahıs nişancı (FPS) oyunudur. Oyun, Counter-Strike serisi ile Overwatch'un mekaniklerini birleştirerek benzersiz bir deneyim sunar.</p>
                       
-                      <p className="mb-4">5v5 formatında oynanan League of Legends'ta, oyuncular farklı yeteneklere sahip ""Şampiyon" karakterlerini seçer. Her şampiyonun kendine özgü 4 yeteneği vardır: bir imza yeteneği, iki satın alınabilir yetenek ve bir ultimate yeteneği.</p>
+                      <p className="mb-4">5v5 formatında oynanan Valorant'ta, oyuncular farklı yeteneklere sahip "Ajan" karakterlerini seçer. Her ajanın kendine özgü 4 yeteneği vardır: bir imza yeteneği, iki satın alınabilir yetenek ve bir ultimate yeteneği.</p>
                       
-                      <p className="mb-4">Riot Points (RP), oyun içi premium para birimidir. RP ile şunları satın alabilirsiniz:</p>
+                      <p className="mb-4">Valorant Points (VP), oyun içi premium para birimidir. VP ile şunları satın alabilirsiniz:</p>
                       <ul className="list-disc list-inside mb-4 space-y-1">
                         <li>Silah skinleri ve koleksiyonları</li>
                         <li>Battle Pass ve Premium Battle Pass</li>
@@ -1685,7 +1682,7 @@ export default function LolPage() {
                   {/* Show More/Less Button */}
                   <button
                     onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                    className="flex items-center gap-2 text-yellow-400 hover:text-red-300 text-sm font-medium transition-colors"
+                    className="flex items-center gap-2 text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
                   >
                     {descriptionExpanded ? (
                       <>
@@ -1700,20 +1697,21 @@ export default function LolPage() {
                     )}
                   </button>
 
-                  {/* RP Paketleri */}
+                  {/* VP Paketleri */}
                   <div className="mt-8">
-                    <h3 className="text-lg font-bold text-white mb-4">RP Paketleri</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <h3 className="text-lg font-bold text-white mb-4">VP Paketleri</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                       {[
-                        { amount: '460 RP' },
-                        { amount: '1005 RP' },
-                        { amount: '2105 RP' },
-                        { amount: '3625 RP' },
-                        { amount: '5295 RP' },
-                        { amount: '10875 RP' }
+                        { amount: '375 VP', description: 'Başlangıç' },
+                        { amount: '825 VP', description: 'Standart' },
+                        { amount: '1700 VP', description: 'Popüler' },
+                        { amount: '2925 VP', description: 'Değerli' },
+                        { amount: '4325 VP', description: 'Premium' },
+                        { amount: '8900 VP', description: 'Mega' }
                       ].map((pkg, idx) => (
                         <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
-                          <div className="text-yellow-400 font-bold text-lg">{pkg.amount}</div>
+                          <div className="text-red-400 font-bold text-lg">{pkg.amount}</div>
+                          <div className="text-white/50 text-xs">{pkg.description}</div>
                         </div>
                       ))}
                     </div>
@@ -1723,7 +1721,7 @@ export default function LolPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">🚀 Anında Teslimat</h4>
-                      <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra RP kodunuz anında iletilir ve siparişleriniz bölümünde görüntülenir.</p>
+                      <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra Robux kodunuz anında iletilir ve siparişleriniz bölümünde görüntülenir.</p>
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">🔒 Güvenli Ödeme</h4>
@@ -1731,7 +1729,7 @@ export default function LolPage() {
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">💳 Kolay Kullanım</h4>
-                      <p className="text-white/60 text-sm">Aldığınız RP kodunu League of Legends mağazasında kullanabilirsiniz.</p>
+                      <p className="text-white/60 text-sm">Aldığınız VP kodunu Valorant mağazasında kullanabilirsiniz.</p>
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">📞 7/24 Destek</h4>
@@ -1744,16 +1742,16 @@ export default function LolPage() {
                     <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
                     <div className="space-y-3">
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">RP kodu nasıl kullanılır?</h4>
-                        <p className="text-white/60 text-sm">Riot Games hesabınıza giriş yapın, ardından kodlar.riotgames.com adresine gidin. "Kodu Kullan" bölümüne Riot Cash kodunuzu girin ve RP'niz hesabınıza yüklenecektir.</p>
+                        <h4 className="text-white font-medium mb-2">VP kodu nasıl kullanılır?</h4>
+                        <p className="text-white/60 text-sm">Valorant'ı açın, mağazaya gidin ve "VP Satın Al" bölümünden "Kodu Kullan" seçeneğini seçin. Aldığınız kodu girerek VP'nizi hesabınıza yükleyin.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">RP kodları hangi bölgelerde geçerli?</h4>
-                        <p className="text-white/60 text-sm">RP kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
+                        <h4 className="text-white font-medium mb-2">VP kodları hangi bölgelerde geçerli?</h4>
+                        <p className="text-white/60 text-sm">VP kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">Teslimat ne kadar sürer?</h4>
-                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra Riot Cash kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
+                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra Robux kodunuz anında e-posta ile gönderilir ve siparişleriniz bölümünde görüntülenir.</p>
                       </div>
                     </div>
                   </div>
@@ -1868,13 +1866,13 @@ export default function LolPage() {
             <div className="overflow-y-auto flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
-                  {/* League of Legends RP - Oyuncu ID gerekmez, direkt kod teslimi */}
-                  <div className="px-4 py-3.5 rounded bg-yellow-500/15 border border-yellow-500/30">
-                    <div className="flex items-center gap-2 text-yellow-400 mb-1 text-xs font-semibold">
+                  {/* Valorant VP - Oyuncu ID gerekmez, direkt kod teslimi */}
+                  <div className="px-4 py-3.5 rounded bg-red-500/15 border border-red-500/30">
+                    <div className="flex items-center gap-2 text-red-400 mb-1 text-xs font-semibold">
                       <Check className="w-4 h-4" />
-                      <span>League of Legends RP Kodu</span>
+                      <span>Roblox Robux Kodu</span>
                     </div>
-                    <p className="text-white/70 text-sm">Ödeme sonrası RP kodunuz anında e-posta ile gönderilecek ve Siparişlerim bölümünde görüntülenecektir.</p>
+                    <p className="text-white/70 text-sm">Ödeme sonrası Robux kodunuz anında e-posta ile gönderilecek ve Siparişlerim bölümünde görüntülenecektir.</p>
                   </div>
 
                   <div>
@@ -2042,12 +2040,12 @@ export default function LolPage() {
                       <div className="flex items-start gap-2 mb-4">
                         <input
                           type="checkbox"
-                          id="termsCheckboxLol"
+                          id="termsCheckboxValorant"
                           checked={termsAccepted}
                           onChange={(e) => setTermsAccepted(e.target.checked)}
                           className="mt-1 w-4 h-4 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-blue-500/50 cursor-pointer"
                         />
-                        <label htmlFor="termsCheckboxLol" className="text-xs text-white/50 cursor-pointer">
+                        <label htmlFor="termsCheckboxValorant" className="text-xs text-white/50 cursor-pointer">
                           <button 
                             type="button"
                             onClick={(e) => { e.preventDefault(); setTermsModalOpen(true); }}
@@ -2109,7 +2107,7 @@ export default function LolPage() {
           {/* Content - relative z-10 to stay above background */}
           <div className="relative z-10 bg-[#1e2229]/90 backdrop-blur-sm rounded-lg">
             {playerIdError && (
-              <div className="px-5 py-3 bg-yellow-600 flex items-start gap-3 rounded-t-lg">
+              <div className="px-5 py-3 bg-red-600 flex items-start gap-3 rounded-t-lg">
                 <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span className="text-red-600 font-bold text-sm">!</span>
                 </div>
@@ -2416,19 +2414,19 @@ export default function LolPage() {
               <h3 className="text-white font-semibold mb-2">2. Ürün Tanımları ve Özel Koşullar</h3>
               <p>Platformumuzda satışa sunulan ürünler farklı kategorilerde olabilir:</p>
               <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
-                <li><strong className="text-white">Standart RP Paketleri:</strong> Belirtilen miktarda RP içerir.</li>
-                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele RP miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, düşük veya yüksek miktarda RP çıkabilir. Bu tür ürünlerde çıkan RP miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
+                <li><strong className="text-white">Standart VP Paketleri:</strong> Belirtilen miktarda VP içerir.</li>
+                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele VP miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, düşük veya yüksek miktarda VP çıkabilir. Bu tür ürünlerde çıkan VP miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
               </ul>
             </section>
 
             <section>
               <h3 className="text-white font-semibold mb-2">3. İade ve İptal Politikası</h3>
-              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan RP miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
+              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan VP miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
             </section>
 
             <section>
               <h3 className="text-white font-semibold mb-2">4. Sorumluluk Reddi</h3>
-              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan RP miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
+              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan VP miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
             </section>
 
             <section>
@@ -2441,8 +2439,8 @@ export default function LolPage() {
               <p>Bu koşullar PINLY tarafından önceden haber verilmeksizin güncellenebilir.</p>
             </div>
 
-            <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-              <h4 className="text-yellow-400 font-semibold text-sm mb-2">⚠️ Yasal Uyarı</h4>
+            <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <h4 className="text-red-400 font-semibold text-sm mb-2">⚠️ Yasal Uyarı</h4>
               <p className="text-white/60 text-xs leading-relaxed">
                 İşbu satış koşullarını okuyarak ve onay kutusunu işaretleyerek, tüm maddeleri kabul ettiğinizi hukuken beyan etmiş bulunmaktasınız. Bu onay sonrasında, satış koşullarında belirtilen hususlara ilişkin şikayet, itiraz veya iade talep hakkınız bulunmamaktadır.
               </p>

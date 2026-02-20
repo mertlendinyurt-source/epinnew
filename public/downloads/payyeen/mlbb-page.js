@@ -1237,6 +1237,12 @@ export default function MLBBPage() {
                         </div>
                         <span className="text-sm text-white/90">League of Legends</span>
                       </a>
+                      <a href="/roblox" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-green-900 flex items-center justify-center overflow-hidden">
+                          <span className="text-white font-bold text-xs">R</span>
+                        </div>
+                        <span className="text-sm text-white/90">Roblox</span>
+                      </a>
                     </div>
                   </div>
                 </>
@@ -1283,6 +1289,16 @@ export default function MLBBPage() {
                 <img src="/lol-logo.png" alt="League of Legends" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
               </div>
               <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-yellow-400 transition-colors whitespace-nowrap">League of Legends</span>
+            </a>
+          {/* Roblox */}
+            <a 
+              href="/roblox" 
+              className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 bg-[#1a1f2e] hover:bg-[#232a3d] rounded-lg transition-all border border-green-500/20 flex-shrink-0 group"
+            >
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-green-900 flex items-center justify-center overflow-hidden">
+                <span className="text-white font-bold text-xs">R</span>
+              </div>
+              <span className="text-xs md:text-sm font-medium text-white/90 group-hover:text-green-400 transition-colors whitespace-nowrap">Roblox</span>
             </a>
           </div>
         </div>

@@ -2757,10 +2757,13 @@ export async function GET(request) {
       const url = new URL(request.url);
       const fullUrl = request.url;
       
-      // Payyeen URL'e ?status=success ekleyebilir, bu da ?orderId=xxx?status=success olur
-      // Bu durumda status parametresi düzgün parse edilemez
-      // Hem normal hem de bozuk URL formatını destekle
-      let orderId = url.searchParams.get('orderId');
+      // orderId'yi path'den veya query'den al
+      // Path format: /api/payment/payyeen/return/{orderId}?status=success
+      // Query format: /api/payment/payyeen/return?orderId=xxx&status=success (eski format)
+      const pathParts = pathname.split('/');
+      const pathOrderId = pathParts.length > 5 ? pathParts[5] : null; // /api/payment/payyeen/return/{orderId}
+      
+      let orderId = pathOrderId || url.searchParams.get('orderId');
       let status = url.searchParams.get('status');
       let transactionId = url.searchParams.get('transaction_id');
       let epin = url.searchParams.get('epin');
@@ -2770,7 +2773,6 @@ export async function GET(request) {
       if (orderId && orderId.includes('?')) {
         const parts = orderId.split('?');
         orderId = parts[0];
-        // Parse the rest as additional params
         const extraParams = new URLSearchParams(parts[1]);
         if (!status) status = extraParams.get('status');
         if (!transactionId) transactionId = extraParams.get('transaction_id');
@@ -2778,7 +2780,7 @@ export async function GET(request) {
         if (!errorMessage) errorMessage = extraParams.get('message');
       }
       
-      // Fallback: URL'den regex ile status parametresini bul
+      // Fallback: URL'den regex ile parametreleri bul
       if (!status) {
         const statusMatch = fullUrl.match(/[?&]status=([^&]+)/g);
         if (statusMatch) {

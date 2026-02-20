@@ -284,7 +284,7 @@ export default function RobloxPage() {
       let matchedProduct = null;
       
       if (!isNaN(vpAmount)) {
-        // Find product that contains the VP amount in title or vpAmount field
+        // Find product that contains the Robux amount in title
         matchedProduct = products.find(p => {
           // Check vpAmount field first
           if (p.vpAmount && parseInt(p.vpAmount) === vpAmount) {
@@ -690,7 +690,7 @@ export default function RobloxPage() {
     setPlayerValid(null)
     setTermsAccepted(true) // Terms pre-accepted for new product
     
-    // Update URL with product parameter for Google Ads tracking (VP için)
+    // Update URL with product parameter for Google Ads tracking (Robux için)
     const vpAmount = product.title.match(/(\d+)\s*Robux/i) || product.title.match(/(\d+)\s*VP/i) || product.vpAmount;
     if (vpAmount) {
       const amount = typeof vpAmount === 'object' ? vpAmount[1] : (product.vpAmount || product.ucAmount);
@@ -771,7 +771,7 @@ export default function RobloxPage() {
         },
         body: JSON.stringify({
           productId: selectedProduct.id,
-          playerId: 'roblox-direct', // Valorant için oyuncu ID gerekmiyor
+          playerId: 'roblox-direct', // Roblox için oyuncu ID gerekmiyor
           playerName: 'Roblox Robux',
           paymentMethod: paymentMethod, // 'card' or 'balance'
           game: GAME_TYPE, // 'roblox'
@@ -1307,11 +1307,11 @@ export default function RobloxPage() {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: siteSettings?.valorantHeroImage 
+            backgroundImage: siteSettings?.robloxHeroImage 
               ? `url(${siteSettings.valorantHeroImage})`
               : siteSettings?.heroImage 
                 ? `url(${siteSettings.heroImage})`
-                : 'url(https://images.contentstack.io/v3/assets/bltb6530b271fddd0b1/blt81a85f0d04358da3/5eb7cdc19df5cf37047009d1/Valorant_VALORANT_Background.jpg)'
+                : 'url(https://images.unsplash.com/photo-1616588589676-62b3bd4ff6d2?w=1920&h=400&fit=crop)'
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-[#1a1a1a]" />
@@ -1335,7 +1335,7 @@ export default function RobloxPage() {
             )}
             <div>
               <div className="text-xs md:text-sm text-white/60 mb-0.5 md:mb-1">Anasayfa &gt; Oyunlar</div>
-              <h1 className="text-xl md:text-[28px] font-bold text-white">Valorant</h1>
+              <h1 className="text-xl md:text-[28px] font-bold text-white">Roblox</h1>
               <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
                 <span className="text-red-400 text-xs md:text-sm">★★★★★ 5/5</span>
                 <span className="text-white/70 text-xs md:text-sm">(2008) yorum</span>
@@ -1559,7 +1559,7 @@ export default function RobloxPage() {
                     {/* Content Section */}
                     <div className="h-[58%] md:h-[45%] flex flex-col justify-between p-2.5 md:p-3.5">
                       <div>
-                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.vpAmount || product.ucAmount} VP Yükleme Şansı</div>
+                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.robuxAmount || product.vpAmount || product.ucAmount} Robux Yükleme Şansı</div>
                         <div className="flex items-center gap-1 mt-0.5">
                           <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>
@@ -1650,17 +1650,17 @@ export default function RobloxPage() {
           <div className="p-6">
             {activeInfoTab === 'description' && (
               <div className="prose prose-invert max-w-none">
-                {/* Valorant için özel açıklama - gameContent kullanılmıyor */}
+                {/* Roblox için özel açıklama - gameContent kullanılmıyor */}
                 <div className="space-y-6">
                   {/* Ana Açıklama */}
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-3">Valorant: Oynanış, Tarihçe ve Sistem Gereksinimleri</h3>
+                    <h3 className="text-lg font-bold text-white mb-3">Roblox: Oynanış ve Robux Rehberi</h3>
                     <div className={`text-white/80 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 ${!descriptionExpanded ? 'max-h-32 overflow-hidden' : ''}`}>
-                      <p className="mb-4">Valorant, Riot Games tarafından geliştirilen ve 2020 yılında piyasaya sürülen ücretsiz taktiksel birinci şahıs nişancı (FPS) oyunudur. Oyun, Counter-Strike serisi ile Overwatch'un mekaniklerini birleştirerek benzersiz bir deneyim sunar.</p>
+                      <p className="mb-4">Roblox, milyonlarca kullanıcının kendi oyunlarını oluşturup paylaşabildiği devasa bir çevrimiçi oyun platformudur. 2006 yılında kurulan Roblox, dünya genelinde 200 milyondan fazla aktif kullanıcıya sahiptir.</p>
                       
-                      <p className="mb-4">5v5 formatında oynanan Valorant'ta, oyuncular farklı yeteneklere sahip "Ajan" karakterlerini seçer. Her ajanın kendine özgü 4 yeteneği vardır: bir imza yeteneği, iki satın alınabilir yetenek ve bir ultimate yeteneği.</p>
+                      <p className="mb-4">Roblox'ta oyuncular binlerce farklı oyun deneyimi yaşayabilir, avatar özelleştirme yapabilir ve arkadaşlarıyla birlikte eğlenceli vakit geçirebilir. Platform hem mobil hem PC hem de konsollarda oynanabilir.</p>
                       
-                      <p className="mb-4">Valorant Points (VP), oyun içi premium para birimidir. VP ile şunları satın alabilirsiniz:</p>
+                      <p className="mb-4">Robux, Roblox'un oyun içi premium para birimidir. Robux ile şunları satın alabilirsiniz:</p>
                       <ul className="list-disc list-inside mb-4 space-y-1">
                         <li>Silah skinleri ve koleksiyonları</li>
                         <li>Battle Pass ve Premium Battle Pass</li>
@@ -1697,17 +1697,17 @@ export default function RobloxPage() {
                     )}
                   </button>
 
-                  {/* VP Paketleri */}
+                  {/* Robux Paketleri */}
                   <div className="mt-8">
-                    <h3 className="text-lg font-bold text-white mb-4">VP Paketleri</h3>
+                    <h3 className="text-lg font-bold text-white mb-4">Robux Paketleri</h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                       {[
-                        { amount: '375 VP', description: 'Başlangıç' },
-                        { amount: '825 VP', description: 'Standart' },
-                        { amount: '1700 VP', description: 'Popüler' },
-                        { amount: '2925 VP', description: 'Değerli' },
-                        { amount: '4325 VP', description: 'Premium' },
-                        { amount: '8900 VP', description: 'Mega' }
+                        { amount: '400 Robux', description: 'Başlangıç' },
+                        { amount: '800 Robux', description: 'Standart' },
+                        { amount: '1700 Robux', description: 'Popüler' },
+                        { amount: '2200 Robux', description: 'Değerli' },
+                        { amount: '4500 Robux', description: 'Premium' },
+                        { amount: '10000 Robux', description: 'Mega' }
                       ].map((pkg, idx) => (
                         <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
                           <div className="text-red-400 font-bold text-lg">{pkg.amount}</div>
@@ -1729,7 +1729,7 @@ export default function RobloxPage() {
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">💳 Kolay Kullanım</h4>
-                      <p className="text-white/60 text-sm">Aldığınız VP kodunu Valorant mağazasında kullanabilirsiniz.</p>
+                      <p className="text-white/60 text-sm">Aldığınız Robux kodunu Roblox'ta kullanabilirsiniz.</p>
                     </div>
                     <div className="bg-[#282d36] rounded-lg p-4">
                       <h4 className="text-white font-medium mb-2">📞 7/24 Destek</h4>
@@ -1742,12 +1742,12 @@ export default function RobloxPage() {
                     <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
                     <div className="space-y-3">
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">VP kodu nasıl kullanılır?</h4>
-                        <p className="text-white/60 text-sm">Valorant'ı açın, mağazaya gidin ve "VP Satın Al" bölümünden "Kodu Kullan" seçeneğini seçin. Aldığınız kodu girerek VP'nizi hesabınıza yükleyin.</p>
+                        <h4 className="text-white font-medium mb-2">Robux kodu nasıl kullanılır?</h4>
+                        <p className="text-white/60 text-sm">Roblox'u açın, Robux sayfasına gidin ve "Kodu Kullan" seçeneğini seçin. Aldığınız kodu girerek Robux'unuzu hesabınıza yükleyin.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
-                        <h4 className="text-white font-medium mb-2">VP kodları hangi bölgelerde geçerli?</h4>
-                        <p className="text-white/60 text-sm">VP kodları Türkiye bölgesi için geçerlidir. Hesabınızın Türkiye sunucusunda olduğundan emin olun.</p>
+                        <h4 className="text-white font-medium mb-2">Robux kodları hangi bölgelerde geçerli?</h4>
+                        <p className="text-white/60 text-sm">Robux kodları tüm bölgelerde geçerlidir. Roblox hesabınıza giriş yaparak kodu kullanabilirsiniz.</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4 border border-white/5">
                         <h4 className="text-white font-medium mb-2">Teslimat ne kadar sürer?</h4>
@@ -1866,7 +1866,7 @@ export default function RobloxPage() {
             <div className="overflow-y-auto flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
-                  {/* Valorant VP - Oyuncu ID gerekmez, direkt kod teslimi */}
+                  {/* Roblox Robux - Oyuncu ID gerekmez, direkt kod teslimi */}
                   <div className="px-4 py-3.5 rounded bg-red-500/15 border border-red-500/30">
                     <div className="flex items-center gap-2 text-red-400 mb-1 text-xs font-semibold">
                       <Check className="w-4 h-4" />
@@ -2040,12 +2040,12 @@ export default function RobloxPage() {
                       <div className="flex items-start gap-2 mb-4">
                         <input
                           type="checkbox"
-                          id="termsCheckboxValorant"
+                          id="termsCheckboxRoblox"
                           checked={termsAccepted}
                           onChange={(e) => setTermsAccepted(e.target.checked)}
                           className="mt-1 w-4 h-4 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-blue-500/50 cursor-pointer"
                         />
-                        <label htmlFor="termsCheckboxValorant" className="text-xs text-white/50 cursor-pointer">
+                        <label htmlFor="termsCheckboxRoblox" className="text-xs text-white/50 cursor-pointer">
                           <button 
                             type="button"
                             onClick={(e) => { e.preventDefault(); setTermsModalOpen(true); }}
@@ -2414,19 +2414,19 @@ export default function RobloxPage() {
               <h3 className="text-white font-semibold mb-2">2. Ürün Tanımları ve Özel Koşullar</h3>
               <p>Platformumuzda satışa sunulan ürünler farklı kategorilerde olabilir:</p>
               <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
-                <li><strong className="text-white">Standart VP Paketleri:</strong> Belirtilen miktarda VP içerir.</li>
-                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele VP miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, düşük veya yüksek miktarda VP çıkabilir. Bu tür ürünlerde çıkan VP miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
+                <li><strong className="text-white">Standart Robux Paketleri:</strong> Belirtilen miktarda Robux içerir.</li>
+                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele Robux miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, düşük veya yüksek miktarda Robux çıkabilir. Bu tür ürünlerde çıkan Robux miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
               </ul>
             </section>
 
             <section>
               <h3 className="text-white font-semibold mb-2">3. İade ve İptal Politikası</h3>
-              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan VP miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
+              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan Robux miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
             </section>
 
             <section>
               <h3 className="text-white font-semibold mb-2">4. Sorumluluk Reddi</h3>
-              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan VP miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
+              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan Robux miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
             </section>
 
             <section>

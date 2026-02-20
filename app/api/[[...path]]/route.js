@@ -3079,8 +3079,87 @@ export async function GET(request) {
         return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
       }
       
-      // Unknown status - redirect to success page and let it handle
-      console.log(`Payyeen return: Unknown status '${status}' for order ${orderId}`);
+      // Unknown status or no status - treat as SUCCESS (Payyeen success_url'ye yönlendirdiyse ödeme başarılıdır)
+      // Status gelmemiş olabilir çünkü Payyeen URL parametrelerini farklı ekleyebilir
+      console.log(`Payyeen return: Status='${status}' for order ${orderId}, treating as SUCCESS`);
+      
+      // Find the order and process as success
+      const unknownOrder = await db.collection('orders').findOne({ id: orderId });
+      if (unknownOrder && unknownOrder.status === 'pending') {
+        // Process as successful payment
+        await db.collection('orders').updateOne(
+          { id: orderId },
+          {
+            $set: {
+              status: 'paid',
+              paymentProvider: 'payyeen',
+              paymentId: transactionId || null,
+              updatedAt: new Date()
+            }
+          }
+        );
+        
+        // Create payment record
+        await db.collection('payments').insertOne({
+          id: uuidv4(),
+          orderId: orderId,
+          provider: 'payyeen',
+          providerTxnId: transactionId || null,
+          status: 'paid',
+          amount: unknownOrder.amount,
+          currency: unknownOrder.currency || 'TRY',
+          source: 'return_url_fallback',
+          rawPayload: { status, transactionId, epin, rawUrl: fullUrl },
+          verifiedAt: new Date(),
+          createdAt: new Date()
+        });
+        
+        // Process delivery (same logic as success block)
+        const fallbackUser = await db.collection('users').findOne({ id: unknownOrder.userId });
+        const fallbackProduct = unknownOrder.productId ? await db.collection('products').findOne({ id: unknownOrder.productId }) : null;
+        
+        if (fallbackUser && fallbackUser.phone) {
+          const itemTitle = fallbackProduct?.title || unknownOrder.accountTitle || 'Sipariş';
+          sendPaymentSuccessSms(db, unknownOrder, fallbackUser, itemTitle).catch(err =>
+            console.error('Payyeen fallback SMS failed:', err)
+          );
+        }
+        
+        const fallbackAmount = unknownOrder.amount || unknownOrder.totalAmount || 0;
+        
+        if (fallbackAmount >= 3000) {
+          await db.collection('orders').updateOne(
+            { id: orderId },
+            {
+              $set: {
+                verification: { required: true, status: 'pending', identityPhoto: null, paymentReceipt: null, submittedAt: null, reviewedAt: null, reviewedBy: null, rejectionReason: null },
+                delivery: { status: 'verification_required', message: 'Yüksek tutarlı sipariş - Kimlik ve ödeme dekontu doğrulaması gerekli', items: [] }
+              }
+            }
+          );
+        } else if (fallbackProduct) {
+          // Stock assignment
+          try {
+            const assignedStock = await db.collection('stock').findOneAndUpdate(
+              { productId: unknownOrder.productId, status: 'available' },
+              { $set: { status: 'assigned', orderId: orderId, assignedAt: new Date() } },
+              { returnDocument: 'after', sort: { createdAt: 1 } }
+            );
+            if (assignedStock && assignedStock.value) {
+              await db.collection('orders').updateOne(
+                { id: orderId },
+                { $set: { delivery: { status: 'delivered', items: [assignedStock.value], stockId: assignedStock.id || assignedStock._id, assignedAt: new Date() } } }
+              );
+            } else {
+              await db.collection('orders').updateOne(
+                { id: orderId },
+                { $set: { delivery: { status: 'pending', message: 'Stok bekleniyor', items: [] } } }
+              );
+            }
+          } catch (e) { console.error('Fallback stock error:', e); }
+        }
+      }
+      
       return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
     }
 

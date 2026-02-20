@@ -9573,7 +9573,7 @@ export async function POST(request) {
         );
       }
 
-      const { logo, favicon, heroImage, valorantHeroImage, mlbbHeroImage, lolHeroImage, categoryIcon, siteName, metaTitle, metaDescription, contactEmail, contactPhone, liveSupportEnabled, liveSupportHours, dailyBannerEnabled, dailyBannerTitle, dailyBannerSubtitle, dailyBannerIcon, dailyCountdownEnabled, dailyCountdownLabel } = body;
+      const { logo, favicon, heroImage, valorantHeroImage, mlbbHeroImage, lolHeroImage, robloxHeroImage, categoryIcon, siteName, metaTitle, metaDescription, contactEmail, contactPhone, liveSupportEnabled, liveSupportHours, dailyBannerEnabled, dailyBannerTitle, dailyBannerSubtitle, dailyBannerIcon, dailyCountdownEnabled, dailyCountdownLabel } = body;
 
       // Validation
       if (siteName !== undefined && (!siteName || siteName.trim().length === 0)) {

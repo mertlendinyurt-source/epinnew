@@ -1392,6 +1392,18 @@ async function sendAbandonedOrderSms(db, order, user) {
   return sendSms(db, user.phone, message, 'abandoned_order', order.id);
 }
 
+async function sendPaymentFailedSms(db, order, user) {
+  const settings = await getSmsSettings(db);
+  if (!settings || !settings.enabled) {
+    console.log('Payment failed SMS disabled');
+    return { success: false, reason: 'disabled' };
+  }
+  
+  const customerName = user.firstName || user.name || 'Müşteri';
+  const message = `${customerName} Merhaba, odemeniz basarisiz oldu. Garanti bankasi kartlari kabul edilmemektedir. Lutfen baska bir kart ile tekrar deneyin. pinly.com.tr - PINLY`;
+  return sendSms(db, user.phone, message, 'payment_failed', order.id);
+}
+
 // ============================================
 // EMAIL SERVICE
 // ============================================
@@ -2796,6 +2808,11 @@ export async function GET(request) {
           if (failedUser && failedUser.email) {
             sendPaymentFailedEmail(db, failedOrder, failedUser).catch(err =>
               console.error('Payment failed email error:', err)
+            );
+          }
+          if (failedUser && failedUser.phone) {
+            sendPaymentFailedSms(db, failedOrder, failedUser).catch(err =>
+              console.error('Payment failed SMS error:', err)
             );
           }
         }

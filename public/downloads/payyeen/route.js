@@ -2174,6 +2174,7 @@ export async function GET(request) {
             valorantHeroImage: siteSettings?.valorantHeroImage || null,
             mlbbHeroImage: siteSettings?.mlbbHeroImage || null,
             lolHeroImage: siteSettings?.lolHeroImage || null,
+            robloxHeroImage: siteSettings?.robloxHeroImage || null,
             categoryIcon: siteSettings?.categoryIcon || null,
             siteName: siteSettings?.siteName || 'PINLY',
             metaTitle: siteSettings?.metaTitle || 'PINLY – Dijital Kod ve Oyun Satış Platformu',
@@ -3781,6 +3782,7 @@ export async function GET(request) {
           valorantHeroImage: settings?.valorantHeroImage || null,
           mlbbHeroImage: settings?.mlbbHeroImage || null,
           lolHeroImage: settings?.lolHeroImage || null,
+          robloxHeroImage: settings?.robloxHeroImage || null,
           categoryIcon: settings?.categoryIcon || null,
           siteName: settings?.siteName || 'PINLY',
           metaTitle: settings?.metaTitle || 'PINLY – Dijital Kod ve Oyun Satış Platformu',
@@ -9571,7 +9573,7 @@ export async function POST(request) {
         );
       }
 
-      const { logo, favicon, heroImage, valorantHeroImage, mlbbHeroImage, lolHeroImage, categoryIcon, siteName, metaTitle, metaDescription, contactEmail, contactPhone, liveSupportEnabled, liveSupportHours, dailyBannerEnabled, dailyBannerTitle, dailyBannerSubtitle, dailyBannerIcon, dailyCountdownEnabled, dailyCountdownLabel } = body;
+      const { logo, favicon, heroImage, valorantHeroImage, mlbbHeroImage, lolHeroImage, robloxHeroImage, categoryIcon, siteName, metaTitle, metaDescription, contactEmail, contactPhone, liveSupportEnabled, liveSupportHours, dailyBannerEnabled, dailyBannerTitle, dailyBannerSubtitle, dailyBannerIcon, dailyCountdownEnabled, dailyCountdownLabel } = body;
 
       // Validation
       if (siteName !== undefined && (!siteName || siteName.trim().length === 0)) {
@@ -9622,6 +9624,7 @@ export async function POST(request) {
         valorantHeroImage: valorantHeroImage !== undefined ? valorantHeroImage : existingSettings?.valorantHeroImage || null,
         mlbbHeroImage: mlbbHeroImage !== undefined ? mlbbHeroImage : existingSettings?.mlbbHeroImage || null,
         lolHeroImage: lolHeroImage !== undefined ? lolHeroImage : existingSettings?.lolHeroImage || null,
+        robloxHeroImage: robloxHeroImage !== undefined ? robloxHeroImage : existingSettings?.robloxHeroImage || null,
         categoryIcon: categoryIcon !== undefined ? categoryIcon : existingSettings?.categoryIcon || null,
         siteName: siteName !== undefined ? siteName.trim() : existingSettings?.siteName || 'PINLY',
         metaTitle: metaTitle !== undefined ? metaTitle.trim() : existingSettings?.metaTitle || '',

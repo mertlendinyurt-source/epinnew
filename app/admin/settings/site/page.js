@@ -20,6 +20,7 @@ export default function SiteSettingsPage() {
     valorantHeroImage: null,
     mlbbHeroImage: null,
     lolHeroImage: null,
+    robloxHeroImage: null,
     categoryIcon: null,
     siteName: '',
     metaTitle: '',

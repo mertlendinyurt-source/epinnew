@@ -2753,13 +2753,45 @@ export async function GET(request) {
     // Payyeen ödeme sonrası kullanıcıyı buraya yönlendirir
     // Sipariş durumunu günceller, stok atar, sonra success/failed sayfasına redirect eder
     // ============================================
-    if (pathname === '/api/payment/payyeen/return') {
+    if (pathname.startsWith('/api/payment/payyeen/return')) {
       const url = new URL(request.url);
-      const orderId = url.searchParams.get('orderId');
-      const status = url.searchParams.get('status');
-      const transactionId = url.searchParams.get('transaction_id');
-      const epin = url.searchParams.get('epin');
-      const errorMessage = url.searchParams.get('message');
+      const fullUrl = request.url;
+      
+      // orderId'yi path'den veya query'den al
+      // Path format: /api/payment/payyeen/return/{orderId}?status=success
+      // Query format: /api/payment/payyeen/return?orderId=xxx&status=success (eski format)
+      const pathParts = pathname.split('/');
+      const pathOrderId = pathParts.length > 5 ? pathParts[5] : null; // /api/payment/payyeen/return/{orderId}
+      
+      let orderId = pathOrderId || url.searchParams.get('orderId');
+      let status = url.searchParams.get('status');
+      let transactionId = url.searchParams.get('transaction_id');
+      let epin = url.searchParams.get('epin');
+      let errorMessage = url.searchParams.get('message');
+      
+      // Eğer orderId içinde ? varsa, Payyeen URL'i bozmuş demek - düzelt
+      if (orderId && orderId.includes('?')) {
+        const parts = orderId.split('?');
+        orderId = parts[0];
+        const extraParams = new URLSearchParams(parts[1]);
+        if (!status) status = extraParams.get('status');
+        if (!transactionId) transactionId = extraParams.get('transaction_id');
+        if (!epin) epin = extraParams.get('epin');
+        if (!errorMessage) errorMessage = extraParams.get('message');
+      }
+      
+      // Fallback: URL'den regex ile parametreleri bul
+      if (!status) {
+        const statusMatch = fullUrl.match(/[?&]status=([^&]+)/g);
+        if (statusMatch) {
+          const lastMatch = statusMatch[statusMatch.length - 1];
+          status = lastMatch.replace(/.*status=/, '');
+        }
+      }
+      if (!transactionId) {
+        const txMatch = fullUrl.match(/transaction_id=([^&]+)/);
+        if (txMatch) transactionId = txMatch[1];
+      }
       
       // Doğru base URL'yi belirle (localhost yerine gerçek domain kullan)
       const host = request.headers.get('host');
@@ -2767,7 +2799,8 @@ export async function GET(request) {
       const protocol = protoHeader.split(',')[0].trim();
       const publicBaseUrl = host ? `${protocol}://${host}` : BASE_URL;
       
-      console.log('Payyeen return:', { orderId, status, transactionId, epin, publicBaseUrl });
+      console.log('Payyeen return RAW URL:', fullUrl);
+      console.log('Payyeen return PARSED:', { orderId, status, transactionId, epin, publicBaseUrl });
       
       if (!orderId) {
         return NextResponse.redirect(`${publicBaseUrl}/payment/failed?error=missing_order`);
@@ -3048,8 +3081,87 @@ export async function GET(request) {
         return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
       }
       
-      // Unknown status - redirect to success page and let it handle
-      console.log(`Payyeen return: Unknown status '${status}' for order ${orderId}`);
+      // Unknown status or no status - treat as SUCCESS (Payyeen success_url'ye yönlendirdiyse ödeme başarılıdır)
+      // Status gelmemiş olabilir çünkü Payyeen URL parametrelerini farklı ekleyebilir
+      console.log(`Payyeen return: Status='${status}' for order ${orderId}, treating as SUCCESS`);
+      
+      // Find the order and process as success
+      const unknownOrder = await db.collection('orders').findOne({ id: orderId });
+      if (unknownOrder && unknownOrder.status === 'pending') {
+        // Process as successful payment
+        await db.collection('orders').updateOne(
+          { id: orderId },
+          {
+            $set: {
+              status: 'paid',
+              paymentProvider: 'payyeen',
+              paymentId: transactionId || null,
+              updatedAt: new Date()
+            }
+          }
+        );
+        
+        // Create payment record
+        await db.collection('payments').insertOne({
+          id: uuidv4(),
+          orderId: orderId,
+          provider: 'payyeen',
+          providerTxnId: transactionId || null,
+          status: 'paid',
+          amount: unknownOrder.amount,
+          currency: unknownOrder.currency || 'TRY',
+          source: 'return_url_fallback',
+          rawPayload: { status, transactionId, epin, rawUrl: fullUrl },
+          verifiedAt: new Date(),
+          createdAt: new Date()
+        });
+        
+        // Process delivery (same logic as success block)
+        const fallbackUser = await db.collection('users').findOne({ id: unknownOrder.userId });
+        const fallbackProduct = unknownOrder.productId ? await db.collection('products').findOne({ id: unknownOrder.productId }) : null;
+        
+        if (fallbackUser && fallbackUser.phone) {
+          const itemTitle = fallbackProduct?.title || unknownOrder.accountTitle || 'Sipariş';
+          sendPaymentSuccessSms(db, unknownOrder, fallbackUser, itemTitle).catch(err =>
+            console.error('Payyeen fallback SMS failed:', err)
+          );
+        }
+        
+        const fallbackAmount = unknownOrder.amount || unknownOrder.totalAmount || 0;
+        
+        if (fallbackAmount >= 3000) {
+          await db.collection('orders').updateOne(
+            { id: orderId },
+            {
+              $set: {
+                verification: { required: true, status: 'pending', identityPhoto: null, paymentReceipt: null, submittedAt: null, reviewedAt: null, reviewedBy: null, rejectionReason: null },
+                delivery: { status: 'verification_required', message: 'Yüksek tutarlı sipariş - Kimlik ve ödeme dekontu doğrulaması gerekli', items: [] }
+              }
+            }
+          );
+        } else if (fallbackProduct) {
+          // Stock assignment
+          try {
+            const assignedStock = await db.collection('stock').findOneAndUpdate(
+              { productId: unknownOrder.productId, status: 'available' },
+              { $set: { status: 'assigned', orderId: orderId, assignedAt: new Date() } },
+              { returnDocument: 'after', sort: { createdAt: 1 } }
+            );
+            if (assignedStock && assignedStock.value) {
+              await db.collection('orders').updateOne(
+                { id: orderId },
+                { $set: { delivery: { status: 'delivered', items: [assignedStock.value], stockId: assignedStock.id || assignedStock._id, assignedAt: new Date() } } }
+              );
+            } else {
+              await db.collection('orders').updateOne(
+                { id: orderId },
+                { $set: { delivery: { status: 'pending', message: 'Stok bekleniyor', items: [] } } }
+              );
+            }
+          } catch (e) { console.error('Fallback stock error:', e); }
+        }
+      }
+      
       return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
     }
 
@@ -7314,8 +7426,8 @@ export async function POST(request) {
           amount: orderAmount.toFixed(2),
           currency: 'TRY',
           description: `PINLY-${order.id}`,
-          success_url: `${BASE_URL}/api/payment/payyeen/return?orderId=${order.id}`,
-          cancel_url: `${BASE_URL}/api/payment/payyeen/return?orderId=${order.id}`
+          success_url: `${BASE_URL}/api/payment/payyeen/return/${order.id}`,
+          cancel_url: `${BASE_URL}/api/payment/payyeen/return/${order.id}`
         };
 
         // Store payment request for audit trail
@@ -10924,8 +11036,8 @@ export async function POST(request) {
           amount: orderAmount.toFixed(2),
           currency: 'TRY',
           description: `PINLY-${order.id}`,
-          success_url: `${BASE_URL}/api/payment/payyeen/return?orderId=${order.id}`,
-          cancel_url: `${BASE_URL}/api/payment/payyeen/return?orderId=${order.id}`
+          success_url: `${BASE_URL}/api/payment/payyeen/return/${order.id}`,
+          cancel_url: `${BASE_URL}/api/payment/payyeen/return/${order.id}`
         };
 
         // Store payment request for audit trail

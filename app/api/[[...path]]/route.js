@@ -3940,6 +3940,30 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: content });
     }
 
+    // Public: Get Roblox content - WITH CACHE
+    if (pathname === '/api/content/roblox') {
+      const cacheKey = 'content_roblox';
+      let content = getCached(cacheKey);
+      
+      if (!content) {
+        content = await db.collection('game_content').findOne({ game: 'roblox' });
+        
+        if (!content) {
+          content = {
+            game: 'roblox',
+            title: 'Roblox',
+            description: 'Roblox Robux satın alarak oyun içi avantajlar elde edin.',
+            defaultRating: 5.0,
+            defaultReviewCount: 1500,
+            updatedAt: new Date()
+          };
+        }
+        setCache(cacheKey, content, 300000);
+      }
+      
+      return NextResponse.json({ success: true, data: content });
+    }
+
     // Public: Get reviews with pagination - WITH CACHE
     if (pathname === '/api/reviews') {
       const game = searchParams.get('game') || 'pubg';

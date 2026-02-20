@@ -3940,6 +3940,30 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: content });
     }
 
+    // Public: Get Roblox content - WITH CACHE
+    if (pathname === '/api/content/roblox') {
+      const cacheKey = 'content_roblox';
+      let content = getCached(cacheKey);
+      
+      if (!content) {
+        content = await db.collection('game_content').findOne({ game: 'roblox' });
+        
+        if (!content) {
+          content = {
+            game: 'roblox',
+            title: 'Roblox',
+            description: 'Roblox Robux satın alarak oyun içi avantajlar elde edin.',
+            defaultRating: 5.0,
+            defaultReviewCount: 1500,
+            updatedAt: new Date()
+          };
+        }
+        setCache(cacheKey, content, 300000);
+      }
+      
+      return NextResponse.json({ success: true, data: content });
+    }
+
     // Public: Get reviews with pagination - WITH CACHE
     if (pathname === '/api/reviews') {
       const game = searchParams.get('game') || 'pubg';
@@ -4062,6 +4086,31 @@ export async function GET(request) {
           description: '',
           defaultRating: 5.0,
           defaultReviewCount: 2008
+        };
+      }
+
+      return NextResponse.json({ success: true, data: content });
+    }
+
+    // Admin: Get Roblox content (GET)
+    if (pathname === '/api/admin/content/roblox') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      let content = await db.collection('game_content').findOne({ game: 'roblox' });
+      
+      if (!content) {
+        content = {
+          game: 'roblox',
+          title: 'Roblox',
+          description: '',
+          defaultRating: 5.0,
+          defaultReviewCount: 1500
         };
       }
 
@@ -10059,6 +10108,44 @@ export async function POST(request) {
         success: true,
         message: 'İçerik güncellendi',
         data: content
+      });
+    }
+
+    // Admin: Save Roblox content
+    if (pathname === '/api/admin/content/roblox') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { title, description, defaultRating, defaultReviewCount } = body;
+
+      await db.collection('game_content').updateOne(
+        { game: 'roblox' },
+        {
+          $set: {
+            game: 'roblox',
+            title: title || 'Roblox',
+            description: description || '',
+            defaultRating: defaultRating || 5.0,
+            defaultReviewCount: defaultReviewCount || 0,
+            updatedBy: user.username,
+            updatedAt: new Date()
+          }
+        },
+        { upsert: true }
+      );
+
+      const robloxContent = await db.collection('game_content').findOne({ game: 'roblox' });
+      clearCache('content_roblox');
+
+      return NextResponse.json({
+        success: true,
+        message: 'Roblox içeriği güncellendi',
+        data: robloxContent
       });
     }
 

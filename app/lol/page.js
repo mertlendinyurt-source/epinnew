@@ -1239,6 +1239,12 @@ export default function LolPage() {
                         </div>
                         <span className="text-sm text-yellow-400">League of Legends</span>
                       </a>
+                      <a href="/roblox" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-green-900 flex items-center justify-center overflow-hidden">
+                          <span className="text-white font-bold text-xs">R</span>
+                        </div>
+                        <span className="text-sm text-white/90">Roblox</span>
+                      </a>
                     </div>
                   </div>
                 </>

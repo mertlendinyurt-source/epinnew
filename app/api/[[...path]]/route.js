@@ -9624,6 +9624,7 @@ export async function POST(request) {
         valorantHeroImage: valorantHeroImage !== undefined ? valorantHeroImage : existingSettings?.valorantHeroImage || null,
         mlbbHeroImage: mlbbHeroImage !== undefined ? mlbbHeroImage : existingSettings?.mlbbHeroImage || null,
         lolHeroImage: lolHeroImage !== undefined ? lolHeroImage : existingSettings?.lolHeroImage || null,
+        robloxHeroImage: robloxHeroImage !== undefined ? robloxHeroImage : existingSettings?.robloxHeroImage || null,
         categoryIcon: categoryIcon !== undefined ? categoryIcon : existingSettings?.categoryIcon || null,
         siteName: siteName !== undefined ? siteName.trim() : existingSettings?.siteName || 'PINLY',
         metaTitle: metaTitle !== undefined ? metaTitle.trim() : existingSettings?.metaTitle || '',

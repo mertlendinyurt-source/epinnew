@@ -2496,15 +2496,21 @@ export async function GET(request) {
         console.log('PUBG API response:', JSON.stringify(apiData));
         
         // Check if player was found - more flexible check
-        // Accept if: data.username exists OR msg is 'id_found'
         const hasPlayerData = apiData.data && (apiData.data.username || apiData.data.nickname || apiData.data.name);
         const isFound = apiData.msg === 'id_found' || hasPlayerData;
         
-        if (apiData.error || !isFound) {
+        if (!isFound) {
+          // API couldn't find the player - but don't block the user
+          // Accept with fallback name instead of returning error
+          console.log(`PUBG API: Player ${playerId} not found by API, using fallback name`);
           return NextResponse.json({
-            success: false,
-            error: 'Oyuncu ID bulunamadı. Lütfen geçerli bir PUBG Mobile Global ID girin.'
-          }, { status: 404 });
+            success: true,
+            data: {
+              playerId,
+              playerName: `Player#${playerId.slice(-4)}`,
+              verified: false
+            }
+          });
         }
 
         // Check if account is banned

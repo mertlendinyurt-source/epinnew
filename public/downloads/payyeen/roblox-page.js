@@ -1308,7 +1308,7 @@ export default function RobloxPage() {
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage: siteSettings?.robloxHeroImage 
-              ? `url(${siteSettings.valorantHeroImage})`
+              ? `url(${siteSettings.robloxHeroImage})`
               : siteSettings?.heroImage 
                 ? `url(${siteSettings.heroImage})`
                 : 'url(https://images.unsplash.com/photo-1616588589676-62b3bd4ff6d2?w=1920&h=400&fit=crop)'

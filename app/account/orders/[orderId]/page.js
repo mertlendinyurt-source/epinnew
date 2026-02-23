@@ -384,7 +384,7 @@ export default function OrderDetailPage() {
                   <div className="text-sm text-gray-400 mb-2">>{isEN ? 'Payment Status' : 'Ödeme Durumu'}</div>
                   <div className="flex items-center gap-2">
                     <span className={`px-3 py-1.5 rounded-lg text-sm font-semibold text-white ${getStatusColor(order.status)}`}>
-                      {order.status === 'paid' ? '✓ Ödendi' : order.status === 'pending' ? '⏳ Bekliyor' : '✗ Başarısız'}
+                      {order.status === 'paid' ? isEN ? '✓ Paid' : '✓ Ödendi' : order.status === 'pending' ? isEN ? '⏳ Pending' : '⏳ Bekliyor' : isEN ? '✗ Failed' : '✗ Başarısız'}
                     </span>
                   </div>
                 </div>
@@ -396,7 +396,7 @@ export default function OrderDetailPage() {
                       <>
                         {getDeliveryStatusIcon(order.delivery.status)}
                         <span className="text-white font-medium">
-                          {order.delivery.status === 'delivered' ? 'Teslim Edildi' : 'Stok Bekleniyor'}
+                          {order.delivery.status === 'delivered' ? isEN ? 'Delivered' : 'Teslim Edildi' : isEN ? 'Awaiting Stock' : 'Stok Bekleniyor'}
                         </span>
                       </>
                     ) : (
@@ -566,12 +566,12 @@ export default function OrderDetailPage() {
                   )}
                   <h2 className="text-xl font-bold text-white">
                     {order.verification.status === 'pending' && !order.verification.submittedAt
-                      ? 'Doğrulama Gerekli'
+                      ? isEN ? 'Verification Required' : 'Doğrulama Gerekli'
                       : order.verification.status === 'pending' && order.verification.submittedAt
-                      ? 'Doğrulama İnceleniyor'
+                      ? isEN ? 'Under Review' : 'Doğrulama İnceleniyor'
                       : order.verification.status === 'approved'
-                      ? 'Doğrulama Onaylandı'
-                      : 'Doğrulama Reddedildi'}
+                      ? isEN ? 'Verification Approved' : 'Doğrulama Onaylandı'
+                      : isEN ? 'Verification Rejected' : 'Doğrulama Reddedildi'}
                   </h2>
                 </div>
 
@@ -671,7 +671,7 @@ export default function OrderDetailPage() {
 
                 <div className="bg-gray-900/50 rounded-xl p-4 border border-yellow-700/30">
                   <p className="text-yellow-200 mb-2">
-                    {order.delivery.message || 'Stok bekleniyor'}
+                    {order.delivery.message || isEN ? 'Awaiting stock' : 'Stok bekleniyor'}
                   </p>
                   <p className="text-sm text-gray-400">
                     Ürün stoka girdiğinde kodunuz otomatik olarak bu sayfada görünecektir. E-posta ile de bilgilendirileceksiniz.
@@ -712,7 +712,7 @@ export default function OrderDetailPage() {
               
               <div className="bg-gray-900/50 rounded-xl p-4 mb-4 border border-gray-700">
                 <div className="text-2xl font-bold text-white mb-1">
-                  {order.productSnapshot?.title || order.productTitle || 'Ürün'}
+                  {order.productSnapshot?.title || order.productTitle || isEN ? 'Product' : 'Ürün'}
                 </div>
                 <div className="text-sm text-gray-400">
                   {order.productTitle?.toLowerCase().includes('valorant') || order.productTitle?.toLowerCase().includes('vp') 

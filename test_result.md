@@ -1033,11 +1033,14 @@ backend:
     file: "app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added priceUSD and discountPriceUSD fields to product model. Migration adds defaults (0) to existing products. Admin can set USD prices via product edit endpoints. Products API returns USD fields."
+      - working: true
+        agent: "testing"
+        comment: "GET /api/products working correctly. All 5 products have priceUSD and discountPriceUSD fields present. Field validation passed - both USD price fields are numbers (int/float) with default value 0 as expected. No products missing USD fields. Migration working correctly - existing products updated with USD price fields. Public API returns USD fields correctly."
 
   - task: "Frontend Locale/Translation System"
     implemented: true

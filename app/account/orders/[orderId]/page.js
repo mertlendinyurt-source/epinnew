@@ -150,7 +150,7 @@ export default function OrderDetailPage() {
               className="text-white hover:bg-gray-800"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Geri
+              {isEN ? 'Back' : 'Geri'}
             </Button>
             <div>
               <h1 className="text-xl font-bold text-white">{isEN ? 'Order Detail' : 'Sipariş Detayı'}</h1>

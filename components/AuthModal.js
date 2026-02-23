@@ -549,7 +549,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
 
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <Label className="text-gray-300">Şifre</Label>
+                        <Label className="text-gray-300">{L.password}</Label>
                         <button
                           type="button"
                           onClick={() => setForgotPasswordMode(true)}

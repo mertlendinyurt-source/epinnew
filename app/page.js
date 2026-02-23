@@ -1822,7 +1822,7 @@ export default function App() {
                     ))
                   ) : (
                     <div className="text-center py-8 text-white/60">
-                      Henüz değerlendirme bulunmuyor.
+                      {t('review.noReviews')}
                     </div>
                   )}
                 </div>

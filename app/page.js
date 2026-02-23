@@ -1090,7 +1090,7 @@ export default function App() {
                     <div className="hidden md:flex w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 items-center justify-center text-white text-sm font-bold">
                       {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
                     </div>
-                    <span className="hidden md:inline text-sm">{user?.firstName || 'Hesabım'}</span>
+                    <span className="hidden md:inline text-sm">{user?.firstName || t('auth.myAccount')}</span>
                     <ChevronDown className="w-4 h-4" />
                   </Button>
                   

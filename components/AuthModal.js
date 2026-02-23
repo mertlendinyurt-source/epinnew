@@ -467,10 +467,10 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                       </div>
                       <h3 className="text-lg font-semibold text-white mb-2">{isEN ? 'Email Sent!' : 'E-posta Gönderildi!'}</h3>
                       <p className="text-sm text-gray-400 mb-4">
-                        Şifre sıfırlama linki <span className="text-blue-400">{forgotPasswordEmail}</span> adresine gönderildi.
+                        {isEN ? <>Password reset link sent to <span className="text-blue-400">{forgotPasswordEmail}</span>.</> : <>Şifre sıfırlama linki <span className="text-blue-400">{forgotPasswordEmail}</span> adresine gönderildi.</>}
                       </p>
                       <p className="text-xs text-gray-500 mb-4">
-                        E-postanızı kontrol edin. Spam klasörünü de kontrol etmeyi unutmayın.
+                        {isEN ? 'Check your email. Don\'t forget to check the spam folder.' : 'E-postanızı kontrol edin. Spam klasörünü de kontrol etmeyi unutmayın.'}
                       </p>
                       <Button
                         type="button"

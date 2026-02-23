@@ -2206,14 +2206,14 @@ export default function App() {
             )}
 
             <div className="px-6 py-5 border-b border-white/5">
-              <h2 className="text-lg font-bold text-white">Oyuncu ID</h2>
+              <h2 className="text-lg font-bold text-white">{isInternational ? 'Player ID' : 'Oyuncu ID'}</h2>
             </div>
 
             <div className="p-6 space-y-5">
               <div>
-                <Label className="text-sm text-white/70 mb-2 block">Oyuncu ID'nizi girin</Label>
+                <Label className="text-sm text-white/70 mb-2 block">{t('player.enterLabel')}</Label>
                 <Input
-                  placeholder="Oyuncu ID"
+                  placeholder={isInternational ? 'Player ID' : 'Oyuncu ID'}
                   value={playerId}
                   onChange={(e) => {
                     setPlayerId(e.target.value)

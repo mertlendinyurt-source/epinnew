@@ -733,7 +733,7 @@ export default function App() {
   const handleCheckout = async () => {
     // 0. Check payment method selected
     if (!paymentMethod) {
-      toast.error('Lütfen bir ödeme yöntemi seçin')
+      toast.error(t('checkout.selectPaymentMethod'))
       return
     }
 

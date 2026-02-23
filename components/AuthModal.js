@@ -515,7 +515,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                         disabled={loading}
                         className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
                       >
-                        {loading ? 'Gönderiliyor...' : 'Şifre Sıfırlama Linki Gönder'}
+                        {loading ? L.sending : L.sendResetLink}
                       </Button>
 
                       <button

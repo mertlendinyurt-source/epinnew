@@ -536,7 +536,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
 
                   <form onSubmit={handleLogin} className="space-y-4">
                     <div>
-                      <Label className="text-gray-300">E-posta</Label>
+                      <Label className="text-gray-300">{L.email}</Label>
                       <Input
                         type="email"
                         value={loginForm.email}

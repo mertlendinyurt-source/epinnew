@@ -2106,9 +2106,9 @@ export default function App() {
 
                     <div className="pt-5 border-t border-white/10">
                       <div className="flex justify-between items-center mb-4">
-                        <span className="text-sm md:text-base text-white/70 uppercase">Ödenecek Tutar</span>
+                        <span className="text-sm md:text-base text-white/70 uppercase">{t('checkout.totalAmount')}</span>
                         <span className="text-2xl md:text-3xl font-black text-white">
-                          ₺ {selectedProduct.discountPrice.toFixed(2)}
+                          {formatPrice(selectedProduct.discountPrice, selectedProduct.discountPriceUSD)}
                         </span>
                       </div>
 

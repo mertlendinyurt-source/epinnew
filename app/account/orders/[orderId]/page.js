@@ -331,7 +331,7 @@ export default function OrderDetailPage() {
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">3</span>
                         <div>
                           <p className="text-white font-medium">OYUNCU ID&apos;nizi girin</p>
-                          <p className="text-gray-400 text-xs">PUBG Mobile içinden Profil → Oyuncu ID bölümünden kopyalayın.</p>
+                          <p className="text-gray-400 text-xs">{isEN ? 'Copy from PUBG Mobile Profile → Player ID section.' : 'PUBG Mobile içinden Profil → Oyuncu ID bölümünden kopyalayın.'}</p>
                         </div>
                       </div>
 
@@ -362,7 +362,7 @@ export default function OrderDetailPage() {
                     <div className="mt-4 p-3 bg-red-900/30 rounded-lg border border-red-600/50">
                       <p className="text-red-300 text-xs font-medium mb-2">⚠️ En sık yapılan hatalar:</p>
                       <ul className="text-red-200 text-xs space-y-1">
-                        <li>❌ Yanlış Oyuncu ID girilmesi</li>
+                        <li>❌ {isEN ? 'Incorrect Player ID entered' : 'Yanlış Oyuncu ID girilmesi'}</li>
                         <li>❌ Kodun boşluklu ya da hatalı kopyalanması</li>
                       </ul>
                     </div>

@@ -1581,20 +1581,20 @@ export default function App() {
                     {/* Content Section */}
                     <div className="h-[58%] md:h-[45%] flex flex-col justify-between p-2.5 md:p-3.5">
                       <div>
-                        <div className="text-[10px] md:text-[10px] text-white/60 font-bold uppercase">MOBİLE</div>
-                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.ucAmount} UC Yükleme Şansı</div>
+                        <div className="text-[10px] md:text-[10px] text-white/60 font-bold uppercase">{t('product.mobile')}</div>
+                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.ucAmount} {t('product.ucChance')}</div>
                         <div className="flex items-center gap-1 mt-0.5">
                           <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>
-                        <div className="text-[9px] md:text-[9px] text-emerald-400 mt-0.5">Bölgenizde kullanılabilir</div>
+                        <div className="text-[9px] md:text-[9px] text-emerald-400 mt-0.5">{t('product.availableInRegion')}</div>
                       </div>
                       <div className="mt-1">
-                        {product.discountPrice < product.price && (
-                          <div className="text-[11px] md:text-[9px] text-red-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
+                        {(isInternational ? (product.discountPriceUSD || 0) < (product.priceUSD || 0) : product.discountPrice < product.price) && (
+                          <div className="text-[11px] md:text-[9px] text-red-500 line-through">{formatPrice(product.price, product.priceUSD)}</div>
                         )}
-                        <div className="text-[18px] md:text-[15px] font-bold text-white">₺ {product.discountPrice.toFixed(2).replace('.', ',')}</div>
+                        <div className="text-[18px] md:text-[15px] font-bold text-white">{formatPrice(product.discountPrice, product.discountPriceUSD)}</div>
                         {product.discountPercent > 0 && (
-                          <div className="text-[10px] md:text-[11px] text-emerald-400 font-medium">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
+                          <div className="text-[10px] md:text-[11px] text-emerald-400 font-medium">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ {t('product.discount')}</div>
                         )}
                       </div>
                     </div>

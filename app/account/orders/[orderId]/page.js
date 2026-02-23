@@ -210,7 +210,7 @@ export default function OrderDetailPage() {
                 </div>
 
                 <div className="mt-4 text-sm text-green-300/70">
-                  📅 Teslim tarihi: {order.delivery?.assignedAt ? new Date(order.delivery.assignedAt).toLocaleString('tr-TR') : 'N/A'}
+                  📅 Teslim tarihi: {order.delivery?.assignedAt ? new Date(order.delivery.assignedAt).toLocaleString(isEN ? 'en-US' : 'tr-TR') : 'N/A'}
                 </div>
 
                 {/* Kodu Nasıl Kullanırım? - Dinamik */}
@@ -408,7 +408,7 @@ export default function OrderDetailPage() {
 
               <div className="mt-4 pt-4 border-t border-gray-700">
                 <div className="text-sm text-gray-400">
-                  Sipariş Tarihi: <span className="text-white">{order.createdAt ? new Date(order.createdAt).toLocaleString('tr-TR') : 'N/A'}</span>
+                  {isEN ? 'Order Date:' : 'Sipariş Tarihi:'} <span className="text-white">{order.createdAt ? new Date(order.createdAt).toLocaleString(isEN ? 'en-US' : 'tr-TR') : 'N/A'}</span>
                 </div>
               </div>
             </div>
@@ -608,7 +608,7 @@ export default function OrderDetailPage() {
                         Doğrulama genellikle 1 saat içinde tamamlanır. Onaylandığında e-posta ile bilgilendirileceksiniz.
                       </p>
                       <div className="mt-3 text-xs text-gray-500">
-                        Gönderilme: {new Date(order.verification.submittedAt).toLocaleString('tr-TR')}
+                        Gönderilme: {new Date(order.verification.submittedAt).toLocaleString(isEN ? 'en-US' : 'tr-TR')}
                       </div>
                     </>
                   ) : order.verification.status === 'approved' ? (
@@ -646,7 +646,7 @@ export default function OrderDetailPage() {
 
                 <div className="bg-gray-900/50 rounded-xl p-4 border border-amber-700/30">
                   <p className="text-amber-200 mb-3">
-                    Yüksek tutarlı siparişiniz (₺{(order.amount || order.totalAmount || 0).toLocaleString('tr-TR')}) için güvenlik doğrulaması gerekmektedir.
+                    Yüksek tutarlı siparişiniz (₺{(order.amount || order.totalAmount || 0).toLocaleString(isEN ? 'en-US' : 'tr-TR')}) için güvenlik doğrulaması gerekmektedir.
                   </p>
                   <p className="text-sm text-gray-300 mb-4">
                     Lütfen kimlik fotoğrafınızı ve ödeme dekontunuzu yükleyin. Doğrulama onaylandıktan sonra siparişiniz teslim edilecektir.

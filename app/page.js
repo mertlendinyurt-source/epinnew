@@ -2027,7 +2027,7 @@ export default function App() {
                           <div className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-purple-800 rounded text-white font-bold text-xs">
                             SHOPINEXT
                           </div>
-                          <span className="text-white/60 text-xs">Güvenli Ödeme</span>
+                          <span className="text-white/60 text-xs">{t('checkout.securePayment')}</span>
                         </div>
                       </div>
                     )}

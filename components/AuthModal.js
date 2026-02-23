@@ -563,7 +563,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                         value={loginForm.password}
                         onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                         className="bg-gray-800 border-gray-700 text-white"
-                        placeholder="Şifreniz"
+                        placeholder={isEN ? "Your password" : "Şifreniz"}
                         required
                       />
                     </div>

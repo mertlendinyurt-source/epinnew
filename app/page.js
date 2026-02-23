@@ -1624,8 +1624,7 @@ export default function App() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
               </span>
-              Canlı Destek
-              <span className="text-xs opacity-75">({siteSettings?.liveSupportHours || '14:00-22:00'})</span>
+              {t('support.liveSupport')}
             </button>
           ) : (
             <div className="flex items-center gap-3 px-6 py-3 bg-gray-600/50 text-white/50 rounded-xl text-base font-semibold cursor-not-allowed">

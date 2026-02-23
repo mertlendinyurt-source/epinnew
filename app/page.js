@@ -1699,12 +1699,12 @@ export default function App() {
                         {descriptionExpanded ? (
                           <>
                             <ChevronUp className="w-4 h-4" />
-                            Daha az göster
+                            {t('desc.showLess')}
                           </>
                         ) : (
                           <>
                             <ChevronDown className="w-4 h-4" />
-                            Devamını göster
+                            {t('desc.showMore')}
                           </>
                         )}
                       </button>

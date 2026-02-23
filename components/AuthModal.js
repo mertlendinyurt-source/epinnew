@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
-export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'register' }) {
+export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'register', locale = 'tr' }) {
   const [tab, setTab] = useState(defaultTab);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);

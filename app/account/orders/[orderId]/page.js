@@ -178,10 +178,10 @@ export default function OrderDetailPage() {
                 <div className="bg-green-900/30 rounded-xl p-4 mb-4 border border-green-600/50">
                   <p className="text-base text-green-100 font-medium">
                     {order.productTitle?.toLowerCase().includes('valorant') || order.productTitle?.toLowerCase().includes('vp')
-                      ? '✅ {isEN ? 'Your VP code is ready! Use the code below in Valorant.' : 'VP kodunuz hazır! Aşağıdaki kodu Valorant içinde kullanabilirsiniz.'}'
+                      ? (isEN ? '✅ Your VP code is ready! Use the code below in Valorant.' : '✅ VP kodunuz hazır! Aşağıdaki kodu Valorant içinde kullanabilirsiniz.')
                       : order.productTitle?.toLowerCase().includes('mlbb') || order.productTitle?.toLowerCase().includes('diamond') || order.productTitle?.toLowerCase().includes('elmas')
-                      ? '✅ {isEN ? 'Your Diamonds code is ready! Use the code below in Mobile Legends.' : 'Diamonds kodunuz hazır! Aşağıdaki kodu Mobile Legends içinde kullanabilirsiniz.'}'
-                      : '✅ {isEN ? 'Your UC code is ready! Use the code below in PUBG Mobile.' : 'UC kodunuz hazır! Aşağıdaki kodu PUBG Mobile içinde kullanabilirsiniz.'}'
+                      ? (isEN ? '✅ Your Diamonds code is ready! Use the code below in Mobile Legends.' : '✅ Diamonds kodunuz hazır! Aşağıdaki kodu Mobile Legends içinde kullanabilirsiniz.')
+                      : (isEN ? '✅ Your UC code is ready! Use the code below in PUBG Mobile.' : '✅ UC kodunuz hazır! Aşağıdaki kodu PUBG Mobile içinde kullanabilirsiniz.')
                     }
                   </p>
                 </div>

@@ -1708,6 +1708,44 @@ export default function AdminProducts() {
                   </div>
                 </div>
               )}
+
+              {/* USD Pricing Section */}
+              <div className="mt-4 p-4 bg-blue-500/5 border border-blue-500/20 rounded-lg">
+                <h4 className="text-sm font-medium text-blue-400 mb-3 flex items-center gap-2">
+                  <span>🌍</span> Yurt Dışı Fiyatlandırma (USD)
+                </h4>
+                <p className="text-xs text-slate-500 mb-3">Türkiye dışından gelen ziyaretçiler bu fiyatları görecek. 0 bırakılırsa yurt dışı ziyaretçilere gösterilmez.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-300 text-sm">Liste Fiyatı (USD)</Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={addFormData.priceUSD}
+                        onChange={(e) => setAddFormData({...addFormData, priceUSD: e.target.value})}
+                        className="bg-slate-800 border-slate-700 text-white h-11 pl-8"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-300 text-sm">İndirimli Fiyat (USD)</Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={addFormData.discountPriceUSD}
+                        onChange={(e) => setAddFormData({...addFormData, discountPriceUSD: e.target.value})}
+                        className="bg-slate-800 border-slate-700 text-white h-11 pl-8"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Section 3: Image */}

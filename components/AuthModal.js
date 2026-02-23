@@ -102,7 +102,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
     e.preventDefault();
     
     if (!forgotPasswordEmail) {
-      toast.error('E-posta adresi gereklidir');
+      toast.error(L.emailPasswordRequired);
       return;
     }
 
@@ -121,11 +121,11 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
         toast.error(data.error);
       } else {
         setForgotPasswordSent(true);
-        toast.success('Şifre sıfırlama linki e-posta adresinize gönderildi!');
+        toast.success(L.resetSent);
       }
     } catch (error) {
       console.error('Forgot password error:', error);
-      toast.error('Bağlantı hatası');
+      toast.error(L.connectionError);
     } finally {
       setLoading(false);
     }
@@ -137,17 +137,17 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
     // Validate
     if (!registerForm.firstName || !registerForm.lastName || !registerForm.email || 
         !registerForm.phone || !registerForm.password) {
-      toast.error('Tüm alanları doldurun');
+      toast.error(L.fillAll);
       return;
     }
 
     if (registerForm.password !== registerForm.confirmPassword) {
-      toast.error('Şifreler eşleşmiyor');
+      toast.error(L.passwordMismatch);
       return;
     }
 
     if (registerForm.password.length < 6) {
-      toast.error('Şifre en az 6 karakter olmalıdır');
+      toast.error(L.passwordMin);
       return;
     }
 
@@ -173,7 +173,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
         localStorage.setItem('userToken', data.data.token);
         localStorage.setItem('userData', JSON.stringify(data.data.user));
         
-        toast.success('Hesap oluşturuldu! Ödemeye devam edebilirsiniz.');
+        toast.success(L.accountCreated);
         
         // GA4 sign_up event
         if (typeof window !== 'undefined' && window.gtag) {
@@ -201,12 +201,12 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
           toast.error(data.error);
           setTab('login'); // Switch to login tab
         } else {
-          toast.error(data.error || 'Kayıt başarısız');
+          toast.error(data.error || L.registerFailed);
         }
       }
     } catch (error) {
       console.error('Register error:', error);
-      toast.error('Bağlantı hatası');
+      toast.error(L.connectionError);
     } finally {
       setLoading(false);
     }
@@ -216,7 +216,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
     e.preventDefault();
 
     if (!loginForm.email || !loginForm.password) {
-      toast.error('E-posta ve şifre gereklidir');
+      toast.error(L.emailPasswordRequired);
       return;
     }
 
@@ -236,7 +236,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
         localStorage.setItem('userToken', data.data.token);
         localStorage.setItem('userData', JSON.stringify(data.data.user));
         
-        toast.success('Giriş başarılı!');
+        toast.success(L.loginSuccess);
         
         // GA4 login event
         if (typeof window !== 'undefined' && window.gtag) {
@@ -248,7 +248,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
 
         // Check if user is admin and redirect accordingly
         if (data.data.user.role === 'admin') {
-          toast.success('Admin paneline yönlendiriliyorsunuz...');
+          toast.success(L.adminRedirect);
           // Close modal first
           onClose();
           // Redirect to admin dashboard
@@ -270,12 +270,12 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
         } else if (data.code === 'ACCOUNT_SUSPENDED') {
           toast.error(data.error);
         } else {
-          toast.error(data.error || 'Giriş başarısız');
+          toast.error(data.error || L.loginFailed);
         }
       }
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('Bağlantı hatası');
+      toast.error(L.connectionError);
     } finally {
       setLoading(false);
     }

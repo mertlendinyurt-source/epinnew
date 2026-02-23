@@ -7,7 +7,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://payyeen-api-dev.preview.emergentagent.com"
+BASE_URL = "https://world-store-en.preview.emergentagent.com"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 

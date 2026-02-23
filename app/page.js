@@ -2442,7 +2442,7 @@ export default function App() {
           <div className="mt-8 pt-6 border-t border-white/10">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-white/30 text-sm">
-                © 2026 {siteSettings?.siteName || 'PINLY'}. Tüm hakları saklıdır.
+                © 2026 {siteSettings?.siteName || 'PINLY'}. {t('footer.allRightsReserved')}
               </p>
               
               <p className="text-white/40 text-xs text-center">

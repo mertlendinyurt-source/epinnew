@@ -800,6 +800,7 @@ export default function AdminProducts() {
                       <TableHead className="text-slate-400">Fiyat</TableHead>
                       <TableHead className="text-slate-400">İnd. Fiyat</TableHead>
                       <TableHead className="text-slate-400">%</TableHead>
+                      <TableHead className="text-slate-400">USD</TableHead>
                       <TableHead className="text-slate-400">DijiPin</TableHead>
                       <TableHead className="text-slate-400">Durum</TableHead>
                       <TableHead className="text-slate-400">İşlemler</TableHead>

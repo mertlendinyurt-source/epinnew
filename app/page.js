@@ -2361,13 +2361,13 @@ export default function App() {
                 {t('footer.corporate')}
               </h3>
               <ul className="space-y-3">
-                <li><a href="/legal/hakkimizda" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Hakkımızda</a></li>
-                <li><a href="/legal/gizlilik-politikasi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Gizlilik Politikası</a></li>
-                <li><a href="/legal/kullanici-sozlesmesi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Kullanıcı Sözleşmesi</a></li>
-                <li><a href="/legal/satis-sozlesmesi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Mesafeli Satış Sözleşmesi</a></li>
-                <li><a href="/legal/iptal-iade" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">İptal ve İade Koşulları</a></li>
-                <li><a href="/legal/kvkk" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">KVKK Aydınlatma Metni</a></li>
-                <li><a href="/legal/cerez-politikasi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Çerez Politikası</a></li>
+                <li><a href="/legal/hakkimizda" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">{t('footer.aboutUs')}</a></li>
+                <li><a href="/legal/gizlilik-politikasi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">{t('footer.privacyPolicy')}</a></li>
+                <li><a href="/legal/kullanici-sozlesmesi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">{t('footer.userAgreement')}</a></li>
+                <li><a href="/legal/satis-sozlesmesi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">{t('footer.distanceSales')}</a></li>
+                <li><a href="/legal/iptal-iade" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">{t('footer.cancellationRefund')}</a></li>
+                <li><a href="/legal/kvkk" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">{t('footer.kvkk')}</a></li>
+                <li><a href="/legal/cerez-politikasi" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">{t('footer.cookiePolicy')}</a></li>
               </ul>
             </div>
           </div>

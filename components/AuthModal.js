@@ -315,7 +315,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
         <div className="w-full border-t border-gray-700" />
       </div>
       <div className="relative flex justify-center text-xs uppercase">
-        <span className="px-3 bg-gray-900 text-gray-500">veya</span>
+        <span className="px-3 bg-gray-900 text-gray-500">{L.or}</span>
       </div>
     </div>
   );

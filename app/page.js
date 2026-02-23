@@ -2414,7 +2414,7 @@ export default function App() {
                   )}
                   {siteSettings?.contactPhone && (
                     <p className="text-white/80 text-sm">
-                      <span className="text-white/50">Tel: </span>
+                      <span className="text-white/50">{t('footer.phone')}: </span>
                       <a href={`tel:${siteSettings.contactPhone.replace(/\s/g, '')}`} className="hover:text-cyan-400 transition-colors">
                         {siteSettings.contactPhone}
                       </a>

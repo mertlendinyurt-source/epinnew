@@ -481,7 +481,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                         }}
                         className="w-full bg-gray-700 hover:bg-gray-600"
                       >
-                        Giriş Yap Sayfasına Dön
+                        {L.backToLogin}
                       </Button>
                     </div>
                   ) : (

@@ -2358,7 +2358,7 @@ export default function App() {
             {/* Column 4: Kurumsal/Künye */}
             <div>
               <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-5">
-                Kurumsal/Künye
+                {t('footer.corporate')}
               </h3>
               <ul className="space-y-3">
                 <li><a href="/legal/hakkimizda" className="text-white/50 hover:text-white hover:underline text-sm transition-colors">Hakkımızda</a></li>

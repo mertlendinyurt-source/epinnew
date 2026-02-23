@@ -196,7 +196,7 @@ export default function OrderDetailPage() {
                             onClick={() => handleCopyCode(code, index)}
                             className="bg-green-600 hover:bg-green-500 text-white font-bold px-4"
                           >
-                            {copiedCode === index ? <><Check className="w-4 h-4 mr-2" /> Kopyalandı!</> : <><Copy className="w-4 h-4 mr-2" /> KOPYALA</>}
+                            {copiedCode === index ? <><Check className="w-4 h-4 mr-2" />{isEN ? ' Copied!' : ' Kopyalandı!'}</> : <><Copy className="w-4 h-4 mr-2" />{isEN ? ' COPY' : ' KOPYALA'}</>}
                           </Button>
                         </div>
                         <div className="bg-black/50 rounded-lg p-4 border border-green-500/30">

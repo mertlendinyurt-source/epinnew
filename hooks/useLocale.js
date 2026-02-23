@@ -17,35 +17,13 @@ export default function useLocale() {
 
   const detectLocale = async () => {
     try {
-      // Check localStorage cache first (valid for 24 hours)
-      const cached = localStorage.getItem('pinly_geo')
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached)
-          if (parsed.expiry > Date.now()) {
-            applyLocale(parsed.countryCode)
-            setGeoLoaded(true)
-            return
-          }
-        } catch (e) {
-          localStorage.removeItem('pinly_geo')
-        }
-      }
-
-      // Call our backend GeoIP endpoint
+      // Always call GeoIP fresh - no long cache (IP can change with VPN etc.)
       const response = await fetch('/api/geo')
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
           const cc = data.data.countryCode || 'TR'
           applyLocale(cc)
-          
-          // Cache for 24 hours
-          localStorage.setItem('pinly_geo', JSON.stringify({
-            countryCode: cc,
-            country: data.data.country,
-            expiry: Date.now() + 24 * 60 * 60 * 1000
-          }))
         }
       }
     } catch (error) {

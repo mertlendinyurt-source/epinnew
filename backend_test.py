@@ -1,566 +1,300 @@
 #!/usr/bin/env python3
 """
-PINLY Backend Test Suite for Payyeen Payment Integration
-Tests all 6 Payyeen backend tasks from test_result.md
+PINLY UC Store Backend Test Script
+Testing newly added GeoIP and USD pricing features
 """
 
 import requests
 import json
-import time
-from datetime import datetime
+import sys
+from typing import Dict, Any, List
 
 # Test Configuration
-BASE_URL = "http://localhost:3000"
-API_BASE = f"{BASE_URL}/api"
-
-# Admin credentials
+BASE_URL = "http://localhost:3000"  # Default from backend code
 ADMIN_CREDENTIALS = {
     "username": "admin",
     "password": "admin123"
 }
 
-# Test data
-TEST_PAYYEEN_API_KEY = "test_pk_12345abcdef67890"
-
-def log_test(test_name, success, details=""):
-    """Log test results with timestamp"""
-    timestamp = datetime.now().strftime('%H:%M:%S')
-    status = "✅ PASS" if success else "❌ FAIL"
-    print(f"[{timestamp}] {status} {test_name}")
-    if details:
-        print(f"    → {details}")
-    print()
-
-def test_admin_login():
-    """Get admin JWT token for authenticated requests"""
-    print("🔑 Getting admin authentication token...")
-    
-    try:
-        response = requests.post(f"{API_BASE}/admin/login", json=ADMIN_CREDENTIALS)
+class BackendTester:
+    def __init__(self):
+        self.base_url = BASE_URL
+        self.admin_token = None
+        self.test_results = []
         
-        if response.status_code == 200:
-            result = response.json()
-            if result.get('success') and 'data' in result:
-                token = result['data'].get('token')
-                if token:
-                    log_test("Admin Login", True, f"Token obtained successfully")
-                    return token
-                else:
-                    log_test("Admin Login", False, "No token in data")
-                    return None
-            else:
-                log_test("Admin Login", False, f"Unexpected response structure: {result}")
-                return None
-        else:
-            log_test("Admin Login", False, f"HTTP {response.status_code}: {response.text}")
-            return None
+    def log_result(self, test_name: str, success: bool, message: str):
+        """Log test result"""
+        self.test_results.append({
+            'test': test_name,
+            'success': success,
+            'message': message
+        })
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} {test_name}: {message}")
+        
+    def make_request(self, method: str, endpoint: str, data=None, headers=None, expect_status=200) -> Dict[Any, Any]:
+        """Make HTTP request with error handling"""
+        url = f"{self.base_url}{endpoint}"
+        default_headers = {"Content-Type": "application/json"}
+        if headers:
+            default_headers.update(headers)
             
-    except Exception as e:
-        log_test("Admin Login", False, f"Exception: {str(e)}")
-        return None
-
-def create_test_user():
-    """Create a test user for order testing or use existing"""
-    print("👤 Getting test user...")
-    
-    # First try to login with existing test user
-    existing_user = {
-        "email": "testuser@example.com",
-        "password": "test123456"
-    }
-    
-    try:
-        # Try login first
-        response = requests.post(f"{API_BASE}/auth/login", json=existing_user)
-        if response.status_code == 200:
-            result = response.json()
-            if result.get('success') and 'data' in result:
-                token = result['data'].get('token')
-                if token:
-                    log_test("User Login", True, f"Using existing user: {existing_user['email']}")
-                    return token, existing_user
-        
-        # If login failed, try to register new user
-        timestamp = int(time.time())
-        test_user = {
-            "firstName": "Payyeen",
-            "lastName": "Test", 
-            "email": f"payyeen{timestamp}@test.com",
-            "phone": "5551234567",
-            "password": "test123456",
-            "confirmPassword": "test123456"
-        }
-        
-        response = requests.post(f"{API_BASE}/auth/register", json=test_user)
-        
-        if response.status_code in [200, 201]:
-            result = response.json()
-            if result.get('success') and 'data' in result:
-                token = result['data'].get('token')
-                if token:
-                    log_test("User Registration", True, f"User created: {test_user['email']}")
-                    return token, test_user
-                else:
-                    log_test("User Registration", False, "No token in data")
-                    return None, None
+        try:
+            if method.upper() == 'GET':
+                response = requests.get(url, headers=default_headers, timeout=10)
+            elif method.upper() == 'POST':
+                response = requests.post(url, json=data, headers=default_headers, timeout=10)
+            elif method.upper() == 'PUT':
+                response = requests.put(url, json=data, headers=default_headers, timeout=10)
             else:
-                log_test("User Registration", False, f"Unexpected response: {result}")
-                return None, None
-        else:
-            log_test("User Registration", False, f"HTTP {response.status_code}: {response.text}")
-            return None, None
-            
-    except Exception as e:
-        log_test("User Authentication", False, f"Exception: {str(e)}")
-        return None, None
-
-def test_payyeen_admin_settings_get(admin_token):
-    """Test GET /api/admin/settings/payyeen"""
-    print("📋 Testing Payyeen Admin Settings - GET...")
-    
-    headers = {"Authorization": f"Bearer {admin_token}"}
-    
-    try:
-        # Test without auth first
-        response = requests.get(f"{API_BASE}/admin/settings/payyeen")
-        if response.status_code == 401:
-            log_test("Payyeen GET - Auth Check", True, "Returns 401 without admin token")
-        else:
-            log_test("Payyeen GET - Auth Check", False, f"Expected 401, got {response.status_code}")
-        
-        # Test with auth - should return settings state
-        response = requests.get(f"{API_BASE}/admin/settings/payyeen", headers=headers)
-        
-        if response.status_code == 200:
-            result = response.json()
-            if result.get('success') and 'data' in result:
-                data = result['data']
-                # Check if configured or not configured
-                is_configured = data.get('isConfigured', False)
-                log_test("Payyeen GET - Settings Check", True, f"Returns isConfigured: {is_configured}")
-                return True
-            else:
-                log_test("Payyeen GET - Settings Check", False, f"Unexpected response structure: {result}")
-                return False
-        else:
-            log_test("Payyeen GET - Request", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-            
-    except Exception as e:
-        log_test("Payyeen GET - Exception", False, f"Exception: {str(e)}")
-        return False
-
-def test_payyeen_admin_settings_post(admin_token):
-    """Test POST /api/admin/settings/payyeen"""
-    print("💾 Testing Payyeen Admin Settings - POST...")
-    
-    headers = {"Authorization": f"Bearer {admin_token}"}
-    
-    try:
-        # Test without auth first
-        response = requests.post(f"{API_BASE}/admin/settings/payyeen", json={"apiKey": "test"})
-        if response.status_code == 401:
-            log_test("Payyeen POST - Auth Check", True, "Returns 401 without admin token")
-        else:
-            log_test("Payyeen POST - Auth Check", False, f"Expected 401, got {response.status_code}")
-        
-        # Test validation - missing apiKey
-        response = requests.post(f"{API_BASE}/admin/settings/payyeen", json={}, headers=headers)
-        if response.status_code == 400:
-            log_test("Payyeen POST - Validation", True, "Returns 400 for missing apiKey")
-        else:
-            log_test("Payyeen POST - Validation", False, f"Expected 400, got {response.status_code}")
-        
-        # Test successful save - first save with apiKey only
-        payyeen_settings = {
-            "apiKey": TEST_PAYYEEN_API_KEY
-        }
-        
-        response = requests.post(f"{API_BASE}/admin/settings/payyeen", json=payyeen_settings, headers=headers)
-        
-        if response.status_code == 200:
-            result = response.json()
-            if result.get('success'):
-                log_test("Payyeen POST - Save Settings", True, "Settings saved successfully")
+                raise ValueError(f"Unsupported HTTP method: {method}")
                 
-                # Verify settings are saved with GET
-                get_response = requests.get(f"{API_BASE}/admin/settings/payyeen", headers=headers)
-                if get_response.status_code == 200:
-                    get_result = get_response.json()
-                    if get_result.get('success') and 'data' in get_result:
-                        get_data = get_result['data']
-                        if get_data.get('isConfigured') == True and 'apiKey' in get_data:
-                            # Check if API key is masked
-                            masked_key = get_data['apiKey']
-                            if '***' in masked_key or '*' in masked_key:
-                                log_test("Payyeen POST - Masked Key", True, f"API key properly masked: {masked_key}")
-                            else:
-                                log_test("Payyeen POST - Masked Key", False, f"API key not masked: {masked_key}")
-                            
-                            # Test toggle functionality
-                            toggle_data = {"isEnabled": False}
-                            toggle_response = requests.post(f"{API_BASE}/admin/settings/payyeen", json=toggle_data, headers=headers)
-                            
-                            if toggle_response.status_code == 200:
-                                log_test("Payyeen POST - Toggle", True, "Toggle functionality working")
-                                return True
-                            else:
-                                log_test("Payyeen POST - Toggle", False, f"Toggle failed: {toggle_response.status_code}")
-                                return False
-                        else:
-                            log_test("Payyeen POST - Verify Save", False, f"Settings not properly saved: {get_data}")
-                            return False
-                    else:
-                        log_test("Payyeen POST - Verify Save", False, f"Invalid GET response: {get_result}")
-                        return False
-                else:
-                    log_test("Payyeen POST - Verify Save", False, f"GET request failed: {get_response.status_code}")
-                    return False
-            else:
-                log_test("Payyeen POST - Save Settings", False, f"Save failed: {result}")
-                return False
-        else:
-            log_test("Payyeen POST - Save Settings", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-            
-        # Test toggle functionality
-        toggle_data = {"isEnabled": False}
-        response = requests.post(f"{API_BASE}/admin/settings/payyeen", json=toggle_data, headers=headers)
-        
-        if response.status_code == 200:
-            log_test("Payyeen POST - Toggle", True, "Toggle functionality working")
-            return True
-        else:
-            log_test("Payyeen POST - Toggle", False, f"Toggle failed: {response.status_code}")
-            return False
-            
-    except Exception as e:
-        log_test("Payyeen POST - Exception", False, f"Exception: {str(e)}")
-        return False
-
-def test_payment_methods_payyeen():
-    """Test GET /api/payment-methods includes Payyeen"""
-    print("💳 Testing Payment Methods with Payyeen...")
-    
-    try:
-        response = requests.get(f"{API_BASE}/payment-methods")
-        
-        if response.status_code == 200:
-            result = response.json()
-            if result.get('success') and 'data' in result:
-                data = result['data']
-                if 'payyeen' in data:
-                    payyeen_info = data['payyeen']
-                    if isinstance(payyeen_info, dict) and 'available' in payyeen_info:
-                        available = payyeen_info['available']
-                        log_test("Payment Methods - Payyeen", True, f"Payyeen available: {available}")
-                        return True
-                    else:
-                        log_test("Payment Methods - Payyeen", False, f"Invalid payyeen structure: {payyeen_info}")
-                        return False
-                else:
-                    log_test("Payment Methods - Payyeen", False, f"Payyeen not found in response: {list(data.keys())}")
-                    return False
-            else:
-                log_test("Payment Methods - Payyeen", False, f"Invalid response structure: {result}")
-                return False
-        else:
-            log_test("Payment Methods - Request", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-            
-    except Exception as e:
-        log_test("Payment Methods - Exception", False, f"Exception: {str(e)}")
-        return False
-
-def test_payyeen_order_creation_uc(user_token):
-    """Test POST /api/orders with paymentMethod: 'payyeen'"""
-    print("🛒 Testing Payyeen Order Creation (UC)...")
-    
-    headers = {"Authorization": f"Bearer {user_token}"}
-    
-    try:
-        # First get a product ID
-        products_response = requests.get(f"{API_BASE}/products")
-        if products_response.status_code != 200:
-            log_test("Payyeen UC Orders - Get Products", False, f"Failed to get products: {products_response.status_code}")
-            return False, None
-            
-        products_result = products_response.json()
-        if not products_result.get('success') or 'data' not in products_result:
-            log_test("Payyeen UC Orders - Get Products", False, f"Invalid products response: {products_result}")
-            return False, None
-            
-        products = products_result['data']
-        if not products:
-            log_test("Payyeen UC Orders - Get Products", False, "No products available")
-            return False, None
-            
-        test_product = products[0]
-        product_id = test_product['id']
-        
-        # Test without auth first
-        order_data = {
-            "productId": product_id,
-            "playerId": "123456789",
-            "playerName": "TestPlayer",
-            "paymentMethod": "payyeen"
-        }
-        
-        response = requests.post(f"{API_BASE}/orders", json=order_data)
-        if response.status_code == 401:
-            response_data = response.json()
-            if response_data.get('code') == 'AUTH_REQUIRED':
-                log_test("Payyeen UC Orders - Auth Check", True, "Returns 401 with AUTH_REQUIRED code")
-            else:
-                log_test("Payyeen UC Orders - Auth Check", False, f"Missing AUTH_REQUIRED code: {response_data}")
-        else:
-            log_test("Payyeen UC Orders - Auth Check", False, f"Expected 401, got {response.status_code}")
-        
-        # Test with auth - should create order
-        response = requests.post(f"{API_BASE}/orders", json=order_data, headers=headers)
-        
-        if response.status_code == 200:
-            result = response.json()
-            if result.get('success') and 'data' in result:
-                data = result['data']
+            # Check status code
+            if response.status_code != expect_status:
+                return {
+                    "success": False,
+                    "error": f"Expected status {expect_status}, got {response.status_code}",
+                    "response": response.text[:500]
+                }
                 
-                # Check required fields
-                required_fields = ['orderId', 'paymentUrl', 'formData', 'paymentProvider']
-                missing_fields = [field for field in required_fields if field not in data]
+            # Try to parse JSON
+            try:
+                return response.json()
+            except json.JSONDecodeError:
+                if response.status_code == 200:
+                    return {"success": True, "data": response.text}
+                return {"success": False, "error": "Invalid JSON response"}
                 
-                if not missing_fields:
-                    # Verify specific Payyeen values
-                    if (data['paymentUrl'] == 'https://payyeen.com/checkout/quick' and 
-                        data['paymentProvider'] == 'payyeen'):
-                        
-                        form_data = data['formData']
-                        form_required = ['api_key', 'amount', 'currency', 'description', 'success_url', 'cancel_url']
-                        missing_form = [field for field in form_required if field not in form_data]
-                        
-                        if not missing_form:
-                            # Check description format (should contain PINLY-{orderId})
-                            description = form_data['description']
-                            order_id = data['orderId']
-                            
-                            if f'PINLY-{order_id}' in description:
-                                log_test("Payyeen UC Orders - Create Order", True, f"Order created: {order_id}")
-                                return True, order_id
-                            else:
-                                log_test("Payyeen UC Orders - Description Format", False, f"Invalid description: {description}")
-                                return False, None
-                        else:
-                            log_test("Payyeen UC Orders - Form Data", False, f"Missing form fields: {missing_form}")
-                            return False, None
-                    else:
-                        log_test("Payyeen UC Orders - Payment Details", False, f"Invalid payment details: URL={data.get('paymentUrl')}, Provider={data.get('paymentProvider')}")
-                        return False, None
-                else:
-                    log_test("Payyeen UC Orders - Response Fields", False, f"Missing fields: {missing_fields}")
-                    return False, None
-            else:
-                log_test("Payyeen UC Orders - Response Structure", False, f"Invalid response structure: {result}")
-                return False, None
-        elif response.status_code == 503:
-            log_test("Payyeen UC Orders - Not Configured", True, "Returns 503 when not configured")
-            return True, None
-        else:
-            log_test("Payyeen UC Orders - Request", False, f"HTTP {response.status_code}: {response.text}")
-            return False, None
-            
-    except Exception as e:
-        log_test("Payyeen UC Orders - Exception", False, f"Exception: {str(e)}")
-        return False, None
-
-def test_payyeen_order_creation_accounts(user_token):
-    """Test POST /api/account-orders with paymentMethod: 'payyeen'"""
-    print("🏪 Testing Payyeen Order Creation (Accounts)...")
+        except requests.exceptions.Timeout:
+            return {"success": False, "error": "Request timeout"}
+        except requests.exceptions.ConnectionError:
+            return {"success": False, "error": "Connection error"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
     
-    headers = {"Authorization": f"Bearer {user_token}"}
-    
-    try:
-        # Get accounts first
-        accounts_response = requests.get(f"{API_BASE}/accounts")
-        if accounts_response.status_code != 200:
-            log_test("Payyeen Account Orders - Get Accounts", False, f"Failed to get accounts: {accounts_response.status_code}")
+    def login_admin(self) -> bool:
+        """Login as admin and get token"""
+        print(f"\n🔐 Logging in as admin...")
+        
+        result = self.make_request(
+            'POST',
+            '/api/admin/login',
+            data=ADMIN_CREDENTIALS
+        )
+        
+        if not result.get('success'):
+            self.log_result("Admin Login", False, f"Login failed: {result.get('error', 'Unknown error')}")
             return False
             
-        accounts_result = accounts_response.json()
-        if accounts_result.get('success') and 'data' in accounts_result:
-            accounts = accounts_result['data']
-        else:
-            log_test("Payyeen Account Orders - Get Accounts", False, f"Invalid accounts response: {accounts_result}")
+        if 'data' not in result or 'token' not in result['data']:
+            self.log_result("Admin Login", False, "No token in response")
             return False
             
-        if not accounts:
-            log_test("Payyeen Account Orders - No Accounts", True, "No accounts available (expected)")
-            return True
-            
-        # If accounts exist, test with first account
-        test_account = accounts[0]
-        account_id = test_account['id']
-        
-        order_data = {
-            "accountId": account_id,
-            "paymentMethod": "payyeen"
-        }
-        
-        response = requests.post(f"{API_BASE}/account-orders", json=order_data, headers=headers)
-        
-        if response.status_code == 200:
-            data = response.json()
-            if 'orderId' in data and 'paymentUrl' in data:
-                log_test("Payyeen Account Orders - Create Order", True, f"Account order created: {data['orderId']}")
-                return True
-            else:
-                log_test("Payyeen Account Orders - Response", False, f"Invalid response: {data}")
-                return False
-        elif response.status_code == 503:
-            log_test("Payyeen Account Orders - Not Configured", True, "Returns 503 when not configured")
-            return True
-        else:
-            log_test("Payyeen Account Orders - Request", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-            
-    except Exception as e:
-        log_test("Payyeen Account Orders - Exception", False, f"Exception: {str(e)}")
-        return False
-
-def test_payyeen_webhook_callback(order_id):
-    """Test POST /api/payment/payyeen/callback"""
-    print("🔄 Testing Payyeen Webhook Callback...")
-    
-    if not order_id:
-        log_test("Payyeen Webhook - Skip", True, "No order ID available (expected if not configured)")
+        self.admin_token = result['data']['token']
+        self.log_result("Admin Login", True, "Successfully logged in as admin")
         return True
     
-    try:
-        # Test successful payment webhook
-        success_payload = {
-            "event": "payment.success",
-            "transaction_id": f"TXN{int(time.time())}",
-            "amount": 19.99,
-            "currency": "TRY",
-            "status": "success",
-            "description": f"PINLY-{order_id}",
-            "created_at": datetime.now().isoformat() + "Z"
+    def test_geoip_endpoint(self):
+        """Test GeoIP Detection Endpoint (GET /api/geo)"""
+        print(f"\n🌍 Testing GeoIP Detection Endpoint...")
+        
+        result = self.make_request('GET', '/api/geo')
+        
+        if not result.get('success'):
+            self.log_result("GeoIP Detection Endpoint", False, f"Request failed: {result.get('error', 'Unknown error')}")
+            return
+            
+        # Check required fields
+        data = result.get('data', {})
+        required_fields = ['countryCode', 'country', 'isTurkey', 'locale', 'currency']
+        
+        missing_fields = []
+        for field in required_fields:
+            if field not in data:
+                missing_fields.append(field)
+                
+        if missing_fields:
+            self.log_result("GeoIP Detection Endpoint", False, f"Missing required fields: {missing_fields}")
+            return
+            
+        # Validate field types and values
+        if not isinstance(data.get('countryCode'), str) or len(data['countryCode']) != 2:
+            self.log_result("GeoIP Detection Endpoint", False, "Invalid countryCode format")
+            return
+            
+        if not isinstance(data.get('isTurkey'), bool):
+            self.log_result("GeoIP Detection Endpoint", False, "isTurkey should be boolean")
+            return
+            
+        if data.get('locale') not in ['tr', 'en']:
+            self.log_result("GeoIP Detection Endpoint", False, f"Invalid locale: {data.get('locale')}")
+            return
+            
+        if data.get('currency') not in ['TRY', 'USD']:
+            self.log_result("GeoIP Detection Endpoint", False, f"Invalid currency: {data.get('currency')}")
+            return
+        
+        # For local IPs should default to Turkey
+        expected_country = 'TR'  # Default for localhost
+        if data.get('countryCode') == expected_country:
+            self.log_result("GeoIP Detection Endpoint", True, f"Returns valid response with countryCode={data.get('countryCode')}, locale={data.get('locale')}, currency={data.get('currency')}")
+        else:
+            self.log_result("GeoIP Detection Endpoint", True, f"Returns valid response (non-local IP): countryCode={data.get('countryCode')}, locale={data.get('locale')}, currency={data.get('currency')}")
+    
+    def test_product_usd_fields(self):
+        """Test Product USD Price Fields (GET /api/products)"""
+        print(f"\n💰 Testing Product USD Price Fields...")
+        
+        result = self.make_request('GET', '/api/products')
+        
+        if not result.get('success'):
+            self.log_result("Product USD Price Fields", False, f"Request failed: {result.get('error', 'Unknown error')}")
+            return
+            
+        products = result.get('data', [])
+        
+        if not products:
+            self.log_result("Product USD Price Fields", False, "No products returned")
+            return
+            
+        # Check if all products have USD price fields
+        products_with_usd = 0
+        products_without_usd = []
+        
+        for product in products:
+            if 'priceUSD' in product and 'discountPriceUSD' in product:
+                # Validate field types
+                if not isinstance(product['priceUSD'], (int, float)) or not isinstance(product['discountPriceUSD'], (int, float)):
+                    self.log_result("Product USD Price Fields", False, f"USD price fields must be numbers in product: {product.get('title', 'Unknown')}")
+                    return
+                products_with_usd += 1
+            else:
+                products_without_usd.append(product.get('title', 'Unknown'))
+        
+        if products_without_usd:
+            self.log_result("Product USD Price Fields", False, f"Products missing USD fields: {products_without_usd}")
+            return
+            
+        self.log_result("Product USD Price Fields", True, f"All {products_with_usd} products have priceUSD and discountPriceUSD fields (numbers)")
+    
+    def test_admin_usd_price_management(self):
+        """Test Admin USD Price Management (PUT /api/admin/products/:productId)"""
+        print(f"\n🔧 Testing Admin USD Price Management...")
+        
+        if not self.admin_token:
+            self.log_result("Admin USD Price Management", False, "No admin token available")
+            return
+            
+        # First get admin products list
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        result = self.make_request('GET', '/api/admin/products', headers=headers)
+        
+        if not result.get('success'):
+            self.log_result("Admin USD Price Management", False, f"Failed to get admin products: {result.get('error', 'Unknown error')}")
+            return
+            
+        products = result.get('data', [])
+        if not products:
+            self.log_result("Admin USD Price Management", False, "No products available for testing")
+            return
+            
+        # Take the first product for testing
+        test_product = products[0]
+        product_id = test_product.get('id')
+        
+        if not product_id:
+            self.log_result("Admin USD Price Management", False, "Product ID not found")
+            return
+            
+        # Update product with USD prices
+        update_data = {
+            'priceUSD': 5.99,
+            'discountPriceUSD': 4.99
         }
         
-        response = requests.post(f"{API_BASE}/payment/payyeen/callback", json=success_payload)
+        update_result = self.make_request(
+            'PUT', 
+            f'/api/admin/products/{product_id}',
+            data=update_data,
+            headers=headers
+        )
         
-        if response.status_code == 200:
-            # Payyeen webhook returns plain text "OK" 
-            response_text = response.text.strip()
-            if response_text == "OK":
-                log_test("Payyeen Webhook - Success Payment", True, f"Webhook processed: {response_text}")
+        if not update_result.get('success'):
+            self.log_result("Admin USD Price Management", False, f"Update failed: {update_result.get('error', 'Unknown error')}")
+            return
+            
+        # Verify the update worked
+        updated_product = update_result.get('data', {})
+        
+        if updated_product.get('priceUSD') != 5.99 or updated_product.get('discountPriceUSD') != 4.99:
+            self.log_result("Admin USD Price Management", False, "USD prices were not updated correctly")
+            return
+            
+        # Verify public API also shows the USD prices
+        public_result = self.make_request('GET', '/api/products')
+        
+        if public_result.get('success'):
+            public_products = public_result.get('data', [])
+            updated_public_product = None
+            
+            for product in public_products:
+                if product.get('id') == product_id:
+                    updated_public_product = product
+                    break
+                    
+            if updated_public_product:
+                if updated_public_product.get('priceUSD') == 5.99 and updated_public_product.get('discountPriceUSD') == 4.99:
+                    self.log_result("Admin USD Price Management", True, f"Successfully updated USD prices for product '{test_product.get('title')}' and verified in public API")
+                else:
+                    self.log_result("Admin USD Price Management", False, "USD prices not reflected in public API")
             else:
-                log_test("Payyeen Webhook - Success Payment", True, f"Webhook processed: {response_text}")
-            
-            # Test idempotency - send same webhook again
-            response2 = requests.post(f"{API_BASE}/payment/payyeen/callback", json=success_payload)
-            if response2.status_code == 200:
-                log_test("Payyeen Webhook - Idempotency", True, "Duplicate webhook handled correctly")
-            else:
-                log_test("Payyeen Webhook - Idempotency", False, f"Duplicate handling failed: {response2.status_code}")
-            
-            return True
+                self.log_result("Admin USD Price Management", False, "Updated product not found in public API")
         else:
-            log_test("Payyeen Webhook - Success Payment", False, f"HTTP {response.status_code}: {response.text}")
-            return False
+            self.log_result("Admin USD Price Management", False, "Could not verify public API after update")
+    
+    def run_all_tests(self):
+        """Run all backend tests"""
+        print("🚀 Starting PINLY UC Store Backend Tests")
+        print("=" * 60)
+        
+        # Test 1: GeoIP Detection Endpoint
+        self.test_geoip_endpoint()
+        
+        # Test 2: Product USD Price Fields  
+        self.test_product_usd_fields()
+        
+        # Test 3: Admin Login (required for next test)
+        admin_login_success = self.login_admin()
+        
+        # Test 4: Admin USD Price Management (only if admin login succeeded)
+        if admin_login_success:
+            self.test_admin_usd_price_management()
+        
+        # Summary
+        print("\n" + "=" * 60)
+        print("📊 TEST SUMMARY")
+        print("=" * 60)
+        
+        passed = sum(1 for result in self.test_results if result['success'])
+        total = len(self.test_results)
+        
+        for result in self.test_results:
+            status = "✅ PASS" if result['success'] else "❌ FAIL"
+            print(f"{status} {result['test']}")
             
-        # Test failed payment webhook
-        failed_payload = {
-            "event": "payment.failed",
-            "transaction_id": f"TXN{int(time.time())}FAIL",
-            "amount": 19.99,
-            "currency": "TRY", 
-            "status": "failed",
-            "description": f"PINLY-{order_id}",
-            "created_at": datetime.now().isoformat() + "Z"
-        }
+        print(f"\nResults: {passed}/{total} tests passed")
         
-        response = requests.post(f"{API_BASE}/payment/payyeen/callback", json=failed_payload)
-        
-        if response.status_code == 200:
-            log_test("Payyeen Webhook - Failed Payment", True, "Failed payment webhook processed")
-            return True
+        if passed == total:
+            print("🎉 All backend tests passed!")
+            return 0
         else:
-            log_test("Payyeen Webhook - Failed Payment", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-            
-    except Exception as e:
-        log_test("Payyeen Webhook - Exception", False, f"Exception: {str(e)}")
-        return False
+            print("⚠️  Some tests failed. Check the details above.")
+            return 1
 
 def main():
-    """Run all Payyeen backend tests"""
-    print("🚀 Starting Payyeen Payment Integration Backend Tests")
-    print("=" * 60)
-    print()
-    
-    # Track results
-    results = {
-        "payyeen_admin_get": False,
-        "payyeen_admin_post": False, 
-        "payment_methods": False,
-        "uc_orders": False,
-        "account_orders": False,
-        "webhook_callback": False
-    }
-    
-    # Step 1: Get admin token
-    admin_token = test_admin_login()
-    if not admin_token:
-        print("❌ Cannot proceed without admin token")
-        return
-    
-    # Step 2: Create test user
-    user_token, test_user = create_test_user()
-    if not user_token:
-        print("❌ Cannot proceed without user token")
-        return
-    
-    # Step 3: Test Payyeen Admin Settings GET
-    results["payyeen_admin_get"] = test_payyeen_admin_settings_get(admin_token)
-    
-    # Step 4: Test Payyeen Admin Settings POST  
-    results["payyeen_admin_post"] = test_payyeen_admin_settings_post(admin_token)
-    
-    # Step 5: Test Payment Methods includes Payyeen
-    results["payment_methods"] = test_payment_methods_payyeen()
-    
-    # Step 6: Test Payyeen UC Order Creation
-    uc_success, order_id = test_payyeen_order_creation_uc(user_token)
-    results["uc_orders"] = uc_success
-    
-    # Step 7: Test Payyeen Account Order Creation
-    results["account_orders"] = test_payyeen_order_creation_accounts(user_token)
-    
-    # Step 8: Test Payyeen Webhook Callback
-    results["webhook_callback"] = test_payyeen_webhook_callback(order_id)
-    
-    # Print Results Summary
-    print("\n" + "=" * 60)
-    print("📊 PAYYEEN BACKEND TEST RESULTS SUMMARY")
-    print("=" * 60)
-    
-    passed = sum(1 for success in results.values() if success)
-    total = len(results)
-    
-    print(f"✅ Passed: {passed}/{total} tests ({passed/total*100:.1f}%)")
-    print()
-    
-    for test_name, success in results.items():
-        status = "✅ PASS" if success else "❌ FAIL" 
-        task_name = test_name.replace("_", " ").title()
-        print(f"{status} {task_name}")
-    
-    if passed == total:
-        print(f"\n🎉 All Payyeen backend tests passed! Integration ready for production.")
-    else:
-        failed = total - passed
-        print(f"\n⚠️  {failed} test(s) failed. Check implementation before proceeding.")
-    
-    print("\n" + "=" * 60)
+    """Main function"""
+    tester = BackendTester()
+    return tester.run_all_tests()
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

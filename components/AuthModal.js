@@ -523,7 +523,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                         onClick={() => setForgotPasswordMode(false)}
                         className="w-full text-sm text-gray-400 hover:text-white transition-colors"
                       >
-                        ← Giriş yap sayfasına dön
+                        {isEN ? '← Back to login' : '← Giriş yap sayfasına dön'}
                       </button>
                     </form>
                   )}

@@ -2263,7 +2263,7 @@ export default function App() {
               </div>
               
               <p className="text-white/50 text-sm">
-                Güvenli ve hızlı UC satın alma platformu
+                {t('footer.description')}
               </p>
               
               {/* Contact Info */}

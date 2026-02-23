@@ -1916,7 +1916,7 @@ export default function App() {
                   </div>
 
                   <div>
-                    <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Ödeme yöntemleri</Label>
+                    <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">{t('checkout.paymentMethods')}</Label>
                     
                     {/* Balance Payment Option - Only show if user has SUFFICIENT balance */}
                     {isAuthenticated && selectedProduct && userBalance >= selectedProduct.discountPrice && (

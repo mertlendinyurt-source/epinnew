@@ -60,6 +60,7 @@ function BannerIcon({ icon, size }) {
 }
 
 export default function App() {
+  const { locale, currency, currencySymbol, t, formatPrice, getPrice, getDiscountPrice, formatDate, isTurkey, isInternational, geoLoaded } = useLocale()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedProduct, setSelectedProduct] = useState(null)

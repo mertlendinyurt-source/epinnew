@@ -2008,9 +2008,9 @@ export default function App() {
                         )}
                         
                         <div className="mb-3">
-                          <div className="text-base md:text-lg font-bold text-white mb-1">Kredi / Banka Kartı</div>
+                          <div className="text-base md:text-lg font-bold text-white mb-1">{t('checkout.creditDebitCard')}</div>
                           <div className="inline-block px-2 py-0.5 rounded bg-purple-500/20 text-[11px] text-purple-300">
-                            Anında teslimat
+                            {t('checkout.instantDelivery')}
                           </div>
                         </div>
                         

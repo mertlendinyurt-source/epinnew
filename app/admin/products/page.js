@@ -162,6 +162,8 @@ export default function AdminProducts() {
       price: product.price.toString(),
       discountPrice: product.discountPrice.toString(),
       discountPercent: product.discountPercent.toString(),
+      priceUSD: (product.priceUSD || 0).toString(),
+      discountPriceUSD: (product.discountPriceUSD || 0).toString(),
       active: product.active,
       featured: product.featured || false,
       sortOrder: product.sortOrder.toString(),

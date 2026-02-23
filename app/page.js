@@ -2339,7 +2339,7 @@ export default function App() {
             {/* Column 3: Popüler Kategoriler */}
             <div>
               <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-5">
-                Popüler Kategoriler
+                {t('footer.popularCategories')}
               </h3>
               <ul className="space-y-3">
                 {(footerSettings?.categories || [{ label: 'PUBG UC', url: '/' }, { label: 'Valorant VP', url: '/valorant' }, { label: 'MLBB Diamonds', url: '/mlbb' }]).map((cat, index) => (

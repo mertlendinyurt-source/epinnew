@@ -590,7 +590,7 @@ export default function OrderDetailPage() {
                         🔐 Yüksek tutarlı siparişiniz (3000 TL+) için güvenlik doğrulaması gerekmektedir.
                       </p>
                       <p className="text-sm text-gray-300 mb-4">
-                        Lütfen kimlik fotoğrafınızı ve ödeme dekontunuzu yükleyin. Doğrulama onaylandıktan sonra siparişiniz teslim edilecektir.
+                        {isEN ? 'Please upload your ID photo and payment receipt. Your order will be delivered after verification is approved.' : 'Lütfen kimlik fotoğrafınızı ve ödeme dekontunuzu yükleyin. Doğrulama onaylandıktan sonra siparişiniz teslim edilecektir.'}
                       </p>
                       <Button
                         onClick={() => router.push(`/account/orders/${orderId}/verification`)}
@@ -649,7 +649,7 @@ export default function OrderDetailPage() {
                     Yüksek tutarlı siparişiniz (₺{(order.amount || order.totalAmount || 0).toLocaleString(isEN ? 'en-US' : 'tr-TR')}) için güvenlik doğrulaması gerekmektedir.
                   </p>
                   <p className="text-sm text-gray-300 mb-4">
-                    Lütfen kimlik fotoğrafınızı ve ödeme dekontunuzu yükleyin. Doğrulama onaylandıktan sonra siparişiniz teslim edilecektir.
+                    {isEN ? 'Please upload your ID photo and payment receipt. Your order will be delivered after verification is approved.' : 'Lütfen kimlik fotoğrafınızı ve ödeme dekontunuzu yükleyin. Doğrulama onaylandıktan sonra siparişiniz teslim edilecektir.'}
                   </p>
                   <Button
                     onClick={() => router.push(`/account/orders/${orderId}/verification`)}

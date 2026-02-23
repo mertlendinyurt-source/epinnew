@@ -1862,7 +1862,7 @@ export default function App() {
           
           <div className="relative bg-[#1e2229]/95 backdrop-blur-md flex flex-col max-h-[90vh]">
             <div className="px-5 md:px-8 py-4 md:py-6 border-b border-white/5 flex-shrink-0">
-              <h2 className="text-lg md:text-xl font-bold text-white uppercase tracking-wide">ÖDEME TÜRÜNÜ SEÇİN</h2>
+              <h2 className="text-lg md:text-xl font-bold text-white uppercase tracking-wide">{t('checkout.selectPaymentType')}</h2>
             </div>
             
             <div className="overflow-y-auto flex-1">

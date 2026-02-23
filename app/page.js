@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
 import AuthModal from '@/components/AuthModal'
+import useLocale from '@/hooks/useLocale'
 
 // Banner Icon Component for dynamic icons
 function BannerIcon({ icon, size }) {

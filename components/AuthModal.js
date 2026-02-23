@@ -366,7 +366,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
               <form onSubmit={handleRegister} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-gray-300">Ad *</Label>
+                    <Label className="text-gray-300">{isEN ? 'First Name *' : 'Ad *'}</Label>
                     <Input
                       type="text"
                       value={registerForm.firstName}
@@ -377,7 +377,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                     />
                   </div>
                   <div>
-                    <Label className="text-gray-300">Soyad *</Label>
+                    <Label className="text-gray-300">{isEN ? 'Last Name *' : 'Soyad *'}</Label>
                     <Input
                       type="text"
                       value={registerForm.lastName}
@@ -390,7 +390,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                 </div>
 
                 <div>
-                  <Label className="text-gray-300">E-posta *</Label>
+                  <Label className="text-gray-300">{isEN ? 'Email *' : 'E-posta *'}</Label>
                   <Input
                     type="email"
                     value={registerForm.email}
@@ -402,7 +402,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                 </div>
 
                 <div>
-                  <Label className="text-gray-300">Telefon *</Label>
+                  <Label className="text-gray-300">{isEN ? 'Phone *' : 'Telefon *'}</Label>
                   <Input
                     type="tel"
                     value={registerForm.phone}
@@ -414,7 +414,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                 </div>
 
                 <div>
-                  <Label className="text-gray-300">Şifre *</Label>
+                  <Label className="text-gray-300">{isEN ? 'Password *' : 'Şifre *'}</Label>
                   <Input
                     type="password"
                     value={registerForm.password}
@@ -426,7 +426,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                 </div>
 
                 <div>
-                  <Label className="text-gray-300">Şifre Tekrar *</Label>
+                  <Label className="text-gray-300">{isEN ? 'Confirm Password *' : 'Şifre Tekrar *'}</Label>
                   <Input
                     type="password"
                     value={registerForm.confirmPassword}

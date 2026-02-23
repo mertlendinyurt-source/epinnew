@@ -2310,10 +2310,10 @@ export default function App() {
               </div>
             </div>
 
-            {/* Column 2: Hızlı Erişim */}
+            {/* Column 2: Quick Access */}
             <div>
               <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-5">
-                Hızlı Erişim
+                {t('footer.quickAccess')}
               </h3>
               <ul className="space-y-3">
                 {(footerSettings?.quickLinks || [

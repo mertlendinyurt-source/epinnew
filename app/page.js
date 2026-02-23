@@ -2084,9 +2084,12 @@ export default function App() {
                         </div>
                         <div className="flex-1">
                           <div className="text-xl md:text-2xl font-bold text-white mb-2">
-                            {selectedProduct.title?.includes('Yükleme Şansı') || selectedProduct.title?.includes('Top-Up')
-                              ? selectedProduct.title 
-                              : `${selectedProduct.title} ${t('checkout.topUpChance')}`}
+                            {isInternational 
+                              ? `${selectedProduct.ucAmount || selectedProduct.title?.match(/\d+/)?.[0] || ''} UC ${t('checkout.topUpChance')}`
+                              : (selectedProduct.title?.includes('Yükleme Şansı') || selectedProduct.title?.includes('Top-Up')
+                                ? selectedProduct.title 
+                                : `${selectedProduct.title} ${t('checkout.topUpChance')}`)
+                            }
                           </div>
                           <div className="flex items-center gap-1.5 text-xs md:text-sm font-bold text-white mb-1">
                             <RegionDisplay regionCode={selectedProduct.regionCode || 'TR'} size="lg" />

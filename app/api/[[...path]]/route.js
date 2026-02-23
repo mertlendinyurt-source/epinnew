@@ -2285,29 +2285,42 @@ export async function GET(request) {
     // ============================================
     if (pathname === '/api/geo') {
       try {
-        // Get client IP from headers (Kubernetes/proxy)
+        // Get client IP from headers (supports: Cloudflare, nginx, Apache, Kubernetes)
+        const cfIp = request.headers.get('cf-connecting-ip');
         const forwardedFor = request.headers.get('x-forwarded-for');
         const realIp = request.headers.get('x-real-ip');
-        const cfIp = request.headers.get('cf-connecting-ip');
-        const clientIp = cfIp || (forwardedFor ? forwardedFor.split(',')[0].trim() : null) || realIp || '127.0.0.1';
+        const trueClientIp = request.headers.get('true-client-ip');
+        const clientIp = cfIp || trueClientIp || (forwardedFor ? forwardedFor.split(',')[0].trim() : null) || realIp || '127.0.0.1';
         
-        // Check cache first (10 min TTL per IP)
+        console.log(`GeoIP: Detected IP=${clientIp}, CF=${cfIp}, XFF=${forwardedFor}, XRI=${realIp}`);
+        
+        // Check cache first (2 min TTL per IP - short so VPN changes work fast)
         const geoCacheKey = `geo_${clientIp}`;
         let geoData = getCached(geoCacheKey);
         
         if (!geoData) {
-          // Use ip-api.com free service (no key needed, 45 req/min)
-          const isLocal = clientIp === '127.0.0.1' || clientIp === '::1' || clientIp.startsWith('10.') || clientIp.startsWith('192.168.');
+          // Check if local/private IP
+          const isLocal = clientIp === '127.0.0.1' || clientIp === '::1' || 
+                          clientIp.startsWith('10.') || clientIp.startsWith('192.168.') || 
+                          clientIp.startsWith('172.16.') || clientIp.startsWith('172.17.') ||
+                          clientIp.startsWith('172.18.') || clientIp.startsWith('172.19.') ||
+                          clientIp.startsWith('172.2') || clientIp.startsWith('172.3');
           
           if (isLocal) {
-            // Local development - default to Turkey
             geoData = { countryCode: 'TR', country: 'Turkey', city: 'Local' };
           } else {
             try {
+              // Use ip-api.com free service (no key needed, 45 req/min)
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 3000);
+              
               const geoResponse = await fetch(`http://ip-api.com/json/${clientIp}?fields=status,country,countryCode,city,query`, {
-                signal: AbortSignal.timeout(3000) // 3 second timeout
+                signal: controller.signal
               });
+              clearTimeout(timeoutId);
+              
               const geoResult = await geoResponse.json();
+              console.log(`GeoIP: Result for ${clientIp}:`, geoResult);
               
               if (geoResult.status === 'success') {
                 geoData = {
@@ -2319,13 +2332,13 @@ export async function GET(request) {
                 geoData = { countryCode: 'TR', country: 'Turkey', city: '' };
               }
             } catch (geoErr) {
-              console.error('GeoIP API error:', geoErr);
+              console.error('GeoIP API error:', geoErr.message);
               geoData = { countryCode: 'TR', country: 'Turkey', city: '' };
             }
           }
           
-          // Cache for 10 minutes
-          setCache(geoCacheKey, geoData, 600000);
+          // Cache for 2 minutes (short so VPN/IP changes work quickly)
+          setCache(geoCacheKey, geoData, 120000);
         }
         
         return NextResponse.json({

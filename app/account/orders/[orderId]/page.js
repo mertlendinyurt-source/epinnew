@@ -587,7 +587,7 @@ export default function OrderDetailPage() {
                   {order.verification.status === 'pending' && !order.verification.submittedAt ? (
                     <>
                       <p className="text-amber-200 mb-3">
-                        🔐 Yüksek tutarlı siparişiniz (3000 TL+) için güvenlik doğrulaması gerekmektedir.
+                        🔐 {isEN ? 'Security verification is required for your high-value order' : 'Yüksek tutarlı siparişiniz'} (3000 TL+) {isEN ? '' : 'için güvenlik doğrulaması gerekmektedir.'}
                       </p>
                       <p className="text-sm text-gray-300 mb-4">
                         {isEN ? 'Please upload your ID photo and payment receipt. Your order will be delivered after verification is approved.' : 'Lütfen kimlik fotoğrafınızı ve ödeme dekontunuzu yükleyin. Doğrulama onaylandıktan sonra siparişiniz teslim edilecektir.'}
@@ -646,7 +646,7 @@ export default function OrderDetailPage() {
 
                 <div className="bg-gray-900/50 rounded-xl p-4 border border-amber-700/30">
                   <p className="text-amber-200 mb-3">
-                    Yüksek tutarlı siparişiniz (₺{(order.amount || order.totalAmount || 0).toLocaleString(isEN ? 'en-US' : 'tr-TR')}) için güvenlik doğrulaması gerekmektedir.
+                    {isEN ? 'Security verification is required for your high-value order' : 'Yüksek tutarlı siparişiniz'} ({currencySymbol}{(order.amount || order.totalAmount || 0).toLocaleString(isEN ? 'en-US' : 'tr-TR')}) {isEN ? '' : 'için güvenlik doğrulaması gerekmektedir.'}
                   </p>
                   <p className="text-sm text-gray-300 mb-4">
                     {isEN ? 'Please upload your ID photo and payment receipt. Your order will be delivered after verification is approved.' : 'Lütfen kimlik fotoğrafınızı ve ödeme dekontunuzu yükleyin. Doğrulama onaylandıktan sonra siparişiniz teslim edilecektir.'}
@@ -727,7 +727,7 @@ export default function OrderDetailPage() {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between items-center py-2">
                   <span className="text-gray-400">Ürün Fiyatı</span>
-                  <span className="text-white font-mono">₺{order.amount ? Number(order.amount).toFixed(2) : '0.00'}</span>
+                  <span className="text-white font-mono">{currencySymbol}{order.amount ? Number(order.amount).toFixed(2) : '0.00'}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-t border-gray-700">
                   <span className="text-gray-400">Para Birimi</span>
@@ -738,7 +738,7 @@ export default function OrderDetailPage() {
               <div className="pt-4 border-t-2 border-gray-700">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-300 text-lg">>{isEN ? 'Total' : 'Toplam'}</span>
-                  <span className="text-3xl font-bold text-white">₺{order.amount ? Number(order.amount).toFixed(2) : '0.00'}</span>
+                  <span className="text-3xl font-bold text-white">{currencySymbol}{order.amount ? Number(order.amount).toFixed(2) : '0.00'}</span>
                 </div>
               </div>
 

@@ -975,7 +975,7 @@ export default function App() {
   const FilterSidebar = () => (
     <div className="w-full space-y-3">
       <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
-        <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Oyun Türü</h3>
+        <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">{t('filter.gameType')}</h3>
         <div className="space-y-2">
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />

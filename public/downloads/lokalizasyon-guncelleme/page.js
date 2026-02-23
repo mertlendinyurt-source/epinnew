@@ -253,7 +253,7 @@ export default function App() {
       // Auto-reset date at midnight
       if (newTime.hours === 0 && newTime.minutes === 0 && newTime.seconds === 0) {
         setTimeout(() => {
-          setTodayDate(new Date().toLocaleDateString('tr-TR', { 
+          setTodayDate(new Date().toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', { 
             day: 'numeric', 
             month: 'long', 
             year: 'numeric' 
@@ -266,7 +266,7 @@ export default function App() {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         setCountdown(calculateTimeToMidnight())
-        setTodayDate(new Date().toLocaleDateString('tr-TR', { 
+        setTodayDate(new Date().toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', { 
           day: 'numeric', 
           month: 'long', 
           year: 'numeric' 
@@ -943,9 +943,14 @@ export default function App() {
     window.location.reload()
   }
 
-  // Region display component
+  // Region display component - shows 🌍 Global for international visitors
   const RegionDisplay = ({ regionCode, size = 'sm', showWhiteText = false }) => {
     const region = regions.find(r => r.code === regionCode) || { code: regionCode, name: regionCode, flag: '🌍', flagImageUrl: null }
+    
+    // For international visitors: always show 🌍 Global instead of country flags
+    const displayName = isInternational ? 'Global' : region.name
+    const displayFlag = isInternational ? '🌍' : (region.flag || '🌍')
+    const showFlagImage = !isInternational && region.flagImageUrl
     
     const sizeClasses = {
       sm: 'text-[9px] md:text-[10px]',
@@ -961,12 +966,12 @@ export default function App() {
     
     return (
       <span className={`flex items-center gap-1 ${sizeClasses[size]} ${showWhiteText ? 'text-white' : 'text-white/70'} font-medium`}>
-        {region.flagImageUrl ? (
-          <img src={region.flagImageUrl} alt={region.name} className={`${imgSizeClasses[size]} object-cover rounded-sm`} />
+        {showFlagImage ? (
+          <img src={region.flagImageUrl} alt={displayName} className={`${imgSizeClasses[size]} object-cover rounded-sm`} />
         ) : (
-          <span>{region.flag || '🌍'}</span>
+          <span>{displayFlag}</span>
         )}
-        <span>{region.name}</span>
+        <span>{displayName}</span>
       </span>
     )
   }
@@ -987,19 +992,24 @@ export default function App() {
       <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
         <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">{t('filter.region')}</h3>
         <div className="space-y-2">
-          {regions.map(region => (
+          {regions.map(region => {
+            // For international visitors, translate region names
+            const regionNameMap = { 'Türkiye': 'Turkey', 'Küresel': 'Global', 'Almanya': 'Germany', 'Fransa': 'France', 'Japonya': 'Japan', 'Amerika': 'USA', 'İngiltere': 'UK', 'Rusya': 'Russia', 'Brezilya': 'Brazil', 'Hindistan': 'India' }
+            const displayName = isInternational ? (regionNameMap[region.name] || region.name) : region.name
+            return (
             <label key={region.code} className="flex items-center gap-2 cursor-pointer group">
               <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
               <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
-                {region.flagImageUrl ? (
-                  <img src={region.flagImageUrl} alt={region.name} className="w-5 h-4 object-cover rounded-sm" />
+                {!isInternational && region.flagImageUrl ? (
+                  <img src={region.flagImageUrl} alt={displayName} className="w-5 h-4 object-cover rounded-sm" />
                 ) : (
-                  <span>{region.flag || '🌍'}</span>
+                  <span>{isInternational ? '🌍' : (region.flag || '🌍')}</span>
                 )}
-                {region.name}
+                {displayName}
               </span>
             </label>
-          ))}
+            )
+          })}
         </div>
       </div>
     </div>
@@ -1360,7 +1370,7 @@ export default function App() {
               <h1 className="text-xl md:text-[28px] font-bold text-white">PUBG Mobile</h1>
               <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
                 <span className="text-yellow-400 text-xs md:text-sm">★★★★★ 5/5</span>
-                <span className="text-white/70 text-xs md:text-sm">(2008) yorum</span>
+                <span className="text-white/70 text-xs md:text-sm">({reviewStats.reviewCount > 0 ? reviewStats.reviewCount : 2008}) {t('review.comments')}</span>
               </div>
             </div>
           </div>
@@ -1402,10 +1412,10 @@ export default function App() {
               
               <div>
                 <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-white tracking-tight">
-                  {siteSettings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar'}
+                  {isInternational ? t('banner.dailyPrices') : (siteSettings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar')}
                 </h2>
                 <p className="text-sm md:text-base text-white/60 mt-0.5">
-                  {siteSettings?.dailyBannerSubtitle || todayDate || ''}
+                  {siteSettings?.dailyBannerSubtitle || new Date().toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) || ''}
                 </p>
               </div>
             </div>
@@ -1419,7 +1429,7 @@ export default function App() {
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    {siteSettings?.dailyCountdownLabel || 'Kampanya bitimine'}
+                    {isInternational ? t('banner.campaignEnds') : (siteSettings?.dailyCountdownLabel || 'Kampanya bitimine')}
                   </span>
                   <div 
                     className={`flex items-center gap-1 md:gap-1.5 font-mono text-lg md:text-xl lg:text-2xl font-bold tracking-wider transition-colors duration-500 ${
@@ -1712,7 +1722,7 @@ export default function App() {
                     {/* UC Packages Info */}
                     {gameContent.ucPackages && gameContent.ucPackages.length > 0 && (
                       <div className="mt-8">
-                        <h3 className="text-lg font-bold text-white mb-4">UC Paketleri</h3>
+                        <h3 className="text-lg font-bold text-white mb-4">{t('desc.ucPackages')}</h3>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                           {gameContent.ucPackages.map((pkg, idx) => (
                             <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">
@@ -1727,7 +1737,7 @@ export default function App() {
                     {/* FAQ Section */}
                     {gameContent.faq && gameContent.faq.length > 0 && (
                       <div className="mt-8">
-                        <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
+                        <h3 className="text-lg font-bold text-white mb-4">{t('desc.faq')}</h3>
                         <div className="space-y-3">
                           {gameContent.faq.map((item, idx) => (
                             <div key={idx} className="bg-[#282d36] rounded-lg p-4 border border-white/5">
@@ -1742,17 +1752,16 @@ export default function App() {
                 ) : (
                   <div className="space-y-4">
                     <p className="text-white/80">
-                      PUBG Mobile UC (Unknown Cash), oyun içi premium para birimidir. UC ile özel kostümler, silah skinleri, 
-                      Royale Pass ve daha birçok özel içeriğe erişebilirsiniz.
+                      {t('desc.ucInfo')}
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                       <div className="bg-[#282d36] rounded-lg p-4">
-                        <h4 className="text-white font-medium mb-2">Anında Teslimat</h4>
-                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra UC'ler anında hesabınıza yüklenir.</p>
+                        <h4 className="text-white font-medium mb-2">{t('desc.instantDelivery')}</h4>
+                        <p className="text-white/60 text-sm">{t('desc.instantDeliveryDesc')}</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4">
-                        <h4 className="text-white font-medium mb-2">Güvenli Ödeme</h4>
-                        <p className="text-white/60 text-sm">256-bit SSL şifreleme ile tüm ödemeleriniz güvende.</p>
+                        <h4 className="text-white font-medium mb-2">{t('desc.securePayment')}</h4>
+                        <p className="text-white/60 text-sm">{t('desc.securePaymentDesc')}</p>
                       </div>
                     </div>
                   </div>
@@ -2017,7 +2026,7 @@ export default function App() {
                           <div className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-purple-800 rounded text-white font-bold text-xs">
                             SHOPINEXT
                           </div>
-                          <span className="text-white/60 text-xs">Güvenli Ödeme</span>
+                          <span className="text-white/60 text-xs">{t('checkout.securePayment')}</span>
                         </div>
                       </div>
                     )}
@@ -2470,14 +2479,14 @@ export default function App() {
         <DialogContent className="sm:max-w-md bg-gray-900 border-gray-700 text-white">
           <div className="space-y-4">
             <div className="text-center">
-              <h2 className="text-xl font-bold mb-2">Telefon Numarası Gerekli</h2>
+              <h2 className="text-xl font-bold mb-2">{t('phone.title')}</h2>
               <p className="text-sm text-gray-400">
-                Siparişleriniz için telefon numaranıza ihtiyacımız var
+                {t('phone.description')}
               </p>
             </div>
             
             <div className="space-y-2">
-              <Label className="text-gray-300">Telefon Numarası *</Label>
+              <Label className="text-gray-300">{t('phone.label')} *</Label>
               <Input
                 type="tel"
                 value={phoneNumber}
@@ -2492,7 +2501,7 @@ export default function App() {
               disabled={phoneLoading}
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
             >
-              {phoneLoading ? 'Kaydediliyor...' : 'Onayla ve Devam Et'}
+              {phoneLoading ? t('phone.saving') : t('phone.confirmContinue')}
             </Button>
           </div>
         </DialogContent>
@@ -2536,7 +2545,7 @@ export default function App() {
             </section>
 
             <div className="pt-4 border-t border-white/10 text-xs text-white/40">
-              <p>Son güncelleme: {new Date().toLocaleDateString('tr-TR')}</p>
+              <p>{t('terms.lastUpdate')}: {new Date().toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US')}</p>
               <p>Bu koşullar PINLY tarafından önceden haber verilmeksizin güncellenebilir.</p>
             </div>
 
@@ -2562,7 +2571,7 @@ export default function App() {
               }}
               className="bg-blue-600 hover:bg-blue-500 text-white"
             >
-              Okudum, Kabul Ediyorum
+              {t('terms.accept')}
             </Button>
           </div>
         </DialogContent>

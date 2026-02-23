@@ -1235,7 +1235,7 @@ export default function App() {
                     
                     {/* Game Categories */}
                     <div className="p-2">
-                      <p className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-white/40 font-medium">Oyun Kategorileri</p>
+                      <p className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-white/40 font-medium">{t('nav.gameCategories')}</p>
                       <a href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors bg-white/5">
                         <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center overflow-hidden">
                           <img src="/pubg-logo.png" alt="PUBG" className="w-6 h-6 object-contain" />

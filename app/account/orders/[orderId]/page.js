@@ -613,12 +613,12 @@ export default function OrderDetailPage() {
                     </>
                   ) : order.verification.status === 'approved' ? (
                     <p className="text-green-200">
-                      ✓ Doğrulamanız başarıyla onaylandı. Siparişiniz işleme alındı.
+                      ✓ {isEN ? 'Your verification has been approved. Your order is being processed.' : 'Doğrulamanız başarıyla onaylandı. Siparişiniz işleme alındı.'}
                     </p>
                   ) : (
                     <>
                       <p className="text-red-200 mb-2">
-                        ✗ Doğrulama belgeleri uygun bulunmadı ve siparişiniz iptal edildi.
+                        ✗ {isEN ? 'Verification documents were not found suitable and your order has been cancelled.' : 'Doğrulama belgeleri uygun bulunmadı ve siparişiniz iptal edildi.'}
                       </p>
                       {order.verification.rejectionReason && (
                         <div className="mt-3 p-3 bg-red-900/30 rounded-lg border border-red-800">

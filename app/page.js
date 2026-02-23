@@ -1810,7 +1810,7 @@ export default function App() {
                             </div>
                             <p className="text-white/70 text-sm">{review.comment}</p>
                             <p className="text-white/40 text-xs">
-                              {new Date(review.createdAt).toLocaleDateString('tr-TR', {
+                              {new Date(review.createdAt).toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric'

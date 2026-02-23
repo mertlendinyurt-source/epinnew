@@ -2463,6 +2463,7 @@ export default function App() {
         onClose={() => setAuthModalOpen(false)}
         onSuccess={handleAuthSuccess}
         defaultTab={authModalTab}
+        locale={locale}
       />
 
       {/* Phone Number Modal for Google Users */}

@@ -2089,16 +2089,16 @@ export default function App() {
                     </div>
 
                     <div>
-                      <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Fiyat detayları</Label>
+                      <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">{t('checkout.priceDetails')}</Label>
                       <div className="space-y-3">
                         <div className="flex justify-between items-center text-sm md:text-base">
-                          <span className="text-white/70">Orjinal Fiyat</span>
-                          <span className="text-white font-bold">₺ {selectedProduct.price.toFixed(2)}</span>
+                          <span className="text-white/70">{t('checkout.originalPrice')}</span>
+                          <span className="text-white font-bold">{formatPrice(selectedProduct.price, selectedProduct.priceUSD)}</span>
                         </div>
-                        {selectedProduct.discountPrice < selectedProduct.price && (
+                        {(isInternational ? (selectedProduct.discountPriceUSD || 0) < (selectedProduct.priceUSD || 0) : selectedProduct.discountPrice < selectedProduct.price) && (
                           <div className="flex justify-between items-center text-sm md:text-base">
-                            <span className="text-green-400 font-semibold">Size Özel Fiyat</span>
-                            <span className="text-green-400 font-bold">₺ {selectedProduct.discountPrice.toFixed(2)}</span>
+                            <span className="text-green-400 font-semibold">{t('checkout.specialPrice')}</span>
+                            <span className="text-green-400 font-bold">{formatPrice(selectedProduct.discountPrice, selectedProduct.discountPriceUSD)}</span>
                           </div>
                         )}
                       </div>

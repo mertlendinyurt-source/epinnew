@@ -821,6 +821,9 @@ export default function AdminProducts() {
                           {product.discountPrice.toFixed(2)} ₺
                         </TableCell>
                         <TableCell className="text-slate-400">{product.discountPercent}%</TableCell>
+                        <TableCell className="text-blue-400 text-xs">
+                          {(product.discountPriceUSD || 0) > 0 ? `$${product.discountPriceUSD.toFixed(2)}` : '-'}
+                        </TableCell>
                         <TableCell>
                           <Switch
                             checked={product.dijipinEnabled || false}

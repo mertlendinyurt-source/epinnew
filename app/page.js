@@ -1910,7 +1910,7 @@ export default function App() {
                         onClick={() => setPlayerIdModalOpen(true)}
                         className="px-4 py-3 rounded bg-[#12161D] border border-white/10 text-white/40 cursor-pointer hover:border-white/20 transition-colors"
                       >
-                        <span className="text-sm">Oyuncu ID'nizi girin</span>
+                        <span className="text-sm">{t('checkout.enterYourPlayerId')}</span>
                       </div>
                     )}
                   </div>

@@ -442,7 +442,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                   disabled={loading}
                   className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
                 >
-                  {loading ? 'İşleniyor...' : 'Hesap Oluştur ve Ödemeye Devam Et'}
+                  {loading ? L.processing : L.createAccount}
                 </Button>
 
                 <p className="text-xs text-gray-400 text-center">

@@ -1060,11 +1060,14 @@ backend:
     file: "app/admin/products/page.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Admin products page updated with USD price fields. Both edit and add forms have 'Yurt Dışı Fiyatlandırma (USD)' section with priceUSD and discountPriceUSD inputs. Products table shows USD column. Save handlers send USD fields to backend."
+      - working: true
+        agent: "testing"
+        comment: "Admin USD Price Management backend API working correctly. Admin login successful (username: admin, password: admin123). GET /api/admin/products returns all products with admin JWT authentication. PUT /api/admin/products/:productId successfully updates priceUSD and discountPriceUSD fields. Verified USD prices updated correctly (priceUSD: 5.99, discountPriceUSD: 4.99) in both admin endpoint response and public API. Full CRUD flow tested successfully - backend fully supports USD price management for products."
 
 frontend:
   - task: "Auth Modal (Register + Login)"

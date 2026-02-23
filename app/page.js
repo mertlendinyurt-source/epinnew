@@ -1878,7 +1878,7 @@ export default function App() {
                 <div className="p-5 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-white/5">
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <Label className="text-sm md:text-base text-white/80 uppercase">Oyuncu ID</Label>
+                      <Label className="text-sm md:text-base text-white/80 uppercase">{isInternational ? 'PLAYER ID' : 'Oyuncu ID'}</Label>
                       {!playerValid && (
                         <button 
                           onClick={() => setPlayerIdModalOpen(true)}

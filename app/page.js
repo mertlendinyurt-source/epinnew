@@ -2318,8 +2318,8 @@ export default function App() {
               </h3>
               <ul className="space-y-3">
                 {(footerSettings?.quickLinks || [
-                  { label: 'Giriş Yap', action: 'login' },
-                  { label: 'Kayıt Ol', action: 'register' }
+                  { label: locale === 'tr' ? 'Giriş Yap' : 'Sign In', action: 'login' },
+                  { label: locale === 'tr' ? 'Kayıt Ol' : 'Sign Up', action: 'register' }
                 ]).map((link, index) => (
                   <li key={index}>
                     <button 

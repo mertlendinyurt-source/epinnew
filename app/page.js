@@ -1225,11 +1225,11 @@ export default function App() {
                     <div className="p-2 border-b border-white/10">
                       <a href="/account/orders" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
                         <span className="text-lg">📦</span>
-                        <span className="text-sm text-white/90">Siparişlerim</span>
+                        <span className="text-sm text-white/90">{t('menu.myOrders')}</span>
                       </a>
                       <a href="/account/support/new" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
                         <span className="text-lg">💬</span>
-                        <span className="text-sm text-white/90">Destek Talebi Oluştur</span>
+                        <span className="text-sm text-white/90">{t('menu.createSupportTicket')}</span>
                       </a>
                     </div>
                     

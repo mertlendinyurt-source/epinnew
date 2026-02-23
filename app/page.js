@@ -2145,10 +2145,10 @@ export default function App() {
                         {orderProcessing ? (
                           <>
                             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                            İşleniyor...
+                            {t('checkout.processing')}
                           </>
                         ) : (
-                          'Ödemeye Git'
+                          t('checkout.proceedToPayment')
                         )}
                       </Button>
                     </div>

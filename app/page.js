@@ -1775,7 +1775,7 @@ export default function App() {
                         />
                       ))}
                     </div>
-                    <div className="text-white/40 text-xs mt-1">{reviewStats.reviewCount} değerlendirme</div>
+                    <div className="text-white/40 text-xs mt-1">{reviewStats.reviewCount} {t('review.count')}</div>
                   </div>
                 </div>
 

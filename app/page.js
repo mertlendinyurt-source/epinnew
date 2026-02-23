@@ -943,9 +943,14 @@ export default function App() {
     window.location.reload()
   }
 
-  // Region display component
+  // Region display component - shows 🌍 Global for international visitors
   const RegionDisplay = ({ regionCode, size = 'sm', showWhiteText = false }) => {
     const region = regions.find(r => r.code === regionCode) || { code: regionCode, name: regionCode, flag: '🌍', flagImageUrl: null }
+    
+    // For international visitors: always show 🌍 Global instead of country flags
+    const displayName = isInternational ? 'Global' : region.name
+    const displayFlag = isInternational ? '🌍' : (region.flag || '🌍')
+    const showFlagImage = !isInternational && region.flagImageUrl
     
     const sizeClasses = {
       sm: 'text-[9px] md:text-[10px]',
@@ -961,12 +966,12 @@ export default function App() {
     
     return (
       <span className={`flex items-center gap-1 ${sizeClasses[size]} ${showWhiteText ? 'text-white' : 'text-white/70'} font-medium`}>
-        {region.flagImageUrl ? (
-          <img src={region.flagImageUrl} alt={region.name} className={`${imgSizeClasses[size]} object-cover rounded-sm`} />
+        {showFlagImage ? (
+          <img src={region.flagImageUrl} alt={displayName} className={`${imgSizeClasses[size]} object-cover rounded-sm`} />
         ) : (
-          <span>{region.flag || '🌍'}</span>
+          <span>{displayFlag}</span>
         )}
-        <span>{region.name}</span>
+        <span>{displayName}</span>
       </span>
     )
   }

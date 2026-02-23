@@ -908,7 +908,7 @@ export default function App() {
         setPlayerValid(false)
       }
     } catch (error) {
-      setPlayerIdError('Bağlantı hatası. Lütfen tekrar deneyin.')
+      setPlayerIdError(t('player.connectionError'))
       setPlayerValid(false)
     } finally {
       setPlayerLoading(false)

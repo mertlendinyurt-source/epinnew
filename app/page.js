@@ -1124,8 +1124,8 @@ export default function App() {
                         </button>
                       ) : (
                         <div className="flex items-center gap-2 px-3 py-2 text-sm text-white/40 cursor-not-allowed">
-                          🔴 Canlı Destek
-                          <span className="text-[10px]">({siteSettings?.liveSupportHours || '14:00-22:00'} arası açık)</span>
+                          🔴 {t('menu.liveSupportClosed')}
+                          <span className="text-[10px]">({siteSettings?.liveSupportHours || '14:00-22:00'} {t('menu.liveSupportHoursOpen')})</span>
                         </div>
                       )}
                       <button 

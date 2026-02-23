@@ -2428,7 +2428,7 @@ export default function App() {
 
           {/* Ödeme Yöntemleri */}
           <div className="mt-8 pt-6 border-t border-white/10">
-            <p className="text-center text-white/40 text-xs mb-4 uppercase tracking-wider">Ödeme Yöntemleri</p>
+            <p className="text-center text-white/40 text-xs mb-4 uppercase tracking-wider">{t('footer.paymentMethods')}</p>
             <div className="flex items-center justify-center">
               <img 
                 src="/payment-logos.png" 

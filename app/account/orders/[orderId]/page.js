@@ -465,7 +465,7 @@ export default function OrderDetailPage() {
 
                 <div className="bg-gray-900/70 rounded-xl p-4 border border-gray-700">
                   <div className="flex items-center justify-between gap-3 mb-3">
-                    <div className="text-xs text-gray-400">Hesap Giriş Bilgileri</div>
+                    <div className="text-xs text-gray-400">{isEN ? 'Account Credentials' : 'Hesap Giriş Bilgileri'}</div>
                     <div className="flex gap-2">
                       <Button
                         variant="ghost"
@@ -474,7 +474,7 @@ export default function OrderDetailPage() {
                         className="text-gray-400 hover:text-white"
                       >
                         {showCodes.credentials ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        <span className="ml-1 text-xs">{showCodes.credentials ? 'Gizle' : 'Göster'}</span>
+                        <span className="ml-1 text-xs">{showCodes.credentials ? isEN ? 'Hide' : 'Gizle' : isEN ? 'Show' : 'Göster'}</span>
                       </Button>
                       <Button
                         variant="ghost"

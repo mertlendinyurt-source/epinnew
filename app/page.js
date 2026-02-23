@@ -2382,9 +2382,9 @@ export default function App() {
                 <p className="text-white/50 text-xs">{t('footer.mersisNo')}: 0730089706000001</p>
               </div>
 
-              {/* Unvan */}
+              {/* Company Title */}
               <div className="space-y-2">
-                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Unvan</h4>
+                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">{t('footer.companyTitle')}</h4>
                 <p className="text-white/80 text-sm font-semibold leading-snug">
                   PİNLY ELEKTRONİK HİZMETLER TİCARET ANONİM ŞİRKETİ
                 </p>

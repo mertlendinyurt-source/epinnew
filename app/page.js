@@ -1752,17 +1752,16 @@ export default function App() {
                 ) : (
                   <div className="space-y-4">
                     <p className="text-white/80">
-                      PUBG Mobile UC (Unknown Cash), oyun içi premium para birimidir. UC ile özel kostümler, silah skinleri, 
-                      Royale Pass ve daha birçok özel içeriğe erişebilirsiniz.
+                      {t('desc.ucInfo')}
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                       <div className="bg-[#282d36] rounded-lg p-4">
-                        <h4 className="text-white font-medium mb-2">Anında Teslimat</h4>
-                        <p className="text-white/60 text-sm">Ödemeniz onaylandıktan sonra UC'ler anında hesabınıza yüklenir.</p>
+                        <h4 className="text-white font-medium mb-2">{t('desc.instantDelivery')}</h4>
+                        <p className="text-white/60 text-sm">{t('desc.instantDeliveryDesc')}</p>
                       </div>
                       <div className="bg-[#282d36] rounded-lg p-4">
-                        <h4 className="text-white font-medium mb-2">Güvenli Ödeme</h4>
-                        <p className="text-white/60 text-sm">256-bit SSL şifreleme ile tüm ödemeleriniz güvende.</p>
+                        <h4 className="text-white font-medium mb-2">{t('desc.securePayment')}</h4>
+                        <p className="text-white/60 text-sm">{t('desc.securePaymentDesc')}</p>
                       </div>
                     </div>
                   </div>

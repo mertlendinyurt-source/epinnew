@@ -1356,7 +1356,7 @@ export default function App() {
               <div className="w-14 h-14 md:w-20 md:h-20 rounded-lg bg-white/5 animate-pulse shadow-lg"></div>
             )}
             <div>
-              <div className="text-xs md:text-sm text-white/60 mb-0.5 md:mb-1">Anasayfa &gt; Oyunlar</div>
+              <div className="text-xs md:text-sm text-white/60 mb-0.5 md:mb-1">{t('nav.breadcrumb')}</div>
               <h1 className="text-xl md:text-[28px] font-bold text-white">PUBG Mobile</h1>
               <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
                 <span className="text-yellow-400 text-xs md:text-sm">★★★★★ 5/5</span>

@@ -1132,7 +1132,7 @@ export default function App() {
                         onClick={handleLogout}
                         className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-white/5 rounded-md transition-colors w-full text-left"
                       >
-                        🚪 Çıkış Yap
+                        🚪 {t('auth.logout')}
                       </button>
                     </div>
                   </div>

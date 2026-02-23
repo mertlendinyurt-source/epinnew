@@ -31,7 +31,7 @@ export default function OrderDetailPage() {
     const token = localStorage.getItem('userToken');
     
     if (!token) {
-      toast.error('Lütfen giriş yapın');
+      toast.error(isEN ? 'Please sign in' : 'Lütfen giriş yapın');
       router.push('/');
       return;
     }
@@ -46,13 +46,13 @@ export default function OrderDetailPage() {
       if (response.status === 401) {
         localStorage.removeItem('userToken');
         localStorage.removeItem('userData');
-        toast.error('Oturumunuz sonlandı');
+        toast.error(isEN ? 'Session expired' : 'Oturumunuz sonlandı');
         router.push('/');
         return;
       }
 
       if (response.status === 404) {
-        toast.error('Sipariş bulunamadı');
+        toast.error(isEN ? 'Order not found' : 'Sipariş bulunamadı');
         router.push('/account/orders');
         return;
       }
@@ -74,12 +74,12 @@ export default function OrderDetailPage() {
           setPayment(null);
         }
       } else {
-        toast.error('Sipariş yüklenemedi');
+        toast.error(isEN ? 'Failed to load order' : 'Sipariş yüklenemedi');
         router.push('/account/orders');
       }
     } catch (error) {
       console.error('Fetch order error:', error);
-      toast.error('Bağlantı hatası');
+      toast.error(isEN ? 'Connection error' : 'Bağlantı hatası');
     } finally {
       setLoading(false);
     }
@@ -88,7 +88,7 @@ export default function OrderDetailPage() {
   const handleCopyCode = (code, index) => {
     navigator.clipboard.writeText(code);
     setCopiedCode(index);
-    toast.success('Kod kopyalandı!');
+    toast.success(isEN ? 'Code copied!' : 'Kod kopyalandı!');
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
@@ -483,7 +483,7 @@ export default function OrderDetailPage() {
                           navigator.clipboard.writeText(order.delivery.credentials);
                           setCopiedCode('credentials');
                           setTimeout(() => setCopiedCode(null), 2000);
-                          toast.success('Kopyalandı!');
+                          toast.success(isEN ? 'Copied!' : 'Kopyalandı!');
                         }}
                         className="text-gray-400 hover:text-white"
                       >

@@ -251,7 +251,7 @@ export default function OrderDetailPage() {
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">4</span>
                         <div>
-                          <p className="text-white font-medium">{isEN ? 'Paste the code above and confirm' : '{isEN ? 'Paste the code above' : 'Yukarıdaki kodu yapıştırın'} ve onaylayın'}</p>
+                          <p className="text-white font-medium">{isEN ? 'Paste the code above and confirm' : 'Yukarıdaki kodu yapıştırın ve onaylayın'}</p>
                         </div>
                       </div>
                       <div className="flex gap-3">

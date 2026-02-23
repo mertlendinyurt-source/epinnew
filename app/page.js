@@ -985,7 +985,7 @@ export default function App() {
       </div>
       
       <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
-        <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Bölge</h3>
+        <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">{t('filter.region')}</h3>
         <div className="space-y-2">
           {regions.map(region => (
             <label key={region.code} className="flex items-center gap-2 cursor-pointer group">

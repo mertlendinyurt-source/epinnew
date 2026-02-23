@@ -6,11 +6,14 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { Copy, Check, Eye, EyeOff, ArrowLeft, Package, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import useLocale from '@/hooks/useLocale';
 
 export default function OrderDetailPage() {
   const router = useRouter();
   const params = useParams();
   const orderId = params.orderId;
+  const { locale, t, formatPrice, currencySymbol, isInternational } = useLocale();
+  const isEN = locale === 'en';
   
   const [order, setOrder] = useState(null);
   const [payment, setPayment] = useState(null);

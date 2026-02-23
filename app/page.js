@@ -2567,7 +2567,7 @@ export default function App() {
               }}
               className="bg-blue-600 hover:bg-blue-500 text-white"
             >
-              Okudum, Kabul Ediyorum
+              {t('terms.accept')}
             </Button>
           </div>
         </DialogContent>

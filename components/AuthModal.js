@@ -465,7 +465,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      <h3 className="text-lg font-semibold text-white mb-2">E-posta Gönderildi!</h3>
+                      <h3 className="text-lg font-semibold text-white mb-2">{isEN ? 'Email Sent!' : 'E-posta Gönderildi!'}</h3>
                       <p className="text-sm text-gray-400 mb-4">
                         Şifre sıfırlama linki <span className="text-blue-400">{forgotPasswordEmail}</span> adresine gönderildi.
                       </p>

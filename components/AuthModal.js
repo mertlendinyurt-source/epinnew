@@ -8,6 +8,42 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'register', locale = 'tr' }) {
+  const isEN = locale === 'en';
+  const L = {
+    register: isEN ? 'Sign Up' : 'Kayıt Ol',
+    login: isEN ? 'Sign In' : 'Giriş Yap',
+    firstName: isEN ? 'First Name' : 'Ad',
+    lastName: isEN ? 'Last Name' : 'Soyad',
+    email: isEN ? 'Email' : 'E-posta',
+    phone: isEN ? 'Phone' : 'Telefon',
+    password: isEN ? 'Password' : 'Şifre',
+    confirmPassword: isEN ? 'Confirm Password' : 'Şifre Tekrar',
+    createAccount: isEN ? 'Create Account & Continue to Payment' : 'Hesap Oluştur ve Ödemeye Devam Et',
+    loginContinue: isEN ? 'Sign In & Continue' : 'Giriş Yap ve Devam Et',
+    processing: isEN ? 'Processing...' : 'İşleniyor...',
+    loggingIn: isEN ? 'Signing in...' : 'Giriş yapılıyor...',
+    sending: isEN ? 'Sending...' : 'Gönderiliyor...',
+    or: isEN ? 'or' : 'veya',
+    googleContinue: isEN ? 'Continue with Google' : 'Google ile devam et',
+    forgotPassword: isEN ? 'Forgot Password?' : 'Şifremi Unuttum',
+    sendResetLink: isEN ? 'Send Password Reset Link' : 'Şifre Sıfırlama Linki Gönder',
+    resetSent: isEN ? 'Password reset link sent to your email!' : 'Şifre sıfırlama linki e-posta adresinize gönderildi!',
+    backToLogin: isEN ? 'Back to Login' : 'Giriş ekranına dön',
+    hasAccount: isEN ? 'Already have an account?' : 'Zaten hesabınız var mı?',
+    noAccount: isEN ? "Don't have an account?" : 'Hesabınız yok mu?',
+    fillAll: isEN ? 'Please fill in all fields' : 'Tüm alanları doldurun',
+    passwordMismatch: isEN ? 'Passwords do not match' : 'Şifreler eşleşmiyor',
+    passwordMin: isEN ? 'Password must be at least 6 characters' : 'Şifre en az 6 karakter olmalıdır',
+    accountCreated: isEN ? 'Account created! You can continue to payment.' : 'Hesap oluşturuldu! Ödemeye devam edebilirsiniz.',
+    loginSuccess: isEN ? 'Login successful!' : 'Giriş başarılı!',
+    registerFailed: isEN ? 'Registration failed' : 'Kayıt başarısız',
+    loginFailed: isEN ? 'Login failed' : 'Giriş başarısız',
+    emailPasswordRequired: isEN ? 'Email and password are required' : 'E-posta ve şifre gereklidir',
+    connectionError: isEN ? 'Connection error' : 'Bağlantı hatası',
+    adminRedirect: isEN ? 'Redirecting to admin panel...' : 'Admin paneline yönlendiriliyorsunuz...',
+    checkEmail: isEN ? 'Check your email for the reset link' : 'Şifre sıfırlama linki için e-postanızı kontrol edin',
+    emailResetSent: isEN ? 'If an account exists, a reset link will be sent.' : 'Hesap varsa sıfırlama linki gönderilecektir.',
+  };
   const [tab, setTab] = useState(defaultTab);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);

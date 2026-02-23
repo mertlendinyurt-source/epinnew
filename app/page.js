@@ -919,7 +919,7 @@ export default function App() {
     setIsAuthenticated(true)
     setUser(userData)
     setAuthModalOpen(false)
-    toast.success('Giriş başarılı!')
+    toast.success(t('auth.loginSuccess'))
     
     // Fetch user balance
     fetch('/api/account/balance', {

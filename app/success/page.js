@@ -2,18 +2,20 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import useLocale from '@/hooks/useLocale';
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { locale, t, isInternational } = useLocale();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const orderId = searchParams.get('orderId');
+  const isEN = locale === 'en';
 
   useEffect(() => {
     if (orderId) {
-      // Optional: Fetch order details to show confirmation
       loadOrderDetails();
     } else {
       setLoading(false);
@@ -22,8 +24,6 @@ export default function PaymentSuccessPage() {
 
   const loadOrderDetails = async () => {
     try {
-      // In a real scenario, you might want to verify the order status
-      // For now, we'll just show the success message
       setLoading(false);
     } catch (error) {
       console.error('Failed to load order:', error);
@@ -34,7 +34,7 @@ export default function PaymentSuccessPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Yükleniyor...</div>
+        <div className="text-white text-xl">{t('common.loading')}</div>
       </div>
     );
   }
@@ -49,15 +49,15 @@ export default function PaymentSuccessPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Ödeme Başarılı!</h1>
-          <p className="text-gray-300">İşleminiz başarıyla tamamlandı</p>
+          <h1 className="text-3xl font-bold text-white mb-2">{isEN ? 'Payment Successful!' : 'Ödeme Başarılı!'}</h1>
+          <p className="text-gray-300">{isEN ? 'Your transaction has been completed successfully' : 'İşleminiz başarıyla tamamlandı'}</p>
         </div>
 
         {/* Order Details Card */}
         <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700 shadow-2xl">
           {orderId && (
             <div className="mb-6 pb-6 border-b border-gray-700">
-              <p className="text-sm text-gray-400 mb-1">Sipariş Numarası</p>
+              <p className="text-sm text-gray-400 mb-1">{isEN ? 'Order Number' : 'Sipariş Numarası'}</p>
               <p className="text-white font-mono text-sm break-all">{orderId}</p>
             </div>
           )}
@@ -70,8 +70,8 @@ export default function PaymentSuccessPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-white font-semibold">Ödeme onaylandı</h3>
-                <p className="text-sm text-gray-400">Ödemeniz başarıyla işleme alındı</p>
+                <h3 className="text-white font-semibold">{isEN ? 'Payment confirmed' : 'Ödeme onaylandı'}</h3>
+                <p className="text-sm text-gray-400">{isEN ? 'Your payment has been processed successfully' : 'Ödemeniz başarıyla işleme alındı'}</p>
               </div>
             </div>
 
@@ -82,8 +82,8 @@ export default function PaymentSuccessPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-white font-semibold">UC yükleme işlemi başlatıldı</h3>
-                <p className="text-sm text-gray-400">UC'leriniz kısa süre içinde hesabınıza yüklenecektir</p>
+                <h3 className="text-white font-semibold">{isEN ? 'UC loading started' : 'UC yükleme işlemi başlatıldı'}</h3>
+                <p className="text-sm text-gray-400">{isEN ? 'Your UC will be loaded to your account shortly' : 'UC\'leriniz kısa süre içinde hesabınıza yüklenecektir'}</p>
               </div>
             </div>
 
@@ -95,8 +95,8 @@ export default function PaymentSuccessPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-white font-semibold">Sipariş bilgisi gönderildi</h3>
-                <p className="text-sm text-gray-400">Detaylı bilgi için siparişlerinizi kontrol edebilirsiniz</p>
+                <h3 className="text-white font-semibold">{isEN ? 'Order info sent' : 'Sipariş bilgisi gönderildi'}</h3>
+                <p className="text-sm text-gray-400">{isEN ? 'Check your orders for details' : 'Detaylı bilgi için siparişlerinizi kontrol edebilirsiniz'}</p>
               </div>
             </div>
           </div>
@@ -107,22 +107,22 @@ export default function PaymentSuccessPage() {
               onClick={() => router.push('/')}
               className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-[1.02]"
             >
-              Ana Sayfaya Dön
+              {isEN ? 'Return to Home' : 'Ana Sayfaya Dön'}
             </button>
             <button
               onClick={() => router.push('/')}
               className="w-full px-6 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors"
             >
-              Yeni Sipariş Ver
+              {isEN ? 'Place New Order' : 'Yeni Sipariş Ver'}
             </button>
           </div>
         </div>
 
         {/* Additional Info */}
         <div className="mt-6 text-center text-sm text-gray-400">
-          <p>Herhangi bir sorun yaşarsanız</p>
+          <p>{isEN ? 'If you have any issues' : 'Herhangi bir sorun yaşarsanız'}</p>
           <a href="#" className="text-purple-400 hover:text-purple-300 transition-colors">
-            destek ekibimizle iletişime geçin
+            {isEN ? 'contact our support team' : 'destek ekibimizle iletişime geçin'}
           </a>
         </div>
       </div>

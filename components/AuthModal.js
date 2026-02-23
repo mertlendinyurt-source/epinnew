@@ -499,7 +499,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                       </div>
 
                       <div>
-                        <Label className="text-gray-300">E-posta Adresi</Label>
+                        <Label className="text-gray-300">{isEN ? 'Email Address' : 'E-posta Adresi'}</Label>
                         <Input
                           type="email"
                           value={forgotPasswordEmail}

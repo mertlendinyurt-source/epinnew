@@ -802,7 +802,7 @@ export default function App() {
         setIsAuthenticated(false)
         setAuthModalTab('login')
         setAuthModalOpen(true)
-        toast.error('Oturumunuz sonlandı. Lütfen tekrar giriş yapın')
+        toast.error(t('auth.sessionExpired'))
         return
       }
       

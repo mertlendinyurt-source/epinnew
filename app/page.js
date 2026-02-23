@@ -1834,7 +1834,7 @@ export default function App() {
                     disabled={loadingReviews}
                     className="mt-6 w-full py-3 bg-[#282d36] hover:bg-[#323842] rounded-lg text-blue-400 font-medium text-sm transition-colors disabled:opacity-50"
                   >
-                    {loadingReviews ? 'Yükleniyor...' : 'Daha fazla görüntüle'}
+                    {loadingReviews ? t('review.loading') : t('review.loadMore')}
                   </button>
                 )}
               </div>

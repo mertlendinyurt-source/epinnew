@@ -1147,7 +1147,7 @@ export default function App() {
                       setAuthModalOpen(true)
                     }}
                   >
-                    Giriş Yap
+                    {t('auth.login')}
                   </Button>
                   <Button 
                     className="bg-blue-600 hover:bg-blue-500 text-white text-sm px-3 md:px-4"
@@ -1156,7 +1156,7 @@ export default function App() {
                       setAuthModalOpen(true)
                     }}
                   >
-                    Kayıt Ol
+                    {t('auth.register')}
                   </Button>
                 </>
               )}

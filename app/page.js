@@ -1104,10 +1104,10 @@ export default function App() {
                     </div>
                     <div className="p-1">
                       <a href="/account/orders" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md transition-colors">
-                        📦 Siparişlerim
+                        📦 {t('menu.myOrders')}
                       </a>
                       <a href="/account/support" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md transition-colors">
-                        💬 Destek Taleplerim
+                        💬 {t('menu.supportTickets')}
                       </a>
                       {/* Canlı Destek - Aktifse tıklanabilir, pasifse bilgi gösterir */}
                       {siteSettings?.liveSupportEnabled ? (

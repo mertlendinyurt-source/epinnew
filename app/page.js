@@ -1722,7 +1722,7 @@ export default function App() {
                     {/* UC Packages Info */}
                     {gameContent.ucPackages && gameContent.ucPackages.length > 0 && (
                       <div className="mt-8">
-                        <h3 className="text-lg font-bold text-white mb-4">UC Paketleri</h3>
+                        <h3 className="text-lg font-bold text-white mb-4">{t('desc.ucPackages')}</h3>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                           {gameContent.ucPackages.map((pkg, idx) => (
                             <div key={idx} className="bg-[#282d36] rounded-lg p-3 text-center border border-white/5">

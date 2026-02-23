@@ -1977,6 +1977,18 @@ async function initializeDb() {
     { featured: { $exists: false } },
     { $set: { featured: false } }
   );
+
+  // Migrate existing products: add USD price fields (default: 0)
+  await db.collection('products').updateMany(
+    { priceUSD: { $exists: false } },
+    { $set: { priceUSD: 0, discountPriceUSD: 0 } }
+  );
+
+  // Migrate existing accounts: add USD price fields (default: 0)
+  await db.collection('accounts').updateMany(
+    { priceUSD: { $exists: false } },
+    { $set: { priceUSD: 0, discountPriceUSD: 0 } }
+  );
   
   // Check if products exist
   const productsCount = await db.collection('products').countDocuments();

@@ -2376,10 +2376,10 @@ export default function App() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
               {/* Vergi / Ticaret Sicil */}
               <div className="space-y-2">
-                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Ticaret Sicil No</h4>
+                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">{t('footer.tradeRegistry')}</h4>
                 <p className="text-white/80 text-sm font-semibold">541409</p>
-                <p className="text-white/50 text-xs">Vergi No: 7300897060</p>
-                <p className="text-white/50 text-xs">Mersis No: 0730089706000001</p>
+                <p className="text-white/50 text-xs">{t('footer.taxNo')}: 7300897060</p>
+                <p className="text-white/50 text-xs">{t('footer.mersisNo')}: 0730089706000001</p>
               </div>
 
               {/* Unvan */}

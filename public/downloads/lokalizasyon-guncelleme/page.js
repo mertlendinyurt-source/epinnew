@@ -1624,8 +1624,7 @@ export default function App() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
               </span>
-              Canlı Destek
-              <span className="text-xs opacity-75">({siteSettings?.liveSupportHours || '14:00-22:00'})</span>
+              {t('support.liveSupport')}
             </button>
           ) : (
             <div className="flex items-center gap-3 px-6 py-3 bg-gray-600/50 text-white/50 rounded-xl text-base font-semibold cursor-not-allowed">
@@ -1649,7 +1648,7 @@ export default function App() {
                   : 'text-white/50 hover:text-white/70'
               }`}
             >
-              Açıklama
+              {t('tab.description')}
               {activeInfoTab === 'description' && (
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
               )}
@@ -2311,10 +2310,10 @@ export default function App() {
               </div>
             </div>
 
-            {/* Column 2: Hızlı Erişim */}
+            {/* Column 2: Quick Access */}
             <div>
               <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-5">
-                Hızlı Erişim
+                {t('footer.quickAccess')}
               </h3>
               <ul className="space-y-3">
                 {(footerSettings?.quickLinks || [
@@ -2377,23 +2376,23 @@ export default function App() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
               {/* Vergi / Ticaret Sicil */}
               <div className="space-y-2">
-                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Ticaret Sicil No</h4>
+                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">{t('footer.tradeRegistry')}</h4>
                 <p className="text-white/80 text-sm font-semibold">541409</p>
-                <p className="text-white/50 text-xs">Vergi No: 7300897060</p>
-                <p className="text-white/50 text-xs">Mersis No: 0730089706000001</p>
+                <p className="text-white/50 text-xs">{t('footer.taxNo')}: 7300897060</p>
+                <p className="text-white/50 text-xs">{t('footer.mersisNo')}: 0730089706000001</p>
               </div>
 
-              {/* Unvan */}
+              {/* Company Title */}
               <div className="space-y-2">
-                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Unvan</h4>
+                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">{t('footer.companyTitle')}</h4>
                 <p className="text-white/80 text-sm font-semibold leading-snug">
                   PİNLY ELEKTRONİK HİZMETLER TİCARET ANONİM ŞİRKETİ
                 </p>
               </div>
 
-              {/* Adres */}
+              {/* Address */}
               <div className="space-y-2">
-                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Adres</h4>
+                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">{t('footer.address')}</h4>
                 <p className="text-white/80 text-sm leading-snug">
                   Kızılırmak Mah. Dumlupınar Bul.<br/>
                   No: 3C-1 İç Kapı No: 160<br/>
@@ -2401,13 +2400,13 @@ export default function App() {
                 </p>
               </div>
 
-              {/* İletişim */}
+              {/* Contact */}
               <div className="space-y-2">
-                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">İletişim</h4>
+                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">{t('footer.contact')}</h4>
                 <div className="space-y-1">
                   {siteSettings?.contactEmail && (
                     <p className="text-white/80 text-sm">
-                      <span className="text-white/50">E-Posta: </span>
+                      <span className="text-white/50">{t('footer.email')}: </span>
                       <a href={`mailto:${siteSettings.contactEmail}`} className="hover:text-cyan-400 transition-colors">
                         {siteSettings.contactEmail}
                       </a>
@@ -2415,7 +2414,7 @@ export default function App() {
                   )}
                   {siteSettings?.contactPhone && (
                     <p className="text-white/80 text-sm">
-                      <span className="text-white/50">Tel: </span>
+                      <span className="text-white/50">{t('footer.phone')}: </span>
                       <a href={`tel:${siteSettings.contactPhone.replace(/\s/g, '')}`} className="hover:text-cyan-400 transition-colors">
                         {siteSettings.contactPhone}
                       </a>

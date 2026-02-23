@@ -2076,14 +2076,14 @@ export default function App() {
                         </div>
                         <div className="flex-1">
                           <div className="text-xl md:text-2xl font-bold text-white mb-2">
-                            {selectedProduct.title?.includes('Yükleme Şansı') 
+                            {selectedProduct.title?.includes('Yükleme Şansı') || selectedProduct.title?.includes('Top-Up')
                               ? selectedProduct.title 
-                              : `${selectedProduct.title} Yükleme Şansı`}
+                              : `${selectedProduct.title} ${t('checkout.topUpChance')}`}
                           </div>
                           <div className="flex items-center gap-1.5 text-xs md:text-sm font-bold text-white mb-1">
                             <RegionDisplay regionCode={selectedProduct.regionCode || 'TR'} size="lg" />
                           </div>
-                          <div className="text-[11px] md:text-xs text-green-400">Bölgenizde kullanılabilir</div>
+                          <div className="text-[11px] md:text-xs text-green-400">{t('product.availableInRegion')}</div>
                         </div>
                       </div>
                     </div>

@@ -494,7 +494,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                         </div>
                         <h3 className="text-lg font-semibold text-white">{L.forgotPassword}</h3>
                         <p className="text-sm text-gray-400 mt-1">
-                          E-posta adresinizi girin, size şifre sıfırlama linki gönderelim.
+                          {isEN ? 'Enter your email address and we will send you a password reset link.' : 'E-posta adresinizi girin, size şifre sıfırlama linki gönderelim.'}
                         </p>
                       </div>
 

@@ -596,7 +596,7 @@ export default function OrderDetailPage() {
                         onClick={() => router.push(`/account/orders/${orderId}/verification`)}
                         className="w-full bg-amber-600 hover:bg-amber-700"
                       >
-                        Doğrulama Belgelerini Yükle
+                        {isEN ? 'Upload Verification Documents' : 'Doğrulama Belgelerini Yükle'}
                       </Button>
                     </>
                   ) : order.verification.status === 'pending' && order.verification.submittedAt ? (
@@ -605,7 +605,7 @@ export default function OrderDetailPage() {
                         ✓ Belgeleriniz alındı ve admin tarafından inceleniyor.
                       </p>
                       <p className="text-sm text-gray-400">
-                        Doğrulama genellikle 1 saat içinde tamamlanır. Onaylandığında e-posta ile bilgilendirileceksiniz.
+                        {isEN ? 'Verification is usually completed within 1 hour. You will be notified by email when approved.' : 'Doğrulama genellikle 1 saat içinde tamamlanır. Onaylandığında e-posta ile bilgilendirileceksiniz.'}
                       </p>
                       <div className="mt-3 text-xs text-gray-500">
                         Gönderilme: {new Date(order.verification.submittedAt).toLocaleString(isEN ? 'en-US' : 'tr-TR')}
@@ -655,7 +655,7 @@ export default function OrderDetailPage() {
                     onClick={() => router.push(`/account/orders/${orderId}/verification`)}
                     className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold"
                   >
-                    Doğrulama Belgelerini Yükle
+                    {isEN ? 'Upload Verification Documents' : 'Doğrulama Belgelerini Yükle'}
                   </Button>
                 </div>
               </div>

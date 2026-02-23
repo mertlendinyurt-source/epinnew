@@ -2062,7 +2062,7 @@ export default function App() {
                 {selectedProduct && (
                   <div className="p-5 md:p-8 space-y-6 md:space-y-8 bg-[#1a1e24]/95">
                     <div>
-                      <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Ürün</Label>
+                      <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">{t('checkout.product')}</Label>
                       <div className="flex items-start gap-4">
                         <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg flex items-center justify-center bg-[#12161D] overflow-hidden p-2">
                           <img 

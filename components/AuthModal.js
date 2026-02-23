@@ -573,7 +573,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                       disabled={loading}
                       className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
                     >
-                      {loading ? 'Giriş yapılıyor...' : 'Giriş Yap ve Devam Et'}
+                      {loading ? L.loggingIn : L.loginContinue}
                     </Button>
 
                     <p className="text-xs text-gray-400 text-center">

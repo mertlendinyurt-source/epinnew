@@ -2127,9 +2127,9 @@ export default function App() {
                             onClick={(e) => { e.preventDefault(); setTermsModalOpen(true); }}
                             className="text-blue-400 hover:text-blue-300 underline"
                           >
-                            Satış koşullarını
+                            {t('checkout.salesTerms')}
                           </button>
-                          {' '}okudum ve kabul ediyorum.
+                          {' '}{t('checkout.termsAccept')}
                         </label>
                       </div>
 

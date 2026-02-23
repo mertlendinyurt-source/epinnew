@@ -1407,7 +1407,7 @@ export default function App() {
               
               <div>
                 <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-white tracking-tight">
-                  {siteSettings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar'}
+                  {isInternational ? t('banner.dailyPrices') : (siteSettings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar')}
                 </h2>
                 <p className="text-sm md:text-base text-white/60 mt-0.5">
                   {siteSettings?.dailyBannerSubtitle || todayDate || ''}

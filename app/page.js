@@ -2502,7 +2502,7 @@ export default function App() {
               disabled={phoneLoading}
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
             >
-              {phoneLoading ? 'Kaydediliyor...' : 'Onayla ve Devam Et'}
+              {phoneLoading ? t('phone.saving') : t('phone.confirmContinue')}
             </Button>
           </div>
         </DialogContent>

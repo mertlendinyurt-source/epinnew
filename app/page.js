@@ -1365,7 +1365,7 @@ export default function App() {
               <h1 className="text-xl md:text-[28px] font-bold text-white">PUBG Mobile</h1>
               <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
                 <span className="text-yellow-400 text-xs md:text-sm">★★★★★ 5/5</span>
-                <span className="text-white/70 text-xs md:text-sm">(2008) yorum</span>
+                <span className="text-white/70 text-xs md:text-sm">({reviewStats.reviewCount > 0 ? reviewStats.reviewCount : 2008}) {t('review.comments')}</span>
               </div>
             </div>
           </div>

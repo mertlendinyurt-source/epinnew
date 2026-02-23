@@ -172,7 +172,7 @@ export default function OrderDetailPage() {
               <div className="bg-gradient-to-br from-green-900/40 to-green-800/30 backdrop-blur-lg rounded-2xl p-6 border-2 border-green-500 shadow-lg shadow-green-500/20">
                 <div className="flex items-center gap-3 mb-4">
                   <CheckCircle className="w-8 h-8 text-green-400" />
-                  <h2 className="text-2xl font-bold text-white">🎉 Teslimat Kodları</h2>
+                  <h2 className="text-2xl font-bold text-white">{isEN ? '🎉 Delivery Codes' : '🎉 Teslimat Kodları'}</h2>
                 </div>
 
                 <div className="bg-green-900/30 rounded-xl p-4 mb-4 border border-green-600/50">
@@ -216,7 +216,7 @@ export default function OrderDetailPage() {
                 {/* Kodu Nasıl Kullanırım? - Dinamik */}
                 <div className="mt-6 pt-6 border-t border-green-700/50">
                   <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    📖 Kodu Nasıl Kullanırım?
+                    {isEN ? '📖 How to Use the Code?' : '📖 Kodu Nasıl Kullanırım?'}
                   </h3>
                   
                   {/* VALORANT VP Talimatları */}
@@ -239,7 +239,7 @@ export default function OrderDetailPage() {
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">2</span>
                         <div>
-                          <p className="text-white font-medium">Riot hesabınızla giriş yapın</p>
+                          <p className="text-white font-medium">{isEN ? 'Sign in with your Riot account' : 'Riot hesabınızla giriş yapın'}</p>
                         </div>
                       </div>
                       <div className="flex gap-3">
@@ -251,14 +251,14 @@ export default function OrderDetailPage() {
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">4</span>
                         <div>
-                          <p className="text-white font-medium">Yukarıdaki kodu yapıştırın ve onaylayın</p>
+                          <p className="text-white font-medium">{isEN ? 'Paste the code above and confirm' : '{isEN ? 'Paste the code above' : 'Yukarıdaki kodu yapıştırın'} ve onaylayın'}</p>
                         </div>
                       </div>
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">5</span>
                         <div>
-                          <p className="text-white font-medium">VP hesabınıza yüklenecek</p>
-                          <p className="text-gray-400 text-xs">Valorant oyununu açıp kontrol edebilirsiniz.</p>
+                          <p className="text-white font-medium">{isEN ? 'VP will be loaded to your account' : 'VP hesabınıza yüklenecek'}</p>
+                          <p className="text-gray-400 text-xs">{isEN ? 'You can open Valorant to check.' : 'Valorant oyununu açıp kontrol edebilirsiniz.'}</p>
                         </div>
                       </div>
                     </div>
@@ -270,32 +270,32 @@ export default function OrderDetailPage() {
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">1</span>
                         <div>
-                          <p className="text-white font-medium">Mobile Legends oyununu açın</p>
+                          <p className="text-white font-medium">{isEN ? 'Open Mobile Legends' : 'Mobile Legends oyununu açın'}</p>
                         </div>
                       </div>
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">2</span>
                         <div>
-                          <p className="text-white font-medium">Profil → Kod Kullan bölümüne gidin</p>
+                          <p className="text-white font-medium">{isEN ? 'Go to Profile → Redeem Code section' : 'Profil → Kod Kullan bölümüne gidin'}</p>
                           <p className="text-gray-400 text-xs">Ayarlar içinden &quot;Exchange Code&quot; veya &quot;Kod Kullan&quot; seçeneği</p>
                         </div>
                       </div>
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">3</span>
                         <div>
-                          <p className="text-white font-medium">Yukarıdaki kodu yapıştırın</p>
+                          <p className="text-white font-medium">{isEN ? 'Paste the code above' : 'Yukarıdaki kodu yapıştırın'}</p>
                         </div>
                       </div>
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">4</span>
                         <div>
-                          <p className="text-white font-medium">Onayla butonuna basın</p>
+                          <p className="text-white font-medium">{isEN ? 'Press the Confirm button' : 'Onayla butonuna basın'}</p>
                         </div>
                       </div>
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">5</span>
                         <div>
-                          <p className="text-white font-medium">Diamonds hesabınıza yüklenecek</p>
+                          <p className="text-white font-medium">{isEN ? 'Diamonds will be loaded to your account' : 'Diamonds hesabınıza yüklenecek'}</p>
                         </div>
                       </div>
                     </div>
@@ -307,7 +307,7 @@ export default function OrderDetailPage() {
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">1</span>
                         <div>
-                          <p className="text-white font-medium">Tarayıcıdan siteye girin:</p>
+                          <p className="text-white font-medium">{isEN ? 'Open this website in browser:' : 'Tarayıcıdan siteye girin:'}</p>
                           <a 
                             href="https://www.midasbuy.com/midasbuy/tr/redeem/pubgm" 
                             target="_blank" 
@@ -322,7 +322,7 @@ export default function OrderDetailPage() {
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">2</span>
                         <div>
-                          <p className="text-white font-medium">Hesap oluşturun / giriş yapın</p>
+                          <p className="text-white font-medium">{isEN ? 'Create account / Sign in' : 'Hesap oluşturun / giriş yapın'}</p>
                           <p className="text-gray-400 text-xs">(Google, Facebook veya e-posta ile giriş olabilir.)</p>
                         </div>
                       </div>

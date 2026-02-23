@@ -696,6 +696,8 @@ export default function AdminProducts() {
         price: parseFloat(addFormData.price),
         discountPrice: salePrice,
         discountPercent: parseInt(addFormData.discountPercent) || 0,
+        priceUSD: parseFloat(addFormData.priceUSD) || 0,
+        discountPriceUSD: parseFloat(addFormData.discountPriceUSD) || 0,
         active: addFormData.active,
         sortOrder: parseInt(addFormData.sortOrder) || 1,
         imageUrl: imageUrl,

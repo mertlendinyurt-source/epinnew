@@ -191,7 +191,7 @@ export default function OrderDetailPage() {
                     <div key={index} className="bg-gray-900/80 rounded-xl p-5 border-2 border-green-600/50">
                       <div className="flex flex-col gap-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-green-400 text-sm font-bold uppercase">Kod {index + 1}</span>
+                          <span className="text-green-400 text-sm font-bold uppercase">{isEN ? 'Code' : 'Kod'} {index + 1}</span>
                           <Button
                             onClick={() => handleCopyCode(code, index)}
                             className="bg-green-600 hover:bg-green-500 text-white font-bold px-4"

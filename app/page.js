@@ -2510,58 +2510,64 @@ export default function App() {
         </DialogContent>
       </Dialog>
 
-      {/* Satış Koşulları Modal */}
+      {/* Terms Modal */}
       <Dialog open={termsModalOpen} onOpenChange={setTermsModalOpen}>
         <DialogContent className="max-w-[95vw] md:max-w-2xl max-h-[80vh] overflow-y-auto bg-[#1a1f2e] border-white/10">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-white">Satış Koşulları ve Kullanım Şartları</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-white">{t('terms.title')}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4 text-sm text-white/70 leading-relaxed">
             <section>
-              <h3 className="text-white font-semibold mb-2">1. Genel Hükümler</h3>
-              <p>Bu satış koşulları, PINLY platformu üzerinden gerçekleştirilen tüm dijital ürün satışlarını kapsamaktadır. Satın alma işlemi gerçekleştirerek bu koşulları kabul etmiş sayılırsınız.</p>
+              <h3 className="text-white font-semibold mb-2">1. {t('terms.generalTerms')}</h3>
+              <p>{t('terms.generalTermsText')}</p>
             </section>
 
             <section>
-              <h3 className="text-white font-semibold mb-2">2. Ürün Tanımları ve Özel Koşullar</h3>
-              <p>Platformumuzda satışa sunulan ürünler farklı kategorilerde olabilir:</p>
+              <h3 className="text-white font-semibold mb-2">2. {t('terms.productDefinitions')}</h3>
+              <p>{t('terms.productDefinitionsText')}</p>
               <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
-                <li><strong className="text-white">Standart UC Paketleri:</strong> Belirtilen miktarda UC içerir.</li>
-                <li><strong className="text-white">Şans/Yükleme Şansı Paketleri:</strong> Bu ürünler rastgele UC miktarı içermektedir. Ürün başlığında "şans", "yükleme şansı", "rastgele" veya benzeri ifadeler bulunan paketlerde, düşük veya yüksek miktarda UC çıkabilir. Bu tür ürünlerde çıkan UC miktarı garanti edilmemekte olup, tamamen şansa dayalıdır.</li>
+                <li><strong className="text-white">{isInternational ? 'Standard UC Packages:' : 'Standart UC Paketleri:'}</strong> {t('terms.standardPackages')}</li>
+                <li><strong className="text-white">{isInternational ? 'Chance/Top-Up Chance Packages:' : 'Şans/Yükleme Şansı Paketleri:'}</strong> {t('terms.chancePackages')}</li>
               </ul>
             </section>
 
             <section>
-              <h3 className="text-white font-semibold mb-2">3. İade ve İptal Politikası</h3>
-              <p>Dijital ürünlerin doğası gereği, teslimat gerçekleştikten sonra iade veya iptal talepleri kabul edilmemektedir. Şans paketlerinde çıkan UC miktarı ne olursa olsun, ürün teslim edilmiş sayılır ve iade talep edilemez.</p>
+              <h3 className="text-white font-semibold mb-2">3. {t('terms.refundPolicy')}</h3>
+              <p>{t('terms.refundPolicyText')}</p>
             </section>
 
             <section>
-              <h3 className="text-white font-semibold mb-2">4. Sorumluluk Reddi</h3>
-              <p>Şans paketleri satın alan müşteriler, ürünün rastgele içerik barındırdığını ve sonucun önceden bilinemeyeceğini kabul eder. PINLY, şans paketlerinden çıkan UC miktarından dolayı herhangi bir sorumluluk kabul etmez.</p>
+              <h3 className="text-white font-semibold mb-2">4. {t('terms.disclaimer')}</h3>
+              <p>{t('terms.disclaimerText')}</p>
             </section>
 
             <section>
-              <h3 className="text-white font-semibold mb-2">5. Onay ve Kabul</h3>
-              <p>Bu koşulları onaylayarak, yukarıda belirtilen tüm maddeleri okuduğunuzu, anladığınızı ve kabul ettiğinizi beyan etmiş olursunuz. Şans paketleri dahil tüm ürünlerin özelliklerinden haberdar olduğunuzu teyit edersiniz.</p>
+              <h3 className="text-white font-semibold mb-2">5. {t('terms.consent')}</h3>
+              <p>{t('terms.consentText')}</p>
             </section>
 
             <div className="pt-4 border-t border-white/10 text-xs text-white/40">
               <p>{t('terms.lastUpdate')}: {new Date().toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US')}</p>
-              <p>Bu koşullar PINLY tarafından önceden haber verilmeksizin güncellenebilir.</p>
+              <p>{t('terms.updateNotice')}</p>
             </div>
 
             <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <h4 className="text-red-400 font-semibold text-sm mb-2">⚠️ Yasal Uyarı</h4>
+              <h4 className="text-red-400 font-semibold text-sm mb-2">⚠️ {t('terms.legalWarning')}</h4>
               <p className="text-white/60 text-xs leading-relaxed">
-                İşbu satış koşullarını okuyarak ve onay kutusunu işaretleyerek, tüm maddeleri kabul ettiğinizi hukuken beyan etmiş bulunmaktasınız. Bu onay sonrasında, satış koşullarında belirtilen hususlara ilişkin şikayet, itiraz veya iade talep hakkınız bulunmamaktadır.
+                {isInternational 
+                  ? 'By reading these terms of sale and checking the approval box, you have legally declared that you accept all terms. After this approval, you have no right to complain, object, or request a refund regarding the matters specified in the terms of sale.'
+                  : 'İşbu satış koşullarını okuyarak ve onay kutusunu işaretleyerek, tüm maddeleri kabul ettiğinizi hukuken beyan etmiş bulunmaktasınız. Bu onay sonrasında, satış koşullarında belirtilen hususlara ilişkin şikayet, itiraz veya iade talep hakkınız bulunmamaktadır.'}
               </p>
               <p className="text-white/60 text-xs leading-relaxed mt-2">
-                <strong className="text-white/70">PINLY LIMITED</strong> şirketimiz, sosyal medya platformları, tüketici şikayet siteleri veya diğer kamuya açık mecralarda şirketimizi, markamızı veya hizmetlerimizi karalayıcı, hakaret içeren, iftira niteliğinde veya ticari itibarımızı zedeleyici nitelikteki her türlü paylaşım, yorum ve içeriğe karşı yasal haklarını saklı tutmaktadır.
+                {isInternational
+                  ? 'PINLY LIMITED reserves all legal rights against any defamatory, insulting, slanderous or commercially damaging posts, comments and content on social media platforms, consumer complaint sites or other publicly accessible channels.'
+                  : <><strong className="text-white/70">PINLY LIMITED</strong> şirketimiz, sosyal medya platformları, tüketici şikayet siteleri veya diğer kamuya açık mecralarda şirketimizi, markamızı veya hizmetlerimizi karalayıcı, hakaret içeren, iftira niteliğinde veya ticari itibarımızı zedeleyici nitelikteki her türlü paylaşım, yorum ve içeriğe karşı yasal haklarını saklı tutmaktadır.</>}
               </p>
               <p className="text-white/60 text-xs leading-relaxed mt-2">
-                Bu tür eylemlerin tespiti halinde, <strong className="text-white/70">Türk Ceza Kanunu</strong> ve <strong className="text-white/70">Türk Borçlar Kanunu</strong> kapsamında hukuk müşavirlerimiz aracılığıyla maddi ve manevi tazminat davaları dahil olmak üzere gerekli tüm yasal işlemler başlatılacaktır.
+                {isInternational
+                  ? 'In the event of detection of such actions, all necessary legal proceedings will be initiated through our legal advisors, including material and moral compensation lawsuits.'
+                  : <>Bu tür eylemlerin tespiti halinde, <strong className="text-white/70">Türk Ceza Kanunu</strong> ve <strong className="text-white/70">Türk Borçlar Kanunu</strong> kapsamında hukuk müşavirlerimiz aracılığıyla maddi ve manevi tazminat davaları dahil olmak üzere gerekli tüm yasal işlemler başlatılacaktır.</>}
               </p>
             </div>
           </div>

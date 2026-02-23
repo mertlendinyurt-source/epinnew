@@ -1086,7 +1086,7 @@ export default function App() {
                     className="flex items-center gap-2 text-white hover:bg-white/10 px-2 md:px-3"
                   >
                     {/* Mobilde Siparişlerim yazısı, Desktop'ta avatar */}
-                    <span className="md:hidden text-xs font-medium">📦 Siparişlerim</span>
+                    <span className="md:hidden text-xs font-medium">📦 {t('menu.myOrders')}</span>
                     <div className="hidden md:flex w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 items-center justify-center text-white text-sm font-bold">
                       {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
                     </div>

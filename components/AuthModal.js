@@ -342,7 +342,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              Kayıt Ol
+              {L.register}
             </button>
             <button
               onClick={() => setTab('login')}
@@ -352,7 +352,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              Giriş Yap
+              {L.login}
             </button>
           </div>
 

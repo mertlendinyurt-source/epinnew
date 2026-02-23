@@ -1737,7 +1737,7 @@ export default function App() {
                     {/* FAQ Section */}
                     {gameContent.faq && gameContent.faq.length > 0 && (
                       <div className="mt-8">
-                        <h3 className="text-lg font-bold text-white mb-4">Sıkça Sorulan Sorular</h3>
+                        <h3 className="text-lg font-bold text-white mb-4">{t('desc.faq')}</h3>
                         <div className="space-y-3">
                           {gameContent.faq.map((item, idx) => (
                             <div key={idx} className="bg-[#282d36] rounded-lg p-4 border border-white/5">

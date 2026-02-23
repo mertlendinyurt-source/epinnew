@@ -153,7 +153,7 @@ export default function OrderDetailPage() {
               Geri
             </Button>
             <div>
-              <h1 className="text-xl font-bold text-white">Sipariş Detayı</h1>
+              <h1 className="text-xl font-bold text-white">>{isEN ? 'Order Detail' : 'Sipariş Detayı'}</h1>
               <p className="text-sm text-gray-400">#{order.id?.substring(0, 12) || 'N/A'}...</p>
             </div>
           </div>
@@ -376,7 +376,7 @@ export default function OrderDetailPage() {
             <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
               <div className="flex items-center gap-3 mb-6">
                 <Package className="w-6 h-6 text-blue-400" />
-                <h2 className="text-xl font-bold text-white">Sipariş Durumu</h2>
+                <h2 className="text-xl font-bold text-white">>{isEN ? 'Order Status' : 'Sipariş Durumu'}</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -416,7 +416,7 @@ export default function OrderDetailPage() {
             {/* Player Info Card - Only for UC orders */}
             {order.type !== 'account' && (
             <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
-              <h2 className="text-xl font-bold text-white mb-4">Oyuncu Bilgileri</h2>
+              <h2 className="text-xl font-bold text-white mb-4">>{isEN ? 'Player Information' : 'Oyuncu Bilgileri'}</h2>
               
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2">
@@ -434,7 +434,7 @@ export default function OrderDetailPage() {
             {/* Account Info Card - Only for Account orders */}
             {order.type === 'account' && (
             <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
-              <h2 className="text-xl font-bold text-white mb-4">Hesap Detayları</h2>
+              <h2 className="text-xl font-bold text-white mb-4">>{isEN ? 'Account Details' : 'Hesap Detayları'}</h2>
               
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2">
@@ -454,7 +454,7 @@ export default function OrderDetailPage() {
               <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-purple-700/50">
                 <div className="flex items-center gap-3 mb-4">
                   <CheckCircle className="w-6 h-6 text-purple-400" />
-                  <h2 className="text-xl font-bold text-white">Hesap Bilgileri</h2>
+                  <h2 className="text-xl font-bold text-white">>{isEN ? 'Account Information' : 'Hesap Bilgileri'}</h2>
                 </div>
 
                 <div className="bg-gray-900/50 rounded-xl p-4 mb-4 border border-purple-700/30">
@@ -666,7 +666,7 @@ export default function OrderDetailPage() {
               <div className="bg-gradient-to-br from-yellow-900/30 to-yellow-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-yellow-700/50">
                 <div className="flex items-center gap-3 mb-4">
                   <Clock className="w-6 h-6 text-yellow-400" />
-                  <h2 className="text-xl font-bold text-white">Teslimat Bekliyor</h2>
+                  <h2 className="text-xl font-bold text-white">>{isEN ? 'Delivery Pending' : 'Teslimat Bekliyor'}</h2>
                 </div>
 
                 <div className="bg-gray-900/50 rounded-xl p-4 border border-yellow-700/30">
@@ -683,7 +683,7 @@ export default function OrderDetailPage() {
             {/* Customer Info */}
             {order.customer && (
               <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
-                <h2 className="text-xl font-bold text-white mb-4">Müşteri Bilgileri</h2>
+                <h2 className="text-xl font-bold text-white mb-4">>{isEN ? 'Customer Information' : 'Müşteri Bilgileri'}</h2>
                 
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2">

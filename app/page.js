@@ -1889,7 +1889,7 @@ export default function App() {
                         <div>
                           <div className="flex items-center gap-2 text-green-400 mb-1 text-xs font-semibold">
                             <Check className="w-4 h-4" />
-                            <span>Oyuncu Bulundu</span>
+                            <span>{t('checkout.playerFound')}</span>
                           </div>
                           <p className="text-white text-base font-bold">{playerName}</p>
                           <p className="text-white/50 text-xs mt-0.5">ID: {playerId}</p>

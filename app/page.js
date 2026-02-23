@@ -1415,7 +1415,7 @@ export default function App() {
                   {isInternational ? t('banner.dailyPrices') : (siteSettings?.dailyBannerTitle || 'Bugüne Özel Fiyatlar')}
                 </h2>
                 <p className="text-sm md:text-base text-white/60 mt-0.5">
-                  {siteSettings?.dailyBannerSubtitle || todayDate || ''}
+                  {siteSettings?.dailyBannerSubtitle || new Date().toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) || ''}
                 </p>
               </div>
             </div>

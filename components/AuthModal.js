@@ -555,7 +555,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                           onClick={() => setForgotPasswordMode(true)}
                           className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
                         >
-                          Şifremi Unuttum
+                          {L.forgotPassword}
                         </button>
                       </div>
                       <Input

@@ -2480,14 +2480,14 @@ export default function App() {
         <DialogContent className="sm:max-w-md bg-gray-900 border-gray-700 text-white">
           <div className="space-y-4">
             <div className="text-center">
-              <h2 className="text-xl font-bold mb-2">Telefon Numarası Gerekli</h2>
+              <h2 className="text-xl font-bold mb-2">{t('phone.title')}</h2>
               <p className="text-sm text-gray-400">
-                Siparişleriniz için telefon numaranıza ihtiyacımız var
+                {t('phone.description')}
               </p>
             </div>
             
             <div className="space-y-2">
-              <Label className="text-gray-300">Telefon Numarası *</Label>
+              <Label className="text-gray-300">{t('phone.label')} *</Label>
               <Input
                 type="tel"
                 value={phoneNumber}

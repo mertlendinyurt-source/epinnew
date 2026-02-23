@@ -2258,6 +2258,74 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data });
     }
 
+    // ============================================
+    // 🌍 GEO IP DETECTION - PUBLIC ENDPOINT
+    // ============================================
+    if (pathname === '/api/geo') {
+      try {
+        // Get client IP from headers (Kubernetes/proxy)
+        const forwardedFor = request.headers.get('x-forwarded-for');
+        const realIp = request.headers.get('x-real-ip');
+        const cfIp = request.headers.get('cf-connecting-ip');
+        const clientIp = cfIp || (forwardedFor ? forwardedFor.split(',')[0].trim() : null) || realIp || '127.0.0.1';
+        
+        // Check cache first (10 min TTL per IP)
+        const geoCacheKey = `geo_${clientIp}`;
+        let geoData = getCached(geoCacheKey);
+        
+        if (!geoData) {
+          // Use ip-api.com free service (no key needed, 45 req/min)
+          const isLocal = clientIp === '127.0.0.1' || clientIp === '::1' || clientIp.startsWith('10.') || clientIp.startsWith('192.168.');
+          
+          if (isLocal) {
+            // Local development - default to Turkey
+            geoData = { countryCode: 'TR', country: 'Turkey', city: 'Local' };
+          } else {
+            try {
+              const geoResponse = await fetch(`http://ip-api.com/json/${clientIp}?fields=status,country,countryCode,city,query`, {
+                signal: AbortSignal.timeout(3000) // 3 second timeout
+              });
+              const geoResult = await geoResponse.json();
+              
+              if (geoResult.status === 'success') {
+                geoData = {
+                  countryCode: geoResult.countryCode || 'TR',
+                  country: geoResult.country || 'Turkey',
+                  city: geoResult.city || ''
+                };
+              } else {
+                geoData = { countryCode: 'TR', country: 'Turkey', city: '' };
+              }
+            } catch (geoErr) {
+              console.error('GeoIP API error:', geoErr);
+              geoData = { countryCode: 'TR', country: 'Turkey', city: '' };
+            }
+          }
+          
+          // Cache for 10 minutes
+          setCache(geoCacheKey, geoData, 600000);
+        }
+        
+        return NextResponse.json({
+          success: true,
+          data: {
+            countryCode: geoData.countryCode,
+            country: geoData.country,
+            city: geoData.city,
+            isTurkey: geoData.countryCode === 'TR',
+            locale: geoData.countryCode === 'TR' ? 'tr' : 'en',
+            currency: geoData.countryCode === 'TR' ? 'TRY' : 'USD'
+          }
+        });
+      } catch (error) {
+        console.error('GeoIP endpoint error:', error);
+        return NextResponse.json({
+          success: true,
+          data: { countryCode: 'TR', country: 'Turkey', isTurkey: true, locale: 'tr', currency: 'TRY' }
+        });
+      }
+    }
+
     // Get all products - WITH CACHE (supports game filter)
     if (pathname === '/api/products') {
       const game = searchParams.get('game'); // 'pubg', 'valorant', or null (all)

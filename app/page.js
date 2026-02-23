@@ -902,7 +902,7 @@ export default function App() {
         setPlayerName(data.data.playerName)
         setPlayerValid(true)
         setPlayerIdModalOpen(false)
-        toast.success(`Oyuncu bulundu: ${data.data.playerName}`)
+        toast.success(`${t('player.found')}: ${data.data.playerName}`)
       } else {
         setPlayerIdError(data.error || 'Oyuncu bulunamadı')
         setPlayerValid(false)

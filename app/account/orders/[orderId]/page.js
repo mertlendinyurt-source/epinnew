@@ -323,7 +323,7 @@ export default function OrderDetailPage() {
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">2</span>
                         <div>
                           <p className="text-white font-medium">{isEN ? 'Create account / Sign in' : 'Hesap oluşturun / giriş yapın'}</p>
-                          <p className="text-gray-400 text-xs">(Google, Facebook veya e-posta ile giriş olabilir.)</p>
+                          <p className="text-gray-400 text-xs">{isEN ? '(Login with Google, Facebook or email)' : '(Google, Facebook veya e-posta ile giriş olabilir.)'}</p>
                         </div>
                       </div>
 
@@ -338,32 +338,32 @@ export default function OrderDetailPage() {
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">4</span>
                         <div>
-                          <p className="text-white font-medium">Satın aldığınız KODU girin</p>
-                          <p className="text-gray-400 text-xs">Yukarıdaki kodu kopyalayıp ilgili alana yapıştırın.</p>
+                          <p className="text-white font-medium">{isEN ? 'Enter the CODE you purchased' : 'Satın aldığınız KODU girin'}</p>
+                          <p className="text-gray-400 text-xs">{isEN ? 'Copy and paste the code above into the field.' : 'Yukarıdaki kodu kopyalayıp ilgili alana yapıştırın.'}</p>
                         </div>
                       </div>
 
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">5</span>
                         <div>
-                          <p className="text-white font-medium">Onayla / Redeem butonuna basın</p>
+                          <p className="text-white font-medium">{isEN ? 'Press the Confirm / Redeem button' : 'Onayla / Redeem butonuna basın'}</p>
                         </div>
                       </div>
 
                     <div className="flex gap-3">
                       <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">6</span>
                       <div>
-                        <p className="text-white font-medium">UC otomatik yüklenir</p>
-                        <p className="text-gray-400 text-xs">Genelde anında, bazen birkaç dakika içinde oyun hesabınıza düşer. Oyunu kapatıp açmak gerekebilir.</p>
+                        <p className="text-white font-medium">{isEN ? 'UC is loaded automatically' : 'UC otomatik yüklenir'}</p>
+                        <p className="text-gray-400 text-xs">{isEN ? 'Usually instant, sometimes takes a few minutes. You may need to restart the game.' : 'Genelde anında, bazen birkaç dakika içinde oyun hesabınıza düşer. Oyunu kapatıp açmak gerekebilir.'}</p>
                       </div>
                     </div>
 
                     {/* Uyarılar - PUBG için */}
                     <div className="mt-4 p-3 bg-red-900/30 rounded-lg border border-red-600/50">
-                      <p className="text-red-300 text-xs font-medium mb-2">⚠️ En sık yapılan hatalar:</p>
+                      <p className="text-red-300 text-xs font-medium mb-2">⚠️ {isEN ? 'Most common mistakes:' : 'En sık yapılan hatalar:'}</p>
                       <ul className="text-red-200 text-xs space-y-1">
                         <li>❌ {isEN ? 'Incorrect Player ID entered' : 'Yanlış Oyuncu ID girilmesi'}</li>
-                        <li>❌ Kodun boşluklu ya da hatalı kopyalanması</li>
+                        <li>❌ {isEN ? 'Copying the code with spaces or errors' : 'Kodun boşluklu ya da hatalı kopyalanması'}</li>
                       </ul>
                     </div>
                   </div>
@@ -438,12 +438,12 @@ export default function OrderDetailPage() {
               
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-400">Ürün</span>
+                  <span className="text-gray-400">{isEN ? 'Product' : 'Ürün'}</span>
                   <span className="text-white font-semibold">{order.accountTitle || 'PUBG Hesap'}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-t border-gray-700">
                   <span className="text-gray-400">>{isEN ? 'Order Type' : 'Sipariş Türü'}</span>
-                  <span className="text-purple-400 font-semibold">Hesap Satışı</span>
+                  <span className="text-purple-400 font-semibold">{isEN ? 'Account Sale' : 'Hesap Satışı'}</span>
                 </div>
               </div>
             </div>
@@ -459,7 +459,7 @@ export default function OrderDetailPage() {
 
                 <div className="bg-gray-900/50 rounded-xl p-4 mb-4 border border-purple-700/30">
                   <p className="text-sm text-purple-200">
-                    🎉 Hesap bilgileriniz hazır! Aşağıdaki bilgileri kullanarak giriş yapabilirsiniz.
+                    🎉 {isEN ? 'Your account details are ready! Use the credentials below to sign in.' : 'Hesap bilgileriniz hazır! Aşağıdaki bilgileri kullanarak giriş yapabilirsiniz.'}
                   </p>
                 </div>
 
@@ -501,7 +501,7 @@ export default function OrderDetailPage() {
                 {/* Account Usage Instructions */}
                 <div className="mt-6 pt-6 border-t border-purple-700/30">
                   <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    📖 Hesabı Nasıl Kullanırım?
+                    {isEN ? '📖 How to Use the Account?' : '📖 Hesabı Nasıl Kullanırım?'}
                   </h3>
                   
                   <div className="space-y-3 text-sm">

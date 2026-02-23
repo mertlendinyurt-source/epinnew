@@ -446,7 +446,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                 </Button>
 
                 <p className="text-xs text-gray-400 text-center">
-                  Hesabınız otomatik oluşturulacaktır
+                  {isEN ? 'Your account will be created automatically' : 'Hesabınız otomatik oluşturulacaktır'}
                 </p>
               </form>
             </div>

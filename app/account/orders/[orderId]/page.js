@@ -153,7 +153,7 @@ export default function OrderDetailPage() {
               Geri
             </Button>
             <div>
-              <h1 className="text-xl font-bold text-white">>{isEN ? 'Order Detail' : 'Sipariş Detayı'}</h1>
+              <h1 className="text-xl font-bold text-white">{isEN ? 'Order Detail' : 'Sipariş Detayı'}</h1>
               <p className="text-sm text-gray-400">#{order.id?.substring(0, 12) || 'N/A'}...</p>
             </div>
           </div>
@@ -376,12 +376,12 @@ export default function OrderDetailPage() {
             <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
               <div className="flex items-center gap-3 mb-6">
                 <Package className="w-6 h-6 text-blue-400" />
-                <h2 className="text-xl font-bold text-white">>{isEN ? 'Order Status' : 'Sipariş Durumu'}</h2>
+                <h2 className="text-xl font-bold text-white">{isEN ? 'Order Status' : 'Sipariş Durumu'}</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
-                  <div className="text-sm text-gray-400 mb-2">>{isEN ? 'Payment Status' : 'Ödeme Durumu'}</div>
+                  <div className="text-sm text-gray-400 mb-2">{isEN ? 'Payment Status' : 'Ödeme Durumu'}</div>
                   <div className="flex items-center gap-2">
                     <span className={`px-3 py-1.5 rounded-lg text-sm font-semibold text-white ${getStatusColor(order.status)}`}>
                       {order.status === 'paid' ? isEN ? '✓ Paid' : '✓ Ödendi' : order.status === 'pending' ? isEN ? '⏳ Pending' : '⏳ Bekliyor' : isEN ? '✗ Failed' : '✗ Başarısız'}
@@ -390,7 +390,7 @@ export default function OrderDetailPage() {
                 </div>
 
                 <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
-                  <div className="text-sm text-gray-400 mb-2">>{isEN ? 'Delivery Status' : 'Teslimat Durumu'}</div>
+                  <div className="text-sm text-gray-400 mb-2">{isEN ? 'Delivery Status' : 'Teslimat Durumu'}</div>
                   <div className="flex items-center gap-2">
                     {order.delivery ? (
                       <>
@@ -416,15 +416,15 @@ export default function OrderDetailPage() {
             {/* Player Info Card - Only for UC orders */}
             {order.type !== 'account' && (
             <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
-              <h2 className="text-xl font-bold text-white mb-4">>{isEN ? 'Player Information' : 'Oyuncu Bilgileri'}</h2>
+              <h2 className="text-xl font-bold text-white mb-4">{isEN ? 'Player Information' : 'Oyuncu Bilgileri'}</h2>
               
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-400">>{isEN ? 'Player ID' : 'Oyuncu ID'}</span>
+                  <span className="text-gray-400">{isEN ? 'Player ID' : 'Oyuncu ID'}</span>
                   <span className="text-white font-mono">{order.playerId || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-t border-gray-700">
-                  <span className="text-gray-400">>{isEN ? 'Player Name' : 'Oyuncu Adı'}</span>
+                  <span className="text-gray-400">{isEN ? 'Player Name' : 'Oyuncu Adı'}</span>
                   <span className="text-white font-semibold">{order.playerName || 'N/A'}</span>
                 </div>
               </div>
@@ -434,7 +434,7 @@ export default function OrderDetailPage() {
             {/* Account Info Card - Only for Account orders */}
             {order.type === 'account' && (
             <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
-              <h2 className="text-xl font-bold text-white mb-4">>{isEN ? 'Account Details' : 'Hesap Detayları'}</h2>
+              <h2 className="text-xl font-bold text-white mb-4">{isEN ? 'Account Details' : 'Hesap Detayları'}</h2>
               
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2">
@@ -442,7 +442,7 @@ export default function OrderDetailPage() {
                   <span className="text-white font-semibold">{order.accountTitle || 'PUBG Hesap'}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-t border-gray-700">
-                  <span className="text-gray-400">>{isEN ? 'Order Type' : 'Sipariş Türü'}</span>
+                  <span className="text-gray-400">{isEN ? 'Order Type' : 'Sipariş Türü'}</span>
                   <span className="text-purple-400 font-semibold">{isEN ? 'Account Sale' : 'Hesap Satışı'}</span>
                 </div>
               </div>
@@ -454,7 +454,7 @@ export default function OrderDetailPage() {
               <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-purple-700/50">
                 <div className="flex items-center gap-3 mb-4">
                   <CheckCircle className="w-6 h-6 text-purple-400" />
-                  <h2 className="text-xl font-bold text-white">>{isEN ? 'Account Information' : 'Hesap Bilgileri'}</h2>
+                  <h2 className="text-xl font-bold text-white">{isEN ? 'Account Information' : 'Hesap Bilgileri'}</h2>
                 </div>
 
                 <div className="bg-gray-900/50 rounded-xl p-4 mb-4 border border-purple-700/30">
@@ -666,7 +666,7 @@ export default function OrderDetailPage() {
               <div className="bg-gradient-to-br from-yellow-900/30 to-yellow-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-yellow-700/50">
                 <div className="flex items-center gap-3 mb-4">
                   <Clock className="w-6 h-6 text-yellow-400" />
-                  <h2 className="text-xl font-bold text-white">>{isEN ? 'Delivery Pending' : 'Teslimat Bekliyor'}</h2>
+                  <h2 className="text-xl font-bold text-white">{isEN ? 'Delivery Pending' : 'Teslimat Bekliyor'}</h2>
                 </div>
 
                 <div className="bg-gray-900/50 rounded-xl p-4 border border-yellow-700/30">
@@ -683,7 +683,7 @@ export default function OrderDetailPage() {
             {/* Customer Info */}
             {order.customer && (
               <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
-                <h2 className="text-xl font-bold text-white mb-4">>{isEN ? 'Customer Information' : 'Müşteri Bilgileri'}</h2>
+                <h2 className="text-xl font-bold text-white mb-4">{isEN ? 'Customer Information' : 'Müşteri Bilgileri'}</h2>
                 
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2">
@@ -737,14 +737,14 @@ export default function OrderDetailPage() {
 
               <div className="pt-4 border-t-2 border-gray-700">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-300 text-lg">>{isEN ? 'Total' : 'Toplam'}</span>
+                  <span className="text-gray-300 text-lg">{isEN ? 'Total' : 'Toplam'}</span>
                   <span className="text-3xl font-bold text-white">{currencySymbol}{order.amount ? Number(order.amount).toFixed(2) : '0.00'}</span>
                 </div>
               </div>
 
               {payment && (
                 <div className="mt-6 pt-6 border-t border-gray-700">
-                  <div className="text-xs text-gray-400 mb-2">>{isEN ? 'Payment Information' : 'Ödeme Bilgileri'}</div>
+                  <div className="text-xs text-gray-400 mb-2">{isEN ? 'Payment Information' : 'Ödeme Bilgileri'}</div>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Sağlayıcı</span>
@@ -755,7 +755,7 @@ export default function OrderDetailPage() {
                       <span className="text-white font-mono text-xs">{payment.providerTxnId?.substring(0, 12) || 'N/A'}...</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">>{isEN ? 'Verification' : 'Doğrulama'}</span>
+                      <span className="text-gray-400">{isEN ? 'Verification' : 'Doğrulama'}</span>
                       <span className="text-green-400">✓ Onaylı</span>
                     </div>
                   </div>

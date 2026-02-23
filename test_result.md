@@ -1011,6 +1011,55 @@ backend:
         comment: "POST /api/payment/payyeen/callback working correctly. Accepts Payyeen webhook payload with all required fields (event, transaction_id, amount, currency, status, description, created_at). Extracts orderId from description (PINLY-{orderId} format). Updates order status to 'paid' on payment.success. Idempotency protection working: duplicate callbacks for already PAID orders return 200 OK without reprocessing. Creates payment record in payments collection. Stock assignment attempted (no stock available scenario handled gracefully). Returns plain text 'OK' response to Payyeen. Full webhook flow tested successfully."
 
 
+
+  - task: "GeoIP Detection Endpoint"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/geo endpoint implemented. Detects visitor country from IP using ip-api.com. Returns countryCode, country, isTurkey, locale, currency. Caches results per IP for 10 minutes. Falls back to TR for local/private IPs."
+
+  - task: "Product USD Price Fields"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added priceUSD and discountPriceUSD fields to product model. Migration adds defaults (0) to existing products. Admin can set USD prices via product edit endpoints. Products API returns USD fields."
+
+  - task: "Frontend Locale/Translation System"
+    implemented: true
+    working: true
+    file: "lib/translations.js, hooks/useLocale.js, app/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Complete IP-based localization system. (1) lib/translations.js - 100+ TR/EN translation entries, (2) hooks/useLocale.js - GeoIP detection hook with t() translation function and formatPrice() for currency, (3) app/page.js updated with all text using t() translations and formatPrice() for prices. Turkey visitors see Turkish/TRY, international visitors see English/USD."
+
+  - task: "Admin USD Price Management"
+    implemented: true
+    working: true
+    file: "app/admin/products/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Admin products page updated with USD price fields. Both edit and add forms have 'Yurt Dışı Fiyatlandırma (USD)' section with priceUSD and discountPriceUSD inputs. Products table shows USD column. Save handlers send USD fields to backend."
+
 frontend:
   - task: "Auth Modal (Register + Login)"
     implemented: true

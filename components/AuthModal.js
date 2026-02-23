@@ -372,7 +372,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                       value={registerForm.firstName}
                       onChange={(e) => setRegisterForm({ ...registerForm, firstName: e.target.value })}
                       className="bg-gray-800 border-gray-700 text-white"
-                      placeholder="Adınız"
+                      placeholder={isEN ? "Your first name" : "Adınız"}
                       required
                     />
                   </div>
@@ -383,7 +383,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                       value={registerForm.lastName}
                       onChange={(e) => setRegisterForm({ ...registerForm, lastName: e.target.value })}
                       className="bg-gray-800 border-gray-700 text-white"
-                      placeholder="Soyadınız"
+                      placeholder={isEN ? "Your last name" : "Soyadınız"}
                       required
                     />
                   </div>
@@ -396,7 +396,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                     value={registerForm.email}
                     onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
                     className="bg-gray-800 border-gray-700 text-white"
-                    placeholder="ornek@email.com"
+                    placeholder={isEN ? "email@example.com" : "ornek@email.com"}
                     required
                   />
                 </div>
@@ -432,7 +432,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                     value={registerForm.confirmPassword}
                     onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
                     className="bg-gray-800 border-gray-700 text-white"
-                    placeholder="Şifrenizi tekrar girin"
+                    placeholder={isEN ? "Confirm your password" : "Şifrenizi tekrar girin"}
                     required
                   />
                 </div>
@@ -505,7 +505,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                           value={forgotPasswordEmail}
                           onChange={(e) => setForgotPasswordEmail(e.target.value)}
                           className="bg-gray-800 border-gray-700 text-white"
-                          placeholder="ornek@email.com"
+                          placeholder={isEN ? "email@example.com" : "ornek@email.com"}
                           required
                         />
                       </div>
@@ -542,7 +542,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                         value={loginForm.email}
                         onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                         className="bg-gray-800 border-gray-700 text-white"
-                        placeholder="ornek@email.com"
+                        placeholder={isEN ? "email@example.com" : "ornek@email.com"}
                         required
                       />
                     </div>

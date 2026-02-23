@@ -1942,16 +1942,16 @@ export default function App() {
                             Bakiye ile Öde
                           </div>
                           <div className="inline-block px-2 py-0.5 rounded bg-green-500/20 text-[11px] text-green-400 font-semibold">
-                            Anında teslimat
+                            {t('checkout.instantDelivery')}
                           </div>
                         </div>
                         
                         <div className="space-y-1">
                           <div className="text-sm text-white/70">
-                            Mevcut Bakiye: <span className="font-bold text-green-400">{userBalance.toFixed(2)} ₺</span>
+                            {t('checkout.currentBalance')}: <span className="font-bold text-green-400">{formatPrice(userBalance, isInternational ? null : null)}</span>
                           </div>
                           <div className="text-xs text-green-400 font-semibold">
-                            ✓ Yeterli bakiye
+                            ✓ {t('checkout.sufficientBalance')}
                           </div>
                         </div>
                       </div>

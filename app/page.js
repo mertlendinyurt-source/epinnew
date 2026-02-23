@@ -1632,8 +1632,8 @@ export default function App() {
               <span className="relative flex h-3 w-3">
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-red-400"></span>
               </span>
-              Canlı Destek Kapalı
-              <span className="text-xs">({siteSettings?.liveSupportHours || '14:00-22:00'} arası açık)</span>
+              {t('support.liveSupportClosed')}
+              <span className="text-xs">({siteSettings?.liveSupportHours || '14:00-22:00'} {t('support.openHours')})</span>
             </div>
           )}
         </div>

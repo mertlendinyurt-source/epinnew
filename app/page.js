@@ -2390,9 +2390,9 @@ export default function App() {
                 </p>
               </div>
 
-              {/* Adres */}
+              {/* Address */}
               <div className="space-y-2">
-                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Adres</h4>
+                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">{t('footer.address')}</h4>
                 <p className="text-white/80 text-sm leading-snug">
                   Kızılırmak Mah. Dumlupınar Bul.<br/>
                   No: 3C-1 İç Kapı No: 160<br/>

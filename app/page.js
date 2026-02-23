@@ -887,7 +887,7 @@ export default function App() {
 
   const handlePlayerIdConfirm = async () => {
     if (!playerId || playerId.length < 6) {
-      setPlayerIdError('Oyuncu ID en az 6 karakter olmalıdır')
+      setPlayerIdError(t('player.minChars'))
       return
     }
     

@@ -236,7 +236,7 @@ export default function App() {
     handleLoginRedirect()
     
     // Set today's date only on client-side to avoid hydration mismatch
-    setTodayDate(new Date().toLocaleDateString('tr-TR', { 
+    setTodayDate(new Date().toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', { 
       day: 'numeric', 
       month: 'long', 
       year: 'numeric' 

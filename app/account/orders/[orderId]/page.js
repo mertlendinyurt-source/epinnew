@@ -641,7 +641,7 @@ export default function OrderDetailPage() {
               <div className="bg-gradient-to-br from-amber-900/30 to-amber-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-amber-700/50">
                 <div className="flex items-center gap-3 mb-4">
                   <AlertCircle className="w-6 h-6 text-amber-400" />
-                  <h2 className="text-xl font-bold text-white">🔐 Doğrulama Gerekli</h2>
+                  <h2 className="text-xl font-bold text-white">{isEN ? '🔐 Verification Required' : '🔐 Doğrulama Gerekli'}</h2>
                 </div>
 
                 <div className="bg-gray-900/50 rounded-xl p-4 border border-amber-700/30">

@@ -1552,7 +1552,7 @@ export default function App() {
                     {/* En Çok Tercih Edilen Badge */}
                     {product.featured && (
                       <div className="absolute top-0 left-0 right-0 z-30 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white text-[10px] md:text-[11px] font-bold py-1 px-2 text-center shadow-lg">
-                        ⭐ EN ÇOK TERCİH EDİLEN
+                        ⭐ {t('product.mostPopular')}
                       </div>
                     )}
                     

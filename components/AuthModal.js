@@ -577,7 +577,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
                     </Button>
 
                     <p className="text-xs text-gray-400 text-center">
-                      Hesabınız yok mu? <button type="button" onClick={() => setTab('register')} className="text-blue-500">>{L.register}</button>
+                      {L.noAccount} <button type="button" onClick={() => setTab('register')} className="text-blue-500">{L.register}</button>
                     </p>
                   </form>
                 </>

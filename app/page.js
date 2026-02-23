@@ -253,7 +253,7 @@ export default function App() {
       // Auto-reset date at midnight
       if (newTime.hours === 0 && newTime.minutes === 0 && newTime.seconds === 0) {
         setTimeout(() => {
-          setTodayDate(new Date().toLocaleDateString('tr-TR', { 
+          setTodayDate(new Date().toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', { 
             day: 'numeric', 
             month: 'long', 
             year: 'numeric' 
@@ -266,7 +266,7 @@ export default function App() {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         setCountdown(calculateTimeToMidnight())
-        setTodayDate(new Date().toLocaleDateString('tr-TR', { 
+        setTodayDate(new Date().toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', { 
           day: 'numeric', 
           month: 'long', 
           year: 'numeric' 

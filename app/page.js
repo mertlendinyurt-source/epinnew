@@ -2400,13 +2400,13 @@ export default function App() {
                 </p>
               </div>
 
-              {/* İletişim */}
+              {/* Contact */}
               <div className="space-y-2">
-                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">İletişim</h4>
+                <h4 className="text-cyan-400 text-xs font-medium tracking-wide">{t('footer.contact')}</h4>
                 <div className="space-y-1">
                   {siteSettings?.contactEmail && (
                     <p className="text-white/80 text-sm">
-                      <span className="text-white/50">E-Posta: </span>
+                      <span className="text-white/50">{t('footer.email')}: </span>
                       <a href={`mailto:${siteSettings.contactEmail}`} className="hover:text-cyan-400 transition-colors">
                         {siteSettings.contactEmail}
                       </a>

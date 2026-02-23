@@ -381,7 +381,7 @@ export default function OrderDetailPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
-                  <div className="text-sm text-gray-400 mb-2">Ödeme Durumu</div>
+                  <div className="text-sm text-gray-400 mb-2">>{isEN ? 'Payment Status' : 'Ödeme Durumu'}</div>
                   <div className="flex items-center gap-2">
                     <span className={`px-3 py-1.5 rounded-lg text-sm font-semibold text-white ${getStatusColor(order.status)}`}>
                       {order.status === 'paid' ? '✓ Ödendi' : order.status === 'pending' ? '⏳ Bekliyor' : '✗ Başarısız'}
@@ -390,7 +390,7 @@ export default function OrderDetailPage() {
                 </div>
 
                 <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
-                  <div className="text-sm text-gray-400 mb-2">Teslimat Durumu</div>
+                  <div className="text-sm text-gray-400 mb-2">>{isEN ? 'Delivery Status' : 'Teslimat Durumu'}</div>
                   <div className="flex items-center gap-2">
                     {order.delivery ? (
                       <>
@@ -420,11 +420,11 @@ export default function OrderDetailPage() {
               
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-400">Oyuncu ID</span>
+                  <span className="text-gray-400">>{isEN ? 'Player ID' : 'Oyuncu ID'}</span>
                   <span className="text-white font-mono">{order.playerId || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-t border-gray-700">
-                  <span className="text-gray-400">Oyuncu Adı</span>
+                  <span className="text-gray-400">>{isEN ? 'Player Name' : 'Oyuncu Adı'}</span>
                   <span className="text-white font-semibold">{order.playerName || 'N/A'}</span>
                 </div>
               </div>
@@ -442,7 +442,7 @@ export default function OrderDetailPage() {
                   <span className="text-white font-semibold">{order.accountTitle || 'PUBG Hesap'}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-t border-gray-700">
-                  <span className="text-gray-400">Sipariş Türü</span>
+                  <span className="text-gray-400">>{isEN ? 'Order Type' : 'Sipariş Türü'}</span>
                   <span className="text-purple-400 font-semibold">Hesap Satışı</span>
                 </div>
               </div>
@@ -737,14 +737,14 @@ export default function OrderDetailPage() {
 
               <div className="pt-4 border-t-2 border-gray-700">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-300 text-lg">Toplam</span>
+                  <span className="text-gray-300 text-lg">>{isEN ? 'Total' : 'Toplam'}</span>
                   <span className="text-3xl font-bold text-white">₺{order.amount ? Number(order.amount).toFixed(2) : '0.00'}</span>
                 </div>
               </div>
 
               {payment && (
                 <div className="mt-6 pt-6 border-t border-gray-700">
-                  <div className="text-xs text-gray-400 mb-2">Ödeme Bilgileri</div>
+                  <div className="text-xs text-gray-400 mb-2">>{isEN ? 'Payment Information' : 'Ödeme Bilgileri'}</div>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Sağlayıcı</span>
@@ -755,7 +755,7 @@ export default function OrderDetailPage() {
                       <span className="text-white font-mono text-xs">{payment.providerTxnId?.substring(0, 12) || 'N/A'}...</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Doğrulama</span>
+                      <span className="text-gray-400">>{isEN ? 'Verification' : 'Doğrulama'}</span>
                       <span className="text-green-400">✓ Onaylı</span>
                     </div>
                   </div>

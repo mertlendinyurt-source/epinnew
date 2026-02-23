@@ -2541,7 +2541,7 @@ export default function App() {
             </section>
 
             <div className="pt-4 border-t border-white/10 text-xs text-white/40">
-              <p>Son güncelleme: {new Date().toLocaleDateString('tr-TR')}</p>
+              <p>{t('terms.lastUpdate')}: {new Date().toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US')}</p>
               <p>Bu koşullar PINLY tarafından önceden haber verilmeksizin güncellenebilir.</p>
             </div>
 

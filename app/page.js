@@ -992,19 +992,24 @@ export default function App() {
       <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
         <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">{t('filter.region')}</h3>
         <div className="space-y-2">
-          {regions.map(region => (
+          {regions.map(region => {
+            // For international visitors, translate region names
+            const regionNameMap = { 'Türkiye': 'Turkey', 'Küresel': 'Global', 'Almanya': 'Germany', 'Fransa': 'France', 'Japonya': 'Japan', 'Amerika': 'USA', 'İngiltere': 'UK', 'Rusya': 'Russia', 'Brezilya': 'Brazil', 'Hindistan': 'India' }
+            const displayName = isInternational ? (regionNameMap[region.name] || region.name) : region.name
+            return (
             <label key={region.code} className="flex items-center gap-2 cursor-pointer group">
               <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
               <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
-                {region.flagImageUrl ? (
-                  <img src={region.flagImageUrl} alt={region.name} className="w-5 h-4 object-cover rounded-sm" />
+                {!isInternational && region.flagImageUrl ? (
+                  <img src={region.flagImageUrl} alt={displayName} className="w-5 h-4 object-cover rounded-sm" />
                 ) : (
-                  <span>{region.flag || '🌍'}</span>
+                  <span>{isInternational ? '🌍' : (region.flag || '🌍')}</span>
                 )}
-                {region.name}
+                {displayName}
               </span>
             </label>
-          ))}
+            )
+          })}
         </div>
       </div>
     </div>

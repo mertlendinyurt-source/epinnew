@@ -939,7 +939,7 @@ export default function App() {
     setIsAuthenticated(false)
     setUser(null)
     setUserBalance(0)
-    toast.success('Çıkış yapıldı')
+    toast.success(t('auth.logoutSuccess'))
     window.location.reload()
   }
 

@@ -750,7 +750,7 @@ export default function App() {
       // Open auth modal instead of just showing toast
       setAuthModalTab('login')
       setAuthModalOpen(true)
-      toast.error('Sipariş vermek için giriş yapmalısınız')
+      toast.error(t('auth.loginRequired'))
       return
     }
 

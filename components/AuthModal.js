@@ -326,9 +326,9 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
         <div className="space-y-4">
           {/* Header */}
           <div className="text-center">
-            <h2 className="text-2xl font-bold mb-2">Sipariş Bilgileri</h2>
+            <h2 className="text-2xl font-bold mb-2">{isEN ? 'Order Information' : 'Sipariş Bilgileri'}</h2>
             <p className="text-sm text-gray-400">
-              Ödeme işlemi için bu bilgiler zorunludur
+              {isEN ? 'This information is required for payment' : 'Ödeme işlemi için bu bilgiler zorunludur'}
             </p>
           </div>
 

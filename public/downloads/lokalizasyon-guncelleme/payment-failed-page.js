@@ -34,8 +34,8 @@ function PaymentFailedContent() {
             <p className="text-xs">Lütfen ödeme bilgilerinizi kontrol edip tekrar deneyin.</p>
           </div>
 
-          {/* BANKA BAKIM UYARISI - DİKKAT ÇEKİCİ */}
-          <div className="relative overflow-hidden rounded-xl border-2 border-yellow-500 animate-pulse">
+          {/* BANKA BAKIM UYARISI */}
+          <div className="relative overflow-hidden rounded-xl border-2 border-yellow-500">
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-600/20 via-red-600/20 to-yellow-600/20" />
             <div className="relative p-4 bg-gradient-to-r from-yellow-900/60 to-red-900/40">
               <div className="flex items-center gap-2 mb-2">
@@ -52,6 +52,17 @@ function PaymentFailedContent() {
                 </p>
               </div>
             </div>
+          </div>
+
+          <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700 text-sm">
+            <p className="font-semibold text-white mb-2">Olası Nedenler:</p>
+            <ul className="space-y-1.5 text-slate-400 text-xs">
+              <li>• Yetersiz bakiye</li>
+              <li>• Kart bilgileri hatalı</li>
+              <li>• 3D Secure doğrulaması başarısız</li>
+              <li>• Banka tarafından işlem engellendi</li>
+              <li>• İşlem zaman aşımına uğradı</li>
+            </ul>
           </div>
 
           <div className="space-y-2">

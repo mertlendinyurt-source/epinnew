@@ -120,3 +120,11 @@ function FailedContent() {
     </div>
   );
 }
+
+export default function PaymentFailedPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 flex items-center justify-center"><div className="text-white text-xl">Yükleniyor...</div></div>}>
+      <FailedContent />
+    </Suspense>
+  );
+}

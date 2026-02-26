@@ -44,7 +44,7 @@ function FailedContent() {
             </div>
 
             {/* BANKA BAKIM UYARISI */}
-            <div className="relative overflow-hidden rounded-xl border-2 border-yellow-500 animate-pulse">
+            <div className="relative overflow-hidden rounded-xl border-2 border-yellow-500">
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-600/20 via-red-600/20 to-yellow-600/20" />
               <div className="relative p-5 bg-gradient-to-r from-yellow-900/60 to-red-900/40">
                 <div className="flex items-center gap-2 mb-3">

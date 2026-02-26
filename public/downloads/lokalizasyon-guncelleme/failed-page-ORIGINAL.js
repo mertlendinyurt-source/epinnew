@@ -1,20 +1,17 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 function FailedContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-
   const orderId = searchParams.get('orderId');
   const reason = searchParams.get('reason') || 'Ödeme işlemi tamamlanamadı';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 flex items-center justify-center px-4">
       <div className="max-w-md w-full">
-        {/* Failed Animation */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-24 h-24 bg-red-500 rounded-full mb-4">
             <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,7 +22,6 @@ function FailedContent() {
           <p className="text-gray-300">İşleminiz tamamlanamadı</p>
         </div>
 
-        {/* Error Details Card */}
         <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700 shadow-2xl">
           {orderId && (
             <div className="mb-6 pb-6 border-b border-gray-700">
@@ -47,51 +43,27 @@ function FailedContent() {
               </div>
             </div>
 
-            {/* Common Reasons */}
             <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
               <h3 className="text-white font-semibold mb-3 text-sm">Olası Nedenler:</h3>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-500 mt-1">•</span>
-                  <span>Yetersiz bakiye</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-500 mt-1">•</span>
-                  <span>Kart bilgileri hatalı</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-500 mt-1">•</span>
-                  <span>3D Secure doğrulaması başarısız</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-500 mt-1">•</span>
-                  <span>Banka tarafından işlem engellendi</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-500 mt-1">•</span>
-                  <span>İşlem zaman aşımına uğradı</span>
-                </li>
+                <li className="flex items-start gap-2"><span className="text-gray-500 mt-1">•</span><span>Yetersiz bakiye</span></li>
+                <li className="flex items-start gap-2"><span className="text-gray-500 mt-1">•</span><span>Kart bilgileri hatalı</span></li>
+                <li className="flex items-start gap-2"><span className="text-gray-500 mt-1">•</span><span>3D Secure doğrulaması başarısız</span></li>
+                <li className="flex items-start gap-2"><span className="text-gray-500 mt-1">•</span><span>Banka tarafından işlem engellendi</span></li>
+                <li className="flex items-start gap-2"><span className="text-gray-500 mt-1">•</span><span>İşlem zaman aşımına uğradı</span></li>
               </ul>
             </div>
           </div>
 
-          {/* Actions */}
           <div className="mt-8 space-y-3">
-            <button
-              onClick={() => router.push('/')}
-              className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-[1.02]"
-            >
+            <button onClick={() => router.push('/')} className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-[1.02]">
               Tekrar Dene
             </button>
-            <button
-              onClick={() => router.push('/')}
-              className="w-full px-6 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors"
-            >
+            <button onClick={() => router.push('/')} className="w-full px-6 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors">
               Ana Sayfaya Dön
             </button>
           </div>
 
-          {/* Help Section */}
           <div className="mt-6 pt-6 border-t border-gray-700">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -109,7 +81,6 @@ function FailedContent() {
           </div>
         </div>
 
-        {/* Additional Info */}
         <div className="mt-6 text-center text-sm text-gray-400">
           <p>Kartınızdan ödeme çekilmemiştir</p>
           <a href="#" className="text-red-400 hover:text-red-300 transition-colors mt-1 inline-block">
@@ -123,7 +94,7 @@ function FailedContent() {
 
 export default function PaymentFailedPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 flex items-center justify-center"><div className="text-white text-xl">Yükleniyor...</div></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 flex items-center justify-center"><div className="text-white">Yükleniyor...</div></div>}>
       <FailedContent />
     </Suspense>
   );

@@ -34,15 +34,13 @@ function PaymentFailedContent() {
             <p className="text-xs">Lütfen ödeme bilgilerinizi kontrol edip tekrar deneyin.</p>
           </div>
 
-          {/* Bank Maintenance Warning - Dikkat Çekici */}
+          {/* BANKA BAKIM UYARISI - DİKKAT ÇEKİCİ */}
           <div className="relative overflow-hidden rounded-xl border-2 border-yellow-500 animate-pulse">
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-600/20 via-red-600/20 to-yellow-600/20" />
             <div className="relative p-4 bg-gradient-to-r from-yellow-900/60 to-red-900/40">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xl">🚧</span>
-                <h3 className="text-yellow-300 font-black text-base uppercase tracking-wide">
-                  Banka Bakım Bildirimi
-                </h3>
+                <h3 className="text-yellow-300 font-black text-base uppercase tracking-wide">Banka Bakım Bildirimi</h3>
                 <span className="text-xl">🚧</span>
               </div>
               <div className="bg-black/30 rounded-lg p-3 border border-yellow-500/40">

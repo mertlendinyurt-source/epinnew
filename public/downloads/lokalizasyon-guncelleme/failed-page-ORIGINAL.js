@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-export default function PaymentFailedPage() {
+function FailedContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -118,5 +118,13 @@ export default function PaymentFailedPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentFailedPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 flex items-center justify-center"><div className="text-white text-xl">Yükleniyor...</div></div>}>
+      <FailedContent />
+    </Suspense>
   );
 }

@@ -1,14 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useLocale from '@/hooks/useLocale';
 
-export default function PaymentFailedPage() {
+function FailedContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { locale } = useLocale();
-  const [loading, setLoading] = useState(false);
   const isEN = locale === 'en';
 
   const orderId = searchParams.get('orderId');
@@ -120,5 +119,13 @@ export default function PaymentFailedPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentFailedPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 flex items-center justify-center"><div className="text-white text-xl">Loading...</div></div>}>
+      <FailedContent />
+    </Suspense>
   );
 }

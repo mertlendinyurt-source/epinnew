@@ -34,9 +34,26 @@ function PaymentFailedContent() {
             <p className="text-xs">Lütfen ödeme bilgilerinizi kontrol edip tekrar deneyin.</p>
           </div>
 
-          <div className="p-4 rounded-lg bg-amber-900/20 border border-amber-700 text-sm text-amber-400">
-            <p className="font-semibold mb-1">⚠️ Garanti Bankası Kartları</p>
-            <p className="text-xs">Garanti bankası sanal kart ve banka kartları ile ödeme yapılamamaktadır. Lütfen başka bir banka kartı ile tekrar deneyin.</p>
+          {/* Bank Maintenance Warning - Dikkat Çekici */}
+          <div className="relative overflow-hidden rounded-xl border-2 border-yellow-500 animate-pulse">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-600/20 via-red-600/20 to-yellow-600/20" />
+            <div className="relative p-4 bg-gradient-to-r from-yellow-900/60 to-red-900/40">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">🚧</span>
+                <h3 className="text-yellow-300 font-black text-base uppercase tracking-wide">
+                  Banka Bakım Bildirimi
+                </h3>
+                <span className="text-xl">🚧</span>
+              </div>
+              <div className="bg-black/30 rounded-lg p-3 border border-yellow-500/40">
+                <p className="text-white font-bold text-sm leading-relaxed">
+                  🏦 Garanti Bankası ve Ziraat Bankası ödeme sistemleri şu anda bakımdadır.
+                </p>
+                <p className="text-yellow-300 font-bold text-sm mt-2">
+                  💳 Lütfen farklı bir banka kartı ile tekrar deneyiniz.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">

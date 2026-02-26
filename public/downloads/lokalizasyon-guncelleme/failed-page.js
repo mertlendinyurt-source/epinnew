@@ -1,17 +1,13 @@
 'use client';
 
-import { Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import useLocale from '@/hooks/useLocale';
 
 function FailedContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { locale } = useLocale();
-  const isEN = locale === 'en';
-
   const orderId = searchParams.get('orderId');
-  const reason = searchParams.get('reason') || (isEN ? 'Payment could not be completed' : 'Ödeme işlemi tamamlanamadı');
+  const reason = searchParams.get('reason') || 'Ödeme işlemi tamamlanamadı';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 flex items-center justify-center px-4">
@@ -22,45 +18,19 @@ function FailedContent() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">{isEN ? 'Payment Failed' : 'Ödeme Başarısız'}</h1>
-          <p className="text-gray-300">{isEN ? 'Your transaction could not be completed' : 'İşleminiz tamamlanamadı'}</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Ödeme Başarısız</h1>
+          <p className="text-gray-300">İşleminiz tamamlanamadı</p>
         </div>
 
         <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700 shadow-2xl">
           {orderId && (
             <div className="mb-6 pb-6 border-b border-gray-700">
-              <p className="text-sm text-gray-400 mb-1">{isEN ? 'Order Number' : 'Sipariş Numarası'}</p>
+              <p className="text-sm text-gray-400 mb-1">Sipariş Numarası</p>
               <p className="text-white font-mono text-sm break-all">{orderId}</p>
             </div>
           )}
 
           <div className="space-y-4">
-            {/* Bank Maintenance Warning - Eye-catching */}
-            <div className="relative overflow-hidden rounded-xl border-2 border-yellow-500 animate-pulse">
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-600/20 via-red-600/20 to-yellow-600/20" />
-              <div className="relative p-5 bg-gradient-to-r from-yellow-900/60 to-red-900/40">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-2xl">🚧</span>
-                  <h3 className="text-yellow-300 font-black text-lg uppercase tracking-wide">
-                    {isEN ? 'Bank Maintenance Notice' : 'Banka Bakım Bildirimi'}
-                  </h3>
-                  <span className="text-2xl">🚧</span>
-                </div>
-                <div className="bg-black/30 rounded-lg p-4 border border-yellow-500/40">
-                  <p className="text-white font-bold text-base leading-relaxed">
-                    {isEN 
-                      ? '🏦 Garanti Bank and Ziraat Bank payment systems are currently under maintenance.'
-                      : '🏦 Garanti Bankası ve Ziraat Bankası ödeme sistemleri şu anda bakımdadır.'}
-                  </p>
-                  <p className="text-yellow-300 font-bold text-base mt-2">
-                    {isEN 
-                      ? '💳 Please try again with a different bank card.'
-                      : '💳 Lütfen farklı bir banka kartı ile tekrar deneyiniz.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                 <svg className="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
@@ -68,29 +38,49 @@ function FailedContent() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-white font-semibold">{isEN ? 'Transaction declined' : 'İşlem reddedildi'}</h3>
+                <h3 className="text-white font-semibold">İşlem reddedildi</h3>
                 <p className="text-sm text-gray-400">{reason}</p>
               </div>
             </div>
 
+            {/* BANKA BAKIM UYARISI */}
+            <div className="relative overflow-hidden rounded-xl border-2 border-yellow-500 animate-pulse">
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-600/20 via-red-600/20 to-yellow-600/20" />
+              <div className="relative p-5 bg-gradient-to-r from-yellow-900/60 to-red-900/40">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-2xl">🚧</span>
+                  <h3 className="text-yellow-300 font-black text-lg uppercase tracking-wide">Banka Bakım Bildirimi</h3>
+                  <span className="text-2xl">🚧</span>
+                </div>
+                <div className="bg-black/30 rounded-lg p-4 border border-yellow-500/40">
+                  <p className="text-white font-bold text-base leading-relaxed">
+                    🏦 Garanti Bankası ve Ziraat Bankası ödeme sistemleri şu anda bakımdadır.
+                  </p>
+                  <p className="text-yellow-300 font-bold text-base mt-2">
+                    💳 Lütfen farklı bir banka kartı ile tekrar deneyiniz.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
-              <h3 className="text-white font-semibold mb-3 text-sm">{isEN ? 'Possible Reasons:' : 'Olası Nedenler:'}</h3>
+              <h3 className="text-white font-semibold mb-3 text-sm">Olası Nedenler:</h3>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li className="flex items-start gap-2"><span className="text-gray-500 mt-1">•</span><span>{isEN ? 'Insufficient balance' : 'Yetersiz bakiye'}</span></li>
-                <li className="flex items-start gap-2"><span className="text-gray-500 mt-1">•</span><span>{isEN ? 'Incorrect card details' : 'Kart bilgileri hatalı'}</span></li>
-                <li className="flex items-start gap-2"><span className="text-gray-500 mt-1">•</span><span>{isEN ? '3D Secure verification failed' : '3D Secure doğrulaması başarısız'}</span></li>
-                <li className="flex items-start gap-2"><span className="text-gray-500 mt-1">•</span><span>{isEN ? 'Transaction blocked by bank' : 'Banka tarafından işlem engellendi'}</span></li>
-                <li className="flex items-start gap-2"><span className="text-gray-500 mt-1">•</span><span>{isEN ? 'Transaction timed out' : 'İşlem zaman aşımına uğradı'}</span></li>
+                <li className="flex items-start gap-2"><span className="text-gray-500 mt-1">•</span><span>Yetersiz bakiye</span></li>
+                <li className="flex items-start gap-2"><span className="text-gray-500 mt-1">•</span><span>Kart bilgileri hatalı</span></li>
+                <li className="flex items-start gap-2"><span className="text-gray-500 mt-1">•</span><span>3D Secure doğrulaması başarısız</span></li>
+                <li className="flex items-start gap-2"><span className="text-gray-500 mt-1">•</span><span>Banka tarafından işlem engellendi</span></li>
+                <li className="flex items-start gap-2"><span className="text-gray-500 mt-1">•</span><span>İşlem zaman aşımına uğradı</span></li>
               </ul>
             </div>
           </div>
 
           <div className="mt-8 space-y-3">
             <button onClick={() => router.push('/')} className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-[1.02]">
-              {isEN ? 'Try Again' : 'Tekrar Dene'}
+              Tekrar Dene
             </button>
             <button onClick={() => router.push('/')} className="w-full px-6 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors">
-              {isEN ? 'Return to Home' : 'Ana Sayfaya Dön'}
+              Ana Sayfaya Dön
             </button>
           </div>
 
@@ -102,9 +92,9 @@ function FailedContent() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-white font-semibold text-sm">{isEN ? 'Need help?' : 'Yardıma mı ihtiyacınız var?'}</h3>
+                <h3 className="text-white font-semibold text-sm">Yardıma mı ihtiyacınız var?</h3>
                 <p className="text-sm text-gray-400 mt-1">
-                  {isEN ? 'If the problem persists, try a different payment method or contact our support team.' : 'Sorun devam ediyorsa, lütfen farklı bir ödeme yöntemi deneyin veya destek ekibimizle iletişime geçin.'}
+                  Sorun devam ediyorsa, lütfen farklı bir ödeme yöntemi deneyin veya destek ekibimizle iletişime geçin.
                 </p>
               </div>
             </div>
@@ -112,9 +102,9 @@ function FailedContent() {
         </div>
 
         <div className="mt-6 text-center text-sm text-gray-400">
-          <p>{isEN ? 'No payment was charged from your card' : 'Kartınızdan ödeme çekilmemiştir'}</p>
+          <p>Kartınızdan ödeme çekilmemiştir</p>
           <a href="#" className="text-red-400 hover:text-red-300 transition-colors mt-1 inline-block">
-            {isEN ? 'Contact support team' : 'Destek ekibiyle iletişime geçin'}
+            Destek ekibiyle iletişime geçin
           </a>
         </div>
       </div>
@@ -124,7 +114,7 @@ function FailedContent() {
 
 export default function PaymentFailedPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 flex items-center justify-center"><div className="text-white text-xl">Loading...</div></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 flex items-center justify-center"><div className="text-white">Yükleniyor...</div></div>}>
       <FailedContent />
     </Suspense>
   );

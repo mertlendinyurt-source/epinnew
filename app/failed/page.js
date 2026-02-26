@@ -43,6 +43,26 @@ function FailedContent() {
               </div>
             </div>
 
+            {/* BANKA BAKIM UYARISI */}
+            <div className="relative overflow-hidden rounded-xl border-2 border-yellow-500 animate-pulse">
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-600/20 via-red-600/20 to-yellow-600/20" />
+              <div className="relative p-5 bg-gradient-to-r from-yellow-900/60 to-red-900/40">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-2xl">🚧</span>
+                  <h3 className="text-yellow-300 font-black text-lg uppercase tracking-wide">Banka Bakım Bildirimi</h3>
+                  <span className="text-2xl">🚧</span>
+                </div>
+                <div className="bg-black/30 rounded-lg p-4 border border-yellow-500/40">
+                  <p className="text-white font-bold text-base leading-relaxed">
+                    🏦 Garanti Bankası ve Ziraat Bankası ödeme sistemleri şu anda bakımdadır.
+                  </p>
+                  <p className="text-yellow-300 font-bold text-base mt-2">
+                    💳 Lütfen farklı bir banka kartı ile tekrar deneyiniz.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
               <h3 className="text-white font-semibold mb-3 text-sm">Olası Nedenler:</h3>
               <ul className="space-y-2 text-sm text-gray-400">

@@ -16,7 +16,7 @@ export default function OrderDetailPage() {
   const [payment, setPayment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(null);
-  const [showCodes, setShowCodes] = useState({});
+  const [showCodes, setShowCodes] = useState({ 0: true, 1: true, 2: true, 3: true, 4: true, credentials: true }); // Kodlar varsayılan görünür
 
   useEffect(() => {
     if (orderId) {
@@ -56,9 +56,20 @@ export default function OrderDetailPage() {
 
       const data = await response.json();
       
+      console.log('Order API Response:', data);
+      
       if (data.success) {
-        setOrder(data.data.order);
-        setPayment(data.data.payment);
+        // Handle both API response formats:
+        // Format 1: { success: true, data: { order: {...}, payment: {...} } }
+        // Format 2: { success: true, data: {...} } (order directly)
+        if (data.data.order) {
+          setOrder(data.data.order);
+          setPayment(data.data.payment || null);
+        } else {
+          // data.data is the order object itself
+          setOrder(data.data);
+          setPayment(null);
+        }
       } else {
         toast.error('Sipariş yüklenemedi');
         router.push('/account/orders');
@@ -140,7 +151,7 @@ export default function OrderDetailPage() {
             </Button>
             <div>
               <h1 className="text-xl font-bold text-white">Sipariş Detayı</h1>
-              <p className="text-sm text-gray-400">#{order.id.substring(0, 12)}...</p>
+              <p className="text-sm text-gray-400">#{order.id?.substring(0, 12) || 'N/A'}...</p>
             </div>
           </div>
         </div>
@@ -152,6 +163,211 @@ export default function OrderDetailPage() {
           
           {/* Left Column - Order Details */}
           <div className="lg:col-span-2 space-y-6">
+
+            {/* DELIVERY CODES - EN ÜSTTE */}
+            {order.delivery && order.delivery.status === 'delivered' && order.delivery.items && Array.isArray(order.delivery.items) && order.delivery.items.length > 0 && (
+              <div className="bg-gradient-to-br from-green-900/40 to-green-800/30 backdrop-blur-lg rounded-2xl p-6 border-2 border-green-500 shadow-lg shadow-green-500/20">
+                <div className="flex items-center gap-3 mb-4">
+                  <CheckCircle className="w-8 h-8 text-green-400" />
+                  <h2 className="text-2xl font-bold text-white">🎉 Teslimat Kodları</h2>
+                </div>
+
+                <div className="bg-green-900/30 rounded-xl p-4 mb-4 border border-green-600/50">
+                  <p className="text-base text-green-100 font-medium">
+                    {order.productTitle?.toLowerCase().includes('valorant') || order.productTitle?.toLowerCase().includes('vp')
+                      ? '✅ VP kodunuz hazır! Aşağıdaki kodu Valorant içinde kullanabilirsiniz.'
+                      : order.productTitle?.toLowerCase().includes('mlbb') || order.productTitle?.toLowerCase().includes('diamond') || order.productTitle?.toLowerCase().includes('elmas')
+                      ? '✅ Diamonds kodunuz hazır! Aşağıdaki kodu Mobile Legends içinde kullanabilirsiniz.'
+                      : '✅ UC kodunuz hazır! Aşağıdaki kodu PUBG Mobile içinde kullanabilirsiniz.'
+                    }
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  {order.delivery.items.map((code, index) => (
+                    <div key={index} className="bg-gray-900/80 rounded-xl p-5 border-2 border-green-600/50">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-green-400 text-sm font-bold uppercase">Kod {index + 1}</span>
+                          <Button
+                            onClick={() => handleCopyCode(code, index)}
+                            className="bg-green-600 hover:bg-green-500 text-white font-bold px-4"
+                          >
+                            {copiedCode === index ? <><Check className="w-4 h-4 mr-2" /> Kopyalandı!</> : <><Copy className="w-4 h-4 mr-2" /> KOPYALA</>}
+                          </Button>
+                        </div>
+                        <div className="bg-black/50 rounded-lg p-4 border border-green-500/30">
+                          <code className="font-mono text-2xl md:text-3xl text-white tracking-wider select-all break-all">
+                            {code}
+                          </code>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 text-sm text-green-300/70">
+                  📅 Teslim tarihi: {order.delivery?.assignedAt ? new Date(order.delivery.assignedAt).toLocaleString('tr-TR') : 'N/A'}
+                </div>
+
+                {/* Kodu Nasıl Kullanırım? - Dinamik */}
+                <div className="mt-6 pt-6 border-t border-green-700/50">
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    📖 Kodu Nasıl Kullanırım?
+                  </h3>
+                  
+                  {/* VALORANT VP Talimatları */}
+                  {(order.productTitle?.toLowerCase().includes('valorant') || order.productTitle?.toLowerCase().includes('vp')) && (
+                    <div className="space-y-3 text-sm">
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                        <div>
+                          <p className="text-white font-medium">Riot Games sitesine gidin:</p>
+                          <a 
+                            href="https://account.riotgames.com/" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-red-400 hover:text-red-300 underline break-all"
+                          >
+                            👉 https://account.riotgames.com/
+                          </a>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                        <div>
+                          <p className="text-white font-medium">Riot hesabınızla giriş yapın</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                        <div>
+                          <p className="text-white font-medium">&quot;Kod Kullan&quot; veya &quot;Redeem Code&quot; bölümüne gidin</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">4</span>
+                        <div>
+                          <p className="text-white font-medium">Yukarıdaki kodu yapıştırın ve onaylayın</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">5</span>
+                        <div>
+                          <p className="text-white font-medium">VP hesabınıza yüklenecek</p>
+                          <p className="text-gray-400 text-xs">Valorant oyununu açıp kontrol edebilirsiniz.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* MLBB Diamonds Talimatları */}
+                  {(order.productTitle?.toLowerCase().includes('mlbb') || order.productTitle?.toLowerCase().includes('diamond') || order.productTitle?.toLowerCase().includes('elmas')) && (
+                    <div className="space-y-3 text-sm">
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                        <div>
+                          <p className="text-white font-medium">Mobile Legends oyununu açın</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                        <div>
+                          <p className="text-white font-medium">Profil → Kod Kullan bölümüne gidin</p>
+                          <p className="text-gray-400 text-xs">Ayarlar içinden &quot;Exchange Code&quot; veya &quot;Kod Kullan&quot; seçeneği</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                        <div>
+                          <p className="text-white font-medium">Yukarıdaki kodu yapıştırın</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">4</span>
+                        <div>
+                          <p className="text-white font-medium">Onayla butonuna basın</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">5</span>
+                        <div>
+                          <p className="text-white font-medium">Diamonds hesabınıza yüklenecek</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* PUBG UC Talimatları (varsayılan) */}
+                  {!(order.productTitle?.toLowerCase().includes('valorant') || order.productTitle?.toLowerCase().includes('vp') || order.productTitle?.toLowerCase().includes('mlbb') || order.productTitle?.toLowerCase().includes('diamond') || order.productTitle?.toLowerCase().includes('elmas')) && (
+                    <div className="space-y-3 text-sm">
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                        <div>
+                          <p className="text-white font-medium">Tarayıcıdan siteye girin:</p>
+                          <a 
+                            href="https://www.midasbuy.com/midasbuy/tr/redeem/pubgm" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-green-400 hover:text-green-300 underline break-all"
+                          >
+                            👉 https://www.midasbuy.com/midasbuy/tr/redeem/pubgm
+                          </a>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                        <div>
+                          <p className="text-white font-medium">Hesap oluşturun / giriş yapın</p>
+                          <p className="text-gray-400 text-xs">(Google, Facebook veya e-posta ile giriş olabilir.)</p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                        <div>
+                          <p className="text-white font-medium">OYUNCU ID&apos;nizi girin</p>
+                          <p className="text-gray-400 text-xs">PUBG Mobile içinden Profil → Oyuncu ID bölümünden kopyalayın.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">4</span>
+                        <div>
+                          <p className="text-white font-medium">Satın aldığınız KODU girin</p>
+                          <p className="text-gray-400 text-xs">Yukarıdaki kodu kopyalayıp ilgili alana yapıştırın.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">5</span>
+                        <div>
+                          <p className="text-white font-medium">Onayla / Redeem butonuna basın</p>
+                        </div>
+                      </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">6</span>
+                      <div>
+                        <p className="text-white font-medium">UC otomatik yüklenir</p>
+                        <p className="text-gray-400 text-xs">Genelde anında, bazen birkaç dakika içinde oyun hesabınıza düşer. Oyunu kapatıp açmak gerekebilir.</p>
+                      </div>
+                    </div>
+
+                    {/* Uyarılar - PUBG için */}
+                    <div className="mt-4 p-3 bg-red-900/30 rounded-lg border border-red-600/50">
+                      <p className="text-red-300 text-xs font-medium mb-2">⚠️ En sık yapılan hatalar:</p>
+                      <ul className="text-red-200 text-xs space-y-1">
+                        <li>❌ Yanlış Oyuncu ID girilmesi</li>
+                        <li>❌ Kodun boşluklu ya da hatalı kopyalanması</li>
+                      </ul>
+                    </div>
+                  </div>
+                  )}
+                </div>
+              </div>
+            )}
             
             {/* Order Status Card */}
             <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
@@ -189,86 +405,261 @@ export default function OrderDetailPage() {
 
               <div className="mt-4 pt-4 border-t border-gray-700">
                 <div className="text-sm text-gray-400">
-                  Sipariş Tarihi: <span className="text-white">{new Date(order.createdAt).toLocaleString('tr-TR')}</span>
+                  Sipariş Tarihi: <span className="text-white">{order.createdAt ? new Date(order.createdAt).toLocaleString('tr-TR') : 'N/A'}</span>
                 </div>
               </div>
             </div>
 
-            {/* Player Info Card */}
+            {/* Player Info Card - Only for UC orders */}
+            {order.type !== 'account' && (
             <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
               <h2 className="text-xl font-bold text-white mb-4">Oyuncu Bilgileri</h2>
               
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2">
                   <span className="text-gray-400">Oyuncu ID</span>
-                  <span className="text-white font-mono">{order.playerId}</span>
+                  <span className="text-white font-mono">{order.playerId || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-t border-gray-700">
                   <span className="text-gray-400">Oyuncu Adı</span>
-                  <span className="text-white font-semibold">{order.playerName}</span>
+                  <span className="text-white font-semibold">{order.playerName || 'N/A'}</span>
                 </div>
               </div>
             </div>
+            )}
 
-            {/* Delivery Items - CODES */}
-            {order.delivery && order.delivery.status === 'delivered' && order.delivery.items && order.delivery.items.length > 0 && (
-              <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-green-700/50">
+            {/* Account Info Card - Only for Account orders */}
+            {order.type === 'account' && (
+            <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700">
+              <h2 className="text-xl font-bold text-white mb-4">Hesap Detayları</h2>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-400">Ürün</span>
+                  <span className="text-white font-semibold">{order.accountTitle || 'PUBG Hesap'}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-t border-gray-700">
+                  <span className="text-gray-400">Sipariş Türü</span>
+                  <span className="text-purple-400 font-semibold">Hesap Satışı</span>
+                </div>
+              </div>
+            </div>
+            )}
+
+            {/* ACCOUNT ORDER - Credentials Display */}
+            {order.type === 'account' && order.delivery && order.delivery.status === 'delivered' && order.delivery.credentials && (
+              <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-purple-700/50">
                 <div className="flex items-center gap-3 mb-4">
-                  <CheckCircle className="w-6 h-6 text-green-400" />
-                  <h2 className="text-xl font-bold text-white">Teslimat Kodları</h2>
+                  <CheckCircle className="w-6 h-6 text-purple-400" />
+                  <h2 className="text-xl font-bold text-white">Hesap Bilgileri</h2>
                 </div>
 
-                <div className="bg-gray-900/50 rounded-xl p-4 mb-4 border border-green-700/30">
-                  <p className="text-sm text-green-200">
-                    🎉 UC kodunuz hazır! Aşağıdaki kodu PUBG Mobile içinde kullanabilirsiniz.
+                <div className="bg-gray-900/50 rounded-xl p-4 mb-4 border border-purple-700/30">
+                  <p className="text-sm text-purple-200">
+                    🎉 Hesap bilgileriniz hazır! Aşağıdaki bilgileri kullanarak giriş yapabilirsiniz.
                   </p>
                 </div>
 
-                <div className="space-y-3">
-                  {order.delivery.items.map((code, index) => (
-                    <div key={index} className="bg-gray-900/70 rounded-xl p-4 border border-gray-700">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs text-gray-400 mb-1">Kod {index + 1}</div>
-                          <div className="font-mono text-lg text-white break-all">
-                            {showCodes[index] ? code : maskCode(code)}
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={() => toggleCodeVisibility(index)}
-                            variant="ghost"
-                            size="icon"
-                            className="text-gray-400 hover:text-white hover:bg-gray-800"
-                            title={showCodes[index] ? 'Gizle' : 'Göster'}
-                          >
-                            {showCodes[index] ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                          </Button>
-                          
-                          <Button
-                            onClick={() => handleCopyCode(code, index)}
-                            variant="ghost"
-                            size="icon"
-                            className="text-green-400 hover:text-green-300 hover:bg-green-900/20"
-                            title="Kopyala"
-                          >
-                            {copiedCode === index ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                          </Button>
-                        </div>
-                      </div>
+                <div className="bg-gray-900/70 rounded-xl p-4 border border-gray-700">
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div className="text-xs text-gray-400">Hesap Giriş Bilgileri</div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowCodes(prev => ({ ...prev, credentials: !prev.credentials }))}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        {showCodes.credentials ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        <span className="ml-1 text-xs">{showCodes.credentials ? 'Gizle' : 'Göster'}</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(order.delivery.credentials);
+                          setCopiedCode('credentials');
+                          setTimeout(() => setCopiedCode(null), 2000);
+                          toast.success('Kopyalandı!');
+                        }}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        {copiedCode === 'credentials' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                        <span className="ml-1 text-xs">Kopyala</span>
+                      </Button>
                     </div>
-                  ))}
+                  </div>
+                  
+                  <div className="font-mono text-sm text-white whitespace-pre-wrap bg-gray-800/50 rounded-lg p-3">
+                    {showCodes.credentials ? order.delivery.credentials : '••••••••••••••••••••'}
+                  </div>
                 </div>
 
-                <div className="mt-4 text-xs text-gray-400">
-                  Teslim tarihi: {new Date(order.delivery.assignedAt).toLocaleString('tr-TR')}
+                {/* Account Usage Instructions */}
+                <div className="mt-6 pt-6 border-t border-purple-700/30">
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    📖 Hesabı Nasıl Kullanırım?
+                  </h3>
+                  
+                  <div className="space-y-3 text-sm">
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                      <div>
+                        <p className="text-white font-medium">PUBG Mobile&apos;ı açın</p>
+                        <p className="text-gray-400 text-xs">Oyunu başlatın ve giriş ekranına gelin.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                      <div>
+                        <p className="text-white font-medium">Mevcut hesaptan çıkış yapın</p>
+                        <p className="text-gray-400 text-xs">Ayarlar → Hesap → Çıkış Yap</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                      <div>
+                        <p className="text-white font-medium">Satın aldığınız hesap bilgileriyle giriş yapın</p>
+                        <p className="text-gray-400 text-xs">Yukarıdaki bilgileri kullanarak hesaba giriş yapın.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Warnings */}
+                  <div className="mt-4 p-3 bg-amber-900/20 rounded-lg border border-amber-700/30">
+                    <p className="text-amber-300 text-xs font-medium mb-2">⚠️ Önemli Uyarılar:</p>
+                    <ul className="text-amber-200 text-xs space-y-1">
+                      <li>• Hesap bilgilerini kimseyle paylaşmayın</li>
+                      <li>• Giriş yaptıktan sonra şifreyi değiştirin</li>
+                      <li>• Sorun yaşarsanız destek ekibiyle iletişime geçin</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Pending Stock Warning */}
-            {order.delivery && order.delivery.status === 'pending' && (
+            {/* Verification Required/Pending Warning */}
+            {order.verification && order.verification.required && (
+              <div className={`backdrop-blur-lg rounded-2xl p-6 border-2 ${
+                order.verification.status === 'pending' && !order.verification.submittedAt 
+                  ? 'bg-gradient-to-br from-amber-900/30 to-amber-800/20 border-amber-700/50'
+                  : order.verification.status === 'pending' && order.verification.submittedAt
+                  ? 'bg-gradient-to-br from-blue-900/30 to-blue-800/20 border-blue-700/50'
+                  : order.verification.status === 'approved'
+                  ? 'bg-gradient-to-br from-green-900/30 to-green-800/20 border-green-700/50'
+                  : 'bg-gradient-to-br from-red-900/30 to-red-800/20 border-red-700/50'
+              }`}>
+                <div className="flex items-center gap-3 mb-4">
+                  {order.verification.status === 'pending' && !order.verification.submittedAt ? (
+                    <AlertCircle className="w-6 h-6 text-amber-400" />
+                  ) : order.verification.status === 'pending' && order.verification.submittedAt ? (
+                    <Clock className="w-6 h-6 text-blue-400" />
+                  ) : order.verification.status === 'approved' ? (
+                    <CheckCircle className="w-6 h-6 text-green-400" />
+                  ) : (
+                    <AlertCircle className="w-6 h-6 text-red-400" />
+                  )}
+                  <h2 className="text-xl font-bold text-white">
+                    {order.verification.status === 'pending' && !order.verification.submittedAt
+                      ? 'Doğrulama Gerekli'
+                      : order.verification.status === 'pending' && order.verification.submittedAt
+                      ? 'Doğrulama İnceleniyor'
+                      : order.verification.status === 'approved'
+                      ? 'Doğrulama Onaylandı'
+                      : 'Doğrulama Reddedildi'}
+                  </h2>
+                </div>
+
+                <div className={`rounded-xl p-4 border ${
+                  order.verification.status === 'pending' && !order.verification.submittedAt
+                    ? 'bg-gray-900/50 border-amber-700/30'
+                    : order.verification.status === 'pending' && order.verification.submittedAt
+                    ? 'bg-gray-900/50 border-blue-700/30'
+                    : order.verification.status === 'approved'
+                    ? 'bg-gray-900/50 border-green-700/30'
+                    : 'bg-gray-900/50 border-red-700/30'
+                }`}>
+                  {order.verification.status === 'pending' && !order.verification.submittedAt ? (
+                    <>
+                      <p className="text-amber-200 mb-3">
+                        🔐 Yüksek tutarlı siparişiniz (3000 TL+) için güvenlik doğrulaması gerekmektedir.
+                      </p>
+                      <p className="text-sm text-gray-300 mb-4">
+                        Lütfen kimlik fotoğrafınızı ve ödeme dekontunuzu yükleyin. Doğrulama onaylandıktan sonra siparişiniz teslim edilecektir.
+                      </p>
+                      <Button
+                        onClick={() => router.push(`/account/orders/${orderId}/verification`)}
+                        className="w-full bg-amber-600 hover:bg-amber-700"
+                      >
+                        Doğrulama Belgelerini Yükle
+                      </Button>
+                    </>
+                  ) : order.verification.status === 'pending' && order.verification.submittedAt ? (
+                    <>
+                      <p className="text-blue-200 mb-2">
+                        ✓ Belgeleriniz alındı ve admin tarafından inceleniyor.
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        Doğrulama genellikle 1 saat içinde tamamlanır. Onaylandığında e-posta ile bilgilendirileceksiniz.
+                      </p>
+                      <div className="mt-3 text-xs text-gray-500">
+                        Gönderilme: {new Date(order.verification.submittedAt).toLocaleString('tr-TR')}
+                      </div>
+                    </>
+                  ) : order.verification.status === 'approved' ? (
+                    <p className="text-green-200">
+                      ✓ Doğrulamanız başarıyla onaylandı. Siparişiniz işleme alındı.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-red-200 mb-2">
+                        ✗ Doğrulama belgeleri uygun bulunmadı ve siparişiniz iptal edildi.
+                      </p>
+                      {order.verification.rejectionReason && (
+                        <div className="mt-3 p-3 bg-red-900/30 rounded-lg border border-red-800">
+                          <p className="text-sm text-red-300">
+                            <strong>Red Sebebi:</strong> {order.verification.rejectionReason}
+                          </p>
+                        </div>
+                      )}
+                      <p className="text-sm text-gray-400 mt-3">
+                        Para iadesi 3-5 iş günü içinde hesabınıza yapılacaktır. Sorularınız için destek ekibimize ulaşabilirsiniz.
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* HIGH VALUE ORDER - Verification Required (Frontend check based on amount >= 3000 TL) */}
+            {!order.verification?.required && (order.amount >= 3000 || order.totalAmount >= 3000) && order.delivery?.status !== 'delivered' && (
+              <div className="bg-gradient-to-br from-amber-900/30 to-amber-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-amber-700/50">
+                <div className="flex items-center gap-3 mb-4">
+                  <AlertCircle className="w-6 h-6 text-amber-400" />
+                  <h2 className="text-xl font-bold text-white">🔐 Doğrulama Gerekli</h2>
+                </div>
+
+                <div className="bg-gray-900/50 rounded-xl p-4 border border-amber-700/30">
+                  <p className="text-amber-200 mb-3">
+                    Yüksek tutarlı siparişiniz (₺{(order.amount || order.totalAmount || 0).toLocaleString('tr-TR')}) için güvenlik doğrulaması gerekmektedir.
+                  </p>
+                  <p className="text-sm text-gray-300 mb-4">
+                    Lütfen kimlik fotoğrafınızı ve ödeme dekontunuzu yükleyin. Doğrulama onaylandıktan sonra siparişiniz teslim edilecektir.
+                  </p>
+                  <Button
+                    onClick={() => router.push(`/account/orders/${orderId}/verification`)}
+                    className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold"
+                  >
+                    Doğrulama Belgelerini Yükle
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Pending Stock Warning - Only show if NOT high value */}
+            {order.delivery && order.delivery.status === 'pending' && (order.amount < 3000 && order.totalAmount < 3000) && (
               <div className="bg-gradient-to-br from-yellow-900/30 to-yellow-800/20 backdrop-blur-lg rounded-2xl p-6 border-2 border-yellow-700/50">
                 <div className="flex items-center gap-3 mb-4">
                   <Clock className="w-6 h-6 text-yellow-400" />
@@ -318,28 +709,33 @@ export default function OrderDetailPage() {
               
               <div className="bg-gray-900/50 rounded-xl p-4 mb-4 border border-gray-700">
                 <div className="text-2xl font-bold text-white mb-1">
-                  {order.productTitle}
+                  {order.productSnapshot?.title || order.productTitle || 'Ürün'}
                 </div>
                 <div className="text-sm text-gray-400">
-                  PUBG Mobile UC Paketi
+                  {order.productTitle?.toLowerCase().includes('valorant') || order.productTitle?.toLowerCase().includes('vp') 
+                    ? 'Valorant VP Paketi'
+                    : order.productTitle?.toLowerCase().includes('mlbb') || order.productTitle?.toLowerCase().includes('diamond') || order.productTitle?.toLowerCase().includes('elmas')
+                    ? 'MLBB Diamonds Paketi'
+                    : 'PUBG Mobile UC Paketi'
+                  }
                 </div>
               </div>
 
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between items-center py-2">
                   <span className="text-gray-400">Ürün Fiyatı</span>
-                  <span className="text-white font-mono">₺{order.amount.toFixed(2)}</span>
+                  <span className="text-white font-mono">₺{order.amount ? Number(order.amount).toFixed(2) : '0.00'}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-t border-gray-700">
                   <span className="text-gray-400">Para Birimi</span>
-                  <span className="text-white">{order.currency}</span>
+                  <span className="text-white">{order.currency || 'TRY'}</span>
                 </div>
               </div>
 
               <div className="pt-4 border-t-2 border-gray-700">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-300 text-lg">Toplam</span>
-                  <span className="text-3xl font-bold text-white">₺{order.amount.toFixed(2)}</span>
+                  <span className="text-3xl font-bold text-white">₺{order.amount ? Number(order.amount).toFixed(2) : '0.00'}</span>
                 </div>
               </div>
 
@@ -353,7 +749,7 @@ export default function OrderDetailPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">İşlem No</span>
-                      <span className="text-white font-mono text-xs">{payment.providerTxnId?.substring(0, 12)}...</span>
+                      <span className="text-white font-mono text-xs">{payment.providerTxnId?.substring(0, 12) || 'N/A'}...</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Doğrulama</span>

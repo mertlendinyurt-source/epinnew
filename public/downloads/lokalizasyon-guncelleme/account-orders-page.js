@@ -6,11 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
-import useLocale from '@/hooks/useLocale';
 
 export default function AccountOrdersPage() {
   const router = useRouter();
-  const { locale, t, formatPrice, isInternational, currencySymbol } = useLocale();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
@@ -24,7 +22,7 @@ export default function AccountOrdersPage() {
     const user = localStorage.getItem('userData');
 
     if (!token) {
-      toast.error(t('common.pleaseLogin'));
+      toast.error('Lütfen giriş yapın');
       router.push('/');
       return;
     }
@@ -47,7 +45,7 @@ export default function AccountOrdersPage() {
       if (response.status === 401) {
         localStorage.removeItem('userToken');
         localStorage.removeItem('userData');
-        toast.error(t('common.sessionExpired'));
+        toast.error('Oturumunuz sonlandı');
         router.push('/');
         return;
       }
@@ -57,11 +55,11 @@ export default function AccountOrdersPage() {
       if (data.success) {
         setOrders(data.data);
       } else {
-        toast.error(t('error.ordersLoadFailed'));
+        toast.error('Siparişler yüklenemedi');
       }
     } catch (error) {
       console.error('Fetch orders error:', error);
-      toast.error(t('common.connectionError'));
+      toast.error('Bağlantı hatası');
     } finally {
       setLoading(false);
     }
@@ -69,66 +67,27 @@ export default function AccountOrdersPage() {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { label: t('status.pending'), variant: 'secondary', color: 'bg-yellow-500' },
-      paid: { label: t('status.paid'), variant: 'default', color: 'bg-green-500' },
-      failed: { label: t('status.failed'), variant: 'destructive', color: 'bg-red-500' }
+      pending: { label: 'Bekliyor', variant: 'secondary' },
+      paid: { label: 'Ödendi', variant: 'default' },
+      failed: { label: 'Başarısız', variant: 'destructive' }
     };
 
-    const config = statusConfig[status] || { label: status, variant: 'secondary', color: 'bg-gray-500' };
+    const config = statusConfig[status] || { label: status, variant: 'secondary' };
     
-    return (
-      <span className={`px-2 py-1 rounded text-xs font-semibold text-white ${config.color}`}>
-        {config.label}
-      </span>
-    );
-  };
-
-  const getDeliveryBadge = (order) => {
-    const delivery = order.delivery;
-    const verification = order.verification;
-
-    if (!delivery) {
-      return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-gray-500">{t('status.unknown')}</span>;
-    }
-
-    if (delivery.status === 'delivered') {
-      return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-green-500">✅ {t('status.delivered')}</span>;
-    }
-
-    if (verification?.required) {
-      if (verification.status === 'pending' && !verification.submittedAt) {
-        return <span className="px-3 py-1.5 rounded text-xs font-bold text-white bg-red-600 animate-pulse shadow-lg shadow-red-500/50">⚠️ {t('status.verificationRequired')}</span>;
-      }
-      if (verification.status === 'pending' && verification.submittedAt) {
-        return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-blue-500">🔍 {t('status.underReview')}</span>;
-      }
-      if (verification.status === 'rejected') {
-        return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-red-500">❌ {t('status.rejectedStatus')}</span>;
-      }
-    }
-
-    if (delivery.status === 'verification_pending' || delivery.status === 'verification_required') {
-      return <span className="px-3 py-1.5 rounded text-xs font-bold text-white bg-red-600 animate-pulse shadow-lg shadow-red-500/50">⚠️ {t('status.verificationRequired')}</span>;
-    }
-
-    if (delivery.status === 'pending') {
-      return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-yellow-500">⏳ {t('status.stockPending')}</span>;
-    }
-
-    return <span className="px-2 py-1 rounded text-xs font-semibold text-white bg-gray-500">{delivery.status}</span>;
+    return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   const handleLogout = () => {
     localStorage.removeItem('userToken');
     localStorage.removeItem('userData');
-    toast.success(t('common.loggedOut'));
+    toast.success('Çıkış yapıldı');
     router.push('/');
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">{t('common.loading')}</div>
+        <div className="text-white text-xl">Yükleniyor...</div>
       </div>
     );
   }
@@ -142,7 +101,7 @@ export default function AccountOrdersPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-white">{t('orders.title')}</h1>
+              <h1 className="text-2xl font-bold text-white">Siparişlerim</h1>
               {userData && (
                 <p className="text-sm text-gray-400 mt-1">
                   {userData.firstName} {userData.lastName} ({userData.email})
@@ -155,14 +114,14 @@ export default function AccountOrdersPage() {
                 variant="outline"
                 className="border-gray-700 text-white hover:bg-gray-800"
               >
-                {t('orders.homepage')}
+                Ana Sayfa
               </Button>
               <Button
                 onClick={handleLogout}
                 variant="outline"
                 className="border-red-700 text-red-500 hover:bg-red-900/20"
               >
-                {t('orders.logout')}
+                Çıkış
               </Button>
             </div>
           </div>
@@ -174,13 +133,13 @@ export default function AccountOrdersPage() {
         {orders.length === 0 ? (
           <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-12 border border-gray-700 text-center">
             <div className="text-6xl mb-4">📦</div>
-            <h2 className="text-2xl font-bold text-white mb-2">{t('orders.noOrders')}</h2>
-            <p className="text-gray-400 mb-6">{t('orders.noOrdersDesc')}</p>
+            <h2 className="text-2xl font-bold text-white mb-2">Henüz sipariş yok</h2>
+            <p className="text-gray-400 mb-6">İlk siparişinizi vermek için ana sayfaya dönün</p>
             <Button
               onClick={() => router.push('/')}
               className="bg-gradient-to-r from-purple-600 to-blue-600"
             >
-              {t('orders.startShopping')}
+              Alışverişe Başla
             </Button>
           </div>
         ) : (
@@ -188,134 +147,77 @@ export default function AccountOrdersPage() {
             {orders.map((order) => (
               <div
                 key={order.id}
-                onClick={() => router.push(`/account/orders/${order.id}`)}
-                className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-all cursor-pointer hover:shadow-lg hover:scale-[1.01]"
+                className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-colors"
               >
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg md:text-xl font-semibold text-white mb-2 truncate">
-                      {order.productSnapshot?.title || order.productTitle || t('orders.product')}
-                    </h3>
-                    
-                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-xl font-semibold text-white">
+                        {order.productTitle}
+                      </h3>
                       {getStatusBadge(order.status)}
-                      {getDeliveryBadge(order)}
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-400">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-400">
                       <div>
-                        <span className="text-gray-500">{t('orders.orderNo')}:</span>{' '}
-                        <span className="font-mono text-gray-300">{order.id?.substring(0, 12) || 'N/A'}...</span>
+                        <span className="text-gray-500">Sipariş No:</span>{' '}
+                        <span className="font-mono text-gray-300">{order.id.substring(0, 8)}...</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{t('orders.playerId')}:</span>{' '}
-                        <span className="text-gray-300">{order.playerId || 'N/A'}</span>
+                        <span className="text-gray-500">Oyuncu ID:</span>{' '}
+                        <span className="text-gray-300">{order.playerId}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{t('orders.player')}:</span>{' '}
-                        <span className="text-gray-300">{order.playerName || 'N/A'}</span>
+                        <span className="text-gray-500">Oyuncu Adı:</span>{' '}
+                        <span className="text-gray-300">{order.playerName}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{t('orders.date')}:</span>{' '}
+                        <span className="text-gray-500">Tarih:</span>{' '}
                         <span className="text-gray-300">
-                          {order.createdAt ? new Date(order.createdAt).toLocaleString(locale === 'tr' ? 'tr-TR' : 'en-US') : 'N/A'}
+                          {new Date(order.createdAt).toLocaleString('tr-TR')}
                         </span>
                       </div>
-                      <div>
-                        <span className="text-gray-500">{t('orders.amount')}:</span>{' '}
-                        <span className="text-white font-semibold">{currencySymbol}{order.amount ? Number(order.amount).toFixed(2) : '0.00'}</span>
-                      </div>
                     </div>
 
-                    {order.delivery && order.delivery.status === 'pending' && order.delivery.message && (
-                      <div className="mt-3 flex items-center gap-2 text-yellow-400 text-sm">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                        </svg>
-                        <span>{isInternational ? t('status.stockPending') : order.delivery.message}</span>
-                      </div>
-                    )}
-
-                    {order.verification?.required && order.verification?.status === 'pending' && !order.verification?.submittedAt && (
-                      <div className="mt-3 p-3 md:p-4 bg-gradient-to-r from-red-900/50 to-red-800/40 rounded-xl border-2 border-red-500 animate-pulse">
-                        <div className="flex items-center gap-2 text-red-400 font-bold text-sm md:text-base mb-2">
-                          <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                          </svg>
-                          <span>⚠️ {t('orders.verificationRequired')}</span>
+                    {order.customer && (
+                      <div className="mt-3 pt-3 border-t border-gray-700">
+                        <div className="text-sm text-gray-400">
+                          <span className="text-gray-500">Müşteri:</span>{' '}
+                          {order.customer.firstName} {order.customer.lastName} - {order.customer.email}
                         </div>
-                        <p className="text-red-300 text-xs md:text-sm font-medium">
-                          👉 {t('orders.verificationDesc')}
-                        </p>
-                        <p className="text-red-200/70 text-xs mt-1 md:mt-2">
-                          {t('orders.verificationWarn')}
-                        </p>
-                      </div>
-                    )}
-
-                    {order.verification?.required && order.verification?.status === 'pending' && order.verification?.submittedAt && (
-                      <div className="mt-3 flex items-start gap-2 text-blue-400 text-xs md:text-sm">
-                        <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                        </svg>
-                        <span>{t('orders.reviewing')}</span>
-                      </div>
-                    )}
-
-                    {order.verification?.status === 'rejected' && (
-                      <div className="mt-3 flex items-center gap-2 text-red-400 text-sm">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                        </svg>
-                        <span>{t('orders.rejected')}</span>
-                      </div>
-                    )}
-
-                    {order.delivery && order.delivery.status === 'delivered' && (
-                      <div className="mt-3 p-3 md:p-4 bg-gradient-to-r from-green-900/40 to-green-800/30 rounded-xl border-2 border-green-500/50">
-                        <div className="flex items-center gap-2 text-green-400 font-bold text-sm md:text-base mb-2 md:mb-3">
-                          <svg className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                          <span>✅ {t('orders.codeReady')}</span>
-                        </div>
-                        
-                        {order.delivery.items && Array.isArray(order.delivery.items) && order.delivery.items.length > 0 && (
-                          <div className="space-y-2">
-                            {order.delivery.items.map((code, idx) => (
-                              <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-2 bg-gray-900/60 rounded-lg p-2 md:p-3 border border-green-600/30">
-                                <span className="text-green-300 text-xs font-medium">{t('orders.code')} {idx + 1}:</span>
-                                <code className="flex-1 text-white font-mono text-sm md:text-base tracking-wider bg-black/30 px-2 py-1 rounded select-all break-all">
-                                  {code}
-                                </code>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigator.clipboard.writeText(code);
-                                    toast.success(t('orders.codeCopied'));
-                                  }}
-                                  className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded transition-colors w-full sm:w-auto"
-                                >
-                                  {t('orders.copy')}
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        
-                        <p className="text-green-200/70 text-xs mt-2 md:mt-3">
-                          💡 {t('orders.howToUse')}
-                        </p>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex items-center text-gray-400">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="text-2xl font-bold text-white">
+                      ₺{order.amount.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-gray-400">{order.currency}</div>
                   </div>
                 </div>
+
+                {order.status === 'paid' && (
+                  <div className="mt-4 pt-4 border-t border-gray-700">
+                    <div className="flex items-center gap-2 text-green-500 text-sm">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span>UC yükleme işlemi başlatıldı. Kısa süre içinde hesabınıza yüklenecektir.</span>
+                    </div>
+                  </div>
+                )}
+
+                {order.status === 'failed' && (
+                  <div className="mt-4 pt-4 border-t border-gray-700">
+                    <div className="flex items-center gap-2 text-red-500 text-sm">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      <span>Ödeme başarısız oldu. Lütfen tekrar deneyin.</span>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

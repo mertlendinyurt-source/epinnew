@@ -636,7 +636,10 @@ export default function AdminOrders() {
                           <TableCell className="text-white font-semibold">
                             ₺{(order.amount || order.totalAmount || order.price || 0).toFixed(2)}
                           </TableCell>
-                          <TableCell>{getStatusBadge(order.status)}</TableCell>
+                          <TableCell>
+                            {getStatusBadge(order.status)}
+                            {getIbanBadge(order)}
+                          </TableCell>
                           <TableCell>{getRiskBadge(order)}</TableCell>
                           <TableCell>{getDeliveryBadge(order)}</TableCell>
                           <TableCell className="text-slate-400 text-sm">

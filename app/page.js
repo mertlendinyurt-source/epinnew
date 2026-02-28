@@ -678,6 +678,50 @@ export default function App() {
     }
   }
 
+  // 🏦 IBAN: Check if user has approved IBAN orders → redirect to success page for Google Ads conversion
+  const checkIbanSuccessRedirect = async () => {
+    try {
+      const token = localStorage.getItem('userToken')
+      if (!token) return
+
+      // Check if we already redirected (don't loop)
+      const alreadyRedirected = sessionStorage.getItem('iban_success_redirected')
+      if (alreadyRedirected) return
+
+      const res = await fetch('/api/account/orders', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) return
+
+      const data = await res.json()
+      if (!data.success) return
+
+      // Find first IBAN order that is paid but user hasn't seen success page
+      const ibanPaidOrder = (data.data || []).find(order => 
+        order.paymentMethod === 'iban' && 
+        order.status === 'paid' && 
+        !order.ibanSuccessShown
+      )
+
+      if (ibanPaidOrder) {
+        // Mark as shown so we don't redirect again
+        sessionStorage.setItem('iban_success_redirected', ibanPaidOrder.id)
+        
+        // Mark in backend that success page was shown
+        fetch(`/api/orders/${ibanPaidOrder.id}/iban-notify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ senderName: '_success_shown_' })
+        }).catch(() => {})
+
+        // Redirect to success page → Google Ads conversion fires!
+        window.location.href = `/payment/success?orderId=${ibanPaidOrder.id}`
+      }
+    } catch (err) {
+      console.error('IBAN success redirect check error:', err)
+    }
+  }
+
   const fetchProducts = async () => {
     try {
       const response = await fetch('/api/products')

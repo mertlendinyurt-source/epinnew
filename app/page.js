@@ -826,6 +826,12 @@ export default function App() {
           return
         }
 
+        // IBAN payment - redirect to IBAN page
+        if (data.data.paymentProvider === 'iban') {
+          window.location.href = `/payment/iban?orderId=${data.data.orderId}&amount=${data.data.amount}`
+          return
+        }
+
         // Shopinext payment - Direct URL redirect
         if (data.data.paymentProvider === 'shopinext' && data.data.paymentUrl) {
           window.location.href = data.data.paymentUrl

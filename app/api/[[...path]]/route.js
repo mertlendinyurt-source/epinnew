@@ -8547,6 +8547,7 @@ export async function POST(request) {
             'ibanPayment.status': 'approved',
             'ibanPayment.approvedAt': new Date(),
             'ibanPayment.approvedBy': user.username,
+            ibanSuccessShown: false,
             updatedAt: new Date()
           } 
         }

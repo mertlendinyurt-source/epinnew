@@ -232,6 +232,9 @@ export default function App() {
     // OAuth callback ve redirect işlemleri
     handleGoogleAuthCallback()
     handleLoginRedirect()
+
+    // 🏦 IBAN: Check for approved orders that need success page redirect
+    checkIbanSuccessRedirect()
     
     // Set today's date only on client-side to avoid hydration mismatch
     setTodayDate(new Date().toLocaleDateString('tr-TR', { 

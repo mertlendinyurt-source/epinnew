@@ -7163,6 +7163,58 @@ export async function POST(request) {
       }
 
       // ============================================
+      // 🏦 IBAN PAYMENT FLOW
+      // ============================================
+      if (paymentMethod === 'iban') {
+        const customerSnapshot = {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone
+        };
+
+        const orderAmount = product.discountPrice || product.price || 0;
+
+        const order = {
+          id: uuidv4(),
+          userId: user.id,
+          productId,
+          productTitle: product.title,
+          productImageUrl: product.imageUrl || null,
+          playerId,
+          playerName,
+          customer: customerSnapshot,
+          status: 'pending',
+          amount: orderAmount,
+          totalAmount: orderAmount,
+          currency: 'TRY',
+          paymentMethod: 'iban',
+          ibanPayment: {
+            status: 'waiting', // waiting, notified, approved, rejected
+            notifiedAt: null,
+            senderName: null,
+            approvedAt: null,
+            approvedBy: null
+          },
+          termsAccepted: termsAccepted || false,
+          termsAcceptedAt: termsAcceptedAt ? new Date(termsAcceptedAt) : new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        await db.collection('orders').insertOne(order);
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            orderId: order.id,
+            paymentProvider: 'iban',
+            amount: orderAmount
+          }
+        });
+      }
+
+      // ============================================
       // 💳 CARD PAYMENT FLOW (SHOPIER)
       // ============================================
 

@@ -104,7 +104,7 @@ export default function AdminOrders() {
     
     setFilteredOrders(filtered)
     setCurrentPage(1) // Reset to first page when filter changes
-  }, [statusFilter, riskFilter, orders, emailSearch, phoneSearch, orderIdSearch, playerIdSearch])
+  }, [statusFilter, paymentMethodFilter, riskFilter, orders, emailSearch, phoneSearch, orderIdSearch, playerIdSearch])
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage)

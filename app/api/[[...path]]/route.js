@@ -8556,7 +8556,7 @@ export async function POST(request) {
       try {
         const product = await db.collection('products').findOne({ id: order.productId });
         if (product) {
-          // Try to assign stock
+          // Try to assign stock first
           const assignedStock = await db.collection('stock').findOneAndUpdate(
             { productId: order.productId, status: 'available' },
             { $set: { status: 'assigned', orderId: orderId, assignedAt: new Date() } },
@@ -8564,6 +8564,7 @@ export async function POST(request) {
           );
 
           if (assignedStock) {
+            // Stock found and assigned - use this code
             await db.collection('orders').updateOne(
               { id: orderId },
               { $set: { 
@@ -8571,31 +8572,41 @@ export async function POST(request) {
                 updatedAt: new Date()
               }}
             );
-            console.log(`IBAN: Stock assigned for order ${orderId}`);
+            console.log(`IBAN: Stock assigned for order ${orderId}: ${assignedStock.value}`);
           } else {
-            await db.collection('orders').updateOne(
-              { id: orderId },
-              { $set: { delivery: { status: 'pending', message: 'Stok bekleniyor', items: [] }, updatedAt: new Date() } }
-            );
-            console.log(`IBAN: No stock available for order ${orderId}`);
-          }
-
-          // Try DijiPin delivery if enabled
-          const dijipinSettings = await db.collection('settings').findOne({ type: 'dijipin' });
-          if (dijipinSettings?.isEnabled && product.dijipinEnabled) {
-            try {
-              const dijipinResult = await createDijipinOrder(product.title, 1, order.playerId);
-              if (dijipinResult.success) {
+            // No stock available - try DijiPin as fallback
+            const dijipinSettings = await db.collection('settings').findOne({ type: 'dijipin' });
+            if (dijipinSettings?.isEnabled && product.dijipinEnabled) {
+              try {
+                const dijipinResult = await createDijipinOrder(product.title, 1, order.playerId);
+                if (dijipinResult.success && dijipinResult.pin) {
+                  await db.collection('orders').updateOne(
+                    { id: orderId },
+                    { $set: { 
+                      delivery: { status: 'delivered', items: [dijipinResult.pin], method: 'dijipin', deliveredAt: new Date() },
+                      updatedAt: new Date()
+                    }}
+                  );
+                  console.log(`IBAN: DijiPin delivered for order ${orderId}`);
+                } else {
+                  await db.collection('orders').updateOne(
+                    { id: orderId },
+                    { $set: { delivery: { status: 'pending', message: 'Stok bekleniyor', items: [] }, updatedAt: new Date() } }
+                  );
+                }
+              } catch (err) {
+                console.error('IBAN DijiPin delivery error:', err);
                 await db.collection('orders').updateOne(
                   { id: orderId },
-                  { $set: { 
-                    delivery: { status: 'delivered', items: [dijipinResult.pin || 'DijiPin teslim edildi'], method: 'dijipin', deliveredAt: new Date() },
-                    updatedAt: new Date()
-                  }}
+                  { $set: { delivery: { status: 'pending', message: 'Stok bekleniyor', items: [] }, updatedAt: new Date() } }
                 );
               }
-            } catch (err) {
-              console.error('IBAN DijiPin delivery error:', err);
+            } else {
+              await db.collection('orders').updateOne(
+                { id: orderId },
+                { $set: { delivery: { status: 'pending', message: 'Stok bekleniyor', items: [] }, updatedAt: new Date() } }
+              );
+              console.log(`IBAN: No stock available for order ${orderId}`);
             }
           }
         }

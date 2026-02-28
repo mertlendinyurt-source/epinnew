@@ -95,6 +95,16 @@ function IbanPaymentContent() {
       })
       const data = await res.json()
       if (data.success) {
+        // Fire Google Ads conversion event (so ROAS counts even if user leaves page)
+        if (typeof window !== 'undefined' && window.gtag) {
+          window.gtag('event', 'purchase', {
+            transaction_id: orderId,
+            value: parseFloat(amount) || 0,
+            currency: 'TRY',
+            items: [{ item_id: orderId, item_name: 'IBAN Payment', price: parseFloat(amount) || 0, quantity: 1 }]
+          })
+          console.log('Google Ads conversion fired for IBAN order:', orderId)
+        }
         setStep('waiting')
         toast.success('Ödeme bildiriminiz alındı!')
       } else {

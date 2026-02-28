@@ -241,15 +241,23 @@ function IbanPaymentContent() {
             {/* Sender Name Input */}
             <div className="pt-3 border-t border-slate-700">
               <label className="block text-slate-400 text-xs uppercase tracking-wider font-semibold mb-2">
-                Gönderici Ad Soyad *
+                Gönderici Ad Soyad <span className="text-red-400">*</span> <span className="text-red-400 text-[10px] normal-case">(Zorunlu alan)</span>
               </label>
               <input
                 type="text"
                 value={senderName}
                 onChange={(e) => setSenderName(e.target.value)}
                 placeholder="Havale yapan kişinin adı soyadı"
-                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
+                className={`w-full px-4 py-3 bg-slate-800 border rounded-xl text-white placeholder-slate-500 focus:ring-1 outline-none transition-all ${
+                  senderName.trim().length > 0 && senderName.trim().length < 3 
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                    : 'border-slate-700 focus:border-emerald-500 focus:ring-emerald-500'
+                }`}
+                required
               />
+              {senderName.trim().length > 0 && senderName.trim().length < 3 && (
+                <p className="text-red-400 text-xs mt-1">⚠️ Ad soyad en az 3 karakter olmalıdır</p>
+              )}
               <p className="text-slate-500 text-xs mt-1">Havaleyi yapan kişinin bankadaki ad soyadını girin</p>
             </div>
 

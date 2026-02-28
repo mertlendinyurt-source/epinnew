@@ -22,6 +22,7 @@ export default function AdminOrders() {
   const [filteredOrders, setFilteredOrders] = useState([])
   const [statusFilter, setStatusFilter] = useState('all')
   const [riskFilter, setRiskFilter] = useState('all')
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState('all')
   const [flaggedCount, setFlaggedCount] = useState(0)
   const [processingOrder, setProcessingOrder] = useState(null)
   const [selectedOrder, setSelectedOrder] = useState(null)
@@ -54,6 +55,10 @@ export default function AdminOrders() {
     
     if (statusFilter !== 'all') {
       filtered = filtered.filter(order => order.status === statusFilter)
+    }
+
+    if (paymentMethodFilter !== 'all') {
+      filtered = filtered.filter(order => order.paymentMethod === paymentMethodFilter)
     }
     
     if (riskFilter === 'flagged') {
@@ -99,7 +104,7 @@ export default function AdminOrders() {
     
     setFilteredOrders(filtered)
     setCurrentPage(1) // Reset to first page when filter changes
-  }, [statusFilter, riskFilter, orders, emailSearch, phoneSearch, orderIdSearch, playerIdSearch])
+  }, [statusFilter, paymentMethodFilter, riskFilter, orders, emailSearch, phoneSearch, orderIdSearch, playerIdSearch])
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage)
@@ -505,6 +510,18 @@ export default function AdminOrders() {
                     <SelectItem value="paid" className="text-white">Ödendi</SelectItem>
                     <SelectItem value="failed" className="text-white">Başarısız</SelectItem>
                     <SelectItem value="refunded" className="text-white">İade</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
+                  <SelectTrigger className="w-full lg:w-[150px] bg-slate-800 border-slate-700 text-white text-sm">
+                    <SelectValue placeholder="Ödeme yöntemi" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-700">
+                    <SelectItem value="all" className="text-white">Tüm Ödemeler</SelectItem>
+                    <SelectItem value="iban" className="text-white">🏦 IBAN</SelectItem>
+                    <SelectItem value="card" className="text-white">💳 Kredi Kartı</SelectItem>
+                    <SelectItem value="balance" className="text-white">💰 Bakiye</SelectItem>
+                    <SelectItem value="payyeen" className="text-white">💳 Payyeen</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

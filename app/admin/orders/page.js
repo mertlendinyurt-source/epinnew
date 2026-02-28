@@ -22,6 +22,7 @@ export default function AdminOrders() {
   const [filteredOrders, setFilteredOrders] = useState([])
   const [statusFilter, setStatusFilter] = useState('all')
   const [riskFilter, setRiskFilter] = useState('all')
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState('all')
   const [flaggedCount, setFlaggedCount] = useState(0)
   const [processingOrder, setProcessingOrder] = useState(null)
   const [selectedOrder, setSelectedOrder] = useState(null)

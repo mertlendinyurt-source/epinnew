@@ -9886,6 +9886,24 @@ export async function POST(request) {
 
       await db.collection('ticket_messages').insertOne(ticketMessage);
 
+      // 🤖 Otomatik admin yanıtı
+      const autoReply = {
+        id: uuidv4(),
+        ticketId: ticket.id,
+        sender: 'admin',
+        adminUsername: 'admin',
+        message: 'Canlı desteğe bağlanarak bilgi alın. Çalışma saatleri sabah 08:30 - akşam 22:00 arasında aktif olmaktadır. Bu süre içinde bağlanarak bilgi alabilirsiniz. Lütfen bağlanmadan, bilgi almadan herhangi bir işlem yapmayınız. Teşekkür ederiz.',
+        isAutoReply: true,
+        createdAt: new Date(Date.now() + 1000) // 1 saniye sonra (sıralama için)
+      };
+      await db.collection('ticket_messages').insertOne(autoReply);
+
+      // Ticket durumunu güncelle - admin yanıt verdi
+      await db.collection('tickets').updateOne(
+        { id: ticket.id },
+        { $set: { status: 'waiting_user', userCanReply: true, lastMessageBy: 'admin', updatedAt: new Date() } }
+      );
+
       return NextResponse.json({
         success: true,
         message: 'Destek talebiniz oluşturuldu',

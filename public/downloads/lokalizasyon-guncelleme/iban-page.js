@@ -161,6 +161,20 @@ function IbanPaymentContent() {
           <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
             <p className="text-slate-500 text-xs">Sipariş No: <span className="font-mono text-slate-400">{orderId?.substring(0, 12)}...</span></p>
           </div>
+
+          {/* Kırmızı Uyarı */}
+          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mt-4">
+            <p className="text-red-400 font-bold text-sm mb-1">❌ Ödeme yapmadıysanız onaylanmayacaktır!</p>
+            <p className="text-red-300/70 text-xs">Havale/EFT yapmadan ödeme bildirimi göndermeniz durumunda siparişiniz otomatik olarak onaylanmayacak ve iptal edilecektir.</p>
+          </div>
+
+          {/* Siteye Geri Dön */}
+          <button
+            onClick={() => window.location.href = '/'}
+            className="mt-4 w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-semibold text-sm transition-all"
+          >
+            ← Siteye Geri Dön
+          </button>
         </div>
       </div>
     )

@@ -370,6 +370,17 @@ export default function AdminOrders() {
     return <Badge variant={variants[status] || 'secondary'}>{labels[status] || status}</Badge>
   }
 
+  const getIbanBadge = (order) => {
+    if (order.paymentMethod !== 'iban') return null
+    if (order.ibanPayment?.status === 'notified') {
+      return <Badge className="bg-emerald-600 text-white text-[10px]">🏦 IBAN Bildirildi</Badge>
+    }
+    if (order.ibanPayment?.status === 'waiting' || !order.ibanPayment?.status) {
+      return <Badge className="bg-yellow-600 text-white text-[10px]">🏦 IBAN Bekleniyor</Badge>
+    }
+    return null
+  }
+
   const getRiskBadge = (order) => {
     if (!order.risk) return null
     

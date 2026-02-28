@@ -56,6 +56,10 @@ export default function AdminOrders() {
     if (statusFilter !== 'all') {
       filtered = filtered.filter(order => order.status === statusFilter)
     }
+
+    if (paymentMethodFilter !== 'all') {
+      filtered = filtered.filter(order => order.paymentMethod === paymentMethodFilter)
+    }
     
     if (riskFilter === 'flagged') {
       filtered = filtered.filter(order => order.risk?.status === 'FLAGGED')

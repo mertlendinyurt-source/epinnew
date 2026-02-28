@@ -699,70 +699,76 @@ export default function AdminOrders() {
                             )}
                             {order.paymentMethod === 'iban' && order.status === 'pending' && (
                               <div className="flex flex-col gap-1">
-                                {order.ibanPayment?.senderName && (
-                                  <div className="text-[10px] text-emerald-400 font-medium mb-1">
-                                    🏦 {order.ibanPayment.senderName}
+                                {order.ibanPayment?.status === 'notified' && order.ibanPayment?.senderName ? (
+                                  <>
+                                    <div className="text-[10px] text-emerald-400 font-medium mb-1">
+                                      🏦 {order.ibanPayment.senderName}
+                                    </div>
+                                    <div className="flex gap-1">
+                                      <Button
+                                        size="sm"
+                                        onClick={async () => {
+                                          if (!confirm('IBAN ödemesini onaylamak istediğinize emin misiniz?')) return;
+                                          setProcessingOrder(order.id);
+                                          try {
+                                            const token = localStorage.getItem('adminToken');
+                                            const res = await fetch(`/api/admin/orders/${order.id}/approve-iban`, {
+                                              method: 'POST',
+                                              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                              body: JSON.stringify({})
+                                            });
+                                            const data = await res.json();
+                                            if (data.success) {
+                                              toast.success('IBAN ödemesi onaylandı!');
+                                              fetchOrders();
+                                            } else {
+                                              toast.error(data.error || 'Onaylama başarısız');
+                                            }
+                                          } catch (err) { toast.error('Hata oluştu'); }
+                                          finally { setProcessingOrder(null); }
+                                        }}
+                                        disabled={processingOrder === order.id}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-xs"
+                                      >
+                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                        {processingOrder === order.id ? '...' : 'IBAN Onayla'}
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        onClick={async () => {
+                                          if (!confirm('IBAN ödemesini reddetmek istediğinize emin misiniz?')) return;
+                                          setProcessingOrder(order.id);
+                                          try {
+                                            const token = localStorage.getItem('adminToken');
+                                            const res = await fetch(`/api/admin/orders/${order.id}/reject-iban`, {
+                                              method: 'POST',
+                                              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                              body: JSON.stringify({})
+                                            });
+                                            const data = await res.json();
+                                            if (data.success) {
+                                              toast.success('IBAN ödemesi reddedildi');
+                                              fetchOrders();
+                                            } else {
+                                              toast.error(data.error || 'İşlem başarısız');
+                                            }
+                                          } catch (err) { toast.error('Hata oluştu'); }
+                                          finally { setProcessingOrder(null); }
+                                        }}
+                                        disabled={processingOrder === order.id}
+                                        className="text-xs"
+                                      >
+                                        <XCircle className="w-3 h-3 mr-1" />
+                                        Ret
+                                      </Button>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="text-[10px] text-yellow-400">
+                                    ⏳ Bildirim bekleniyor
                                   </div>
                                 )}
-                                <div className="flex gap-1">
-                                  <Button
-                                    size="sm"
-                                    onClick={async () => {
-                                      if (!confirm('IBAN ödemesini onaylamak istediğinize emin misiniz?')) return;
-                                      setProcessingOrder(order.id);
-                                      try {
-                                        const token = localStorage.getItem('adminToken');
-                                        const res = await fetch(`/api/admin/orders/${order.id}/approve-iban`, {
-                                          method: 'POST',
-                                          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                                          body: JSON.stringify({})
-                                        });
-                                        const data = await res.json();
-                                        if (data.success) {
-                                          toast.success('IBAN ödemesi onaylandı!');
-                                          fetchOrders();
-                                        } else {
-                                          toast.error(data.error || 'Onaylama başarısız');
-                                        }
-                                      } catch (err) { toast.error('Hata oluştu'); }
-                                      finally { setProcessingOrder(null); }
-                                    }}
-                                    disabled={processingOrder === order.id}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-xs"
-                                  >
-                                    <CheckCircle className="w-3 h-3 mr-1" />
-                                    {processingOrder === order.id ? '...' : 'IBAN Onayla'}
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={async () => {
-                                      if (!confirm('IBAN ödemesini reddetmek istediğinize emin misiniz?')) return;
-                                      setProcessingOrder(order.id);
-                                      try {
-                                        const token = localStorage.getItem('adminToken');
-                                        const res = await fetch(`/api/admin/orders/${order.id}/reject-iban`, {
-                                          method: 'POST',
-                                          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                                          body: JSON.stringify({})
-                                        });
-                                        const data = await res.json();
-                                        if (data.success) {
-                                          toast.success('IBAN ödemesi reddedildi');
-                                          fetchOrders();
-                                        } else {
-                                          toast.error(data.error || 'İşlem başarısız');
-                                        }
-                                      } catch (err) { toast.error('Hata oluştu'); }
-                                      finally { setProcessingOrder(null); }
-                                    }}
-                                    disabled={processingOrder === order.id}
-                                    className="text-xs"
-                                  >
-                                    <XCircle className="w-3 h-3 mr-1" />
-                                    Ret
-                                  </Button>
-                                </div>
                               </div>
                             )}
                           </TableCell>

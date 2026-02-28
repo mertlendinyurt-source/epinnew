@@ -49,8 +49,11 @@ function IbanPaymentContent() {
           const data = await res.json()
           if (data.success && data.data.status === 'paid') {
             clearInterval(pollInterval)
-            // Redirect to success page (for Google Ads conversion)
             window.location.href = `/payment/success?orderId=${orderId}`
+          }
+          if (data.success && data.data.status === 'failed') {
+            clearInterval(pollInterval)
+            window.location.href = `/payment/failed?orderId=${orderId}`
           }
         } catch (err) {
           console.error('Poll error:', err)

@@ -8457,6 +8457,179 @@ export async function POST(request) {
       return new Response('OK', { status: 200 });
     }
 
+    // ============================================
+    // 🏦 IBAN PAYMENT ENDPOINTS
+    // ============================================
+
+    // IBAN: User notifies payment (sends sender name)
+    if (pathname.match(/^\/api\/orders\/([^\/]+)\/iban-notify$/)) {
+      const orderId = pathname.split('/')[3];
+      const authUser = verifyToken(request);
+      if (!authUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const { senderName } = body;
+      if (!senderName || senderName.trim().length < 3) {
+        return NextResponse.json({ success: false, error: 'Ad Soyad gereklidir (en az 3 karakter)' }, { status: 400 });
+      }
+
+      const order = await db.collection('orders').findOne({ id: orderId, userId: authUser.id });
+      if (!order) {
+        return NextResponse.json({ success: false, error: 'Sipariş bulunamadı' }, { status: 404 });
+      }
+
+      if (order.paymentMethod !== 'iban') {
+        return NextResponse.json({ success: false, error: 'Bu sipariş IBAN ödemesi değil' }, { status: 400 });
+      }
+
+      await db.collection('orders').updateOne(
+        { id: orderId },
+        { 
+          $set: { 
+            'ibanPayment.status': 'notified',
+            'ibanPayment.senderName': senderName.trim(),
+            'ibanPayment.notifiedAt': new Date(),
+            updatedAt: new Date()
+          } 
+        }
+      );
+
+      return NextResponse.json({ success: true, message: 'Ödeme bildirimi alındı' });
+    }
+
+    // IBAN: Poll order status (for waiting page)
+    if (pathname.match(/^\/api\/orders\/([^\/]+)\/status$/)) {
+      const orderId = pathname.split('/')[3];
+      const authUser = verifyToken(request);
+      if (!authUser) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const order = await db.collection('orders').findOne({ id: orderId, userId: authUser.id });
+      if (!order) {
+        return NextResponse.json({ success: false, error: 'Sipariş bulunamadı' }, { status: 404 });
+      }
+
+      return NextResponse.json({ 
+        success: true, 
+        data: { 
+          status: order.status,
+          ibanStatus: order.ibanPayment?.status || null,
+          deliveryStatus: order.delivery?.status || null
+        } 
+      });
+    }
+
+    // Admin: Approve IBAN payment
+    if (pathname.match(/^\/api\/admin\/orders\/([^\/]+)\/approve-iban$/)) {
+      const orderId = pathname.split('/')[4];
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const order = await db.collection('orders').findOne({ id: orderId });
+      if (!order) {
+        return NextResponse.json({ success: false, error: 'Sipariş bulunamadı' }, { status: 404 });
+      }
+
+      if (order.status === 'paid') {
+        return NextResponse.json({ success: false, error: 'Sipariş zaten onaylanmış' }, { status: 400 });
+      }
+
+      // Update order to paid
+      await db.collection('orders').updateOne(
+        { id: orderId },
+        { 
+          $set: { 
+            status: 'paid',
+            'ibanPayment.status': 'approved',
+            'ibanPayment.approvedAt': new Date(),
+            'ibanPayment.approvedBy': user.username,
+            updatedAt: new Date()
+          } 
+        }
+      );
+
+      // Assign stock (same logic as other payment methods)
+      try {
+        const product = await db.collection('products').findOne({ id: order.productId });
+        if (product) {
+          // Try to assign stock
+          const assignedStock = await db.collection('stock').findOneAndUpdate(
+            { productId: order.productId, status: 'available' },
+            { $set: { status: 'assigned', orderId: orderId, assignedAt: new Date() } },
+            { sort: { createdAt: 1 }, returnDocument: 'after' }
+          );
+
+          if (assignedStock) {
+            await db.collection('orders').updateOne(
+              { id: orderId },
+              { $set: { 
+                delivery: { status: 'delivered', items: [assignedStock.value], stockId: assignedStock.id, assignedAt: new Date() },
+                updatedAt: new Date()
+              }}
+            );
+            console.log(`IBAN: Stock assigned for order ${orderId}`);
+          } else {
+            await db.collection('orders').updateOne(
+              { id: orderId },
+              { $set: { delivery: { status: 'pending', message: 'Stok bekleniyor', items: [] }, updatedAt: new Date() } }
+            );
+            console.log(`IBAN: No stock available for order ${orderId}`);
+          }
+
+          // Try DijiPin delivery if enabled
+          const dijipinSettings = await db.collection('settings').findOne({ type: 'dijipin' });
+          if (dijipinSettings?.isEnabled && product.dijipinEnabled) {
+            try {
+              const dijipinResult = await createDijipinOrder(product.title, 1, order.playerId);
+              if (dijipinResult.success) {
+                await db.collection('orders').updateOne(
+                  { id: orderId },
+                  { $set: { 
+                    delivery: { status: 'delivered', items: [dijipinResult.pin || 'DijiPin teslim edildi'], method: 'dijipin', deliveredAt: new Date() },
+                    updatedAt: new Date()
+                  }}
+                );
+              }
+            } catch (err) {
+              console.error('IBAN DijiPin delivery error:', err);
+            }
+          }
+        }
+      } catch (stockErr) {
+        console.error('IBAN stock assignment error:', stockErr);
+      }
+
+      return NextResponse.json({ success: true, message: 'IBAN ödemesi onaylandı ve stok atandı' });
+    }
+
+    // Admin: Reject IBAN payment
+    if (pathname.match(/^\/api\/admin\/orders\/([^\/]+)\/reject-iban$/)) {
+      const orderId = pathname.split('/')[4];
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      await db.collection('orders').updateOne(
+        { id: orderId },
+        { 
+          $set: { 
+            status: 'failed',
+            'ibanPayment.status': 'rejected',
+            'ibanPayment.rejectedAt': new Date(),
+            'ibanPayment.rejectedBy': user.username,
+            updatedAt: new Date()
+          } 
+        }
+      );
+
+      return NextResponse.json({ success: true, message: 'IBAN ödemesi reddedildi' });
+    }
+
     // Admin: Create product
     if (pathname === '/api/admin/products') {
       const user = verifyAdminToken(request);

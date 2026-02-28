@@ -8498,6 +8498,20 @@ export async function POST(request) {
       return NextResponse.json({ success: true, message: 'Ödeme bildirimi alındı' });
     }
 
+    // IBAN: Mark success page as shown (prevent redirect loop)
+    if (pathname.match(/^\/api\/orders\/([^\/]+)\/mark-success-shown$/)) {
+      const oid = pathname.split('/')[3];
+      const authUser = verifyToken(request);
+      if (!authUser) {
+        return NextResponse.json({ success: true });
+      }
+      await db.collection('orders').updateOne(
+        { id: oid, userId: authUser.id },
+        { $set: { ibanSuccessShown: true, updatedAt: new Date() } }
+      );
+      return NextResponse.json({ success: true });
+    }
+
     // IBAN: Poll order status (for waiting page)
     if (pathname.match(/^\/api\/orders\/([^\/]+)\/status$/)) {
       const orderId = pathname.split('/')[3];

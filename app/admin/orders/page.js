@@ -378,10 +378,10 @@ export default function AdminOrders() {
   const getIbanBadge = (order) => {
     if (order.paymentMethod !== 'iban') return null
     if (order.ibanPayment?.status === 'notified') {
-      return <Badge className="bg-emerald-600 text-white text-[10px]">🏦 IBAN Bildirildi</Badge>
+      return <Badge className="bg-emerald-600 text-white text-[10px]">🏦 {order.ibanPayment.senderName || 'IBAN Bildirildi'}</Badge>
     }
     if (order.ibanPayment?.status === 'waiting' || !order.ibanPayment?.status) {
-      return <Badge className="bg-yellow-600 text-white text-[10px]">🏦 IBAN Bekleniyor</Badge>
+      return <Badge className="bg-yellow-600 text-white text-[10px]">⏳ İsim Bekleniyor</Badge>
     }
     return null
   }

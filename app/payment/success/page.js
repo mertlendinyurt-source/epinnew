@@ -74,6 +74,15 @@ function PaymentSuccessContent() {
         // 3. Veri geldiyse işlemleri yap
         if (orderData) {
           setOrder(orderData)
+
+          // 🏦 IBAN: Mark success page as shown (so homepage doesn't redirect again)
+          if (orderData.paymentMethod === 'iban' && token) {
+            fetch(`/api/orders/${orderId}/mark-success-shown`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify({})
+            }).catch(() => {})
+          }
           
           // --- GTM / Google Ads Tetikleme ---
           if (!purchaseTracked.current) {

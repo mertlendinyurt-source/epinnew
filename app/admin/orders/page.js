@@ -512,6 +512,18 @@ export default function AdminOrders() {
                     <SelectItem value="refunded" className="text-white">İade</SelectItem>
                   </SelectContent>
                 </Select>
+                <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
+                  <SelectTrigger className="w-full lg:w-[150px] bg-slate-800 border-slate-700 text-white text-sm">
+                    <SelectValue placeholder="Ödeme yöntemi" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-700">
+                    <SelectItem value="all" className="text-white">Tüm Ödemeler</SelectItem>
+                    <SelectItem value="iban" className="text-white">🏦 IBAN</SelectItem>
+                    <SelectItem value="card" className="text-white">💳 Kredi Kartı</SelectItem>
+                    <SelectItem value="balance" className="text-white">💰 Bakiye</SelectItem>
+                    <SelectItem value="payyeen" className="text-white">💳 Payyeen</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             

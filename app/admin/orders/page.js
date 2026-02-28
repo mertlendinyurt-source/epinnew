@@ -816,7 +816,74 @@ export default function AdminOrders() {
                       <div className="flex flex-wrap gap-2">
                         {getRiskBadge(order)}
                         {getDeliveryBadge(order)}
+                        {getIbanBadge(order)}
                       </div>
+
+                      {/* IBAN Mobile Actions */}
+                      {order.paymentMethod === 'iban' && order.status === 'pending' && (
+                        <div className="pt-2 border-t border-slate-800">
+                          {order.ibanPayment?.status === 'notified' && order.ibanPayment?.senderName ? (
+                            <div className="space-y-2">
+                              <div className="text-xs text-emerald-400 font-medium">
+                                🏦 Gönderici: {order.ibanPayment.senderName}
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={async () => {
+                                    if (!confirm('IBAN ödemesini onaylamak istediğinize emin misiniz?')) return;
+                                    setProcessingOrder(order.id);
+                                    try {
+                                      const token = localStorage.getItem('adminToken');
+                                      const res = await fetch(`/api/admin/orders/${order.id}/approve-iban`, {
+                                        method: 'POST',
+                                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({})
+                                      });
+                                      const data = await res.json();
+                                      if (data.success) { toast.success('IBAN onaylandı!'); fetchOrders(); }
+                                      else { toast.error(data.error || 'Hata'); }
+                                    } catch (err) { toast.error('Hata'); }
+                                    finally { setProcessingOrder(null); }
+                                  }}
+                                  disabled={processingOrder === order.id}
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-xs h-8 flex-1"
+                                >
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  {processingOrder === order.id ? '...' : 'IBAN Onayla'}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={async () => {
+                                    if (!confirm('Reddetmek istediğinize emin misiniz?')) return;
+                                    setProcessingOrder(order.id);
+                                    try {
+                                      const token = localStorage.getItem('adminToken');
+                                      const res = await fetch(`/api/admin/orders/${order.id}/reject-iban`, {
+                                        method: 'POST',
+                                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({})
+                                      });
+                                      const data = await res.json();
+                                      if (data.success) { toast.success('Reddedildi'); fetchOrders(); }
+                                      else { toast.error(data.error || 'Hata'); }
+                                    } catch (err) { toast.error('Hata'); }
+                                    finally { setProcessingOrder(null); }
+                                  }}
+                                  disabled={processingOrder === order.id}
+                                  className="text-xs h-8"
+                                >
+                                  <XCircle className="w-3 h-3 mr-1" />
+                                  Ret
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-[10px] text-yellow-400">⏳ Bildirim bekleniyor</div>
+                          )}
+                        </div>
+                      )}
                       
                       <div className="flex items-center justify-between pt-2">
                         <span className="text-slate-500 text-xs">

@@ -1696,7 +1696,7 @@ async function sendPaymentFailedEmail(db, order, user) {
         <li>Tutar: ${(order.amount || 0).toFixed(2)} TL</li>
       </ul>
       
-      <p style="margin-top:16px;">Farklı bir kart ile tekrar ödeme yapmayı deneyebilirsiniz.</p>
+      <p style="margin-top:16px;">Farklı bir banka kartı ile tekrar ödeme yapmayı deneyebilir veya <strong>IBAN (Havale/EFT)</strong> seçeneğini kullanabilirsiniz.</p>
     `,
     cta: {
       text: 'Tekrar Dene',

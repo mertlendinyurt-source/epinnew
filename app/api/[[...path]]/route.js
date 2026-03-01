@@ -1400,7 +1400,7 @@ async function sendPaymentFailedSms(db, order, user) {
   }
   
   const customerName = user.firstName || user.name || 'Müşteri';
-  const message = `${customerName} Merhaba, odemeniz basarisiz oldu. Garanti bankasi kartlari kabul edilmemektedir. Lutfen baska bir kart ile tekrar deneyin. pinly.com.tr - PINLY`;
+  const message = `${customerName} Merhaba, odemeniz basarisiz oldu. Garanti Bankasi ve Ziraat Bankasi kartlari su anda bakimdadir. Lutfen baska bir banka karti ile tekrar deneyin. pinly.com.tr - PINLY`;
   return sendSms(db, user.phone, message, 'payment_failed', order.id);
 }
 

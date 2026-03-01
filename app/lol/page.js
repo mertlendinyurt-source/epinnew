@@ -1986,6 +1986,41 @@ export default function LolPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* IBAN Payment Option */}
+                    <div 
+                      onClick={() => setPaymentMethod('iban')}
+                      className={`relative p-4 md:p-5 rounded-lg border-2 cursor-pointer transition-all mt-3 ${
+                        paymentMethod === 'iban'
+                          ? 'bg-emerald-900/20 border-emerald-500'
+                          : 'bg-[#12161D] border-white/10 hover:border-white/20'
+                      }`}
+                    >
+                      {paymentMethod === 'iban' && (
+                        <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                      
+                      <div className="mb-3">
+                        <div className="text-base md:text-lg font-bold text-white mb-1 flex items-center gap-2">
+                          <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                          </svg>
+                          Havale / EFT (IBAN)
+                        </div>
+                        <div className="inline-block px-2 py-0.5 rounded bg-emerald-500/20 text-[11px] text-emerald-400 font-semibold">
+                          Anında teslimat
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-white/60 text-xs">
+                        <svg className="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                        </svg>
+                        Tüm bankalardan havale yapabilirsiniz
+                      </div>
+                    </div>
                   </div>
                 </div>
 

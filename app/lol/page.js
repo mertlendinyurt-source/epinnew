@@ -819,6 +819,12 @@ export default function LolPage() {
           return
         }
 
+        // IBAN payment - redirect to IBAN page
+        if (data.data.paymentProvider === 'iban') {
+          window.location.href = `/payment/iban?orderId=${data.data.orderId}&amount=${data.data.amount}`
+          return
+        }
+
         // Payyeen payment - Form POST redirect
         if (data.data.paymentProvider === 'payyeen' && data.data.formData && data.data.paymentUrl) {
           const form = document.createElement('form')

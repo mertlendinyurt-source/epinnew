@@ -1686,7 +1686,7 @@ async function sendPaymentFailedEmail(db, order, user) {
       
       <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:16px;margin:20px 0;">
         <p style="margin:0 0 8px 0;font-weight:bold;color:#856404;">⚠️ Banka Bakım Bildirimi</p>
-        <p style="margin:0;color:#856404;font-size:14px;">Garanti Bankası ve Ziraat Bankası ödeme sistemleri şu anda bakımdadır. Lütfen <strong>farklı bir banka kartı</strong> ile tekrar deneyin.</p>
+        <p style="margin:0;color:#856404;font-size:14px;">Garanti Bankası ve Ziraat Bankası ödeme sistemleri şu anda bakımdadır. Lütfen <strong>farklı bir banka kartı</strong> ile tekrar deneyin veya <strong>IBAN (Havale/EFT)</strong> seçeneği ile ödeme yapın.</p>
       </div>
       
       <p style="margin-top:20px;"><strong>Sipariş Bilgileri:</strong></p>
@@ -1696,7 +1696,7 @@ async function sendPaymentFailedEmail(db, order, user) {
         <li>Tutar: ${(order.amount || 0).toFixed(2)} TL</li>
       </ul>
       
-      <p style="margin-top:16px;">Farklı bir kart ile tekrar ödeme yapmayı deneyebilirsiniz.</p>
+      <p style="margin-top:16px;">Farklı bir banka kartı ile tekrar ödeme yapmayı deneyebilir veya <strong>IBAN (Havale/EFT)</strong> seçeneğini kullanabilirsiniz.</p>
     `,
     cta: {
       text: 'Tekrar Dene',

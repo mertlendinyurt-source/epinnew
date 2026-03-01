@@ -1685,8 +1685,8 @@ async function sendPaymentFailedEmail(db, order, user) {
       <p>Siparişiniz için yapılan ödeme işlemi başarısız oldu.</p>
       
       <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:16px;margin:20px 0;">
-        <p style="margin:0 0 8px 0;font-weight:bold;color:#856404;">⚠️ Garanti Bankası Kartları</p>
-        <p style="margin:0;color:#856404;font-size:14px;">Garanti bankası sanal kart ve banka kartları ile ödeme yapılamamaktadır. Lütfen <strong>başka bir banka kartı</strong> ile tekrar deneyin.</p>
+        <p style="margin:0 0 8px 0;font-weight:bold;color:#856404;">⚠️ Banka Bakım Bildirimi</p>
+        <p style="margin:0;color:#856404;font-size:14px;">Garanti Bankası ve Ziraat Bankası ödeme sistemleri şu anda bakımdadır. Lütfen <strong>farklı bir banka kartı</strong> ile tekrar deneyin.</p>
       </div>
       
       <p style="margin-top:20px;"><strong>Sipariş Bilgileri:</strong></p>

@@ -11742,6 +11742,11 @@ export async function PUT(request) {
         return NextResponse.json({ success: false, error: 'Bu sipariş doğrulama gerektirmiyor' }, { status: 400 });
       }
 
+      // 🔒 GÜVENLİK: Ödeme yapılmadan doğrulama onaylanamaz!
+      if (order.status !== 'paid') {
+        return NextResponse.json({ success: false, error: 'Bu sipariş henüz ödenmemiş! Ödeme yapılmadan doğrulama onaylanamaz.' }, { status: 400 });
+      }
+
       if (action === 'approve') {
         // Update verification status to approved
         await db.collection('orders').updateOne(

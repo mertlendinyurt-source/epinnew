@@ -97,6 +97,16 @@ function IbanPaymentContent() {
         body: JSON.stringify({ senderName: senderName.trim() })
       })
       const data = await res.json()
+      
+      // Token expired - redirect to login
+      if (res.status === 401) {
+        toast.error('Oturumunuz sonlandı. Lütfen tekrar giriş yapın.')
+        localStorage.removeItem('userToken')
+        localStorage.removeItem('userData')
+        setTimeout(() => { window.location.href = '/' }, 2000)
+        return
+      }
+      
       if (data.success) {
         // Fire Google Ads conversion event (so ROAS counts even if user leaves page)
         if (typeof window !== 'undefined' && window.gtag) {

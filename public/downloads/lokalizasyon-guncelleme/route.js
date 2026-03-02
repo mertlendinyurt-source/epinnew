@@ -9,7 +9,7 @@ import nodemailer from 'nodemailer';
 
 const MONGO_URL = process.env.MONGO_URL;
 const DB_NAME = process.env.DB_NAME || 'pinly_store';
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'pnly-x9k2m-secret-jwt-2025-!@#$%^&*';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 const APP_VERSION = '1.0.0';
 
@@ -9300,6 +9300,14 @@ export async function POST(request) {
         );
       }
 
+      // 🔒 GÜVENLİK: Ödeme yapılmadan onaylanamaz!
+      if (order.status !== 'paid') {
+        return NextResponse.json(
+          { success: false, error: 'Bu sipariş henüz ödenmemiş! Ödeme yapılmadan onaylanamaz.' },
+          { status: 400 }
+        );
+      }
+
       // Get user and product for email
       const orderUser = await db.collection('users').findOne({ id: order.userId });
       const product = await db.collection('products').findOne({ id: order.productId });
@@ -11740,6 +11748,11 @@ export async function PUT(request) {
 
       if (!order.verification || !order.verification.required) {
         return NextResponse.json({ success: false, error: 'Bu sipariş doğrulama gerektirmiyor' }, { status: 400 });
+      }
+
+      // 🔒 GÜVENLİK: Ödeme yapılmadan doğrulama onaylanamaz!
+      if (order.status !== 'paid') {
+        return NextResponse.json({ success: false, error: 'Bu sipariş henüz ödenmemiş! Ödeme yapılmadan doğrulama onaylanamaz.' }, { status: 400 });
       }
 
       if (action === 'approve') {

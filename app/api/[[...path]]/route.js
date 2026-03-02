@@ -9300,6 +9300,14 @@ export async function POST(request) {
         );
       }
 
+      // 🔒 GÜVENLİK: Ödeme yapılmadan onaylanamaz!
+      if (order.status !== 'paid') {
+        return NextResponse.json(
+          { success: false, error: 'Bu sipariş henüz ödenmemiş! Ödeme yapılmadan onaylanamaz.' },
+          { status: 400 }
+        );
+      }
+
       // Get user and product for email
       const orderUser = await db.collection('users').findOne({ id: order.userId });
       const product = await db.collection('products').findOne({ id: order.productId });

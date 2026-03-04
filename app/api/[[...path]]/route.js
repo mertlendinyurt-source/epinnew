@@ -3376,9 +3376,19 @@ export async function GET(request) {
         );
       }
 
-      // Get user's orders
+      // Get user's orders - ONLY paid or IBAN notified orders (hide unpaid/abandoned)
       const orders = await db.collection('orders')
-        .find({ userId: authUser.id })
+        .find({ 
+          userId: authUser.id,
+          $or: [
+            { status: 'paid' },
+            { status: 'refunded' },
+            { paymentMethod: 'iban', 'ibanPayment.status': 'notified' },
+            { paymentMethod: 'iban', 'ibanPayment.status': 'approved' },
+            { paymentMethod: 'balance' },
+            { delivery: { $exists: true, $ne: null } }
+          ]
+        })
         .sort({ createdAt: -1 })
         .toArray();
 
@@ -11750,12 +11760,12 @@ export async function PUT(request) {
         return NextResponse.json({ success: false, error: 'Bu sipariş doğrulama gerektirmiyor' }, { status: 400 });
       }
 
-      // 🔒 GÜVENLİK: Ödeme yapılmadan doğrulama onaylanamaz!
-      if (order.status !== 'paid') {
-        return NextResponse.json({ success: false, error: 'Bu sipariş henüz ödenmemiş! Ödeme yapılmadan doğrulama onaylanamaz.' }, { status: 400 });
-      }
-
       if (action === 'approve') {
+        // 🔒 GÜVENLİK: Ödeme yapılmadan doğrulama onaylanamaz!
+        if (order.status !== 'paid') {
+          return NextResponse.json({ success: false, error: 'Bu sipariş henüz ödenmemiş! Ödeme yapılmadan doğrulama onaylanamaz.' }, { status: 400 });
+        }
+
         // Update verification status to approved
         await db.collection('orders').updateOne(
           { id: orderId },

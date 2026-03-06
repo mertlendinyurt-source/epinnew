@@ -1027,6 +1027,90 @@ backend:
         agent: "testing"
         comment: "GET /api/geo working correctly. Returns valid JSON response with all required fields: countryCode, country, isTurkey (boolean), locale (tr/en), currency (TRY/USD). For local IPs defaults to TR (Turkey) as expected. Field validation passed - countryCode is 2-character string, proper data types for all fields. Response format: countryCode=TR, locale=tr, currency=TRY. Endpoint tested successfully."
 
+  - task: "IBAN Payment - User Registration & Authentication"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "POST /api/auth/register and POST /api/auth/login working correctly for IBAN flow. User registration with firstName, lastName, email (test-iban@test.com), phone (5551234567), password (Test123!) successful. JWT token generation working correctly. Login with existing user works when registration returns 409 conflict."
+
+  - task: "IBAN Payment - Order Creation"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "POST /api/orders with paymentMethod: 'iban' working correctly. Creates order with pending status, sets ibanPayment.status to 'waiting'. Requires user authentication (JWT token). Validates productId, playerId, playerName, termsAccepted. Returns orderId and paymentProvider: 'iban'. Full order creation flow tested successfully."
+
+  - task: "IBAN Payment - User Notification"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "POST /api/orders/{orderId}/iban-notify working correctly. Accepts senderName and updates ibanPayment.status to 'notified', sets notifiedAt timestamp and senderName field. Requires user authentication (JWT token). Only works for orders with paymentMethod: 'iban'. Returns success response after notification."
+
+  - task: "IBAN Payment - Status Verification"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "GET /api/account/orders/{orderId} working correctly for IBAN orders. Returns complete order details including ibanPayment object with status, senderName, timestamps. Status transitions verified: waiting -> notified -> approved. User can only access their own orders (security verified)."
+
+  - task: "IBAN Payment - Admin Authentication"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "POST /api/admin/login working correctly with username: 'admin', password: 'admin123'. Returns admin JWT token with proper payload including username and role. Token authentication required for admin IBAN operations."
+
+  - task: "IBAN Payment - Admin Approval"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "POST /api/admin/orders/{orderId}/approve-iban working correctly. Requires admin JWT authentication. Updates ibanPayment.status to 'approved', sets approvedAt timestamp and approvedBy admin username. Changes order status from 'pending' to 'paid'. Triggers stock assignment (gracefully handles out of stock scenario with delivery.status: 'pending'). Returns success message 'IBAN ödemesi onaylandı ve stok atandı'."
+
+  - task: "IBAN Payment - Complete Flow Integration"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Complete IBAN payment flow tested successfully: (1) User registration/login ✅ (2) Product selection ✅ (3) IBAN order creation ✅ (4) Order status verification (pending, iban waiting) ✅ (5) User payment notification ✅ (6) IBAN status verification (notified) ✅ (7) Admin authentication ✅ (8) Admin approval ✅ (9) Final status verification (paid, approved) ✅. All 9 steps completed successfully. Stock assignment attempted but no stock available (expected behavior)."
+
   - task: "Product USD Price Fields"
     implemented: true
     working: true
@@ -1174,19 +1258,14 @@ frontend:
 
 metadata:
   created_by: "testing_agent"
-  version: "6.1"
-  test_sequence: 7
+  version: "6.2"
+  test_sequence: 8
   run_ui: true
-  last_updated: "2025-12-28 00:45:00"
+  last_updated: "2025-01-04 05:30:00"
 
 test_plan:
   current_focus:
-    - "Payyeen Admin Settings - GET"
-    - "Payyeen Admin Settings - POST"
-    - "Payyeen Payment Methods Integration"
-    - "Payyeen Order Creation (UC)"
-    - "Payyeen Order Creation (Accounts)"
-    - "Payyeen Webhook Callback"
+    - "IBAN Payment - Complete Flow Integration"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -1299,3 +1378,5 @@ agent_communication:
 
   - agent: "testing"
     message: "Payyeen Payment Integration backend testing COMPLETED. All 6 Payyeen backend tasks tested and verified working (100% success rate). TESTED FEATURES: ✅ Payyeen Admin Settings GET - Requires admin JWT authentication, returns proper structure with masked API key, isConfigured status. ✅ Payyeen Admin Settings POST - Validates required fields (apiKey), saves with AES-256-GCM encryption, supports toggle functionality, rate limiting (10/hr). ✅ Payment Methods Integration - Public endpoint includes payyeen field with available boolean. ✅ UC Order Creation - Requires user JWT auth (AUTH_REQUIRED code), creates orders with paymentMethod 'payyeen', returns correct Payyeen Quick Checkout data structure. ✅ Account Order Creation - Same pattern as UC orders, handles no accounts scenario gracefully. ✅ Webhook Callback - Processes payment.success/failed events, extracts orderId from PINLY-{orderId} description format, idempotency protection working, creates payment records, stock assignment attempted, returns 'OK' response. ALL CRITICAL SECURITY FEATURES VERIFIED: API key encryption/decryption, masked responses, authentication requirements, proper status transitions, duplicate callback handling. Payyeen payment integration is fully functional and ready for production use."
+  - agent: "testing"
+    message: "IBAN Payment Flow backend testing COMPLETED successfully. Complete end-to-end IBAN payment flow tested and verified working (100% success rate). ALL 9 STEPS TESTED: ✅ (1) User Registration/Login - Working correctly with JWT token generation, handles existing user login. ✅ (2) Product Selection - GET /api/products working, returns product list with proper structure. ✅ (3) IBAN Order Creation - POST /api/orders with paymentMethod='iban' creates order with pending status, sets ibanPayment.status='waiting'. ✅ (4) Order Status Verification - Order created with paymentMethod='iban', status='pending', ibanPayment object properly structured. ✅ (5) IBAN Payment Notification - POST /api/orders/{orderId}/iban-notify accepts senderName, updates ibanPayment.status='notified', sets timestamps. ✅ (6) IBAN Status Verification - Order status transitions correctly from 'waiting' to 'notified' with senderName saved. ✅ (7) Admin Authentication - POST /api/admin/login working with username='admin', password='admin123', returns admin JWT token. ✅ (8) Admin IBAN Approval - POST /api/admin/orders/{orderId}/approve-iban requires admin auth, updates ibanPayment.status='approved', changes order status to 'paid', attempts stock assignment. ✅ (9) Final Status Verification - Order status='paid', ibanPayment.status='approved', delivery attempted (gracefully handles no stock scenario). IBAN payment system is fully functional and production-ready. Complete flow from user registration to admin approval working correctly with proper authentication, status transitions, and error handling."

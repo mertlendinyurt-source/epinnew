@@ -1994,6 +1994,7 @@ export default function LolPage() {
                     )}
 
                     {/* IBAN Payment Option */}
+                    {(!paymentMethods?.iban || paymentMethods?.iban?.available) && (
                     <div 
                       onClick={() => setPaymentMethod('iban')}
                       className={`relative p-4 md:p-5 rounded-lg border-2 cursor-pointer transition-all mt-3 ${
@@ -2027,6 +2028,7 @@ export default function LolPage() {
                         Tüm bankalardan havale yapabilirsiniz
                       </div>
                     </div>
+                    )}
                   </div>
                 </div>
 

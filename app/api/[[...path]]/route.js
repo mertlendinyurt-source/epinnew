@@ -2710,6 +2710,7 @@ export async function GET(request) {
       const shopierSettings = await db.collection('shopier_settings').findOne({ isActive: true });
       const shopinextSettings = await db.collection('shopinext_settings').findOne({ isActive: true });
       const payeenSettings = await db.collection('payyeen_settings').findOne({ isActive: true });
+      const ibanSettings = await db.collection('iban_settings').findOne({ id: 'main' });
       
       // Check if Shopinext is configured via environment variables
       const shopinextFromEnv = process.env.SHOPINEXT_CLIENT_ID && 
@@ -2749,6 +2750,10 @@ export async function GET(request) {
           payyeen: {
             available: payeenAvailable,
             name: 'Kredi / Banka Kartı'
+          },
+          iban: {
+            available: ibanSettings ? ibanSettings.isEnabled !== false : true,
+            name: 'Havale / EFT (IBAN)'
           }
         }
       });
@@ -3199,6 +3204,24 @@ export async function GET(request) {
           mode: settings.mode || 'production',
           updatedBy: settings.updatedBy,
           updatedAt: settings.updatedAt
+        }
+      });
+    }
+
+    // Admin: Get IBAN Settings (GET)
+    if (pathname === '/api/admin/settings/iban') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+      const settings = await db.collection('iban_settings').findOne({ id: 'main' });
+      return NextResponse.json({
+        success: true,
+        data: {
+          isEnabled: settings ? settings.isEnabled !== false : true,
+          iban: settings?.iban || 'TR16 0006 4000 0014 3790 3852 51',
+          accountName: settings?.accountName || 'PİNLY ELEKTRONİK HİZMET TİCARET A.Ş',
+          updatedAt: settings?.updatedAt || null
         }
       });
     }
@@ -9152,6 +9175,31 @@ export async function POST(request) {
           updatedAt: encryptedSettings.updatedAt
         }
       });
+    }
+
+    // Admin: Save IBAN Settings (POST - toggle on/off)
+    if (pathname === '/api/admin/settings/iban') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'Yetkisiz erişim' }, { status: 401 });
+      }
+
+      const { isEnabled, iban, accountName } = body;
+
+      await db.collection('iban_settings').updateOne(
+        { id: 'main' },
+        { $set: { 
+          id: 'main',
+          isEnabled: isEnabled !== false,
+          iban: iban || 'TR16 0006 4000 0014 3790 3852 51',
+          accountName: accountName || 'PİNLY ELEKTRONİK HİZMET TİCARET A.Ş',
+          updatedBy: user.username || user.email,
+          updatedAt: new Date()
+        }},
+        { upsert: true }
+      );
+
+      return NextResponse.json({ success: true, message: isEnabled !== false ? 'IBAN ödemesi aktif' : 'IBAN ödemesi pasif' });
     }
 
     // Admin: Save Payyeen payment settings (encrypted)

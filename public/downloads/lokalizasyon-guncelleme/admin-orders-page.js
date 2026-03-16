@@ -54,7 +54,11 @@ export default function AdminOrders() {
     let filtered = orders
     
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(order => order.status === statusFilter)
+      if (statusFilter === 'stock_pending') {
+        filtered = filtered.filter(order => order.status === 'paid' && order.delivery?.status === 'pending')
+      } else {
+        filtered = filtered.filter(order => order.status === statusFilter)
+      }
     }
 
     if (paymentMethodFilter !== 'all') {
@@ -508,6 +512,7 @@ export default function AdminOrders() {
                     <SelectItem value="all" className="text-white">Tümü</SelectItem>
                     <SelectItem value="pending" className="text-white">Bekliyor</SelectItem>
                     <SelectItem value="paid" className="text-white">Ödendi</SelectItem>
+                    <SelectItem value="stock_pending" className="text-white">⏳ Stok Bekliyor</SelectItem>
                     <SelectItem value="failed" className="text-white">Başarısız</SelectItem>
                     <SelectItem value="refunded" className="text-white">İade</SelectItem>
                   </SelectContent>

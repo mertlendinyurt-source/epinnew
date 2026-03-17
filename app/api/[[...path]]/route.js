@@ -2730,11 +2730,8 @@ export async function GET(request) {
         shopinextAvailable = true;
       }
 
-      // Payyeen available if settings exist and isEnabled
-      let payeenAvailable = false;
-      if (payeenSettings) {
-        payeenAvailable = payeenSettings.isEnabled !== false; // default true if settings exist
-      }
+      // Shoppiyen available if API key is set in env
+      const shoppiyenAvailable = !!(process.env.SHOPPIYEN_API_KEY);
       
       return NextResponse.json({
         success: true,
@@ -2748,7 +2745,7 @@ export async function GET(request) {
             name: 'Kredi / Banka Kartı'
           },
           payyeen: {
-            available: payeenAvailable,
+            available: shoppiyenAvailable,
             name: 'Kredi / Banka Kartı'
           },
           iban: {
@@ -2761,8 +2758,8 @@ export async function GET(request) {
 
 
     // ============================================
-    // 💳 PAYYEEN SUCCESS HANDLER - Ödeme başarılı
-    // URL: /api/payment/payyeen/success/{orderId}?transaction_id=xxx
+    // 💳 SHOPPIYEN SUCCESS HANDLER - Ödeme başarılı
+    // URL: /api/payment/payyeen/success/{orderId}?status=success&transaction_id=xxx&order_id=xxx&hash=xxx
     // ============================================
     if (pathname.startsWith('/api/payment/payyeen/success/')) {
       const pathParts = pathname.split('/');
@@ -2770,13 +2767,16 @@ export async function GET(request) {
       const url = new URL(request.url);
       const transactionId = url.searchParams.get('transaction_id');
       const epin = url.searchParams.get('epin');
+      const callbackHash = url.searchParams.get('hash');
+      const callbackStatus = url.searchParams.get('status');
+      const callbackUuid = url.searchParams.get('uuid');
       
       const host = request.headers.get('host');
       const protoHeader = request.headers.get('x-forwarded-proto') || 'https';
       const protocol = protoHeader.split(',')[0].trim();
       const publicBaseUrl = host ? `${protocol}://${host}` : BASE_URL;
       
-      console.log('Payyeen SUCCESS:', { orderId, transactionId });
+      console.log('Shoppiyen SUCCESS:', { orderId, transactionId, callbackStatus, callbackUuid });
       
       if (!orderId) return NextResponse.redirect(`${publicBaseUrl}/payment/failed?error=missing_order`);
       
@@ -2785,20 +2785,42 @@ export async function GET(request) {
       if (order.status === 'paid') return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
       if (order.status === 'failed') return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}`);
       
-      // UPDATE ORDER TO PAID
-      await db.collection('orders').updateOne(
-        { id: orderId },
-        { $set: { status: 'paid', paymentProvider: 'payyeen', paymentId: transactionId || null, updatedAt: new Date() } }
-      );
+      // Verify with Shoppiyen webhook verify API
+      let verified = false;
+      const SHOPPIYEN_API_KEY = process.env.SHOPPIYEN_API_KEY || '';
+      if (callbackHash && SHOPPIYEN_API_KEY) {
+        try {
+          const verifyRes = await fetch('https://shoppiyen.com/api/sale/webhook/verify', {
+            method: 'POST',
+            headers: { 'api-key': SHOPPIYEN_API_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_id: orderId, uuid: callbackUuid || '', status: callbackStatus || 'successful', hash: callbackHash })
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData.is_valid && verifyData.official_status === 'successful') {
+            verified = true;
+          }
+          console.log('Shoppiyen verify result:', verifyData);
+        } catch (verifyErr) {
+          console.error('Shoppiyen verify error:', verifyErr);
+        }
+      }
+      
+      // Accept if verified OR if status=success (fallback for redirects)
+      if (verified || callbackStatus === 'success') {
+        // UPDATE ORDER TO PAID
+        await db.collection('orders').updateOne(
+          { id: orderId },
+          { $set: { status: 'paid', paymentProvider: 'shoppiyen', paymentId: transactionId || null, shoppiyen: { verified, uuid: callbackUuid, hash: callbackHash }, updatedAt: new Date() } }
+        );
       
       await db.collection('payments').insertOne({
-        id: uuidv4(), orderId, provider: 'payyeen', providerTxnId: transactionId || null,
+        id: uuidv4(), orderId, provider: 'shoppiyen', providerTxnId: transactionId || null,
         status: 'paid', amount: order.amount, currency: order.currency || 'TRY',
-        source: 'success_url', rawPayload: { transactionId, epin }, verifiedAt: new Date(), createdAt: new Date()
+        source: 'success_url', rawPayload: { transactionId, epin, callbackHash, callbackUuid, verified }, verifiedAt: new Date(), createdAt: new Date()
       });
       
       await db.collection('payment_requests').updateOne(
-        { orderId, provider: 'payyeen' },
+        { orderId, provider: 'shoppiyen' },
         { $set: { status: 'paid', transactionId, updatedAt: new Date() } }
       );
       
@@ -2848,8 +2870,8 @@ export async function GET(request) {
     }
 
     // ============================================
-    // 💳 PAYYEEN FAIL HANDLER - Ödeme başarısız
-    // URL: /api/payment/payyeen/fail/{orderId}?message=xxx
+    // 💳 SHOPPIYEN FAIL HANDLER - Ödeme başarısız
+    // URL: /api/payment/payyeen/fail/{orderId}?status=error&message=xxx
     // ============================================
     if (pathname.startsWith('/api/payment/payyeen/fail/')) {
       const pathParts = pathname.split('/');
@@ -2862,12 +2884,12 @@ export async function GET(request) {
       const protocol = protoHeader.split(',')[0].trim();
       const publicBaseUrl = host ? `${protocol}://${host}` : BASE_URL;
       
-      console.log('Payyeen FAIL:', { orderId, errorMessage });
+      console.log('Shoppiyen FAIL:', { orderId, errorMessage });
       
       if (orderId) {
         await db.collection('orders').updateOne(
           { id: orderId, status: 'pending' },
-          { $set: { status: 'failed', paymentProvider: 'payyeen', failReason: errorMessage || 'Ödeme başarısız', updatedAt: new Date() } }
+          { $set: { status: 'failed', paymentProvider: 'shoppiyen', failReason: errorMessage || 'Ödeme başarısız', updatedAt: new Date() } }
         );
         const failedOrder = await db.collection('orders').findOne({ id: orderId });
         if (failedOrder && failedOrder.type === 'account' && failedOrder.accountId) {
@@ -7107,27 +7129,16 @@ export async function POST(request) {
       }
 
       // ============================================
-      // 💳 PAYYEEN PAYMENT FLOW
+      // 💳 SHOPPIYEN PAYMENT FLOW (Quick Checkout)
       // ============================================
       if (paymentMethod === 'payyeen') {
-        const payeenSettings = await db.collection('payyeen_settings').findOne({ isActive: true });
+        const SHOPPIYEN_API_ID = process.env.SHOPPIYEN_API_ID || '92';
+        const SHOPPIYEN_API_KEY = process.env.SHOPPIYEN_API_KEY || '';
         
-        if (!payeenSettings) {
+        if (!SHOPPIYEN_API_KEY) {
           return NextResponse.json(
-            { success: false, error: 'Payyeen ödeme sistemi yapılandırılmamış.' },
+            { success: false, error: 'Shoppiyen ödeme sistemi yapılandırılmamış.' },
             { status: 503 }
-          );
-        }
-
-        // Decrypt API key
-        let payeenApiKey;
-        try {
-          payeenApiKey = decrypt(payeenSettings.apiKey);
-        } catch (error) {
-          console.error('Payyeen settings decryption failed');
-          return NextResponse.json(
-            { success: false, error: 'Ödeme sistemi yapılandırma hatası' },
-            { status: 500 }
           );
         }
 
@@ -7168,25 +7179,39 @@ export async function POST(request) {
           console.error('Order created email failed:', err)
         );
 
-        // Build Payyeen Quick Checkout form data
-        // success/cancel URL'ler /api/payment/payyeen/return'e gider, oradan sipariş işlenir ve success sayfasına yönlendirilir
-        const payeenFormData = {
-          api_key: payeenApiKey,
+        // Build Shoppiyen Quick Checkout signature
+        const crypto = require('crypto');
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        
+        const payload = {
+          api_id: SHOPPIYEN_API_ID,
           amount: orderAmount.toFixed(2),
+          cancel_url: `${BASE_URL}/api/payment/payyeen/fail/${order.id}`,
           currency: 'TRY',
           description: `PINLY-${order.id}`,
+          order_id: order.id,
           success_url: `${BASE_URL}/api/payment/payyeen/success/${order.id}`,
-          cancel_url: `${BASE_URL}/api/payment/payyeen/fail/${order.id}`
+          ts: timestamp
+        };
+
+        // Sort keys alphabetically and build query string (RFC3986)
+        const sortedKeys = Object.keys(payload).sort();
+        const queryString = sortedKeys.map(key => `${encodeURIComponent(key)}=${encodeURIComponent(payload[key])}`).join('&');
+        const signature = crypto.createHmac('sha256', SHOPPIYEN_API_KEY).update(queryString).digest('hex');
+
+        const formData = {
+          ...payload,
+          signature: signature
         };
 
         // Store payment request for audit trail
         await db.collection('payment_requests').insertOne({
           orderId: order.id,
-          provider: 'payyeen',
-          description: payeenFormData.description,
+          provider: 'shoppiyen',
+          description: formData.description,
           amount: orderAmount,
           currency: 'TRY',
-          apiKey: '***MASKED***',
+          apiId: SHOPPIYEN_API_ID,
           createdAt: new Date()
         });
 
@@ -7194,8 +7219,8 @@ export async function POST(request) {
           success: true,
           data: {
             orderId: order.id,
-            paymentUrl: 'https://payyeen.com/checkout/quick',
-            formData: payeenFormData,
+            paymentUrl: 'https://shoppiyen.com/checkout/quick',
+            formData: formData,
             paymentProvider: 'payyeen'
           }
         });

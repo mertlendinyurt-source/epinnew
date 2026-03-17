@@ -1400,7 +1400,7 @@ async function sendPaymentFailedSms(db, order, user) {
   }
   
   const customerName = user.firstName || user.name || 'Müşteri';
-  const message = `${customerName} Merhaba, odemeniz basarisiz oldu. Garanti Bankasi ve Ziraat Bankasi kartlari su anda bakimdadir. Lutfen baska bir banka karti ile tekrar deneyin. pinly.com.tr - PINLY`;
+  const message = `${customerName} Merhaba, odemeniz basarisiz oldu. Garanti Bankasi kartlari su anda bakimdadir. Lutfen baska bir banka karti ile tekrar deneyin. pinly.com.tr - PINLY`;
   return sendSms(db, user.phone, message, 'payment_failed', order.id);
 }
 
@@ -1686,7 +1686,7 @@ async function sendPaymentFailedEmail(db, order, user) {
       
       <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:16px;margin:20px 0;">
         <p style="margin:0 0 8px 0;font-weight:bold;color:#856404;">⚠️ Banka Bakım Bildirimi</p>
-        <p style="margin:0;color:#856404;font-size:14px;">Garanti Bankası ve Ziraat Bankası ödeme sistemleri şu anda bakımdadır.</p>
+        <p style="margin:0;color:#856404;font-size:14px;">Garanti Bankası ödeme sistemleri şu anda bakımdadır. Lütfen <strong>farklı bir banka kartı</strong> ile tekrar deneyin veya <strong>IBAN (Havale/EFT)</strong> seçeneği ile ödeme yapın.</p>
       </div>
 
       <div style="background:#d4edda;border:1px solid #28a745;border-radius:8px;padding:16px;margin:20px 0;">

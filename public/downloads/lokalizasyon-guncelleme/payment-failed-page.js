@@ -45,7 +45,7 @@ function PaymentFailedContent() {
               </div>
               <div className="bg-black/30 rounded-lg p-3 border border-yellow-500/40">
                 <p className="text-white font-bold text-sm leading-relaxed">
-                  🏦 Garanti Bankası ve Ziraat Bankası ödeme sistemleri şu anda bakımdadır.
+                  🏦 Garanti Bankası ödeme sistemleri şu anda bakımdadır.
                 </p>
                 <p className="text-yellow-300 font-bold text-sm mt-2">
                   💳 Lütfen farklı bir banka kartı ile tekrar deneyiniz.

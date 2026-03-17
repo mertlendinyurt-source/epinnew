@@ -2867,6 +2867,10 @@ export async function GET(request) {
       }
       
       return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
+      } else {
+        // Verification failed or status not success
+        return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}&error=verification_failed`);
+      }
     }
 
     // ============================================

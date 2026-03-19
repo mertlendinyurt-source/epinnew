@@ -798,6 +798,10 @@ export default function OrderDetailPage() {
                     ? 'Valorant VP Paketi'
                     : order.productTitle?.toLowerCase().includes('mlbb') || order.productTitle?.toLowerCase().includes('diamond') || order.productTitle?.toLowerCase().includes('elmas')
                     ? 'MLBB Diamonds Paketi'
+                    : order.productTitle?.toLowerCase().includes('lol') || order.productTitle?.toLowerCase().includes('rp') || order.productTitle?.toLowerCase().includes('riot')
+                    ? 'League of Legends RP Paketi'
+                    : order.productTitle?.toLowerCase().includes('roblox') || order.productTitle?.toLowerCase().includes('robux')
+                    ? 'Roblox Robux Paketi'
                     : 'PUBG Mobile UC Paketi'
                   }
                 </div>

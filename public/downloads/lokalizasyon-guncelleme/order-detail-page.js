@@ -178,6 +178,10 @@ export default function OrderDetailPage() {
                       ? '✅ VP kodunuz hazır! Aşağıdaki kodu Valorant içinde kullanabilirsiniz.'
                       : order.productTitle?.toLowerCase().includes('mlbb') || order.productTitle?.toLowerCase().includes('diamond') || order.productTitle?.toLowerCase().includes('elmas')
                       ? '✅ Diamonds kodunuz hazır! Aşağıdaki kodu Mobile Legends içinde kullanabilirsiniz.'
+                      : order.productTitle?.toLowerCase().includes('lol') || order.productTitle?.toLowerCase().includes('rp') || order.productTitle?.toLowerCase().includes('riot')
+                      ? '✅ RP kodunuz hazır! Aşağıdaki kodu League of Legends içinde kullanabilirsiniz.'
+                      : order.productTitle?.toLowerCase().includes('roblox') || order.productTitle?.toLowerCase().includes('robux')
+                      ? '✅ Robux kodunuz hazır! Aşağıdaki kodu Roblox içinde kullanabilirsiniz.'
                       : '✅ UC kodunuz hazır! Aşağıdaki kodu PUBG Mobile içinde kullanabilirsiniz.'
                     }
                   </p>
@@ -274,7 +278,7 @@ export default function OrderDetailPage() {
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">2</span>
                         <div>
                           <p className="text-white font-medium">Profil → Kod Kullan bölümüne gidin</p>
-                          <p className="text-gray-400 text-xs">Ayarlar içinden &quot;Exchange Code&quot; veya &quot;Kod Kullan&quot; seçeneği</p>
+                          <p className="text-gray-400 text-xs">Ayarlar içinden "Exchange Code" veya "Kod Kullan" seçeneği</p>
                         </div>
                       </div>
                       <div className="flex gap-3">
@@ -298,8 +302,86 @@ export default function OrderDetailPage() {
                     </div>
                   )}
 
+                  {/* LOL RP Talimatları */}
+                  {(order.productTitle?.toLowerCase().includes('lol') || order.productTitle?.toLowerCase().includes('rp') || order.productTitle?.toLowerCase().includes('riot')) && (
+                    <div className="space-y-3 text-sm">
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                        <div>
+                          <p className="text-white font-medium">League of Legends oyun istemcisini açın</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                        <div>
+                          <p className="text-white font-medium">Mağaza bölümüne gidin</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                        <div>
+                          <p className="text-white font-medium">Sağ üst köşedeki "Kod Kullan" butonuna tıklayın</p>
+                          <p className="text-gray-400 text-xs">Veya Riot hesap sayfasından: account.riotgames.com</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-600 text-white flex items-center justify-center text-xs font-bold">4</span>
+                        <div>
+                          <p className="text-white font-medium">Yukarıdaki kodu yapıştırın ve onaylayın</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-600 text-white flex items-center justify-center text-xs font-bold">5</span>
+                        <div>
+                          <p className="text-white font-medium">RP hesabınıza yüklenecek</p>
+                          <p className="text-gray-400 text-xs">Oyun içinde RP bakiyenizi kontrol edebilirsiniz.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ROBLOX Robux Talimatları */}
+                  {(order.productTitle?.toLowerCase().includes('roblox') || order.productTitle?.toLowerCase().includes('robux')) && (
+                    <div className="space-y-3 text-sm">
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                        <div>
+                          <p className="text-white font-medium">Roblox web sitesine gidin:</p>
+                          <a href="https://www.roblox.com/redeem" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline break-all">
+                            👉 https://www.roblox.com/redeem
+                          </a>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+                        <div>
+                          <p className="text-white font-medium">Roblox hesabınızla giriş yapın</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                        <div>
+                          <p className="text-white font-medium">Yukarıdaki kodu yapıştırın</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">4</span>
+                        <div>
+                          <p className="text-white font-medium">"Redeem" butonuna tıklayın</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">5</span>
+                        <div>
+                          <p className="text-white font-medium">Robux hesabınıza yüklenecek</p>
+                          <p className="text-gray-400 text-xs">Roblox oyununda bakiyenizi kontrol edebilirsiniz.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* PUBG UC Talimatları (varsayılan) */}
-                  {!(order.productTitle?.toLowerCase().includes('valorant') || order.productTitle?.toLowerCase().includes('vp') || order.productTitle?.toLowerCase().includes('mlbb') || order.productTitle?.toLowerCase().includes('diamond') || order.productTitle?.toLowerCase().includes('elmas')) && (
+                  {!(order.productTitle?.toLowerCase().includes('valorant') || order.productTitle?.toLowerCase().includes('vp') || order.productTitle?.toLowerCase().includes('mlbb') || order.productTitle?.toLowerCase().includes('diamond') || order.productTitle?.toLowerCase().includes('elmas') || order.productTitle?.toLowerCase().includes('lol') || order.productTitle?.toLowerCase().includes('rp') || order.productTitle?.toLowerCase().includes('riot') || order.productTitle?.toLowerCase().includes('roblox') || order.productTitle?.toLowerCase().includes('robux')) && (
                     <div className="space-y-3 text-sm">
                       <div className="flex gap-3">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">1</span>

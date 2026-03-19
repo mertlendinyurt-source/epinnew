@@ -2730,8 +2730,9 @@ export async function GET(request) {
         shopinextAvailable = true;
       }
 
-      // Shoppiyen available if API key is set in env
-      const shoppiyenAvailable = !!(process.env.SHOPPIYEN_API_KEY);
+      // Shoppiyen available if API key is set AND payyeen settings enabled
+      const shoppiyenApiKeySet = !!(process.env.SHOPPIYEN_API_KEY);
+      const shoppiyenAvailable = shoppiyenApiKeySet && (!payeenSettings || payeenSettings.isEnabled !== false);
       
       return NextResponse.json({
         success: true,

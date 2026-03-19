@@ -1883,8 +1883,8 @@ export default function ValorantPage() {
                   <div>
                     <Label className="text-sm md:text-base text-white/80 uppercase mb-4 block">Ödeme yöntemleri</Label>
                     
-                    {/* Balance Payment Option - Only show if user has SUFFICIENT balance */}
-                    {isAuthenticated && selectedProduct && userBalance >= selectedProduct.discountPrice && (
+                    {/* Balance Payment Option - Show if user has ANY balance */}
+                    {isAuthenticated && selectedProduct && userBalance > 0 && (
                       <div 
                         onClick={() => setPaymentMethod('balance')}
                         className={`relative p-4 md:p-5 rounded-lg border-2 mb-3 cursor-pointer transition-all ${
@@ -1915,9 +1915,15 @@ export default function ValorantPage() {
                           <div className="text-sm text-white/70">
                             Mevcut Bakiye: <span className="font-bold text-green-400">{userBalance.toFixed(2)} ₺</span>
                           </div>
-                          <div className="text-xs text-green-400 font-semibold">
-                            ✓ Yeterli bakiye
-                          </div>
+                          {userBalance >= selectedProduct.discountPrice ? (
+                            <div className="text-xs text-green-400 font-semibold">
+                              ✓ Yeterli bakiye
+                            </div>
+                          ) : (
+                            <div className="text-xs text-red-400 font-semibold">
+                              ✗ Yetersiz bakiye (Eksik: {(selectedProduct.discountPrice - userBalance).toFixed(2)} ₺)
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}

@@ -220,6 +220,7 @@ export default function ValorantPage() {
     // OAuth callback ve redirect işlemleri
     handleGoogleAuthCallback()
     handleLoginRedirect()
+    checkIbanSuccessRedirect()
     
     // Set today's date only on client-side to avoid hydration mismatch
     setTodayDate(new Date().toLocaleDateString('tr-TR', { 
@@ -665,6 +666,27 @@ export default function ValorantPage() {
         console.error('Error loading user data:', error)
       }
     }
+  }
+
+  const checkIbanSuccessRedirect = async () => {
+    try {
+      const token = localStorage.getItem('userToken')
+      if (!token) return
+      const alreadyRedirected = sessionStorage.getItem('iban_success_redirected')
+      if (alreadyRedirected) return
+      const res = await fetch('/api/account/orders', { headers: { 'Authorization': `Bearer ${token}` } })
+      if (!res.ok) return
+      const data = await res.json()
+      if (!data.success) return
+      const paidOrder = (data.data || []).find(order => 
+        (order.paymentMethod === 'iban' || order.paymentMethod === 'odesin') && order.status === 'paid' && !order.ibanSuccessShown
+      )
+      if (paidOrder) {
+        sessionStorage.setItem('iban_success_redirected', paidOrder.id)
+        fetch(`/api/orders/${paidOrder.id}/mark-success-shown`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({}) }).catch(() => {})
+        window.location.href = `/payment/success?orderId=${paidOrder.id}`
+      }
+    } catch (err) { console.error('Success redirect error:', err) }
   }
 
   const fetchProducts = async () => {

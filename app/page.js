@@ -879,6 +879,12 @@ export default function App() {
           return
         }
 
+        // Ödesin payment - redirect to Ödesin checkout
+        if (data.data.paymentProvider === 'odesin') {
+          window.location.href = data.data.checkoutUrl
+          return
+        }
+
         // Shopinext payment - Direct URL redirect
         if (data.data.paymentProvider === 'shopinext' && data.data.paymentUrl) {
           window.location.href = data.data.paymentUrl
@@ -2152,6 +2158,43 @@ export default function App() {
                     )}
                   </div>
                 </div>
+
+                {/* Ödesin Otomatik Havale Option */}
+                {(!paymentMethods?.odesin || paymentMethods?.odesin?.available) && (
+                <div 
+                  onClick={() => setPaymentMethod('odesin')}
+                  className={`relative p-4 md:p-5 rounded-lg border-2 cursor-pointer transition-all mt-3 ${
+                    paymentMethod === 'odesin'
+                      ? 'bg-blue-900/20 border-blue-500'
+                      : 'bg-[#12161D] border-white/10 hover:border-white/20'
+                  }`}
+                >
+                  {paymentMethod === 'odesin' && (
+                    <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                  
+                  <div className="mb-3">
+                    <div className="text-base md:text-lg font-bold text-white mb-1 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      Otomatik Havale / EFT
+                    </div>
+                    <div className="inline-block px-2 py-0.5 rounded bg-blue-500/20 text-[11px] text-blue-400 font-semibold">
+                      Otomatik onay • Anında teslimat
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-white/60 text-xs">
+                    <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Havale yapın, sistem otomatik onaylar
+                  </div>
+                </div>
+                )}
 
                 {selectedProduct && (
                   <div className="p-5 md:p-8 space-y-6 md:space-y-8 bg-[#1a1e24]/95">

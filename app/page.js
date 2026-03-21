@@ -696,9 +696,9 @@ export default function App() {
       const data = await res.json()
       if (!data.success) return
 
-      // Find first IBAN order that is paid but user hasn't seen success page
+      // Find first IBAN/Ödesin order that is paid but user hasn't seen success page
       const ibanPaidOrder = (data.data || []).find(order => 
-        order.paymentMethod === 'iban' && 
+        (order.paymentMethod === 'iban' || order.paymentMethod === 'odesin') && 
         order.status === 'paid' && 
         !order.ibanSuccessShown
       )

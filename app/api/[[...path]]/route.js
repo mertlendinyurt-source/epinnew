@@ -8493,6 +8493,7 @@ export async function POST(request) {
             status: 'paid', 
             paymentProvider: 'odesin',
             paymentId: transaction_id || null,
+            ibanSuccessShown: false,
             odesinWebhook: { event, session_id, reference_code, transaction_id, timestamp, verified },
             updatedAt: new Date() 
           }}

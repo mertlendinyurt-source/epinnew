@@ -7,7 +7,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://world-store-en.preview.emergentagent.com"
+BASE_URL = "https://world-store-en.preview."
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 

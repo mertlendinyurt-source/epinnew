@@ -10,7 +10,7 @@ import time
 import sys
 
 # Configuration
-BASE_URL = "https://world-store-en.preview.emergentagent.com"
+BASE_URL = "https://world-store-en.preview."
 API_BASE = f"{BASE_URL}/api"
 
 def print_test_result(test_name, success, details=""):

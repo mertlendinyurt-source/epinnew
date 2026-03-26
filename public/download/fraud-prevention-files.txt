@@ -4,31 +4,31 @@
 ## 📥 Dosyalar:
 
 1. route.js
-   Link: https://preview.emergentagent.com/download/route.js
+   Link: https://pinly.com.tr/download/route.js
    cPanel: epin-app/app/api/[[...path]]/route.js
    
 2. fileUpload.js  
-   Link: https://preview.emergentagent.com/download/fileUpload.js
+   Link: https://pinly.com.tr/download/fileUpload.js
    cPanel: epin-app/lib/fileUpload.js
    
 3. success/page.js
-   Link: https://preview.emergentagent.com/download/success-page.js
+   Link: https://pinly.com.tr/download/success-page.js
    cPanel: epin-app/app/payment/success/page.js
    
 4. [orderId]/page.js
-   Link: https://preview.emergentagent.com/download/order-detail.js
+   Link: https://pinly.com.tr/download/order-detail.js
    cPanel: epin-app/app/account/orders/[orderId]/page.js
    
 5. verification/page.js (YENİ)
-   Link: https://preview.emergentagent.com/download/verification-upload.js
+   Link: https://pinly.com.tr/download/verification-upload.js
    cPanel: epin-app/app/account/orders/[orderId]/verification/page.js
    
 6. admin/verification/page.js (YENİ)
-   Link: https://preview.emergentagent.com/download/admin-verification.js
+   Link: https://pinly.com.tr/download/admin-verification.js
    cPanel: epin-app/app/admin/verification/page.js
    
 7. AdminSidebar.js
-   Link: https://preview.emergentagent.com/download/AdminSidebar.js
+   Link: https://pinly.com.tr/download/AdminSidebar.js
    cPanel: epin-app/components/admin/AdminSidebar.js
 
 ## 🛠️ Kurulum:

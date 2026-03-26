@@ -160,7 +160,7 @@ export default function LegalPage() {
             style={{
               backgroundImage: siteSettings?.heroImage 
                 ? `url(${siteSettings.heroImage})`
-                : 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)',
+                : 'url(/uploads/bg-pubg.jpg)',
               filter: 'blur(8px)',
               transform: 'scale(1.1)'
             }}

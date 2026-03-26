@@ -1105,7 +1105,7 @@ export default function ValorantPage() {
           style={{
             backgroundImage: siteSettings?.heroImage 
               ? `url(${siteSettings.heroImage})`
-              : 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)'
+              : 'url(/uploads/bg-pubg.jpg)'
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-[#1a1a1a]" />
@@ -1617,7 +1617,7 @@ export default function ValorantPage() {
           <div 
             className="absolute inset-0 bg-cover bg-center blur-sm"
             style={{
-              backgroundImage: 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)',
+              backgroundImage: 'url(/uploads/bg-pubg.jpg)',
               zIndex: -1
             }}
           />
@@ -1801,7 +1801,7 @@ export default function ValorantPage() {
             <div 
               className="absolute inset-0 bg-cover bg-center"
               style={{
-                backgroundImage: 'url(https://customer-assets.emergentagent.com/job_8b265523-4875-46c8-ab48-988eea2d3777/artifacts/prqvfd8b_wp5153882-pubg-fighting-wallpapers.jpg)',
+                backgroundImage: 'url(/uploads/bg-pubg.jpg)',
                 filter: 'blur(6px)'
               }}
             />

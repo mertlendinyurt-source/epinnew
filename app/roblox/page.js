@@ -2360,6 +2360,7 @@ export default function RobloxPage() {
                   alt="T.C. Ticaret Bakanlığı ETBİS Kayıtlıdır" 
                   className="h-16 md:h-20 w-auto opacity-60 group-hover:opacity-100 transition-all group-hover:scale-105"
                 />
+                <span className="text-white/40 text-xs group-hover:text-white/60 transition-colors block text-center mt-2">ETBİS'e Kayıtlıdır. Tıklayarak ulaşabilirsiniz.</span>
               </a>
             </div>
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">

@@ -2368,6 +2368,21 @@ export default function MLBBPage() {
 
           {/* Copyright */}
           <div className="mt-8 pt-6 border-t border-white/10">
+            {/* ETBİS Badge */}
+            <div className="flex justify-center mb-6">
+              <a 
+                href="https://etbis.ticaret.gov.tr/tr/SiteSorgulamaSonuc?siteId=37db7127-ce4b-4df7-868d-02c4cae4c48b"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group"
+              >
+                <img 
+                  src="/uploads/etbis-logo.png" 
+                  alt="T.C. Ticaret Bakanlığı ETBİS Kayıtlıdır" 
+                  className="h-16 md:h-20 w-auto opacity-60 group-hover:opacity-100 transition-all group-hover:scale-105"
+                />
+              </a>
+            </div>
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-white/30 text-xs">© 2026 PINLY. Tüm hakları saklıdır.</p>
               <p className="text-white/30 text-xs text-center">PİNLY ELEKTRONİK HİZMETLER TİCARET A.Ş.</p>

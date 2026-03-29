@@ -2540,28 +2540,13 @@ export default function App() {
                 href="https://etbis.ticaret.gov.tr/tr/SiteSorgulamaSonuc?siteId=37db7127-ce4b-4df7-868d-02c4cae4c48b"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-col items-center gap-2 group"
+                className="group"
               >
-                <div className="bg-white rounded-lg p-3 shadow-lg group-hover:shadow-xl transition-all group-hover:scale-105">
-                  <div className="flex flex-col items-center">
-                    <svg viewBox="0 0 120 120" className="w-20 h-20 md:w-24 md:h-24">
-                      <rect width="120" height="120" fill="white"/>
-                      <rect x="10" y="10" width="8" height="8" fill="black"/><rect x="18" y="10" width="8" height="8" fill="black"/><rect x="26" y="10" width="8" height="8" fill="black"/><rect x="34" y="10" width="8" height="8" fill="black"/><rect x="42" y="10" width="8" height="8" fill="black"/><rect x="50" y="10" width="8" height="8" fill="black"/><rect x="58" y="10" width="8" height="8" fill="black"/>
-                      <rect x="10" y="18" width="8" height="8" fill="black"/><rect x="58" y="18" width="8" height="8" fill="black"/>
-                      <rect x="10" y="26" width="8" height="8" fill="black"/><rect x="26" y="26" width="8" height="8" fill="black"/><rect x="34" y="26" width="8" height="8" fill="black"/><rect x="42" y="26" width="8" height="8" fill="black"/><rect x="58" y="26" width="8" height="8" fill="black"/>
-                      <rect x="10" y="34" width="8" height="8" fill="black"/><rect x="26" y="34" width="8" height="8" fill="black"/><rect x="34" y="34" width="8" height="8" fill="black"/><rect x="42" y="34" width="8" height="8" fill="black"/><rect x="58" y="34" width="8" height="8" fill="black"/>
-                      <rect x="10" y="42" width="8" height="8" fill="black"/><rect x="26" y="42" width="8" height="8" fill="black"/><rect x="34" y="42" width="8" height="8" fill="black"/><rect x="42" y="42" width="8" height="8" fill="black"/><rect x="58" y="42" width="8" height="8" fill="black"/>
-                      <rect x="10" y="50" width="8" height="8" fill="black"/><rect x="58" y="50" width="8" height="8" fill="black"/>
-                      <rect x="10" y="58" width="8" height="8" fill="black"/><rect x="18" y="58" width="8" height="8" fill="black"/><rect x="26" y="58" width="8" height="8" fill="black"/><rect x="34" y="58" width="8" height="8" fill="black"/><rect x="42" y="58" width="8" height="8" fill="black"/><rect x="50" y="58" width="8" height="8" fill="black"/><rect x="58" y="58" width="8" height="8" fill="black"/>
-                      <rect x="40" y="40" width="40" height="18" rx="4" fill="#C41E24"/>
-                      <text x="60" y="53" fontFamily="Arial" fontSize="11" fill="white" textAnchor="middle" fontWeight="bold">ETBİS</text>
-                    </svg>
-                    <div className="bg-red-700 text-white text-[10px] font-bold px-3 py-0.5 rounded-sm mt-1">
-                      ETBİS'e Kayıtlıdır.
-                    </div>
-                  </div>
-                </div>
-                <span className="text-white/40 text-xs group-hover:text-white/60 transition-colors">ETBİS'e Kayıtlıdır.</span>
+                <img 
+                  src="/uploads/etbis-logo.png" 
+                  alt="T.C. Ticaret Bakanlığı ETBİS Kayıtlıdır" 
+                  className="h-16 md:h-20 w-auto opacity-60 group-hover:opacity-100 transition-all group-hover:scale-105"
+                />
               </a>
             </div>
 

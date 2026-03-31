@@ -18,8 +18,8 @@ function IbanPaymentContent() {
   const [dots, setDots] = useState('')
   const [elapsedTime, setElapsedTime] = useState(0)
 
-  const IBAN = 'TR16 0006 4000 0014 3790 3852 51'
-  const IBAN_RAW = 'TR1600064000001437903852 51'
+  const IBAN = 'TR53 0006 2000 0750 0006 2890 66'
+  const IBAN_RAW = 'TR5300062000075000062890 66'
   const IBAN_NAME = 'PİNLY ELEKTRONİK HİZMET TİCARET A.Ş'
 
   // Waiting animation dots

@@ -2265,6 +2265,27 @@ export async function GET(request) {
     }
 
     // Get all products - WITH CACHE (supports game filter)
+    // 🔥 GÜNÜN FIRSATLARI - PUBLIC
+    if (pathname === '/api/daily-deals') {
+      const now = new Date();
+      const deals = await db.collection('daily_deals').find({ active: true, endTime: { $gt: now } }).sort({ createdAt: -1 }).toArray();
+      const dealsWithProducts = await Promise.all(deals.map(async (deal) => {
+        const product = await db.collection('products').findOne({ id: deal.productId, active: true });
+        if (!product) return null;
+        return { ...deal, product: { id: product.id, title: product.title, ucAmount: product.ucAmount, price: product.price, discountPrice: product.discountPrice, imageUrl: product.imageUrl, regionCode: product.regionCode } };
+      }));
+      return NextResponse.json({ success: true, data: dealsWithProducts.filter(Boolean) });
+    }
+
+    // 🔥 ADMIN: Günün Fırsatları (GET)
+    if (pathname === '/api/admin/daily-deals') {
+      const user = verifyAdminToken(request);
+      if (!user) return NextResponse.json({ success: false, error: 'Yetkisiz' }, { status: 401 });
+      const deals = await db.collection('daily_deals').find({}).sort({ createdAt: -1 }).toArray();
+      const products = await db.collection('products').find({ active: true }).sort({ sortOrder: 1 }).toArray();
+      return NextResponse.json({ success: true, data: { deals, products } });
+    }
+
     if (pathname === '/api/products') {
       const game = searchParams.get('game'); // 'pubg', 'valorant', or null (all)
       const cacheKey = game ? `products_active_${game}` : 'products_active';
@@ -8741,6 +8762,31 @@ export async function POST(request) {
       );
 
       return NextResponse.json({ success: true, message: 'IBAN ödemesi reddedildi' });
+    }
+
+    // 🔥 ADMIN: Günün Fırsatları CRUD (POST)
+    if (pathname === '/api/admin/daily-deals') {
+      const user = verifyAdminToken(request);
+      if (!user) return NextResponse.json({ success: false, error: 'Yetkisiz' }, { status: 401 });
+      const { action, dealId, productId, dealPrice, endTime } = body;
+      if (action === 'create') {
+        if (!productId || !dealPrice || !endTime) return NextResponse.json({ success: false, error: 'Tüm alanlar gerekli' }, { status: 400 });
+        const existing = await db.collection('daily_deals').findOne({ productId, active: true, endTime: { $gt: new Date() } });
+        if (existing) return NextResponse.json({ success: false, error: 'Bu ürün zaten fırsatta' }, { status: 400 });
+        const deal = { id: uuidv4(), productId, dealPrice: parseFloat(dealPrice), endTime: new Date(endTime), active: true, createdBy: user.username || user.email, createdAt: new Date() };
+        await db.collection('daily_deals').insertOne(deal);
+        return NextResponse.json({ success: true, data: deal, message: 'Fırsat oluşturuldu' });
+      }
+      if (action === 'delete') {
+        await db.collection('daily_deals').deleteOne({ id: dealId });
+        return NextResponse.json({ success: true, message: 'Fırsat silindi' });
+      }
+      if (action === 'toggle') {
+        const deal = await db.collection('daily_deals').findOne({ id: dealId });
+        if (deal) await db.collection('daily_deals').updateOne({ id: dealId }, { $set: { active: !deal.active } });
+        return NextResponse.json({ success: true, message: 'Güncellendi' });
+      }
+      return NextResponse.json({ success: false, error: 'Geçersiz işlem' }, { status: 400 });
     }
 
     // Admin: Create product

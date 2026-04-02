@@ -69,6 +69,7 @@ export default function App() {
   const [playerLoading, setPlayerLoading] = useState(false)
   const [playerValid, setPlayerValid] = useState(null)
   const [orderProcessing, setOrderProcessing] = useState(false)
+  const [quantity, setQuantity] = useState(1)
   const [playerIdError, setPlayerIdError] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(true)
   const [termsModalOpen, setTermsModalOpen] = useState(false)
@@ -740,6 +741,7 @@ export default function App() {
   const handleProductSelect = (product) => {
     setSelectedProduct(product)
     setCheckoutOpen(true)
+    setQuantity(1)
     setPlayerId('')
     setPlayerName('')
     setPlayerValid(null)
@@ -832,7 +834,8 @@ export default function App() {
           productId: selectedProduct.id,
           playerId,
           playerName,
-          paymentMethod: paymentMethod, // 'card' or 'balance'
+          paymentMethod: paymentMethod,
+          quantity: quantity,
           termsAccepted: termsAccepted,
           termsAcceptedAt: new Date().toISOString()
         })
@@ -2153,48 +2156,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Mobile Quick Pay Button - Only visible on mobile */}
-                {selectedProduct && (
-                  <div className="md:hidden px-5 pb-2 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="mobileTermsCheckbox"
-                        checked={termsAccepted}
-                        onChange={(e) => setTermsAccepted(e.target.checked)}
-                        className="w-4 h-4 rounded border-white/20 bg-[#12161D] text-blue-500 focus:ring-blue-500/20"
-                      />
-                      <label htmlFor="mobileTermsCheckbox" className="text-xs text-white/50 cursor-pointer">
-                        <button 
-                          type="button"
-                          onClick={(e) => { e.preventDefault(); setTermsModalOpen(true); }}
-                          className="text-blue-400 hover:text-blue-300 underline"
-                        >
-                          Satış koşullarını
-                        </button>
-                        {' '}okudum ve kabul ediyorum.
-                      </label>
-                    </div>
-                    <Button
-                      onClick={handleCheckout}
-                      disabled={orderProcessing || !termsAccepted}
-                      className={`w-full h-12 text-white font-bold text-base uppercase tracking-wide rounded-lg transition-all ${
-                        termsAccepted 
-                          ? 'bg-blue-600 hover:bg-blue-500' 
-                          : 'bg-gray-600 cursor-not-allowed opacity-60'
-                      }`}
-                    >
-                      {orderProcessing ? (
-                        <>
-                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          İşleniyor...
-                        </>
-                      ) : (
-                        'ÖDEMEYE GİT'
-                      )}
-                    </Button>
-                  </div>
-                )}
+                {/* Mobile Quick Pay Button - removed, using bottom button for all */}
 
                 {selectedProduct && (
                   <div className="p-5 md:p-8 space-y-6 md:space-y-8 bg-[#1a1e24]/95">
@@ -2241,16 +2203,43 @@ export default function App() {
                       </div>
                     </div>
 
+                    {/* Miktar Seçici */}
+                    <div className="pt-5 border-t border-white/10">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-sm md:text-base text-white/70 uppercase">Adet</span>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                            className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-lg flex items-center justify-center transition-colors"
+                          >
+                            -
+                          </button>
+                          <span className="text-xl font-bold text-white w-8 text-center">{quantity}</span>
+                          <button
+                            onClick={() => setQuantity(q => Math.min(10, q + 1))}
+                            className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-lg flex items-center justify-center transition-colors"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                      {quantity > 1 && (
+                        <div className="text-xs text-white/40 text-right mb-2">
+                          {quantity} x ₺{selectedProduct.discountPrice.toFixed(2)} = ₺{(selectedProduct.discountPrice * quantity).toFixed(2)}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="pt-5 border-t border-white/10">
                       <div className="flex justify-between items-center mb-4">
                         <span className="text-sm md:text-base text-white/70 uppercase">Ödenecek Tutar</span>
                         <span className="text-2xl md:text-3xl font-black text-white">
-                          ₺ {selectedProduct.discountPrice.toFixed(2)}
+                          ₺ {(selectedProduct.discountPrice * quantity).toFixed(2)}
                         </span>
                       </div>
 
-                      {/* Satış Koşulları Onayı - Desktop only */}
-                      <div className="hidden md:flex items-start gap-2 mb-4">
+                      {/* Satış Koşulları Onayı */}
+                      <div className="flex items-start gap-2 mb-4">
                         <input
                           type="checkbox"
                           id="termsCheckbox"
@@ -2273,7 +2262,7 @@ export default function App() {
                       <Button
                         onClick={handleCheckout}
                         disabled={orderProcessing || !termsAccepted}
-                        className={`hidden md:flex w-full h-12 md:h-14 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg transition-all ${
+                        className={`w-full h-12 md:h-14 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg transition-all ${
                           termsAccepted 
                             ? 'bg-blue-600 hover:bg-blue-500' 
                             : 'bg-gray-600 cursor-not-allowed opacity-60'

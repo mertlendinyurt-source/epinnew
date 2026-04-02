@@ -2853,14 +2853,23 @@ export async function GET(request) {
         await db.collection('accounts').updateOne({ id: order.accountId }, { $set: { status: 'sold', soldAt: new Date(), soldToOrderId: orderId } });
       } else if (product) {
         try {
-          const assignedStock = await db.collection('stock').findOneAndUpdate(
-            { productId: order.productId, status: 'available' },
-            { $set: { status: 'assigned', orderId, assignedAt: new Date() } },
-            { returnDocument: 'after', sort: { createdAt: 1 } }
-          );
-          if (assignedStock && assignedStock.value) {
-            await db.collection('orders').updateOne({ id: orderId }, { $set: { delivery: { status: 'delivered', items: [assignedStock.value], stockId: assignedStock.id || assignedStock._id, assignedAt: new Date() } } });
-            if (orderUser) sendDeliveredEmail(db, order, orderUser, product, [assignedStock.value]).catch(err => console.error('Del email err:', err));
+          const orderQty = order.quantity || 1;
+          const assignedItems = [];
+          for (let i = 0; i < orderQty; i++) {
+            const assignedStock = await db.collection('stock').findOneAndUpdate(
+              { productId: order.productId, status: 'available' },
+              { $set: { status: 'assigned', orderId, assignedAt: new Date() } },
+              { returnDocument: 'after', sort: { createdAt: 1 } }
+            );
+            if (assignedStock && assignedStock.value) {
+              assignedItems.push(assignedStock.value);
+            } else {
+              break;
+            }
+          }
+          if (assignedItems.length > 0) {
+            await db.collection('orders').updateOne({ id: orderId }, { $set: { delivery: { status: assignedItems.length >= orderQty ? 'delivered' : 'partial', items: assignedItems, assignedAt: new Date() } } });
+            if (orderUser) sendDeliveredEmail(db, order, orderUser, product, assignedItems).catch(err => console.error('Del email err:', err));
           } else {
             await db.collection('orders').updateOne({ id: orderId }, { $set: { delivery: { status: 'pending', message: 'Stok bekleniyor', items: [] } } });
           }
@@ -6825,7 +6834,8 @@ export async function POST(request) {
         );
       }
 
-      const { productId, playerId, playerName, paymentMethod, termsAccepted, termsAcceptedAt } = body; // paymentMethod: 'card' or 'balance'
+      const { productId, playerId, playerName, paymentMethod, termsAccepted, termsAcceptedAt, quantity: rawQty } = body;
+      const quantity = Math.min(10, Math.max(1, parseInt(rawQty) || 1)); // 1-10 arası
       
       if (!productId || !playerId || !playerName) {
         return NextResponse.json(
@@ -7155,7 +7165,8 @@ export async function POST(request) {
           phone: user.phone
         };
 
-        const orderAmount = product.discountPrice || product.price || product.finalPrice || product.salePrice || 0;
+        const unitPrice = product.discountPrice || product.price || product.finalPrice || product.salePrice || 0;
+        const orderAmount = unitPrice * quantity;
 
         const order = {
           id: uuidv4(),
@@ -7169,6 +7180,7 @@ export async function POST(request) {
           status: 'pending',
           amount: orderAmount,
           totalAmount: orderAmount,
+          quantity: quantity,
           currency: 'TRY',
           paymentMethod: 'payyeen',
           termsAccepted: termsAccepted || false,
@@ -7242,7 +7254,8 @@ export async function POST(request) {
           phone: user.phone
         };
 
-        const orderAmount = product.discountPrice || product.price || 0;
+        const unitPrice = product.discountPrice || product.price || 0;
+        const orderAmount = unitPrice * quantity;
 
         const order = {
           id: uuidv4(),
@@ -7256,6 +7269,7 @@ export async function POST(request) {
           status: 'pending',
           amount: orderAmount,
           totalAmount: orderAmount,
+          quantity: quantity,
           currency: 'TRY',
           paymentMethod: 'iban',
           ibanPayment: {
@@ -7320,7 +7334,8 @@ export async function POST(request) {
 
       // Create order with PENDING status
       // Try all possible price fields
-      const orderAmount = product.discountPrice || product.price || product.finalPrice || product.salePrice || product.currentPrice || product.sellingPrice || 0;
+      const unitPrice = product.discountPrice || product.price || product.finalPrice || product.salePrice || product.currentPrice || product.sellingPrice || 0;
+      const orderAmount = unitPrice * quantity;
       
       console.log('========================================');
       console.log('📦 ORDER CREATION - PRICE CHECK');

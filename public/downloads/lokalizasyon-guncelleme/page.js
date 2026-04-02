@@ -2153,9 +2153,28 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Mobile Quick Pay Button - Only visible on mobile, between payment methods and product info */}
+                {/* Mobile Quick Pay Button - Only visible on mobile */}
                 {selectedProduct && (
-                  <div className="md:hidden px-5 pb-2">
+                  <div className="md:hidden px-5 pb-2 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="mobileTermsCheckbox"
+                        checked={termsAccepted}
+                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                        className="w-4 h-4 rounded border-white/20 bg-[#12161D] text-blue-500 focus:ring-blue-500/20"
+                      />
+                      <label htmlFor="mobileTermsCheckbox" className="text-xs text-white/50 cursor-pointer">
+                        <button 
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); setTermsModalOpen(true); }}
+                          className="text-blue-400 hover:text-blue-300 underline"
+                        >
+                          Satış koşullarını
+                        </button>
+                        {' '}okudum ve kabul ediyorum.
+                      </label>
+                    </div>
                     <Button
                       onClick={handleCheckout}
                       disabled={orderProcessing || !termsAccepted}
@@ -2230,8 +2249,8 @@ export default function App() {
                         </span>
                       </div>
 
-                      {/* Satış Koşulları Onayı */}
-                      <div className="flex items-start gap-2 mb-4">
+                      {/* Satış Koşulları Onayı - Desktop only */}
+                      <div className="hidden md:flex items-start gap-2 mb-4">
                         <input
                           type="checkbox"
                           id="termsCheckbox"
@@ -2254,7 +2273,7 @@ export default function App() {
                       <Button
                         onClick={handleCheckout}
                         disabled={orderProcessing || !termsAccepted}
-                        className={`w-full h-12 md:h-14 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg transition-all ${
+                        className={`hidden md:flex w-full h-12 md:h-14 text-white font-bold text-base md:text-lg uppercase tracking-wide rounded-lg transition-all ${
                           termsAccepted 
                             ? 'bg-blue-600 hover:bg-blue-500' 
                             : 'bg-gray-600 cursor-not-allowed opacity-60'

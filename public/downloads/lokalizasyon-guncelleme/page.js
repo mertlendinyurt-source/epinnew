@@ -71,6 +71,7 @@ export default function App() {
   const [orderProcessing, setOrderProcessing] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const [dailyDeals, setDailyDeals] = useState([])
+  const [viewerCounts, setViewerCounts] = useState({})
   const [playerIdError, setPlayerIdError] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(true)
   const [termsModalOpen, setTermsModalOpen] = useState(false)
@@ -732,6 +733,39 @@ export default function App() {
       if (data.success) setDailyDeals(data.data || [])
     } catch (err) { console.error('Daily deals error:', err) }
   }
+
+  // 🔴 Canlı görüntülenme sayacı - her ürün için farklı ve değişen
+  useEffect(() => {
+    if (products.length === 0) return
+    
+    // İlk değerleri oluştur
+    const initial = {}
+    products.forEach((p, i) => {
+      const base = Math.max(8, 35 - i * 3) // Popüler ürünler daha fazla
+      initial[p.id] = base + Math.floor(Math.random() * 10)
+    })
+    setViewerCounts(initial)
+    
+    // Her 4-8 saniyede rastgele değiştir
+    const interval = setInterval(() => {
+      setViewerCounts(prev => {
+        const updated = { ...prev }
+        // Rastgele 2-3 ürünün sayısını değiştir
+        const productIds = Object.keys(updated)
+        const changeCount = Math.floor(Math.random() * 3) + 1
+        for (let i = 0; i < changeCount; i++) {
+          const randomId = productIds[Math.floor(Math.random() * productIds.length)]
+          if (randomId) {
+            const change = Math.floor(Math.random() * 5) - 2 // -2 ile +2 arası
+            updated[randomId] = Math.max(5, Math.min(55, (updated[randomId] || 15) + change))
+          }
+        }
+        return updated
+      })
+    }, 4000 + Math.random() * 4000) // 4-8 saniye arası
+    
+    return () => clearInterval(interval)
+  }, [products])
 
   const fetchProducts = async () => {
     try {
@@ -1707,6 +1741,15 @@ export default function App() {
                           <div className="text-[10px] md:text-[11px] text-emerald-400 font-medium">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
                         )}
                       </div>
+                      {viewerCounts[product.id] && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                          </span>
+                          <span className="text-[9px] md:text-[10px] text-white/50">{viewerCounts[product.id]} kişi bakıyor</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

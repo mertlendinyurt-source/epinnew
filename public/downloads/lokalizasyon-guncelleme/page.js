@@ -2153,6 +2153,30 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* Mobile Quick Pay Button - Only visible on mobile, between payment methods and product info */}
+                {selectedProduct && (
+                  <div className="md:hidden px-5 pb-2">
+                    <Button
+                      onClick={handleCheckout}
+                      disabled={orderProcessing || !termsAccepted}
+                      className={`w-full h-12 text-white font-bold text-base uppercase tracking-wide rounded-lg transition-all ${
+                        termsAccepted 
+                          ? 'bg-blue-600 hover:bg-blue-500' 
+                          : 'bg-gray-600 cursor-not-allowed opacity-60'
+                      }`}
+                    >
+                      {orderProcessing ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          İşleniyor...
+                        </>
+                      ) : (
+                        'ÖDEMEYE GİT'
+                      )}
+                    </Button>
+                  </div>
+                )}
+
                 {selectedProduct && (
                   <div className="p-5 md:p-8 space-y-6 md:space-y-8 bg-[#1a1e24]/95">
                     <div>

@@ -70,6 +70,7 @@ export default function App() {
   const [playerValid, setPlayerValid] = useState(null)
   const [orderProcessing, setOrderProcessing] = useState(false)
   const [quantity, setQuantity] = useState(1)
+  const [dailyDeals, setDailyDeals] = useState([])
   const [playerIdError, setPlayerIdError] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(true)
   const [termsModalOpen, setTermsModalOpen] = useState(false)
@@ -226,6 +227,7 @@ export default function App() {
   useEffect(() => {
     // 🚀 TEK ÇAĞRI - Tüm homepage verileri
     fetchHomepageData()
+    fetchDailyDeals()
     
     // Kullanıcı auth kontrolü (ayrı kalmalı - token gerektiriyor)
     checkAuth()
@@ -721,6 +723,14 @@ export default function App() {
     } catch (err) {
       console.error('IBAN success redirect check error:', err)
     }
+  }
+
+  const fetchDailyDeals = async () => {
+    try {
+      const res = await fetch('/api/daily-deals')
+      const data = await res.json()
+      if (data.success) setDailyDeals(data.data || [])
+    } catch (err) { console.error('Daily deals error:', err) }
   }
 
   const fetchProducts = async () => {
@@ -1595,6 +1605,52 @@ export default function App() {
                 <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
               </div>
             ) : (
+              <>
+              {dailyDeals.length > 0 && (
+                <div className="mb-6 bg-gradient-to-r from-orange-600/20 via-red-600/20 to-orange-600/20 rounded-2xl border-2 border-orange-500/40 p-4 md:p-6 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl"></div>
+                  <div className="flex items-center gap-2 mb-4 relative z-10">
+                    <span className="text-2xl">🔥</span>
+                    <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-wider">Günün Fırsatları</h2>
+                    <span className="text-2xl">🔥</span>
+                    <span className="ml-auto px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full animate-pulse">KAÇIRMA!</span>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 relative z-10">
+                    {dailyDeals.map(deal => {
+                      const timeLeft = new Date(deal.endTime) - new Date()
+                      const hours = Math.max(0, Math.floor(timeLeft / 3600000))
+                      const minutes = Math.max(0, Math.floor((timeLeft % 3600000) / 60000))
+                      const savings = deal.product ? ((1 - deal.dealPrice / deal.product.price) * 100).toFixed(0) : 0
+                      return (
+                        <div
+                          key={deal.id}
+                          onClick={() => {
+                            const p = products.find(pr => pr.id === deal.productId)
+                            if (p) handleProductSelect({...p, discountPrice: deal.dealPrice, isDeal: true})
+                          }}
+                          className="relative bg-gradient-to-b from-orange-900/40 to-[#252a34] rounded-xl border border-orange-500/30 p-3 cursor-pointer hover:scale-105 transition-all hover:shadow-lg hover:shadow-orange-500/20"
+                        >
+                          <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full z-10">%{savings} İNDİRİM</div>
+                          <div className="text-center mb-2">
+                            <div className="text-white font-bold text-sm md:text-base">{deal.product?.title}</div>
+                          </div>
+                          <div className="text-center space-y-1">
+                            <div className="text-red-400 line-through text-xs">₺{deal.product?.price?.toFixed(2)}</div>
+                            <div className="text-2xl md:text-3xl font-black text-orange-400">₺{deal.dealPrice?.toFixed(2)}</div>
+                          </div>
+                          <div className="mt-2 text-center">
+                            <div className="inline-flex items-center gap-1 bg-black/40 rounded-full px-3 py-1 text-[10px] text-orange-300">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
+                              {hours > 0 ? `${hours}s ${minutes}dk kaldı` : `${minutes} dakika kaldı`}
+                            </div>
+                          </div>
+                          <div className="mt-2 bg-orange-500 hover:bg-orange-400 text-white text-xs font-bold py-1.5 rounded-lg text-center transition-colors">SATIN AL</div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4">
                 {products.map((product) => (
                   <div
@@ -1655,6 +1711,7 @@ export default function App() {
                   </div>
                 ))}
               </div>
+              </>
             )}
           </div>
         </div>

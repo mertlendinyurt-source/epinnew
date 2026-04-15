@@ -36,6 +36,7 @@ export default function AdminOrders() {
   const [phoneSearch, setPhoneSearch] = useState('')
   const [orderIdSearch, setOrderIdSearch] = useState('')
   const [playerIdSearch, setPlayerIdSearch] = useState('')
+  const [ibanNameSearch, setIbanNameSearch] = useState('')
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -105,10 +106,18 @@ export default function AdminOrders() {
         order.player?.id?.includes(searchTerm)
       )
     }
+
+    // IBAN gönderici ismi ile arama
+    if (ibanNameSearch.trim()) {
+      const searchTerm = ibanNameSearch.trim().toLowerCase()
+      filtered = filtered.filter(order => 
+        order.ibanPayment?.senderName?.toLowerCase().includes(searchTerm)
+      )
+    }
     
     setFilteredOrders(filtered)
-    setCurrentPage(1) // Reset to first page when filter changes
-  }, [statusFilter, paymentMethodFilter, riskFilter, orders, emailSearch, phoneSearch, orderIdSearch, playerIdSearch])
+    setCurrentPage(1)
+  }, [statusFilter, paymentMethodFilter, riskFilter, orders, emailSearch, phoneSearch, orderIdSearch, playerIdSearch, ibanNameSearch])
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage)
@@ -570,10 +579,19 @@ export default function AdminOrders() {
                   className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-sm"
                 />
               </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-orange-500" />
+                <Input
+                  placeholder="🏦 IBAN isim ara..."
+                  value={ibanNameSearch}
+                  onChange={(e) => setIbanNameSearch(e.target.value)}
+                  className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-sm"
+                />
+              </div>
             </div>
             
             {/* Aktif Filtre Göstergesi */}
-            {(emailSearch || phoneSearch || orderIdSearch || playerIdSearch) && (
+            {(emailSearch || phoneSearch || orderIdSearch || playerIdSearch || ibanNameSearch) && (
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span className="text-slate-400 text-xs md:text-sm">Aktif filtreler:</span>
                 {emailSearch && (
@@ -601,7 +619,7 @@ export default function AdminOrders() {
                   </Badge>
                 )}
                 <button 
-                  onClick={() => { setEmailSearch(''); setPhoneSearch(''); setOrderIdSearch(''); setPlayerIdSearch(''); }}
+                  onClick={() => { setEmailSearch(''); setPhoneSearch(''); setOrderIdSearch(''); setPlayerIdSearch(''); setIbanNameSearch(''); }}
                   className="text-slate-500 hover:text-slate-300 text-xs ml-2"
                 >
                   Temizle

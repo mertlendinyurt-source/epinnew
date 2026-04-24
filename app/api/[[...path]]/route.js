@@ -8285,61 +8285,36 @@ export async function POST(request) {
           );
         }
         
-        // Stock assignment (same logic as Shopier)
+        // Stock assignment with quantity support (same logic as Shopier)
         if (product && (!order.delivery || order.delivery.status !== 'delivered')) {
           try {
-            const assignedStock = await db.collection('stock').findOneAndUpdate(
-              { productId: order.productId, status: 'available' },
-              { 
-                $set: { 
-                  status: 'assigned', 
-                  orderId: orderId,
-                  assignedAt: new Date()
-                } 
-              },
-              { 
-                returnDocument: 'after',
-                sort: { createdAt: 1 }
-              }
-            );
-            
-            if (assignedStock && assignedStock.value) {
-              const stockCode = assignedStock.value;
-              
+            const orderQty = order.quantity || 1;
+            const assignedItems = [];
+            for (let i = 0; i < orderQty; i++) {
+              const assignedStock = await db.collection('stock').findOneAndUpdate(
+                { productId: order.productId, status: 'available' },
+                { $set: { status: 'assigned', orderId: orderId, assignedAt: new Date() } },
+                { returnDocument: 'after', sort: { createdAt: 1 } }
+              );
+              if (assignedStock && assignedStock.value) {
+                assignedItems.push(assignedStock.value);
+              } else { break; }
+            }
+            if (assignedItems.length > 0) {
               await db.collection('orders').updateOne(
                 { id: orderId },
-                {
-                  $set: {
-                    delivery: {
-                      status: 'delivered',
-                      items: [stockCode],
-                      stockId: assignedStock.id || assignedStock._id,
-                      assignedAt: new Date()
-                    }
-                  }
-                }
+                { $set: { delivery: { status: assignedItems.length >= orderQty ? 'delivered' : 'partial', items: assignedItems, assignedAt: new Date() } } }
               );
-              console.log(`Shopinext: Stock assigned to order ${orderId}`);
-              
-              // Send delivered email
+              console.log(`Shopinext: ${assignedItems.length} stock assigned to order ${orderId}`);
               if (orderUser && product) {
-                sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
+                sendDeliveredEmail(db, order, orderUser, product, assignedItems).catch(err => 
                   console.error('Shopinext delivered email failed:', err)
                 );
               }
             } else {
-              // No stock available
               await db.collection('orders').updateOne(
                 { id: orderId },
-                {
-                  $set: {
-                    delivery: {
-                      status: 'pending',
-                      message: 'Stok bekleniyor',
-                      items: []
-                    }
-                  }
-                }
+                { $set: { delivery: { status: 'pending', message: 'Stok bekleniyor', items: [] } } }
               );
               console.log(`Shopinext: No stock for order ${orderId}`);
             }
@@ -8489,60 +8464,35 @@ export async function POST(request) {
             console.log(`Payyeen: Account credentials delivered for order ${orderId}`);
           }
         } else if (product && (!order.delivery || order.delivery.status !== 'delivered')) {
-          // UC order - Stock assignment
+          // UC order - Stock assignment with quantity
           try {
-            const assignedStock = await db.collection('stock').findOneAndUpdate(
-              { productId: order.productId, status: 'available' },
-              { 
-                $set: { 
-                  status: 'assigned', 
-                  orderId: orderId,
-                  assignedAt: new Date()
-                } 
-              },
-              { 
-                returnDocument: 'after',
-                sort: { createdAt: 1 }
-              }
-            );
-            
-            if (assignedStock && assignedStock.value) {
-              const stockCode = assignedStock.value;
-              
+            const orderQty = order.quantity || 1;
+            const assignedItems = [];
+            for (let i = 0; i < orderQty; i++) {
+              const assignedStock = await db.collection('stock').findOneAndUpdate(
+                { productId: order.productId, status: 'available' },
+                { $set: { status: 'assigned', orderId: orderId, assignedAt: new Date() } },
+                { returnDocument: 'after', sort: { createdAt: 1 } }
+              );
+              if (assignedStock && assignedStock.value) {
+                assignedItems.push(assignedStock.value);
+              } else { break; }
+            }
+            if (assignedItems.length > 0) {
               await db.collection('orders').updateOne(
                 { id: orderId },
-                {
-                  $set: {
-                    delivery: {
-                      status: 'delivered',
-                      items: [stockCode],
-                      stockId: assignedStock.id || assignedStock._id,
-                      assignedAt: new Date()
-                    }
-                  }
-                }
+                { $set: { delivery: { status: assignedItems.length >= orderQty ? 'delivered' : 'partial', items: assignedItems, assignedAt: new Date() } } }
               );
-              console.log(`Payyeen: Stock assigned to order ${orderId}`);
-              
-              // Send delivered email
+              console.log(`Payyeen: ${assignedItems.length} stock assigned to order ${orderId}`);
               if (orderUser && product) {
-                sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
+                sendDeliveredEmail(db, order, orderUser, product, assignedItems).catch(err => 
                   console.error('Payyeen delivered email failed:', err)
                 );
               }
             } else {
-              // No stock available
               await db.collection('orders').updateOne(
                 { id: orderId },
-                {
-                  $set: {
-                    delivery: {
-                      status: 'pending',
-                      message: 'Stok bekleniyor',
-                      items: []
-                    }
-                  }
-                }
+                { $set: { delivery: { status: 'pending', message: 'Stok bekleniyor', items: [] } } }
               );
               console.log(`Payyeen: No stock for order ${orderId}`);
             }
@@ -8679,23 +8629,29 @@ export async function POST(request) {
       try {
         const product = await db.collection('products').findOne({ id: order.productId });
         if (product) {
-          // Try to assign stock first
-          const assignedStock = await db.collection('stock').findOneAndUpdate(
-            { productId: order.productId, status: 'available' },
-            { $set: { status: 'assigned', orderId: orderId, assignedAt: new Date() } },
-            { sort: { createdAt: 1 }, returnDocument: 'after' }
-          );
+          // Try to assign stock with quantity support
+          const orderQty = order.quantity || 1;
+          const assignedItems = [];
+          for (let i = 0; i < orderQty; i++) {
+            const assignedStock = await db.collection('stock').findOneAndUpdate(
+              { productId: order.productId, status: 'available' },
+              { $set: { status: 'assigned', orderId: orderId, assignedAt: new Date() } },
+              { sort: { createdAt: 1 }, returnDocument: 'after' }
+            );
+            if (assignedStock && assignedStock.value) {
+              assignedItems.push(assignedStock.value);
+            } else { break; }
+          }
 
-          if (assignedStock) {
-            // Stock found and assigned - use this code
+          if (assignedItems.length > 0) {
             await db.collection('orders').updateOne(
               { id: orderId },
               { $set: { 
-                delivery: { status: 'delivered', items: [assignedStock.value], stockId: assignedStock.id, assignedAt: new Date() },
+                delivery: { status: assignedItems.length >= orderQty ? 'delivered' : 'partial', items: assignedItems, assignedAt: new Date() },
                 updatedAt: new Date()
               }}
             );
-            console.log(`IBAN: Stock assigned for order ${orderId}: ${assignedStock.value}`);
+            console.log(`IBAN: ${assignedItems.length} stock assigned for order ${orderId}`);
           } else {
             // No stock available - try DijiPin as fallback
             const dijipinSettings = await db.collection('settings').findOne({ type: 'dijipin' });
@@ -9464,51 +9420,33 @@ export async function POST(request) {
       const orderUser = await db.collection('users').findOne({ id: order.userId });
       const product = await db.collection('products').findOne({ id: order.productId });
 
-      // Assign stock (FIFO)
-      const assignedStock = await db.collection('stock').findOneAndUpdate(
-        { productId: order.productId, status: 'available' },
-        { 
-          $set: { 
-            status: 'assigned', 
-            orderId: order.id,
-            assignedAt: new Date()
-          } 
-        },
-        { 
-          returnDocument: 'after',
-          sort: { createdAt: 1 }
-        }
-      );
+      // Assign stock with quantity support (FIFO)
+      const orderQty = order.quantity || 1;
+      const assignedItems = [];
+      for (let i = 0; i < orderQty; i++) {
+        const assignedStock = await db.collection('stock').findOneAndUpdate(
+          { productId: order.productId, status: 'available' },
+          { $set: { status: 'assigned', orderId: order.id, assignedAt: new Date() } },
+          { returnDocument: 'after', sort: { createdAt: 1 } }
+        );
+        if (assignedStock && assignedStock.value) {
+          assignedItems.push(assignedStock.value);
+        } else { break; }
+      }
 
-      if (assignedStock && assignedStock.value) {
-        const stockCode = assignedStock.value;
-        
-        // Update order
+      if (assignedItems.length > 0) {
         await db.collection('orders').updateOne(
           { id: order.id },
-          {
-            $set: {
-              delivery: {
-                status: 'delivered',
-                items: [stockCode],
-                stockId: assignedStock.id || assignedStock._id,
-                assignedAt: new Date(),
-                approvedBy: user.username || user.email,
-                approvedAt: new Date()
-              }
-            }
-          }
+          { $set: { delivery: { status: assignedItems.length >= orderQty ? 'delivered' : 'partial', items: assignedItems, assignedAt: new Date(), approvedBy: user.username || user.email, approvedAt: new Date() } } }
         );
 
-        // Log the approval
         await logAuditAction(db, AUDIT_ACTIONS.ORDER_MANUAL_APPROVE, user.id || user.username, 'order', order.id, request, {
           previousRiskScore: order.risk?.score,
           stockCode: '***MASKED***'
         });
 
-        // Send delivered email
         if (orderUser && product) {
-          sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
+          sendDeliveredEmail(db, order, orderUser, product, assignedItems).catch(err => 
             console.error('Delivered email failed:', err)
           );
         }

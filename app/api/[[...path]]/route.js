@@ -7386,6 +7386,7 @@ export async function POST(request) {
         status: 'pending',
         amount: orderAmount, // Backend-controlled price
         totalAmount: orderAmount, // For verification checks
+        quantity: quantity,
         currency: 'TRY',
         termsAccepted: termsAccepted || false,
         termsAcceptedAt: termsAcceptedAt ? new Date(termsAcceptedAt) : new Date(),

@@ -7956,54 +7956,35 @@ export async function POST(request) {
               }
 
               // ============================================
-              // UC ORDER - Use stock collection (original logic)
+              // UC ORDER - Use stock collection with QUANTITY support
               // ============================================
-              // Find available stock for this product (atomic operation)
-              const assignedStock = await db.collection('stock').findOneAndUpdate(
-                { 
-                  productId: order.productId, 
-                  status: 'available' 
-                },
-                { 
-                  $set: { 
-                    status: 'assigned', 
-                    orderId: order.id,
-                    assignedAt: new Date()
-                  } 
-                },
-                { 
-                  returnDocument: 'after',
-                  sort: { createdAt: 1 } // FIFO - First stock in, first assigned
-                }
-              );
+              const orderQty = order.quantity || 1;
+              const assignedItems = [];
+              
+              for (let i = 0; i < orderQty; i++) {
+                const assignedStock = await db.collection('stock').findOneAndUpdate(
+                  { productId: order.productId, status: 'available' },
+                  { $set: { status: 'assigned', orderId: order.id, assignedAt: new Date() } },
+                  { returnDocument: 'after', sort: { createdAt: 1 } }
+                );
+                if (assignedStock && assignedStock.value) {
+                  assignedItems.push(assignedStock.value);
+                } else { break; }
+              }
 
-              console.log('Stock assignment result:', JSON.stringify(assignedStock));
+              console.log(`Stock assignment: Order ${order.id}, qty=${orderQty}, assigned=${assignedItems.length}`);
 
-              if (assignedStock && assignedStock.value) {
-                // assignedStock IS the document, assignedStock.value IS the stock code string
-                const stockCode = assignedStock.value;
-                
+              if (assignedItems.length > 0) {
                 await db.collection('orders').updateOne(
                   { id: order.id },
-                  {
-                    $set: {
-                      delivery: {
-                        status: 'delivered',
-                        items: [stockCode],
-                        stockId: assignedStock.id || assignedStock._id,
-                        assignedAt: new Date()
-                      }
-                    }
-                  }
+                  { $set: { delivery: { status: assignedItems.length >= orderQty ? 'delivered' : 'partial', items: assignedItems, assignedAt: new Date() } } }
                 );
-                console.log(`Stock assigned: Order ${order.id} received code: ${stockCode}`);
+                console.log(`Stock assigned: Order ${order.id} received ${assignedItems.length} codes`);
                 
-                // Send delivered email with codes
                 if (orderUser && product) {
-                  sendDeliveredEmail(db, order, orderUser, product, [stockCode]).catch(err => 
+                  sendDeliveredEmail(db, order, orderUser, product, assignedItems).catch(err => 
                     console.error('Delivered email failed:', err)
                   );
-                  // UC teslimat SMS'i gönder
                   sendDeliverySms(db, order, orderUser, product.title).catch(err =>
                     console.error('Delivery SMS failed:', err)
                   );

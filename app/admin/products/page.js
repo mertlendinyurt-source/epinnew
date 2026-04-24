@@ -79,7 +79,7 @@ export default function AdminProducts() {
     if (userData) {
       try {
         const user = JSON.parse(userData)
-        if (user.role !== 'admin') {
+        if (user.role !== 'admin' && user.role !== 'destek') {
           toast.error('Bu sayfaya erişim yetkiniz yok')
           router.push('/')
           return

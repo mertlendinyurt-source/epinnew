@@ -3456,16 +3456,19 @@ export async function GET(request) {
         );
       }
 
-      // Get user's orders - ONLY paid or IBAN notified orders (hide unpaid/abandoned)
+      // Get user's orders - Show all relevant orders
       const orders = await db.collection('orders')
         .find({ 
           userId: authUser.id,
           $or: [
             { status: 'paid' },
+            { status: 'failed' },
             { status: 'refunded' },
+            { paymentMethod: 'card', status: 'pending' },
+            { paymentMethod: 'payyeen', status: 'pending' },
+            { paymentMethod: 'balance' },
             { paymentMethod: 'iban', 'ibanPayment.status': 'notified' },
             { paymentMethod: 'iban', 'ibanPayment.status': 'approved' },
-            { paymentMethod: 'balance' },
             { delivery: { $exists: true, $ne: null } }
           ]
         })

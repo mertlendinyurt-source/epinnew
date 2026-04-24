@@ -11264,6 +11264,21 @@ export async function POST(request) {
 
     // Customer: Get verification status
 
+    // Admin: Update user role (POST)
+    if (pathname.match(/^\/api\/admin\/users\/([^\/]+)\/role$/)) {
+      const userId = pathname.split('/')[4];
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser || adminUser.role !== 'admin') {
+        return NextResponse.json({ success: false, error: 'Sadece admin rol değiştirebilir' }, { status: 403 });
+      }
+      const { role } = body;
+      if (!['admin', 'destek', 'user'].includes(role)) {
+        return NextResponse.json({ success: false, error: 'Geçersiz rol' }, { status: 400 });
+      }
+      await db.collection('users').updateOne({ id: userId }, { $set: { role: role, updatedAt: new Date() } });
+      return NextResponse.json({ success: true, message: `Rol "${role}" olarak güncellendi` });
+    }
+
     return NextResponse.json(
       { success: false, error: 'Endpoint bulunamadı' },
       { status: 404 }

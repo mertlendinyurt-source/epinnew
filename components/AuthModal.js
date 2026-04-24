@@ -210,12 +210,10 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
         // Clear form
         setLoginForm({ email: '', password: '' });
 
-        // Check if user is admin and redirect accordingly
-        if (data.data.user.role === 'admin') {
+        // Check if user is admin or destek and redirect accordingly
+        if (data.data.user.role === 'admin' || data.data.user.role === 'destek') {
           toast.success('Admin paneline yönlendiriliyorsunuz...');
-          // Close modal first
           onClose();
-          // Redirect to admin dashboard
           setTimeout(() => {
             window.location.href = '/admin/dashboard';
           }, 500);

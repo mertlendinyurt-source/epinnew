@@ -32,6 +32,15 @@ import {
 } from 'lucide-react'
 
 // AÇILIR/KAPANIR MENÜ YAPISI
+// Destek rolünün erişebileceği sayfalar
+const DESTEK_ALLOWED_PATHS = [
+  '/admin/dashboard',
+  '/admin/orders',
+  '/admin/verification',
+  '/admin/users',
+  '/admin/products',
+];
+
 const menuGroups = [
   {
     id: 'main',
@@ -92,8 +101,19 @@ const menuGroups = [
 export default function AdminSidebar({ isOpen, setIsOpen }) {
   const router = useRouter()
   const pathname = usePathname()
-  // Varsayılan: tüm gruplar kapalı
   const [expandedGroups, setExpandedGroups] = useState([])
+  const [userRole, setUserRole] = useState('admin')
+
+  // Kullanıcı rolünü yükle
+  useEffect(() => {
+    try {
+      const userData = localStorage.getItem('userData')
+      if (userData) {
+        const parsed = JSON.parse(userData)
+        setUserRole(parsed.role || 'admin')
+      }
+    } catch (e) {}
+  }, [])
 
   // LocalStorage'dan açık grupları yükle
   useEffect(() => {
@@ -179,7 +199,13 @@ export default function AdminSidebar({ isOpen, setIsOpen }) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-3">
-          {menuGroups.map((group) => (
+          {/* Destek rolü sadece izin verilen sayfaları görür */}
+          {menuGroups.map((group) => {
+            const filteredItems = userRole === 'destek' 
+              ? group.items.filter(item => DESTEK_ALLOWED_PATHS.includes(item.href))
+              : group.items;
+            if (filteredItems.length === 0) return null;
+            return (
             <div key={group.id} className="mb-2">
               {/* Collapsible Group Header */}
               {group.title ? (
@@ -209,7 +235,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }) {
                   className={group.title ? 'ml-4 mt-1 space-y-0.5 border-l-2 border-slate-700 pl-3' : 'space-y-0.5'}
                   style={group.title ? { animation: 'slideDown 0.2s ease-out' } : {}}
                 >
-                  {group.items.map((item) => {
+                  {filteredItems.map((item) => {
                     const Icon = item.icon
                     const active = isActive(item.href)
                     return (
@@ -231,7 +257,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }) {
                 </div>
               )}
             </div>
-          ))}
+          )})}
         </nav>
 
         {/* Logout */}

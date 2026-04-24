@@ -1942,9 +1942,9 @@ function verifyAdminToken(request) {
   const user = verifyToken(request);
   if (!user) return null;
   
-  // Check if user has admin role
-  if (user.role !== 'admin') {
-    return null; // Reject non-admin users
+  // Check if user has admin or destek role
+  if (user.role !== 'admin' && user.role !== 'destek') {
+    return null;
   }
   
   return user;
@@ -1956,7 +1956,7 @@ function requireAdmin(request) {
   if (!user) {
     return { error: 'Yetkisiz erişim', status: 401 };
   }
-  if (user.role !== 'admin') {
+  if (user.role !== 'admin' && user.role !== 'destek') {
     return { error: 'Admin yetkisi gerekli', status: 403 };
   }
   return { user };
@@ -12031,6 +12031,27 @@ export async function PUT(request) {
         success: true,
         message: 'Şifre başarıyla güncellendi'
       });
+    }
+
+    // Admin: Update user role
+    if (pathname.match(/^\/api\/admin\/users\/([^\/]+)\/role$/)) {
+      const userId = pathname.split('/')[4];
+      const user = verifyAdminToken(request);
+      if (!user || user.role !== 'admin') {
+        return NextResponse.json({ success: false, error: 'Sadece admin rol değiştirebilir' }, { status: 403 });
+      }
+      
+      const { role } = body;
+      if (!['admin', 'destek', 'user'].includes(role)) {
+        return NextResponse.json({ success: false, error: 'Geçersiz rol' }, { status: 400 });
+      }
+      
+      await db.collection('users').updateOne(
+        { id: userId },
+        { $set: { role: role, updatedAt: new Date() } }
+      );
+      
+      return NextResponse.json({ success: true, message: `Kullanıcı rolü "${role}" olarak güncellendi` });
     }
 
     // Admin: Update user balance (add/subtract)

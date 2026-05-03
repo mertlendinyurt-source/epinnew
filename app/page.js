@@ -1641,47 +1641,86 @@ export default function App() {
             ) : (
               <>
               {dailyDeals.length > 0 && (
-                <div className="mb-6 bg-gradient-to-r from-orange-600/20 via-red-600/20 to-orange-600/20 rounded-2xl border-2 border-orange-500/40 p-4 md:p-6 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl"></div>
-                  <div className="flex items-center gap-2 mb-4 relative z-10">
-                    <span className="text-2xl">🔥</span>
-                    <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-wider">Günün Fırsatları</h2>
-                    <span className="text-2xl">🔥</span>
-                    <span className="ml-auto px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full animate-pulse">KAÇIRMA!</span>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 relative z-10">
-                    {dailyDeals.map(deal => {
-                      const timeLeft = new Date(deal.endTime) - new Date()
-                      const hours = Math.max(0, Math.floor(timeLeft / 3600000))
-                      const minutes = Math.max(0, Math.floor((timeLeft % 3600000) / 60000))
-                      const savings = deal.product ? ((1 - deal.dealPrice / deal.product.price) * 100).toFixed(0) : 0
-                      return (
-                        <div
-                          key={deal.id}
-                          onClick={() => {
-                            const p = products.find(pr => pr.id === deal.productId)
-                            if (p) handleProductSelect({...p, discountPrice: deal.dealPrice, isDeal: true})
-                          }}
-                          className="relative bg-gradient-to-b from-orange-900/40 to-[#252a34] rounded-xl border border-orange-500/30 p-3 cursor-pointer hover:scale-105 transition-all hover:shadow-lg hover:shadow-orange-500/20"
-                        >
-                          <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full z-10">%{savings} İNDİRİM</div>
-                          <div className="text-center mb-2">
-                            <div className="text-white font-bold text-sm md:text-base">{deal.product?.title}</div>
-                          </div>
-                          <div className="text-center space-y-1">
-                            <div className="text-red-400 line-through text-xs">₺{deal.product?.price?.toFixed(2)}</div>
-                            <div className="text-2xl md:text-3xl font-black text-orange-400">₺{deal.dealPrice?.toFixed(2)}</div>
-                          </div>
-                          <div className="mt-2 text-center">
-                            <div className="inline-flex items-center gap-1 bg-black/40 rounded-full px-3 py-1 text-[10px] text-orange-300">
-                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
-                              {hours > 0 ? `${hours}s ${minutes}dk kaldı` : `${minutes} dakika kaldı`}
+                <div className="mb-6 rounded-2xl overflow-hidden relative">
+                  {/* Background glow effects */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-pink-900/30 to-orange-900/40"></div>
+                  <div className="absolute top-0 left-1/4 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl"></div>
+                  <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-orange-500/20 rounded-full blur-3xl"></div>
+                  
+                  <div className="relative z-10 p-4 md:p-6 border-2 border-purple-500/30 rounded-2xl backdrop-blur-sm">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30">
+                          <span className="text-xl">⚡</span>
+                        </div>
+                        <div>
+                          <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-wide">Günün Fırsatları</h2>
+                          <p className="text-xs text-white/50">Sınırlı süre • Kaçırmayın!</p>
+                        </div>
+                      </div>
+                      <div className="px-3 py-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-black rounded-lg animate-pulse shadow-lg shadow-red-500/30">
+                        🔥 FIRSAT
+                      </div>
+                    </div>
+
+                    {/* Deal Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 relative z-10">
+                      {dailyDeals.map(deal => {
+                        const timeLeft = new Date(deal.endTime) - new Date()
+                        const hours = Math.max(0, Math.floor(timeLeft / 3600000))
+                        const minutes = Math.max(0, Math.floor((timeLeft % 3600000) / 60000))
+                        const savings = deal.product ? ((1 - deal.dealPrice / deal.product.price) * 100).toFixed(0) : 0
+                        return (
+                          <div
+                            key={deal.id}
+                            onClick={() => {
+                              const p = products.find(pr => pr.id === deal.productId)
+                              if (p) handleProductSelect({...p, discountPrice: deal.dealPrice, isDeal: true})
+                            }}
+                            className="group relative bg-[#1a1f2e] rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl hover:shadow-purple-500/20 border border-white/10 hover:border-purple-500/50"
+                          >
+                            {/* Discount badge */}
+                            <div className="absolute top-3 right-3 z-20 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[11px] font-black px-2.5 py-1 rounded-lg shadow-lg">
+                              %{savings} İNDİRİM
+                            </div>
+
+                            {/* Product image */}
+                            <div className="relative h-28 md:h-32 overflow-hidden bg-gradient-to-b from-purple-900/30 to-transparent">
+                              {deal.product?.imageUrl ? (
+                                <img src={deal.product.imageUrl} alt={deal.product.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <span className="text-4xl">🎮</span>
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-[#1a1f2e] via-transparent to-transparent"></div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="p-4 -mt-4 relative z-10">
+                              <h3 className="text-white font-bold text-sm md:text-base mb-3 group-hover:text-purple-300 transition-colors">{deal.product?.title}</h3>
+                              
+                              <div className="flex items-end gap-2 mb-3">
+                                <span className="text-2xl md:text-3xl font-black bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">₺{deal.dealPrice?.toFixed(0)}</span>
+                                <span className="text-sm text-red-400/80 line-through mb-1">₺{deal.product?.price?.toFixed(0)}</span>
+                              </div>
+
+                              {/* Timer */}
+                              <div className="flex items-center gap-1.5 mb-3">
+                                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
+                                <span className="text-[11px] text-white/60">{hours > 0 ? `${hours} saat ${minutes} dk kaldı` : `${minutes} dakika kaldı`}</span>
+                              </div>
+
+                              {/* Buy button */}
+                              <button className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-sm font-bold rounded-lg transition-all shadow-lg shadow-purple-500/25 group-hover:shadow-purple-500/40">
+                                HEMEN AL →
+                              </button>
                             </div>
                           </div>
-                          <div className="mt-2 bg-orange-500 hover:bg-orange-400 text-white text-xs font-bold py-1.5 rounded-lg text-center transition-colors">SATIN AL</div>
-                        </div>
-                      )
-                    })}
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
               )}

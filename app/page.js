@@ -1641,22 +1641,24 @@ export default function App() {
             ) : (
               <>
               {dailyDeals.length > 0 && (
-                <div className="mb-6 bg-[#1a1f2e] rounded-xl border border-white/10 p-4 md:p-5">
+                <div className="mb-6 bg-[#1e2330] rounded-xl border border-red-500/30 overflow-hidden">
                   {/* Header */}
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">⚡</span>
-                      <h2 className="text-base md:text-lg font-bold text-white">Günün Fırsatları</h2>
+                      <span className="text-yellow-400 text-lg">⚡</span>
+                      <span className="text-yellow-400 font-bold text-sm md:text-base">Bugüne Özel Fırsat</span>
                     </div>
-                    <span className="px-2 py-0.5 bg-red-500/20 text-red-400 text-[10px] font-bold rounded">SINIRLI SÜRE</span>
+                    <div className="flex items-center gap-1.5 bg-red-500 px-3 py-1.5 rounded-lg">
+                      <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
+                      <span className="text-white text-xs font-bold" id="deal-timer">
+                        {(() => { const t = new Date(dailyDeals[0]?.endTime) - new Date(); const h = Math.max(0,Math.floor(t/3600000)); const m = Math.max(0,Math.floor((t%3600000)/60000)); return `Kalan Süre: ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; })()}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Deal Cards - Compact */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {/* Deal Items */}
+                  <div className="divide-y divide-white/5">
                     {dailyDeals.map(deal => {
-                      const timeLeft = new Date(deal.endTime) - new Date()
-                      const hours = Math.max(0, Math.floor(timeLeft / 3600000))
-                      const minutes = Math.max(0, Math.floor((timeLeft % 3600000) / 60000))
                       const savings = deal.product ? ((1 - deal.dealPrice / deal.product.price) * 100).toFixed(0) : 0
                       return (
                         <div
@@ -1665,19 +1667,35 @@ export default function App() {
                             const p = products.find(pr => pr.id === deal.productId)
                             if (p) handleProductSelect({...p, discountPrice: deal.dealPrice, isDeal: true})
                           }}
-                          className="bg-[#252a34] rounded-lg p-3 cursor-pointer hover:bg-[#2a3040] transition-all border border-white/5 hover:border-purple-500/30"
+                          className="flex items-center gap-3 md:gap-4 px-4 py-3 hover:bg-white/5 cursor-pointer transition-colors"
                         >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-white font-semibold text-xs md:text-sm truncate">{deal.product?.title}</span>
-                            <span className="text-[9px] bg-red-500 text-white px-1.5 py-0.5 rounded font-bold ml-1 flex-shrink-0">-{savings}%</span>
+                          {/* Product image */}
+                          <div className="w-12 h-12 md:w-14 md:h-14 rounded-lg overflow-hidden bg-[#252a34] flex-shrink-0">
+                            {deal.product?.imageUrl ? (
+                              <img src={deal.product.imageUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-xl">🎮</div>
+                            )}
                           </div>
-                          <div className="flex items-baseline gap-2 mb-2">
-                            <span className="text-lg md:text-xl font-black text-green-400">₺{deal.dealPrice?.toFixed(0)}</span>
-                            <span className="text-xs text-white/40 line-through">₺{deal.product?.price?.toFixed(0)}</span>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-bold">🔥 %{savings} İNDİRİM</span>
+                              <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded font-medium">⚡ Anında Teslimat</span>
+                            </div>
+                            <p className="text-white text-sm font-medium truncate">{deal.product?.title}</p>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-white/40">{hours > 0 ? `${hours}s ${minutes}dk` : `${minutes}dk`} kaldı</span>
-                            <span className="text-[10px] text-purple-400 font-semibold">Satın Al →</span>
+
+                          {/* Price + Button */}
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            <div className="text-right">
+                              <div className="text-white font-bold text-base md:text-lg">₺{deal.dealPrice?.toFixed(0)}</div>
+                              <div className="text-red-400/70 text-xs line-through">₺{deal.product?.price?.toFixed(0)}</div>
+                            </div>
+                            <div className="hidden md:block bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors">
+                              Satın Al
+                            </div>
                           </div>
                         </div>
                       )

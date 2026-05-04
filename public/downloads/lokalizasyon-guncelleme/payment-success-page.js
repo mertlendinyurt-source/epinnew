@@ -83,55 +83,59 @@ function PaymentSuccessContent() {
               body: JSON.stringify({})
             }).catch(() => {})
           }
+        }
           
-          // --- GTM / Google Ads Tetikleme ---
-          if (!purchaseTracked.current) {
-            purchaseTracked.current = true
-            
-            // Veriyi güvenli şekilde GTM'e gönder
-            if (typeof window !== 'undefined') {
-                window.dataLayer = window.dataLayer || [];
-                window.dataLayer.push({ ecommerce: null }); // Eski veriyi temizle
-                
-                // Tutar: order amount, totalAmount, veya URL'den al
-                let amountValue = Number(orderData.amount || orderData.totalAmount || 0);
-                
-                // Eğer amount hâlâ 0 ise, URL'den almayı dene
-                if (!amountValue || amountValue <= 0) {
-                  const urlAmount = new URLSearchParams(window.location.search).get('amount');
-                  if (urlAmount) amountValue = Number(urlAmount);
-                }
-                
-                // Hâlâ 0 ise, product price'dan hesapla
-                if (!amountValue || amountValue <= 0) {
-                  amountValue = Number(orderData.productPrice || orderData.price || 0);
-                }
+        // --- GTM / Google Ads Tetikleme (orderData olsun olmasın tetikle!) ---
+        if (!purchaseTracked.current && orderId) {
+          purchaseTracked.current = true
+          
+          if (typeof window !== 'undefined') {
+              window.dataLayer = window.dataLayer || [];
+              window.dataLayer.push({ ecommerce: null });
+              
+              // Tutar: order data, URL param, veya product price
+              let amountValue = Number(orderData?.amount || orderData?.totalAmount || 0);
+              
+              // URL'den amount al (her zaman fallback)
+              if (!amountValue || amountValue <= 0) {
+                const urlAmount = new URLSearchParams(window.location.search).get('amount');
+                if (urlAmount) amountValue = Number(urlAmount);
+              }
+              
+              // Hâlâ 0 ise product price dene
+              if (!amountValue || amountValue <= 0) {
+                amountValue = Number(orderData?.productPrice || orderData?.price || 0);
+              }
 
-                console.log('📊 ROAS Event - Order:', orderId, 'Amount:', amountValue, 'Currency: TRY');
-                
+              console.log('📊 ROAS Event - Order:', orderId, 'Amount:', amountValue, 'Currency: TRY');
+              
+              if (amountValue > 0) {
                 window.dataLayer.push({
                   event: 'purchase',
-                  // Google Ads (Düz Yapı)
                   ads_value: amountValue,
                   ads_id: orderId,
                   ads_currency: 'TRY',
-                  // GA4 (Standart Yapı)
                   ecommerce: {
                     transaction_id: orderId,
                     value: amountValue,
                     currency: 'TRY',
                     items: [{
-                      item_id: orderData.productId || orderId,
-                      item_name: orderData.productTitle || 'Ürün',
+                      item_id: orderData?.productId || orderId,
+                      item_name: orderData?.productTitle || 'Ürün',
                       price: amountValue,
-                      quantity: orderData.quantity || 1
+                      quantity: orderData?.quantity || 1
                     }]
                   }
                 });
-            }
+                console.log('✅ ROAS Event fired successfully!');
+              } else {
+                console.warn('⚠️ ROAS Event skipped - amount is 0');
+              }
           }
+        }
           
-          // Yüksek Tutar Doğrulama Kontrolü
+        // Yüksek Tutar Doğrulama Kontrolü
+        if (orderData) {
           const orderAmount = orderData.amount || orderData.totalAmount || 0;
           const isHighValue = orderAmount >= VERIFICATION_THRESHOLD;
           const isNotDelivered = orderData.delivery?.status !== 'delivered';

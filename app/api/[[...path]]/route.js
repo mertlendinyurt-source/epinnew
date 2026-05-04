@@ -2804,7 +2804,7 @@ export async function GET(request) {
       
       const order = await db.collection('orders').findOne({ id: orderId });
       if (!order) return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}&error=order_not_found`);
-      if (order.status === 'paid') return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
+      if (order.status === 'paid') return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}&amount=${order.amount || 0}`);
       if (order.status === 'failed') return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}`);
       
       // Verify with Shoppiyen webhook verify API
@@ -2861,7 +2861,7 @@ export async function GET(request) {
           delivery: { status: 'verification_required', message: 'Yüksek tutarlı sipariş - Doğrulama gerekli', items: [] }
         }});
         if (orderUser && product) sendVerificationRequiredEmail(db, order, orderUser, product).catch(err => console.error('Verif email err:', err));
-        return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
+        return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}&amount=${order.amount || 0}`);
       }
       
       const riskResult = await calculateOrderRisk(db, order, orderUser, request);
@@ -2897,7 +2897,7 @@ export async function GET(request) {
         } catch (e) { console.error('Stock error:', e); }
       }
       
-      return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}`);
+      return NextResponse.redirect(`${publicBaseUrl}/payment/success?orderId=${orderId}&amount=${order.amount || 0}`);
       } else {
         // Verification failed or status not success
         return NextResponse.redirect(`${publicBaseUrl}/payment/failed?orderId=${orderId}&error=verification_failed`);

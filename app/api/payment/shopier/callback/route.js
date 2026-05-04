@@ -161,7 +161,7 @@ async function handleCallback(request) {
     // Zaten ödenmiş mi?
     if (order.status === 'paid') {
       await client.close();
-      return htmlRedirect('/payment/success?orderId=' + orderId);
+      return htmlRedirect('/payment/success?orderId=' + orderId + '&amount=' + (order.amount || 0));
     }
 
     // 3. ADIM: DURUM BELİRLEME

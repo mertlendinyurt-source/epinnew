@@ -93,7 +93,21 @@ function PaymentSuccessContent() {
                 window.dataLayer = window.dataLayer || [];
                 window.dataLayer.push({ ecommerce: null }); // Eski veriyi temizle
                 
-                const amountValue = Number(orderData.amount || orderData.totalAmount || 0);
+                // Tutar: order amount, totalAmount, veya URL'den al
+                let amountValue = Number(orderData.amount || orderData.totalAmount || 0);
+                
+                // Eğer amount hâlâ 0 ise, URL'den almayı dene
+                if (!amountValue || amountValue <= 0) {
+                  const urlAmount = new URLSearchParams(window.location.search).get('amount');
+                  if (urlAmount) amountValue = Number(urlAmount);
+                }
+                
+                // Hâlâ 0 ise, product price'dan hesapla
+                if (!amountValue || amountValue <= 0) {
+                  amountValue = Number(orderData.productPrice || orderData.price || 0);
+                }
+
+                console.log('📊 ROAS Event - Order:', orderId, 'Amount:', amountValue, 'Currency: TRY');
                 
                 window.dataLayer.push({
                   event: 'purchase',
@@ -110,7 +124,7 @@ function PaymentSuccessContent() {
                       item_id: orderData.productId || orderId,
                       item_name: orderData.productTitle || 'Ürün',
                       price: amountValue,
-                      quantity: 1
+                      quantity: orderData.quantity || 1
                     }]
                   }
                 });

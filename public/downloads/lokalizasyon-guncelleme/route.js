@@ -3815,14 +3815,17 @@ export async function GET(request) {
         );
       }
       
-      // Return only safe, non-sensitive order summary data
       return NextResponse.json({
         success: true,
         data: {
           id: order.id,
+          productId: order.productId,
           productTitle: order.productTitle,
           amount: order.amount || order.totalAmount,
+          totalAmount: order.totalAmount || order.amount,
+          quantity: order.quantity || 1,
           status: order.status,
+          paymentMethod: order.paymentMethod,
           customer: order.customer ? {
             firstName: order.customer.firstName,
             lastName: order.customer.lastName,

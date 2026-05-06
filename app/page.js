@@ -1674,8 +1674,8 @@ export default function App() {
                           
                           <div className="text-white font-bold text-sm md:text-base mt-2 mb-3">{deal.product?.title}</div>
                           
-                          <div className="text-red-400/80 line-through text-xs mb-1">₺{deal.product?.price?.toFixed(2)}</div>
-                          <div className="text-2xl md:text-3xl font-black text-orange-400 mb-3">₺{deal.dealPrice?.toFixed(2)}</div>
+                          <div className="text-red-400/80 line-through text-xs mb-1">₺{deal.product?.price?.toFixed(0)}</div>
+                          <div className="text-2xl md:text-3xl font-black text-orange-400 mb-3">₺{deal.dealPrice?.toFixed(0)}</div>
                           
                           <div className="inline-flex items-center gap-1 bg-black/30 rounded px-2 py-1 text-[10px] text-white/60 mb-3">
                             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
@@ -1738,9 +1738,9 @@ export default function App() {
                       </div>
                       <div className="mt-1">
                         {product.discountPrice < product.price && (
-                          <div className="text-[11px] md:text-[9px] text-red-500 line-through">₺{product.price.toFixed(2).replace('.', ',')}</div>
+                          <div className="text-[11px] md:text-[9px] text-red-500 line-through">₺{product.price.toFixed(0)}</div>
                         )}
-                        <div className="text-[18px] md:text-[15px] font-bold text-white">₺ {product.discountPrice.toFixed(2).replace('.', ',')}</div>
+                        <div className="text-[18px] md:text-[15px] font-bold text-white">₺ {product.discountPrice.toFixed(0)}</div>
                         {product.discountPercent > 0 && (
                           <div className="text-[10px] md:text-[11px] text-emerald-400 font-medium">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
                         )}
@@ -2296,12 +2296,12 @@ export default function App() {
                       <div className="space-y-3">
                         <div className="flex justify-between items-center text-sm md:text-base">
                           <span className="text-white/70">Orjinal Fiyat</span>
-                          <span className="text-white font-bold">₺ {selectedProduct.price.toFixed(2)}</span>
+                          <span className="text-white font-bold">₺ {selectedProduct.price.toFixed(0)}</span>
                         </div>
                         {selectedProduct.discountPrice < selectedProduct.price && (
                           <div className="flex justify-between items-center text-sm md:text-base">
                             <span className="text-green-400 font-semibold">Size Özel Fiyat</span>
-                            <span className="text-green-400 font-bold">₺ {selectedProduct.discountPrice.toFixed(2)}</span>
+                            <span className="text-green-400 font-bold">₺ {selectedProduct.discountPrice.toFixed(0)}</span>
                           </div>
                         )}
                       </div>
@@ -2329,7 +2329,7 @@ export default function App() {
                       </div>
                       {quantity > 1 && (
                         <div className="text-xs text-white/40 text-right mb-2">
-                          {quantity} x ₺{selectedProduct.discountPrice.toFixed(2)} = ₺{(selectedProduct.discountPrice * quantity).toFixed(2)}
+                          {quantity} x ₺{selectedProduct.discountPrice.toFixed(0)} = ₺{(selectedProduct.discountPrice * quantity).toFixed(0)}
                         </div>
                       )}
                     </div>
@@ -2338,7 +2338,7 @@ export default function App() {
                       <div className="flex justify-between items-center mb-4">
                         <span className="text-sm md:text-base text-white/70 uppercase">Ödenecek Tutar</span>
                         <span className="text-2xl md:text-3xl font-black text-white">
-                          ₺ {(selectedProduct.discountPrice * quantity).toFixed(2)}
+                          ₺ {(selectedProduct.discountPrice * quantity).toFixed(0)}
                         </span>
                       </div>
 

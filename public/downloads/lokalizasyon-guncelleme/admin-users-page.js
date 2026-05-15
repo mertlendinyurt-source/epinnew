@@ -446,6 +446,28 @@ export default function AdminUsersPage() {
                             <Button
                               size="sm"
                               variant="outline"
+                              onClick={async () => {
+                                if (!confirm(`${user.firstName} ${user.lastName} kullanıcısını tüm cihazlardan çıkış yaptırmak istediğinize emin misiniz?`)) return;
+                                try {
+                                  const token = localStorage.getItem('userToken') || localStorage.getItem('adminToken');
+                                  const res = await fetch(`/api/admin/users/${user.id}/logout-all`, {
+                                    method: 'POST',
+                                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({})
+                                  });
+                                  const data = await res.json();
+                                  if (data.success) toast.success('Tüm cihazlardan çıkış yaptırıldı');
+                                  else toast.error(data.error);
+                                } catch (err) { toast.error('Hata'); }
+                              }}
+                              className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                              title="Tüm Cihazlardan Çıkış Yaptır"
+                            >
+                              🚪
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
                               onClick={() => {
                                 setSelectedUser(user)
                                 setShowDeleteModal(true)

@@ -1931,18 +1931,44 @@ function verifyToken(request) {
   }
   const token = authHeader.substring(7);
   try {
-    return jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded;
   } catch (error) {
     return null;
   }
 }
 
+// Verify token AND check logoutAllAt (async - for critical operations)
+async function verifyTokenSecure(request, db) {
+  const decoded = verifyToken(request);
+  if (!decoded) return null;
+  
+  const user = await db.collection('users').findOne({ id: decoded.id });
+  if (!user) return null;
+  
+  // Check if token was issued before "logout all" timestamp
+  if (user.logoutAllAt && decoded.iat) {
+    const logoutTime = Math.floor(new Date(user.logoutAllAt).getTime() / 1000);
+    if (decoded.iat < logoutTime) {
+      return null; // Token invalidated
+    }
+  }
+  
+  return decoded;
+}
+
 // Verify Admin Token (requires username field, not type)
+// Verify Admin Token (requires admin/destek/izleyici role + logoutAllAt check)
+async function verifyAdminTokenSecure(request, db) {
+  const user = await verifyTokenSecure(request, db);
+  if (!user) return null;
+  if (user.role !== 'admin' && user.role !== 'destek' && user.role !== 'izleyici') return null;
+  return user;
+}
+
 function verifyAdminToken(request) {
   const user = verifyToken(request);
   if (!user) return null;
-  
-  // Check if user has admin or destek role
   if (user.role !== 'admin' && user.role !== 'destek' && user.role !== 'izleyici') {
     return null;
   }
@@ -11266,6 +11292,36 @@ export async function POST(request) {
     }
 
     // Customer: Get verification status
+
+
+    // Tüm cihazlardan çıkış yap (POST)
+    if (pathname === '/api/auth/logout-all') {
+      const user = verifyToken(request);
+      if (!user) return NextResponse.json({ success: false, error: 'Yetkisiz' }, { status: 401 });
+      
+      await db.collection('users').updateOne(
+        { id: user.id },
+        { $set: { logoutAllAt: new Date(), updatedAt: new Date() } }
+      );
+      
+      return NextResponse.json({ success: true, message: 'Tüm cihazlardan çıkış yapıldı' });
+    }
+
+    // Admin: Belirli kullanıcıyı tüm cihazlardan çıkış yaptır
+    if (pathname.match(/^\/api\/admin\/users\/([^\/]+)\/logout-all$/)) {
+      const userId = pathname.split('/')[4];
+      const adminUser = verifyAdminToken(request);
+      if (!adminUser || adminUser.role !== 'admin') {
+        return NextResponse.json({ success: false, error: 'Sadece admin bu işlemi yapabilir' }, { status: 403 });
+      }
+      
+      await db.collection('users').updateOne(
+        { id: userId },
+        { $set: { logoutAllAt: new Date(), updatedAt: new Date() } }
+      );
+      
+      return NextResponse.json({ success: true, message: 'Kullanıcı tüm cihazlardan çıkış yaptırıldı' });
+    }
 
     // Admin: Update user role (POST)
     if (pathname.match(/^\/api\/admin\/users\/([^\/]+)\/role$/)) {

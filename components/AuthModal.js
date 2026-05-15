@@ -211,7 +211,7 @@ export default function AuthModal({ open, onClose, onSuccess, defaultTab = 'regi
         setLoginForm({ email: '', password: '' });
 
         // Check if user is admin or destek and redirect accordingly
-        if (data.data.user.role === 'admin' || data.data.user.role === 'destek') {
+        if (data.data.user.role === 'admin' || data.data.user.role === 'destek' || data.data.user.role === 'izleyici') {
           toast.success('Admin paneline yönlendiriliyorsunuz...');
           onClose();
           setTimeout(() => {

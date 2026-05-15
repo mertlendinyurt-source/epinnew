@@ -41,6 +41,12 @@ const DESTEK_ALLOWED_PATHS = [
   '/admin/products',
 ];
 
+// İzleyici rolünün erişebileceği sayfalar (sadece siparişler)
+const IZLEYICI_ALLOWED_PATHS = [
+  '/admin/dashboard',
+  '/admin/orders',
+];
+
 const menuGroups = [
   {
     id: 'main',
@@ -203,6 +209,8 @@ export default function AdminSidebar({ isOpen, setIsOpen }) {
           {menuGroups.map((group) => {
             const filteredItems = userRole === 'destek' 
               ? group.items.filter(item => DESTEK_ALLOWED_PATHS.includes(item.href))
+              : userRole === 'izleyici'
+              ? group.items.filter(item => IZLEYICI_ALLOWED_PATHS.includes(item.href))
               : group.items;
             if (filteredItems.length === 0) return null;
             return (

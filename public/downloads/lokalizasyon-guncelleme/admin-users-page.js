@@ -387,11 +387,13 @@ export default function AdminUsersPage() {
                             className={`text-xs px-2 py-1 rounded border cursor-pointer ${
                               user.role === 'admin' ? 'bg-red-900/30 border-red-600 text-red-400' :
                               user.role === 'destek' ? 'bg-blue-900/30 border-blue-600 text-blue-400' :
+                              user.role === 'izleyici' ? 'bg-purple-900/30 border-purple-600 text-purple-400' :
                               'bg-slate-800 border-slate-700 text-slate-400'
                             }`}
                           >
                             <option value="user">Kullanıcı</option>
                             <option value="destek">Destek</option>
+                            <option value="izleyici">İzleyici</option>
                             <option value="admin">Admin</option>
                           </select>
                         </TableCell>

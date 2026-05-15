@@ -1943,7 +1943,7 @@ function verifyAdminToken(request) {
   if (!user) return null;
   
   // Check if user has admin or destek role
-  if (user.role !== 'admin' && user.role !== 'destek') {
+  if (user.role !== 'admin' && user.role !== 'destek' && user.role !== 'izleyici') {
     return null;
   }
   
@@ -1956,7 +1956,7 @@ function requireAdmin(request) {
   if (!user) {
     return { error: 'Yetkisiz erişim', status: 401 };
   }
-  if (user.role !== 'admin' && user.role !== 'destek') {
+  if (user.role !== 'admin' && user.role !== 'destek' && user.role !== 'izleyici') {
     return { error: 'Admin yetkisi gerekli', status: 403 };
   }
   return { user };
@@ -11275,7 +11275,7 @@ export async function POST(request) {
         return NextResponse.json({ success: false, error: 'Sadece admin rol değiştirebilir' }, { status: 403 });
       }
       const { role } = body;
-      if (!['admin', 'destek', 'user'].includes(role)) {
+      if (!['admin', 'destek', 'izleyici', 'user'].includes(role)) {
         return NextResponse.json({ success: false, error: 'Geçersiz rol' }, { status: 400 });
       }
       await db.collection('users').updateOne({ id: userId }, { $set: { role: role, updatedAt: new Date() } });
@@ -12060,7 +12060,7 @@ export async function PUT(request) {
       }
       
       const { role } = body;
-      if (!['admin', 'destek', 'user'].includes(role)) {
+      if (!['admin', 'destek', 'izleyici', 'user'].includes(role)) {
         return NextResponse.json({ success: false, error: 'Geçersiz rol' }, { status: 400 });
       }
       
@@ -12080,7 +12080,7 @@ export async function PUT(request) {
         return NextResponse.json({ success: false, error: 'Sadece admin rol değiştirebilir' }, { status: 403 });
       }
       const { role } = body;
-      if (!['admin', 'destek', 'user'].includes(role)) {
+      if (!['admin', 'destek', 'izleyici', 'user'].includes(role)) {
         return NextResponse.json({ success: false, error: 'Geçersiz rol' }, { status: 400 });
       }
       await db.collection('users').updateOne(
@@ -12098,7 +12098,7 @@ export async function PUT(request) {
         return NextResponse.json({ success: false, error: 'Sadece admin rol değiştirebilir' }, { status: 403 });
       }
       const { role } = body;
-      if (!['admin', 'destek', 'user'].includes(role)) {
+      if (!['admin', 'destek', 'izleyici', 'user'].includes(role)) {
         return NextResponse.json({ success: false, error: 'Geçersiz rol' }, { status: 400 });
       }
       await db.collection('users').updateOne({ id: userId }, { $set: { role: role, updatedAt: new Date() } });

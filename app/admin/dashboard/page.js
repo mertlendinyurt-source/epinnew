@@ -31,7 +31,7 @@ export default function AdminDashboard() {
     if (userData) {
       try {
         const user = JSON.parse(userData)
-        if (user.role !== 'admin' && user.role !== 'destek') {
+        if (user.role !== 'admin' && user.role !== 'destek' && user.role !== 'izleyici') {
           toast.error('Bu sayfaya erişim yetkiniz yok')
           router.push('/')
           return

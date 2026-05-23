@@ -1689,29 +1689,23 @@ export default function App() {
                   </div>
                 </div>
               )}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
                 {products.map((product) => (
                   <div
                     key={product.id}
                     onClick={() => handleProductSelect(product)}
-                    className={`product-card-glow group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border ${product.featured ? 'border-yellow-500/50 ring-2 ring-yellow-500/30' : 'border-white/10'} hover:border-white/20 w-full aspect-[2/3.8] md:aspect-[2/3]`}
+                    className={`product-card-glow group relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/10 flex flex-col border ${product.featured ? 'border-yellow-500/50 ring-1 ring-yellow-500/30' : 'border-white/10 hover:border-blue-500/30'} bg-[#171c28] w-full aspect-[2/3.8] md:aspect-[2/3]`}
                     style={{ backgroundColor: '#252a34', maxWidth: '270px', margin: '0 auto' }}
                   >
                     {/* En Çok Tercih Edilen Badge */}
                     {product.featured && (
-                      <div className="absolute top-0 left-0 right-0 z-30 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white text-[10px] md:text-[11px] font-bold py-1 px-2 text-center shadow-lg">
+                      <div className="absolute top-0 left-0 right-0 z-30 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white text-[10px] font-bold py-1 px-2 text-center">
                         ⭐ EN ÇOK TERCİH EDİLEN
                       </div>
                     )}
-                    
-                    {/* Info Icon */}
-                    <div className={`absolute ${product.featured ? 'top-8' : 'top-2'} right-2 w-6 h-6 md:w-5 md:h-5 rounded-full bg-white/90 flex items-center justify-center z-20`}>
-                      <span className="text-gray-700 font-bold text-xs md:text-xs">i</span>
-                    </div>
 
-                    {/* Image Section */}
-                    <div className="relative h-[42%] md:h-[55%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-2 md:p-4">
-                      {/* Flare Effect */}
+                    {/* Image Section - Larger */}
+                    <div className="relative h-[50%] md:h-[55%] bg-gradient-to-b from-[#1e2430] to-[#171c28] flex items-center justify-center p-3 md:p-5 overflow-hidden">
                       <div className="go-product-shine">
                         <div className="go-product-shine-overlay"></div>
                         <img className="go-flare" src="/flare.png" alt="" />
@@ -1719,41 +1713,52 @@ export default function App() {
                       <img 
                         src={product.imageUrl || "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=300&h=300&fit=crop"}
                         alt={product.title}
-                        className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105 relative z-10"
+                        className="max-w-[85%] max-h-[85%] object-contain transition-transform duration-500 group-hover:scale-110 relative z-10 drop-shadow-2xl"
                         onError={(e) => {
                           e.target.src = "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=300&h=300&fit=crop";
                         }}
                       />
+                      {/* Seçim Badge */}
+                      <div className="absolute bottom-2 right-2 z-20 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                        Seçim
+                      </div>
                     </div>
 
-                    {/* Content Section */}
-                    <div className="h-[58%] md:h-[45%] flex flex-col justify-between p-2.5 md:p-3.5">
-                      <div>
-                        <div className="text-[10px] md:text-[10px] text-white/60 font-bold uppercase">MOBİLE</div>
-                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.ucAmount} UC Yükleme Şansı</div>
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
+                    {/* Content Section - Epinland Style */}
+                    <div className="h-[50%] md:h-[45%] flex flex-col p-3 md:p-4 border-t border-white/5">
+                      <div className="flex-1">
+                        <div className="text-[10px] text-white/40 font-semibold uppercase tracking-wider mb-1">PUBG MOBILE UC</div>
+                        <div className="text-[14px] md:text-[13px] font-bold text-white leading-tight mb-2">{product.ucAmount || product.title?.match(/\d+/)?.[0]} UC Yükleme Şansı</div>
+                        <div className="flex items-center gap-1 mb-1">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          <span className="text-[10px] text-emerald-400 font-semibold">HER SUNUCUDA GEÇERLİ</span>
                         </div>
-                        <div className="text-[9px] md:text-[9px] text-emerald-400 mt-0.5">Bölgenizde kullanılabilir</div>
+                        <div className="text-[9px] text-cyan-400/70">Bölgenizde kullanılabilir</div>
                       </div>
-                      <div className="mt-1">
+                      
+                      <div className="pt-2 border-t border-white/5">
                         {product.discountPrice < product.price && (
-                          <div className="text-[11px] md:text-[9px] text-red-500 line-through">₺{product.price.toFixed(0)}</div>
+                          <div className="text-[11px] text-red-400 line-through font-medium">₺{product.price.toFixed(0)}</div>
                         )}
-                        <div className="text-[18px] md:text-[15px] font-bold text-white">₺ {product.discountPrice.toFixed(0)}</div>
-                        {product.discountPercent > 0 && (
-                          <div className="text-[10px] md:text-[11px] text-emerald-400 font-medium">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
-                        )}
-                      </div>
-                      {viewerCounts[product.id] && (
-                        <div className="flex items-center gap-1 mt-1">
-                          <span className="relative flex h-1.5 w-1.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
-                          </span>
-                          <span className="text-[9px] md:text-[10px] text-white/50">{viewerCounts[product.id]} kişi bakıyor</span>
+                        <div className="flex items-end justify-between">
+                          <div>
+                            <div className="text-[20px] md:text-[18px] font-black text-white">₺ {product.discountPrice.toFixed(0)}</div>
+                            {product.discountPercent > 0 && (
+                              <div className="text-[10px] text-emerald-400 font-semibold">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
+                            )}
+                          </div>
+                          {viewerCounts[product.id] && (
+                            <div className="flex items-center gap-1">
+                              <span className="relative flex h-1.5 w-1.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                              </span>
+                              <span className="text-[9px] text-white/40">{viewerCounts[product.id]} kişi</span>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 ))}

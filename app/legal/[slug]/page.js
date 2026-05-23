@@ -238,30 +238,12 @@ export default function LegalPage() {
       <footer className="bg-[#0a0c0f] border-t border-white/10 pt-12 pb-6">
         <div className="max-w-6xl mx-auto px-4">
           {/* Kurumsal Bilgiler */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 pb-8 border-b border-white/10">
-            {/* Vergi / Ticaret Sicil */}
-            <div className="space-y-2">
-              <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Ticaret Sicil No</h4>
-              <p className="text-white/80 text-sm font-semibold">541409</p>
-              <p className="text-white/50 text-xs">Vergi No: 7300897060</p>
-              <p className="text-white/50 text-xs">Mersis No: 0730089706000001</p>
-            </div>
-
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 pb-8 border-b border-white/10">
             {/* Unvan */}
             <div className="space-y-2">
               <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Unvan</h4>
               <p className="text-white/80 text-sm font-semibold leading-snug">
                 PİNLY ELEKTRONİK HİZMETLER TİCARET ANONİM ŞİRKETİ
-              </p>
-            </div>
-
-            {/* Adres */}
-            <div className="space-y-2">
-              <h4 className="text-cyan-400 text-xs font-medium tracking-wide">Adres</h4>
-              <p className="text-white/80 text-sm leading-snug">
-                Kızılırmak Mah. Dumlupınar Bul.<br/>
-                No: 3C-1 İç Kapı No: 160<br/>
-                Çankaya / ANKARA
               </p>
             </div>
 

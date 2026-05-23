@@ -1425,7 +1425,8 @@ export default function App() {
         </div>
       </div>
 
-      <div className="relative h-[200px] md:h-[300px] flex items-start overflow-hidden bg-[#1a1a1a]">
+      {/* Category Hero - Epinland Style */}
+      <div className="relative h-[180px] md:h-[280px] flex items-end overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
@@ -1434,31 +1435,26 @@ export default function App() {
               : 'url(/uploads/bg-pubg.jpg)'
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-[#1a1a1a]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0f1923] via-[#0f1923]/70 to-transparent" />
         
-        <div className="relative z-10 max-w-[1920px] w-full mx-auto px-4 md:px-6 pt-6 md:pt-10">
+        <div className="relative z-10 max-w-7xl w-full mx-auto px-4 md:px-6 pb-6 md:pb-8">
+          <p className="text-white/40 text-xs mb-2">Anasayfa</p>
           <div className="flex items-center gap-3 md:gap-4">
             {siteSettings?.categoryIcon ? (
-              <div className="w-14 h-14 md:w-20 md:h-20 rounded-lg overflow-hidden shadow-lg">
-                <img 
-                  src={siteSettings.categoryIcon}
-                  alt="Category"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ) : siteSettings ? (
-              <div className="w-14 h-14 md:w-20 md:h-20 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center shadow-lg">
-                <span className="font-black text-xl md:text-3xl text-white">P</span>
+              <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl overflow-hidden shadow-2xl border border-white/10">
+                <img src={siteSettings.categoryIcon} alt="PUBG" className="w-full h-full object-cover" />
               </div>
             ) : (
-              <div className="w-14 h-14 md:w-20 md:h-20 rounded-lg bg-white/5 animate-pulse shadow-lg"></div>
+              <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center shadow-2xl border border-white/10">
+                <span className="font-black text-lg md:text-2xl text-white">P</span>
+              </div>
             )}
             <div>
-              <div className="text-xs md:text-sm text-white/60 mb-0.5 md:mb-1">Anasayfa &gt; Oyunlar</div>
-              <h1 className="text-xl md:text-[28px] font-bold text-white">PUBG Mobile</h1>
-              <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
-                <span className="text-yellow-400 text-xs md:text-sm">★★★★★ 5/5</span>
-                <span className="text-white/70 text-xs md:text-sm">(2008) yorum</span>
+              <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight">PUBG Mobile UC</h1>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-yellow-400 text-sm">⭐ 4.8</span>
+                <span className="text-white/50 text-sm">/ 5</span>
+                <span className="text-white/40 text-sm ml-1">({reviewStats.reviewCount || 2008}) yorum</span>
               </div>
             </div>
           </div>

@@ -1069,35 +1069,48 @@ export default function App() {
     )
   }
 
-  // Filter Sidebar Component
+  // Filter Sidebar Component - Epinland Style
   const FilterSidebar = () => (
-    <div className="w-full space-y-3">
-      <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
-        <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Oyun Türü</h3>
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 cursor-pointer group">
-            <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
-            <span className="text-sm text-white/70 group-hover:text-white transition-colors">PUBG Mobile</span>
-          </label>
-        </div>
+    <div className="w-full space-y-4">
+      {/* FİLTRELE Header */}
+      <div className="flex items-center gap-2 px-1">
+        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+        </svg>
+        <span className="text-sm font-bold text-blue-400 uppercase tracking-wider">Filtrele</span>
       </div>
-      
+
+      {/* Bölge Filtresi */}
       <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
-        <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Bölge</h3>
-        <div className="space-y-2">
+        <h3 className="text-xs font-bold text-white/70 mb-3 uppercase tracking-wider">Bölge</h3>
+        <div className="space-y-2.5 max-h-[200px] overflow-y-auto pr-1 scrollbar-thin">
           {regions.map(region => (
-            <label key={region.code} className="flex items-center gap-2 cursor-pointer group">
-              <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
-              <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
+            <label key={region.code} className="flex items-center gap-2.5 cursor-pointer group">
+              <input type="checkbox" className="w-3.5 h-3.5 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
+              <span className="text-sm text-white/60 group-hover:text-white transition-colors flex items-center gap-2">
                 {region.flagImageUrl ? (
-                  <img src={region.flagImageUrl} alt={region.name} className="w-5 h-4 object-cover rounded-sm" />
+                  <img src={region.flagImageUrl} alt={region.name} className="w-5 h-3.5 object-cover rounded-sm" />
                 ) : (
-                  <span>{region.flag || '🌍'}</span>
+                  <span className="text-sm">{region.flag || '🌍'}</span>
                 )}
                 {region.name}
               </span>
             </label>
           ))}
+          <label className="flex items-center gap-2.5 cursor-pointer group pt-1 border-t border-white/5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span className="text-sm text-emerald-400 font-medium">HER SUNUCUDA GEÇERLİ</span>
+          </label>
+        </div>
+      </div>
+
+      {/* Fiyat Aralığı */}
+      <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
+        <h3 className="text-xs font-bold text-white/70 mb-3 uppercase tracking-wider">Fiyat Aralığı</h3>
+        <div className="flex items-center gap-2">
+          <input type="number" placeholder="En Az" className="w-full px-3 py-2 bg-[#12161D] border border-white/10 rounded text-white text-sm placeholder:text-white/30 focus:border-blue-500 outline-none" />
+          <span className="text-white/30">-</span>
+          <input type="number" placeholder="En Çok" className="w-full px-3 py-2 bg-[#12161D] border border-white/10 rounded text-white text-sm placeholder:text-white/30 focus:border-blue-500 outline-none" />
         </div>
       </div>
     </div>
@@ -1637,17 +1650,28 @@ export default function App() {
             ) : (
               <>
               {dailyDeals.length > 0 && (
-                <div className="mb-6 bg-gradient-to-br from-orange-950/80 to-amber-950/60 rounded-2xl border-2 border-orange-500/50 p-4 md:p-5 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-orange-500/10 via-transparent to-transparent"></div>
-                  
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-4 relative z-10">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xl">🔥</span>
-                      <h2 className="text-base md:text-lg font-black text-white uppercase tracking-wider">Günün Fırsatları</h2>
-                      <span className="text-xl">🔥</span>
+                <div className="mb-6 bg-[#1e2229] rounded-xl border border-white/10 overflow-hidden">
+                  {/* Header - Epinland Style */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🔥</span>
+                      <span className="text-white font-bold text-sm md:text-base">Haftanın Fırsatları</span>
                     </div>
-                    <span className="px-3 py-1 bg-red-500 text-white text-[11px] font-bold rounded-md animate-pulse">KAÇIRMA!</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-white/50 text-xs hidden sm:inline">İNDİRİM BİTİŞİNE:</span>
+                      {(() => { 
+                        const t = new Date(dailyDeals[0]?.endTime) - new Date()
+                        const h = Math.max(0,Math.floor(t/3600000))
+                        const m = Math.max(0,Math.floor((t%3600000)/60000))
+                        return (
+                          <div className="flex items-center gap-1">
+                            <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded min-w-[28px] text-center">{String(h).padStart(2,'0')}</span>
+                            <span className="text-red-500 font-bold">:</span>
+                            <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded min-w-[28px] text-center">{String(m).padStart(2,'0')}</span>
+                          </div>
+                        )
+                      })()}
+                    </div>
                   </div>
 
                   {/* Deal Cards */}
@@ -1664,21 +1688,20 @@ export default function App() {
                             const p = products.find(pr => pr.id === deal.productId)
                             if (p) handleProductSelect({...p, discountPrice: deal.dealPrice, isDeal: true})
                           }}
-                          className="relative bg-[#1e2430]/90 rounded-xl p-3 md:p-4 cursor-pointer hover:bg-[#252d3a] transition-all border border-orange-500/20 hover:border-orange-400/40 text-center"
+                          className="relative bg-[#171c28] rounded-xl overflow-hidden cursor-pointer hover:scale-[1.02] transition-all border border-white/5 hover:border-red-500/30"
                         >
-                          <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded z-10">%{savings} İNDİRİM</div>
-                          
-                          <div className="text-white font-bold text-sm md:text-base mt-2 mb-3">{deal.product?.title}</div>
-                          
-                          <div className="text-red-400/80 line-through text-xs mb-1">₺{deal.product?.price?.toFixed(0)}</div>
-                          <div className="text-2xl md:text-3xl font-black text-orange-400 mb-3">₺{deal.dealPrice?.toFixed(0)}</div>
-                          
-                          <div className="inline-flex items-center gap-1 bg-black/30 rounded px-2 py-1 text-[10px] text-white/60 mb-3">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
-                            {hours > 0 ? `${hours}s ${minutes}dk kaldı` : `${minutes}dk kaldı`}
+                          <div className="bg-red-600 text-white text-[10px] font-bold py-1 px-2 text-center">⚡ GÜNÜN FIRSATI</div>
+                          <div className="h-20 md:h-24 flex items-center justify-center p-3 bg-gradient-to-b from-[#1e2430] to-[#171c28]">
+                            {deal.product?.imageUrl ? <img src={deal.product.imageUrl} alt="" className="max-h-full object-contain" /> : <span className="text-3xl">🎮</span>}
                           </div>
-                          
-                          <div className="bg-orange-500 hover:bg-orange-400 text-white text-xs font-bold py-2 rounded-lg transition-colors">SATIN AL</div>
+                          <div className="p-3 text-center">
+                            <div className="text-[10px] text-white/40 uppercase">PUBG MOBILE UC</div>
+                            <div className="text-white font-bold text-xs md:text-sm mb-2">{deal.product?.title}</div>
+                            <div className="text-red-400/80 line-through text-xs">₺{deal.product?.price?.toFixed(0)}</div>
+                            <div className="text-xl md:text-2xl font-black text-white mb-1">₺{deal.dealPrice?.toFixed(0)}</div>
+                            <div className="text-emerald-400 text-[10px] font-semibold mb-2">%{savings} İNDİRİM</div>
+                            <div className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-1.5 rounded transition-colors">Seçim</div>
+                          </div>
                         </div>
                       )
                     })}

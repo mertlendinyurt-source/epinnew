@@ -128,6 +128,19 @@ function PaymentSuccessContent() {
                   }
                 });
                 console.log('✅ ROAS Event fired successfully!');
+
+                // Meta/Facebook Pixel - Purchase Event
+                if (typeof window !== 'undefined' && window.fbq) {
+                  window.fbq('track', 'Purchase', {
+                    value: amountValue,
+                    currency: 'TRY',
+                    content_ids: [orderData?.productId || orderId],
+                    content_name: orderData?.productTitle || 'Ürün',
+                    content_type: 'product',
+                    num_items: orderData?.quantity || 1
+                  });
+                  console.log('✅ Meta Pixel Purchase fired!', amountValue, 'TRY');
+                }
               } else {
                 console.warn('⚠️ ROAS Event skipped - amount is 0');
               }

@@ -1069,48 +1069,35 @@ export default function App() {
     )
   }
 
-  // Filter Sidebar Component - Epinland Style
+  // Filter Sidebar Component
   const FilterSidebar = () => (
-    <div className="w-full space-y-4">
-      {/* FİLTRELE Header */}
-      <div className="flex items-center gap-2 px-1">
-        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-        </svg>
-        <span className="text-sm font-bold text-blue-400 uppercase tracking-wider">Filtrele</span>
-      </div>
-
-      {/* Bölge Filtresi */}
+    <div className="w-full space-y-3">
       <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
-        <h3 className="text-xs font-bold text-white/70 mb-3 uppercase tracking-wider">Bölge</h3>
-        <div className="space-y-2.5 max-h-[200px] overflow-y-auto pr-1 scrollbar-thin">
+        <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Oyun Türü</h3>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
+            <span className="text-sm text-white/70 group-hover:text-white transition-colors">PUBG Mobile</span>
+          </label>
+        </div>
+      </div>
+      
+      <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
+        <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">Bölge</h3>
+        <div className="space-y-2">
           {regions.map(region => (
-            <label key={region.code} className="flex items-center gap-2.5 cursor-pointer group">
-              <input type="checkbox" className="w-3.5 h-3.5 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
-              <span className="text-sm text-white/60 group-hover:text-white transition-colors flex items-center gap-2">
+            <label key={region.code} className="flex items-center gap-2 cursor-pointer group">
+              <input type="checkbox" className="w-4 h-4 rounded bg-[#12161D] border-white/20 text-blue-500 focus:ring-blue-500/20" defaultChecked />
+              <span className="text-sm text-white/70 group-hover:text-white transition-colors flex items-center gap-1.5">
                 {region.flagImageUrl ? (
-                  <img src={region.flagImageUrl} alt={region.name} className="w-5 h-3.5 object-cover rounded-sm" />
+                  <img src={region.flagImageUrl} alt={region.name} className="w-5 h-4 object-cover rounded-sm" />
                 ) : (
-                  <span className="text-sm">{region.flag || '🌍'}</span>
+                  <span>{region.flag || '🌍'}</span>
                 )}
                 {region.name}
               </span>
             </label>
           ))}
-          <label className="flex items-center gap-2.5 cursor-pointer group pt-1 border-t border-white/5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span className="text-sm text-emerald-400 font-medium">HER SUNUCUDA GEÇERLİ</span>
-          </label>
-        </div>
-      </div>
-
-      {/* Fiyat Aralığı */}
-      <div className="bg-[#1e2229] rounded-lg p-4 border border-white/5">
-        <h3 className="text-xs font-bold text-white/70 mb-3 uppercase tracking-wider">Fiyat Aralığı</h3>
-        <div className="flex items-center gap-2">
-          <input type="number" placeholder="En Az" className="w-full px-3 py-2 bg-[#12161D] border border-white/10 rounded text-white text-sm placeholder:text-white/30 focus:border-blue-500 outline-none" />
-          <span className="text-white/30">-</span>
-          <input type="number" placeholder="En Çok" className="w-full px-3 py-2 bg-[#12161D] border border-white/10 rounded text-white text-sm placeholder:text-white/30 focus:border-blue-500 outline-none" />
         </div>
       </div>
     </div>
@@ -1160,31 +1147,31 @@ export default function App() {
               )}
             </a>
 
-            {/* Trust Badges - Epinland Style */}
+            {/* Trust Badges - Desktop Only */}
             <div className="hidden md:flex items-center gap-6 text-[11px] lg:text-xs">
               <div className="flex items-center gap-1.5 text-white/80 whitespace-nowrap">
-                <svg className="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span>128 Bit Koruma & SSL</span>
+                <span>SSL Güvenli</span>
               </div>
               <div className="flex items-center gap-1.5 text-white/80 whitespace-nowrap">
-                <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                 </svg>
-                <span>Anında Teslimat (Direkt)</span>
+                <span>Anında Teslimat</span>
               </div>
               <div className="flex items-center gap-1.5 text-white/80 whitespace-nowrap">
-                <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
                 </svg>
-                <span>7/24 Yardım & Destek</span>
+                <span>7/24 Destek</span>
               </div>
               <div className="flex items-center gap-1.5 text-white/80 whitespace-nowrap">
                 <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
-                <span>+10.000 Mutlu Müşteri</span>
+                <span>10.000+ Mutlu Müşteri</span>
               </div>
             </div>
 
@@ -1438,8 +1425,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Category Hero - Epinland Style */}
-      <div className="relative h-[180px] md:h-[280px] flex items-end overflow-hidden">
+      <div className="relative h-[200px] md:h-[300px] flex items-start overflow-hidden bg-[#1a1a1a]">
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
@@ -1448,26 +1434,31 @@ export default function App() {
               : 'url(/uploads/bg-pubg.jpg)'
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0f1923] via-[#0f1923]/70 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-[#1a1a1a]" />
         
-        <div className="relative z-10 max-w-7xl w-full mx-auto px-4 md:px-6 pb-6 md:pb-8">
-          <p className="text-white/40 text-xs mb-2">Anasayfa</p>
+        <div className="relative z-10 max-w-[1920px] w-full mx-auto px-4 md:px-6 pt-6 md:pt-10">
           <div className="flex items-center gap-3 md:gap-4">
             {siteSettings?.categoryIcon ? (
-              <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl overflow-hidden shadow-2xl border border-white/10">
-                <img src={siteSettings.categoryIcon} alt="PUBG" className="w-full h-full object-cover" />
+              <div className="w-14 h-14 md:w-20 md:h-20 rounded-lg overflow-hidden shadow-lg">
+                <img 
+                  src={siteSettings.categoryIcon}
+                  alt="Category"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : siteSettings ? (
+              <div className="w-14 h-14 md:w-20 md:h-20 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center shadow-lg">
+                <span className="font-black text-xl md:text-3xl text-white">P</span>
               </div>
             ) : (
-              <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center shadow-2xl border border-white/10">
-                <span className="font-black text-lg md:text-2xl text-white">P</span>
-              </div>
+              <div className="w-14 h-14 md:w-20 md:h-20 rounded-lg bg-white/5 animate-pulse shadow-lg"></div>
             )}
             <div>
-              <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight">PUBG Mobile UC</h1>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-yellow-400 text-sm">⭐ 4.8</span>
-                <span className="text-white/50 text-sm">/ 5</span>
-                <span className="text-white/40 text-sm ml-1">({reviewStats.reviewCount || 2008}) yorum</span>
+              <div className="text-xs md:text-sm text-white/60 mb-0.5 md:mb-1">Anasayfa &gt; Oyunlar</div>
+              <h1 className="text-xl md:text-[28px] font-bold text-white">PUBG Mobile</h1>
+              <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
+                <span className="text-yellow-400 text-xs md:text-sm">★★★★★ 5/5</span>
+                <span className="text-white/70 text-xs md:text-sm">(2008) yorum</span>
               </div>
             </div>
           </div>
@@ -1650,28 +1641,17 @@ export default function App() {
             ) : (
               <>
               {dailyDeals.length > 0 && (
-                <div className="mb-6 bg-[#1e2229] rounded-xl border border-white/10 overflow-hidden">
-                  {/* Header - Epinland Style */}
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">🔥</span>
-                      <span className="text-white font-bold text-sm md:text-base">Haftanın Fırsatları</span>
-                    </div>
+                <div className="mb-6 bg-gradient-to-br from-orange-950/80 to-amber-950/60 rounded-2xl border-2 border-orange-500/50 p-4 md:p-5 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-orange-500/10 via-transparent to-transparent"></div>
+                  
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-4 relative z-10">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-white/50 text-xs hidden sm:inline">İNDİRİM BİTİŞİNE:</span>
-                      {(() => { 
-                        const t = new Date(dailyDeals[0]?.endTime) - new Date()
-                        const h = Math.max(0,Math.floor(t/3600000))
-                        const m = Math.max(0,Math.floor((t%3600000)/60000))
-                        return (
-                          <div className="flex items-center gap-1">
-                            <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded min-w-[28px] text-center">{String(h).padStart(2,'0')}</span>
-                            <span className="text-red-500 font-bold">:</span>
-                            <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded min-w-[28px] text-center">{String(m).padStart(2,'0')}</span>
-                          </div>
-                        )
-                      })()}
+                      <span className="text-xl">🔥</span>
+                      <h2 className="text-base md:text-lg font-black text-white uppercase tracking-wider">Günün Fırsatları</h2>
+                      <span className="text-xl">🔥</span>
                     </div>
+                    <span className="px-3 py-1 bg-red-500 text-white text-[11px] font-bold rounded-md animate-pulse">KAÇIRMA!</span>
                   </div>
 
                   {/* Deal Cards */}
@@ -1688,43 +1668,50 @@ export default function App() {
                             const p = products.find(pr => pr.id === deal.productId)
                             if (p) handleProductSelect({...p, discountPrice: deal.dealPrice, isDeal: true})
                           }}
-                          className="relative bg-[#171c28] rounded-xl overflow-hidden cursor-pointer hover:scale-[1.02] transition-all border border-white/5 hover:border-red-500/30"
+                          className="relative bg-[#1e2430]/90 rounded-xl p-3 md:p-4 cursor-pointer hover:bg-[#252d3a] transition-all border border-orange-500/20 hover:border-orange-400/40 text-center"
                         >
-                          <div className="bg-red-600 text-white text-[10px] font-bold py-1 px-2 text-center">⚡ GÜNÜN FIRSATI</div>
-                          <div className="h-20 md:h-24 flex items-center justify-center p-3 bg-gradient-to-b from-[#1e2430] to-[#171c28]">
-                            {deal.product?.imageUrl ? <img src={deal.product.imageUrl} alt="" className="max-h-full object-contain" /> : <span className="text-3xl">🎮</span>}
+                          <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded z-10">%{savings} İNDİRİM</div>
+                          
+                          <div className="text-white font-bold text-sm md:text-base mt-2 mb-3">{deal.product?.title}</div>
+                          
+                          <div className="text-red-400/80 line-through text-xs mb-1">₺{deal.product?.price?.toFixed(0)}</div>
+                          <div className="text-2xl md:text-3xl font-black text-orange-400 mb-3">₺{deal.dealPrice?.toFixed(0)}</div>
+                          
+                          <div className="inline-flex items-center gap-1 bg-black/30 rounded px-2 py-1 text-[10px] text-white/60 mb-3">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
+                            {hours > 0 ? `${hours}s ${minutes}dk kaldı` : `${minutes}dk kaldı`}
                           </div>
-                          <div className="p-3 text-center">
-                            <div className="text-[10px] text-white/40 uppercase">PUBG MOBILE UC</div>
-                            <div className="text-white font-bold text-xs md:text-sm mb-2">{deal.product?.title}</div>
-                            <div className="text-red-400/80 line-through text-xs">₺{deal.product?.price?.toFixed(0)}</div>
-                            <div className="text-xl md:text-2xl font-black text-white mb-1">₺{deal.dealPrice?.toFixed(0)}</div>
-                            <div className="text-emerald-400 text-[10px] font-semibold mb-2">%{savings} İNDİRİM</div>
-                            <div className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-1.5 rounded transition-colors">Seçim</div>
-                          </div>
+                          
+                          <div className="bg-orange-500 hover:bg-orange-400 text-white text-xs font-bold py-2 rounded-lg transition-colors">SATIN AL</div>
                         </div>
                       )
                     })}
                   </div>
                 </div>
               )}
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4">
                 {products.map((product) => (
                   <div
                     key={product.id}
                     onClick={() => handleProductSelect(product)}
-                    className={`product-card-glow group relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/10 flex flex-col border ${product.featured ? 'border-yellow-500/50 ring-1 ring-yellow-500/30' : 'border-white/10 hover:border-blue-500/30'} bg-[#171c28] w-full aspect-[2/3.8] md:aspect-[2/3]`}
+                    className={`product-card-glow group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col border ${product.featured ? 'border-yellow-500/50 ring-2 ring-yellow-500/30' : 'border-white/10'} hover:border-white/20 w-full aspect-[2/3.8] md:aspect-[2/3]`}
                     style={{ backgroundColor: '#252a34', maxWidth: '270px', margin: '0 auto' }}
                   >
                     {/* En Çok Tercih Edilen Badge */}
                     {product.featured && (
-                      <div className="absolute top-0 left-0 right-0 z-30 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white text-[10px] font-bold py-1 px-2 text-center">
+                      <div className="absolute top-0 left-0 right-0 z-30 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white text-[10px] md:text-[11px] font-bold py-1 px-2 text-center shadow-lg">
                         ⭐ EN ÇOK TERCİH EDİLEN
                       </div>
                     )}
+                    
+                    {/* Info Icon */}
+                    <div className={`absolute ${product.featured ? 'top-8' : 'top-2'} right-2 w-6 h-6 md:w-5 md:h-5 rounded-full bg-white/90 flex items-center justify-center z-20`}>
+                      <span className="text-gray-700 font-bold text-xs md:text-xs">i</span>
+                    </div>
 
-                    {/* Image Section - Larger */}
-                    <div className="relative h-[50%] md:h-[55%] bg-gradient-to-b from-[#1e2430] to-[#171c28] flex items-center justify-center p-3 md:p-5 overflow-hidden">
+                    {/* Image Section */}
+                    <div className="relative h-[42%] md:h-[55%] bg-gradient-to-b from-[#2d3444] to-[#252a34] flex items-center justify-center p-2 md:p-4">
+                      {/* Flare Effect */}
                       <div className="go-product-shine">
                         <div className="go-product-shine-overlay"></div>
                         <img className="go-flare" src="/flare.png" alt="" />
@@ -1732,52 +1719,41 @@ export default function App() {
                       <img 
                         src={product.imageUrl || "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=300&h=300&fit=crop"}
                         alt={product.title}
-                        className="max-w-[85%] max-h-[85%] object-contain transition-transform duration-500 group-hover:scale-110 relative z-10 drop-shadow-2xl"
+                        className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105 relative z-10"
                         onError={(e) => {
                           e.target.src = "https://images.unsplash.com/photo-1645690364326-1f80098eca66?w=300&h=300&fit=crop";
                         }}
                       />
-                      {/* Seçim Badge */}
-                      <div className="absolute bottom-2 right-2 z-20 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
-                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                        Seçim
-                      </div>
                     </div>
 
-                    {/* Content Section - Epinland Style */}
-                    <div className="h-[50%] md:h-[45%] flex flex-col p-3 md:p-4 border-t border-white/5">
-                      <div className="flex-1">
-                        <div className="text-[10px] text-white/40 font-semibold uppercase tracking-wider mb-1">PUBG MOBILE UC</div>
-                        <div className="text-[14px] md:text-[13px] font-bold text-white leading-tight mb-2">{product.ucAmount || product.title?.match(/\d+/)?.[0]} UC Yükleme Şansı</div>
-                        <div className="flex items-center gap-1 mb-1">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                          <span className="text-[10px] text-emerald-400 font-semibold">HER SUNUCUDA GEÇERLİ</span>
+                    {/* Content Section */}
+                    <div className="h-[58%] md:h-[45%] flex flex-col justify-between p-2.5 md:p-3.5">
+                      <div>
+                        <div className="text-[10px] md:text-[10px] text-white/60 font-bold uppercase">MOBİLE</div>
+                        <div className="text-[15px] md:text-[13px] font-bold text-white">{product.ucAmount} UC Yükleme Şansı</div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <RegionDisplay regionCode={product.regionCode || 'TR'} size="sm" showWhiteText={true} />
                         </div>
-                        <div className="text-[9px] text-cyan-400/70">Bölgenizde kullanılabilir</div>
+                        <div className="text-[9px] md:text-[9px] text-emerald-400 mt-0.5">Bölgenizde kullanılabilir</div>
                       </div>
-                      
-                      <div className="pt-2 border-t border-white/5">
+                      <div className="mt-1">
                         {product.discountPrice < product.price && (
-                          <div className="text-[11px] text-red-400 line-through font-medium">₺{product.price.toFixed(0)}</div>
+                          <div className="text-[11px] md:text-[9px] text-red-500 line-through">₺{product.price.toFixed(0)}</div>
                         )}
-                        <div className="flex items-end justify-between">
-                          <div>
-                            <div className="text-[20px] md:text-[18px] font-black text-white">₺ {product.discountPrice.toFixed(0)}</div>
-                            {product.discountPercent > 0 && (
-                              <div className="text-[10px] text-emerald-400 font-semibold">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
-                            )}
-                          </div>
-                          {viewerCounts[product.id] && (
-                            <div className="flex items-center gap-1">
-                              <span className="relative flex h-1.5 w-1.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
-                              </span>
-                              <span className="text-[9px] text-white/40">{viewerCounts[product.id]} kişi</span>
-                            </div>
-                          )}
-                        </div>
+                        <div className="text-[18px] md:text-[15px] font-bold text-white">₺ {product.discountPrice.toFixed(0)}</div>
+                        {product.discountPercent > 0 && (
+                          <div className="text-[10px] md:text-[11px] text-emerald-400 font-medium">{product.discountPercent.toFixed(1).replace('.', ',')}% ▼ indirim</div>
+                        )}
                       </div>
+                      {viewerCounts[product.id] && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                          </span>
+                          <span className="text-[9px] md:text-[10px] text-white/50">{viewerCounts[product.id]} kişi bakıyor</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

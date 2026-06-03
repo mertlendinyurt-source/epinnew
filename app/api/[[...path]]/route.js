@@ -7355,15 +7355,15 @@ export async function POST(request) {
       // ============================================
       // 💳 CARD PAYMENT FLOW (SHOPIER V2)
       // ============================================
-
-      // Shopier V2 uses environment variables (no database settings needed)
-      // Customer snapshot
-      const customerSnapshot = {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        phone: user.phone
-      };
+      if (paymentMethod === 'shopierv2') {
+        // Shopier V2 uses environment variables (no database settings needed)
+        // Customer snapshot
+        const customerSnapshot = {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone
+        };
 
       // Create order with PENDING status
       const unitPrice = product.discountPrice || product.price || product.finalPrice || product.salePrice || product.currentPrice || product.sellingPrice || 0;
@@ -7437,17 +7437,18 @@ export async function POST(request) {
         }
       );
 
-      // Return payment URL for iframe
-      return NextResponse.json({
-        success: true,
-        data: {
-          order,
-          paymentUrl: sessionResult.paymentUrl,
-          sessionId: sessionResult.sessionId,
-          shopierOrderId: sessionResult.shopierOrderId,
-          expiresIn: 900 // 15 minutes
-        }
-      });
+        // Return payment URL for iframe
+        return NextResponse.json({
+          success: true,
+          data: {
+            order,
+            paymentUrl: sessionResult.paymentUrl,
+            sessionId: sessionResult.sessionId,
+            shopierOrderId: sessionResult.shopierOrderId,
+            expiresIn: 900 // 15 minutes
+          }
+        });
+      }
     }
 
     // Shopier V2 OSB Webhook Callback

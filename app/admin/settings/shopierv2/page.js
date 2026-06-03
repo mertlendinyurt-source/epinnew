@@ -204,11 +204,11 @@ export default function ShopierV2SettingsPage() {
               </div>
               <div className="bg-gray-800/50 rounded p-3">
                 <p className="text-xs text-gray-400 mb-1">Link TTL</p>
-                <p className="font-mono text-green-400">{settings.linkTtl}s ({Math.floor(settings.linkTtl / 60)} dk)</p>
+                <p className="font-mono text-green-400">{settings.linkTtlSeconds}s ({Math.floor(settings.linkTtlSeconds / 60)} dk)</p>
               </div>
               <div className="bg-gray-800/50 rounded p-3">
                 <p className="text-xs text-gray-400 mb-1">Close Delay</p>
-                <p className="font-mono text-green-400">{settings.closeDelay}s</p>
+                <p className="font-mono text-green-400">{settings.closeDelaySeconds}s</p>
               </div>
               <div className="bg-gray-800/50 rounded p-3">
                 <p className="text-xs text-gray-400 mb-1">OSB Username</p>

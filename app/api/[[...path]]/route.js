@@ -3349,6 +3349,41 @@ export async function GET(request) {
       });
     }
 
+    // Admin: Get Shopier V2 Settings (GET)
+    if (pathname === '/api/admin/settings/shopierv2') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      // Read from environment variables
+      const apiKey = process.env.SHOPIER_V2_API_KEY || '';
+      const osbUsername = process.env.SHOPIER_V2_OSB_USERNAME || '';
+      const osbKey = process.env.SHOPIER_V2_OSB_KEY || '';
+      const referencePrefix = process.env.SHOPIER_V2_REFERENCE_PREFIX || 'SV2';
+      const linkTtl = parseInt(process.env.SHOPIER_V2_LINK_TTL || '900', 10);
+      const closeDelay = parseInt(process.env.SHOPIER_V2_CLOSE_DELAY || '60', 10);
+
+      const isConfigured = !!(apiKey && osbUsername && osbKey);
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          isConfigured,
+          apiKey: apiKey ? maskSensitiveData(apiKey) : null,
+          osbUsername: osbUsername ? maskSensitiveData(osbUsername) : null,
+          osbKey: osbKey ? maskSensitiveData(osbKey) : null,
+          referencePrefix,
+          linkTtlSeconds: linkTtl,
+          closeDelaySeconds: closeDelay,
+          message: isConfigured ? 'Shopier V2 ayarları mevcut' : 'Shopier V2 ayarları henüz yapılmadı'
+        }
+      });
+    }
+
     // Admin: Get Google OAuth Settings (GET)
     if (pathname === '/api/admin/settings/oauth/google') {
       const user = verifyAdminToken(request);
@@ -5311,6 +5346,51 @@ export async function GET(request) {
           sent: sentCount,
           errors: errorCount,
           timestamp: new Date().toISOString()
+        }
+      });
+    }
+
+    // ============================================
+    // SHOPIER V2 - STATUS POLLING ENDPOINT
+    // ============================================
+    if (pathname === '/api/payment/shopierv2/status') {
+      const orderId = searchParams.get('orderId');
+      
+      if (!orderId) {
+        return NextResponse.json(
+          { success: false, error: 'orderId gerekli' },
+          { status: 400 }
+        );
+      }
+
+      // Get session status
+      const statusResult = await shopierV2Service.getSessionStatus(db, orderId);
+
+      if (!statusResult.success) {
+        return NextResponse.json(
+          { success: false, error: statusResult.error },
+          { status: 404 }
+        );
+      }
+
+      // Get order status
+      const order = await db.collection('orders').findOne({ id: orderId });
+      
+      if (!order) {
+        return NextResponse.json(
+          { success: false, error: 'Sipariş bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          orderId: order.id,
+          orderStatus: order.status,
+          sessionStatus: statusResult.status,
+          delivery: order.delivery || null,
+          expiresAt: statusResult.expiresAt
         }
       });
     }
@@ -7755,50 +7835,6 @@ export async function POST(request) {
       });
     }
 
-    // Shopier V2 Status Polling Endpoint
-    if (pathname === '/api/payment/shopierv2/status' && method === 'GET') {
-      const orderId = searchParams.get('orderId');
-      
-      if (!orderId) {
-        return NextResponse.json(
-          { success: false, error: 'orderId gerekli' },
-          { status: 400 }
-        );
-      }
-
-      // Get session status
-      const statusResult = await shopierV2Service.getSessionStatus(db, orderId);
-
-      if (!statusResult.success) {
-        return NextResponse.json(
-          { success: false, error: statusResult.error },
-          { status: 404 }
-        );
-      }
-
-      // Get order status
-      const order = await db.collection('orders').findOne({ id: orderId });
-      
-      if (!order) {
-        return NextResponse.json(
-          { success: false, error: 'Sipariş bulunamadı' },
-          { status: 404 }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          orderId: order.id,
-          orderStatus: order.status,
-          sessionStatus: statusResult.status,
-          delivery: order.delivery || null,
-          expiresAt: statusResult.expiresAt
-        }
-      });
-    }
-
-
     // Shopinext callback (Webhook)
     if (pathname === '/api/payments/shopinext/callback') {
       const { payment_id, status, hash } = body;
@@ -8981,6 +9017,90 @@ export async function POST(request) {
           mode: encryptedSettings.mode,
           updatedBy: encryptedSettings.updatedBy,
           updatedAt: encryptedSettings.updatedAt
+        }
+      });
+    }
+
+    // Admin: Save Shopier V2 Settings (POST)
+    if (pathname === '/api/admin/settings/shopierv2') {
+      const user = verifyAdminToken(request);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Yetkisiz erişim' },
+          { status: 401 }
+        );
+      }
+
+      const { 
+        apiKey, 
+        osbUsername, 
+        osbKey, 
+        referencePrefix, 
+        linkTtlSeconds, 
+        closeDelaySeconds 
+      } = body;
+
+      // Validate required fields
+      if (!apiKey || !osbUsername || !osbKey) {
+        return NextResponse.json(
+          { success: false, error: 'API Key, OSB Username ve OSB Key gereklidir' },
+          { status: 400 }
+        );
+      }
+
+      // Validate numeric fields
+      const linkTtl = parseInt(linkTtlSeconds || '900', 10);
+      const closeDelay = parseInt(closeDelaySeconds || '60', 10);
+
+      if (linkTtl < 60 || linkTtl > 3600) {
+        return NextResponse.json(
+          { success: false, error: 'Link TTL 60-3600 saniye arasında olmalıdır' },
+          { status: 400 }
+        );
+      }
+
+      if (closeDelay < 0 || closeDelay > 300) {
+        return NextResponse.json(
+          { success: false, error: 'Close Delay 0-300 saniye arasında olmalıdır' },
+          { status: 400 }
+        );
+      }
+
+      // Store settings in database for audit trail
+      const shopierV2Settings = {
+        apiKey: encrypt(apiKey),
+        osbUsername: encrypt(osbUsername),
+        osbKey: encrypt(osbKey),
+        referencePrefix: referencePrefix || 'SV2',
+        linkTtlSeconds: linkTtl,
+        closeDelaySeconds: closeDelay,
+        isActive: true,
+        updatedBy: user.username || user.email,
+        updatedAt: new Date(),
+        createdAt: new Date()
+      };
+
+      // Deactivate all previous settings
+      await db.collection('shopierv2_settings').updateMany(
+        {},
+        { $set: { isActive: false } }
+      );
+
+      // Insert new settings
+      await db.collection('shopierv2_settings').insertOne(shopierV2Settings);
+
+      // NOTE: In production, you may want to update .env file or use a secrets manager
+      // For now, we store in DB and admin needs to manually update .env for actual usage
+
+      return NextResponse.json({
+        success: true,
+        message: 'Shopier V2 ayarları başarıyla kaydedildi. Lütfen .env dosyasını da güncelleyin.',
+        data: {
+          referencePrefix: shopierV2Settings.referencePrefix,
+          linkTtlSeconds: shopierV2Settings.linkTtlSeconds,
+          closeDelaySeconds: shopierV2Settings.closeDelaySeconds,
+          updatedBy: shopierV2Settings.updatedBy,
+          updatedAt: shopierV2Settings.updatedAt
         }
       });
     }

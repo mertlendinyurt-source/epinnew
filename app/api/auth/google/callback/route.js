@@ -26,6 +26,9 @@ export async function GET(request) {
     const database = await connectDB();
     const { searchParams } = new URL(request.url);
     
+    // Get current origin from request
+    const origin = new URL(request.url).origin;
+    
     const code = searchParams.get('code');
     const state = searchParams.get('state');
     const error = searchParams.get('error');
@@ -33,12 +36,12 @@ export async function GET(request) {
     // Handle Google OAuth errors
     if (error) {
       console.error('Google OAuth error:', error);
-      return NextResponse.redirect(`${BASE_URL}?error=google_auth_denied`);
+      return NextResponse.redirect(`${origin}?error=google_auth_denied`);
     }
 
     // Validate required parameters
     if (!code || !state) {
-      return NextResponse.redirect(`${BASE_URL}?error=invalid_callback`);
+      return NextResponse.redirect(`${origin}?error=invalid_callback`);
     }
 
     // Validate state (CSRF protection)
@@ -49,7 +52,7 @@ export async function GET(request) {
     });
 
     if (!storedState) {
-      return NextResponse.redirect(`${BASE_URL}?error=invalid_state`);
+      return NextResponse.redirect(`${origin}?error=invalid_state`);
     }
 
     // Delete used state
@@ -59,7 +62,7 @@ export async function GET(request) {
     const oauthSettings = await database.collection('oauth_settings').findOne({ provider: 'google' });
     
     if (!oauthSettings || !oauthSettings.enabled) {
-      return NextResponse.redirect(`${BASE_URL}?error=oauth_disabled`);
+      return NextResponse.redirect(`${origin}?error=oauth_disabled`);
     }
 
     // Decrypt credentials
@@ -69,13 +72,11 @@ export async function GET(request) {
       clientSecret = decrypt(oauthSettings.clientSecret);
     } catch (error) {
       console.error('Failed to decrypt OAuth credentials:', error);
-      return NextResponse.redirect(`${BASE_URL}?error=oauth_config_error`);
+      return NextResponse.redirect(`${origin}?error=oauth_config_error`);
     }
 
-    // Get site base URL
-    const siteSettings = await database.collection('site_settings').findOne({ active: true });
-    const baseUrl = siteSettings?.baseUrl || BASE_URL;
-    const redirectUri = `${baseUrl}/api/auth/google/callback`;
+    // Use origin for redirect URI
+    const redirectUri = `${origin}/api/auth/google/callback`;
 
     // Exchange code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -96,7 +97,7 @@ export async function GET(request) {
 
     if (!tokenResponse.ok || tokenData.error) {
       console.error('Token exchange error:', tokenData);
-      return NextResponse.redirect(`${BASE_URL}?error=token_exchange_failed`);
+      return NextResponse.redirect(`${origin}?error=token_exchange_failed`);
     }
 
     const { access_token, id_token } = tokenData;
@@ -112,7 +113,7 @@ export async function GET(request) {
 
     if (!userInfoResponse.ok || !googleUser.email) {
       console.error('Failed to get user info:', googleUser);
-      return NextResponse.redirect(`${BASE_URL}?error=user_info_failed`);
+      return NextResponse.redirect(`${origin}?error=user_info_failed`);
     }
 
     // Extract Google user data
@@ -181,7 +182,7 @@ export async function GET(request) {
     );
 
     // Create response with token cookie and redirect
-    const response = NextResponse.redirect(`${BASE_URL}?google_auth=success`);
+    const response = NextResponse.redirect(`${origin}?google_auth=success`);
     
     // Set token in cookie (httpOnly for security)
     response.cookies.set('googleAuthToken', token, {
@@ -215,6 +216,7 @@ export async function GET(request) {
 
   } catch (error) {
     console.error('Google OAuth callback error:', error);
-    return NextResponse.redirect(`${BASE_URL}?error=oauth_callback_error`);
+    const origin = new URL(request.url).origin;
+    return NextResponse.redirect(`${origin}?error=oauth_callback_error`);
   }
 }

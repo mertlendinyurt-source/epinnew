@@ -23,17 +23,20 @@ export async function GET(request) {
   try {
     const database = await connectDB();
     
+    // Get current origin from request
+    const origin = new URL(request.url).origin;
+    
     // Get OAuth settings from database
     const oauthSettings = await database.collection('oauth_settings').findOne({ provider: 'google' });
     
     // Check if Google OAuth is enabled
     if (!oauthSettings || !oauthSettings.enabled) {
-      return NextResponse.redirect(`${BASE_URL}?error=oauth_disabled`);
+      return NextResponse.redirect(`${origin}?error=oauth_disabled`);
     }
 
     // Check if credentials are configured
     if (!oauthSettings.clientId || !oauthSettings.clientSecret) {
-      return NextResponse.redirect(`${BASE_URL}?error=oauth_not_configured`);
+      return NextResponse.redirect(`${origin}?error=oauth_not_configured`);
     }
 
     // Decrypt client ID
@@ -42,13 +45,11 @@ export async function GET(request) {
       clientId = decrypt(oauthSettings.clientId);
     } catch (error) {
       console.error('Failed to decrypt client ID:', error);
-      return NextResponse.redirect(`${BASE_URL}?error=oauth_config_error`);
+      return NextResponse.redirect(`${origin}?error=oauth_config_error`);
     }
 
-    // Get site base URL for callback
-    const siteSettings = await database.collection('site_settings').findOne({ active: true });
-    const baseUrl = siteSettings?.baseUrl || BASE_URL;
-    const redirectUri = `${baseUrl}/api/auth/google/callback`;
+    // Use origin for callback URL
+    const redirectUri = `${origin}/api/auth/google/callback`;
 
     // Generate state for CSRF protection
     const state = crypto.randomBytes(32).toString('hex');
@@ -76,6 +77,7 @@ export async function GET(request) {
 
   } catch (error) {
     console.error('Google OAuth init error:', error);
-    return NextResponse.redirect(`${BASE_URL}?error=oauth_error`);
+    const origin = new URL(request.url).origin;
+    return NextResponse.redirect(`${origin}?error=oauth_error`);
   }
 }

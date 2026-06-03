@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { encrypt, decrypt, maskSensitiveData, generateShopierHash } from '@/lib/crypto';
 import { saveUploadedFile, deleteUploadedFile } from '@/lib/fileUpload';
 import nodemailer from 'nodemailer';
+import * as shopierV2Client from '@/lib/shopierv2/client';
+import * as shopierV2Service from '@/lib/shopierv2/service';
 
 const MONGO_URL = process.env.MONGO_URL;
 const DB_NAME = process.env.DB_NAME || 'pinly_store';
@@ -7351,33 +7353,11 @@ export async function POST(request) {
       }
 
       // ============================================
-      // 💳 CARD PAYMENT FLOW (SHOPIER)
+      // 💳 CARD PAYMENT FLOW (SHOPIER V2)
       // ============================================
 
-      // Get Shopier settings from database
-      const shopierSettings = await db.collection('shopier_settings').findOne({ isActive: true });
-      
-      if (!shopierSettings) {
-        return NextResponse.json(
-          { success: false, error: 'Ödeme sistemi yapılandırılmamış. Lütfen yöneticiyle iletişime geçin.' },
-          { status: 503 }
-        );
-      }
-
-      // Decrypt Shopier credentials (only apiKey and apiSecret needed)
-      let apiKey, apiSecret;
-      try {
-        apiKey = decrypt(shopierSettings.apiKey);
-        apiSecret = decrypt(shopierSettings.apiSecret);
-      } catch (error) {
-        console.error('Shopier settings decryption failed');
-        return NextResponse.json(
-          { success: false, error: 'Ödeme sistemi yapılandırma hatası' },
-          { status: 500 }
-        );
-      }
-
-      // Create customer snapshot (for order record)
+      // Shopier V2 uses environment variables (no database settings needed)
+      // Customer snapshot
       const customerSnapshot = {
         firstName: user.firstName,
         lastName: user.lastName,
@@ -7386,37 +7366,33 @@ export async function POST(request) {
       };
 
       // Create order with PENDING status
-      // Try all possible price fields
       const unitPrice = product.discountPrice || product.price || product.finalPrice || product.salePrice || product.currentPrice || product.sellingPrice || 0;
       const orderAmount = unitPrice * quantity;
       
       console.log('========================================');
-      console.log('📦 ORDER CREATION - PRICE CHECK');
+      console.log('📦 SHOPIER V2 - ORDER CREATION');
       console.log('Product ID:', product.id);
       console.log('Product Title:', product.title);
-      console.log('product.discountPrice:', product.discountPrice);
-      console.log('product.price:', product.price);
-      console.log('product.finalPrice:', product.finalPrice);
-      console.log('product.salePrice:', product.salePrice);
-      console.log('product.currentPrice:', product.currentPrice);
-      console.log('product.sellingPrice:', product.sellingPrice);
-      console.log('FINAL orderAmount:', orderAmount);
+      console.log('Unit Price:', unitPrice);
+      console.log('Quantity:', quantity);
+      console.log('Total Amount:', orderAmount);
       console.log('========================================');
       
       const order = {
         id: uuidv4(),
-        userId: user.id, // Link order to user
+        userId: user.id,
         productId,
         productTitle: product.title,
-        productImageUrl: product.imageUrl || null, // Store product image for order display
+        productImageUrl: product.imageUrl || null,
         playerId,
         playerName,
-        customer: customerSnapshot, // Store customer info snapshot
+        customer: customerSnapshot,
         status: 'pending',
-        amount: orderAmount, // Backend-controlled price
-        totalAmount: orderAmount, // For verification checks
+        amount: orderAmount,
+        totalAmount: orderAmount,
         quantity: quantity,
         currency: 'TRY',
+        paymentMethod: 'shopierv2',
         termsAccepted: termsAccepted || false,
         termsAcceptedAt: termsAcceptedAt ? new Date(termsAcceptedAt) : new Date(),
         createdAt: new Date(),
@@ -7425,281 +7401,109 @@ export async function POST(request) {
 
       await db.collection('orders').insertOne(order);
 
-      // Send order created email (async, don't block response)
+      // Send order created email (async)
       sendOrderCreatedEmail(db, order, user, product).catch(err => 
         console.error('Order created email failed:', err)
       );
 
-      // Generate random number for Shopier request (6 digits as per API spec)
-      const randomNr = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
-      const crypto = require('crypto');
-
-      // Currency codes: 0 = TRY, 1 = USD, 2 = EUR
-      const currencyCode = 0; // TRY
-
-      // Prepare Shopier payment request with REAL customer data
-      // Field names MUST match exactly what Shopier expects
-      // E-posta adresi maskeleniyor - Shopier'den müşteriye mail gitmesin
-      const maskedEmail = maskEmailForShopier(customerSnapshot.email);
-      const shopierPayload = {
-        API_key: apiKey, // Note: API_key not api_key
-        website_index: 1,
-        platform_order_id: order.id,
-        product_name: 'Bakiye Yüklemesi',
-        product_type: 1, // 0 = Physical, 1 = Digital
-        buyer_name: customerSnapshot.firstName,
-        buyer_surname: customerSnapshot.lastName,
-        buyer_email: maskedEmail, // Maskelenmiş e-posta
-        buyer_account_age: 0,
-        buyer_id_nr: playerId,
-        buyer_phone: customerSnapshot.phone,
-        billing_address: 'Turkey',
-        billing_city: 'Istanbul',
-        billing_country: 'Turkey',
-        billing_postcode: '34000',
-        shipping_address: 'Turkey',
-        shipping_city: 'Istanbul',
-        shipping_country: 'Turkey',
-        shipping_postcode: '34000',
-        total_order_value: order.amount,
-        currency: currencyCode,
-        platform: 0, // 0 = in frame
-        is_in_frame: 0,
-        current_language: 0, // 0 = TR, 1 = EN
-        modul_version: '1.0.4',
-        random_nr: randomNr,
-      };
-
-      // Generate Shopier signature using CORRECT method:
-      // data = random_nr + platform_order_id + total_order_value + currency
-      // signature = HMAC-SHA256(data, apiSecret).digest('base64')
-      const signatureData = `${randomNr}${order.id}${order.amount}${currencyCode}`;
-      const signature = crypto.createHmac('sha256', apiSecret)
-        .update(signatureData)
-        .digest('base64');
-
-      // Add signature to payload
-      shopierPayload.signature = signature;
-
-      // Shopier payment endpoint
-      const paymentUrl = 'https://www.shopier.com/ShowProduct/api_pay4.php';
-
-      // Store payment request in database for audit trail
-      await db.collection('payment_requests').insertOne({
-        orderId: order.id,
-        shopierPayload: { ...shopierPayload, API_key: '***MASKED***', signature: '***MASKED***' },
-        signatureData: `${randomNr}${order.id}***MASKED***`,
-        createdAt: new Date()
+      // Create Shopier V2 payment session
+      const sessionResult = await shopierV2Service.createPaymentSession(db, order, {
+        userId: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone
       });
 
-      // Return all form fields for frontend to build the form
-      return NextResponse.json({
-        success: true,
-        data: {
-          order,
-          paymentUrl,
-          formData: shopierPayload
-        }
-      });
-    }
-
-    // Shopier callback (Production-ready with security)
-    if (pathname === '/api/payments/shopier/callback') {
-      const { status, payment_id, random_nr, platform_order_id, signature, installment } = body;
-      
-      // Get order ID from callback
-      const orderId = platform_order_id;
-      
-      // 1. Validate order exists
-      const order = await db.collection('orders').findOne({ id: orderId });
-      if (!order) {
-        console.error(`Callback error: Order ${orderId} not found`);
+      if (!sessionResult.success) {
         return NextResponse.json(
-          { success: false, error: 'Sipariş bulunamadı' },
-          { status: 404 }
-        );
-      }
-
-      // 2. Check if order is already PAID (idempotency protection)
-      if (order.status === 'paid') {
-        console.log(`Callback: Order ${order.id} already PAID. Ignoring duplicate callback.`);
-        return NextResponse.json({
-          success: true,
-          message: 'Ödeme zaten işlenmiş'
-        });
-      }
-
-      // 3. Get Shopier settings for signature validation
-      const shopierSettings = await db.collection('shopier_settings').findOne({ isActive: true });
-      if (!shopierSettings) {
-        console.error('Callback error: Shopier settings not found');
-        return NextResponse.json(
-          { success: false, error: 'Ödeme sistemi yapılandırılmamış' },
+          { success: false, error: sessionResult.error || 'Ödeme oturumu oluşturulamadı' },
           { status: 500 }
         );
       }
 
-      // 4. Decrypt API secret for signature validation
-      let apiSecret;
-      try {
-        apiSecret = decrypt(shopierSettings.apiSecret);
-      } catch (error) {
-        console.error('Callback error: Failed to decrypt API secret');
-        return NextResponse.json(
-          { success: false, error: 'Yapılandırma hatası' },
-          { status: 500 }
-        );
-      }
+      console.log('✅ Shopier V2 session created:', sessionResult.sessionId);
 
-      // 5. Validate signature (CRITICAL SECURITY)
-      // Shopier signature: HMAC-SHA256(random_nr + platform_order_id, apiSecret).digest('base64')
-      const expectedSignature = generateShopierHash(random_nr, orderId, apiSecret);
-      if (signature !== expectedSignature) {
-        console.error(`Callback error: Signature mismatch. Expected: ${expectedSignature}, Received: ${signature}`);
-        // Log the failed attempt for security monitoring
-        await db.collection('payment_security_logs').insertOne({
-          orderId: order.id,
-          event: 'signature_mismatch',
-          receivedSignature: signature,
-          expectedSignature: '***MASKED***',
-          payload: { ...body, signature: '***MASKED***' },
-          timestamp: new Date()
-        });
-        
-        return NextResponse.json(
-          { success: false, error: 'Geçersiz imza' },
-          { status: 403 }
-        );
-      }
-
-      // 6. Check payment_id uniqueness (double payment protection)
-      if (payment_id) {
-        const existingPayment = await db.collection('payments').findOne({ providerTxnId: payment_id.toString() });
-        if (existingPayment) {
-          console.error(`Callback error: Payment ${payment_id} already exists`);
-          return NextResponse.json({
-            success: true,
-            message: 'İşlem zaten kaydedilmiş'
-          });
-        }
-      }
-
-      // 7. Map Shopier status to application status
-      // Shopier returns "success" for successful payments
-      let newStatus;
-      if (status === 'success') {
-        newStatus = 'paid';
-      } else {
-        newStatus = 'failed';
-      }
-
-      // 8. Enforce immutable status transitions (PENDING → PAID/FAILED only)
-      if (order.status === 'failed' && newStatus === 'paid') {
-        console.error(`Callback error: Cannot change order ${order.id} from FAILED to PAID`);
-        return NextResponse.json(
-          { success: false, error: 'Geçersiz durum geçişi' },
-          { status: 400 }
-        );
-      }
-
-      // 9. Update order status
+      // Update order with payment URL and session info
       await db.collection('orders').updateOne(
         { id: order.id },
         {
           $set: {
-            status: newStatus,
+            'meta.shopierV2PaymentUrl': sessionResult.paymentUrl,
+            'meta.shopierV2SessionId': sessionResult.sessionId,
+            'meta.shopierV2OrderId': sessionResult.shopierOrderId,
             updatedAt: new Date()
           }
         }
       );
 
-      // 10. Create payment record with full audit trail
-      await db.collection('payments').insertOne({
-        id: uuidv4(),
-        orderId: order.id,
-        provider: 'shopier',
-        providerTxnId: payment_id ? payment_id.toString() : uuidv4(),
-        status: newStatus,
-        amount: order.amount,
-        currency: order.currency,
-        installment: installment || 0,
-        signatureValidated: true,
-        rawPayload: { ...body, signature: '***MASKED***' },
-        verifiedAt: new Date(),
-        createdAt: new Date()
+      // Return payment URL for iframe
+      return NextResponse.json({
+        success: true,
+        data: {
+          order,
+          paymentUrl: sessionResult.paymentUrl,
+          sessionId: sessionResult.sessionId,
+          shopierOrderId: sessionResult.shopierOrderId,
+          expiresIn: 900 // 15 minutes
+        }
       });
+    }
 
-      // 11. PROCESS PAID ORDERS
-      if (newStatus === 'paid') {
-        // Get user and product for email
+    // Shopier V2 OSB Webhook Callback
+    if (pathname === '/api/payment/shopierv2/osb') {
+      console.log('========================================');
+      console.log('🔔 SHOPIER V2 OSB WEBHOOK RECEIVED');
+      console.log('Payload:', body);
+      console.log('========================================');
+
+      // Verify webhook signature
+      const isValidSignature = shopierV2Client.verifyOsbSignature(body);
+      
+      if (!isValidSignature) {
+        console.error('❌ Shopier V2: Invalid webhook signature');
+        return NextResponse.json(
+          { success: false, error: 'Invalid signature' },
+          { status: 403 }
+        );
+      }
+
+      console.log('✅ Shopier V2: Signature verified');
+
+      // Handle webhook callback
+      const webhookResult = await shopierV2Service.handleWebhookCallback(db, body);
+
+      if (!webhookResult.success) {
+        console.error('❌ Shopier V2 Webhook processing failed:', webhookResult.error);
+        return NextResponse.json(
+          { success: false, error: webhookResult.error },
+          { status: 400 }
+        );
+      }
+
+      console.log('✅ Shopier V2 Webhook processed:', webhookResult);
+
+      // If payment is successful, trigger delivery flow
+      if (webhookResult.status === 'paid') {
+        const order = await db.collection('orders').findOne({ id: webhookResult.orderId });
         const orderUser = await db.collection('users').findOne({ id: order.userId });
         const product = await db.collection('products').findOne({ id: order.productId });
-        
-        // Hesap siparişleri için account bilgisini al
-        const account = order.accountId ? await db.collection('accounts').findOne({ id: order.accountId }) : null;
-        
-        // ============================================
-        // 🚀 HEMEN SMS GÖNDER - EN BAŞTA!
-        // ============================================
-        const itemTitle = product?.title || account?.title || order.productTitle || order.accountTitle || 'Sipariş';
-        if (orderUser && orderUser.phone) {
-          console.log('🚀 IMMEDIATE SMS: Sending to', orderUser.phone, 'for', itemTitle);
-          sendPaymentSuccessSms(db, order, orderUser, itemTitle).catch(err =>
-            console.error('🚀 IMMEDIATE SMS FAILED:', err)
-          );
-        } else {
-          console.log('🚀 IMMEDIATE SMS SKIPPED: No user or phone', { hasUser: !!orderUser, hasPhone: !!orderUser?.phone });
-        }
-        // ============================================
-        
-        // Log for debugging
-        console.log('========================================');
-        console.log('📧 SMS/EMAIL DEBUG');
-        console.log('Order ID:', order.id);
-        console.log('Order Type:', order.type);
-        console.log('User found:', !!orderUser);
-        console.log('User phone:', orderUser?.phone);
-        console.log('Product found:', !!product);
-        console.log('Account found:', !!account);
-        console.log('========================================');
 
-        // ============================================
-        // 🔐 HIGH-VALUE ORDER CHECK - DO THIS FIRST!
-        // ============================================
-        // Get the order amount from multiple sources - try ALL possible price fields
-        const productPrice = product ? (product.discountPrice || product.price || product.finalPrice || product.salePrice || product.currentPrice || product.sellingPrice || 0) : 0;
-        const orderAmount = order.amount || order.totalAmount || productPrice || 0;
+        // Check if this is a high-value order (>= 3000 TL)
+        const orderAmount = order.amount || order.totalAmount || 0;
         
-        console.log('========================================');
-        console.log('🔐 HIGH-VALUE ORDER CHECK');
-        console.log('Order ID:', order.id);
-        console.log('order.amount:', order.amount);
-        console.log('order.totalAmount:', order.totalAmount);
-        console.log('product.discountPrice:', product?.discountPrice);
-        console.log('product.price:', product?.price);
-        console.log('product.finalPrice:', product?.finalPrice);
-        console.log('product.salePrice:', product?.salePrice);
-        console.log('FINAL orderAmount:', orderAmount);
-        console.log('Is >= 3000?', orderAmount >= 3000);
-        console.log('========================================');
-
         if (orderAmount >= 3000) {
           // HIGH VALUE ORDER - REQUIRES VERIFICATION
           await db.collection('orders').updateOne(
             { id: order.id },
             {
               $set: {
-                amount: orderAmount,
-                totalAmount: orderAmount,
                 verification: {
                   required: true,
                   status: 'pending',
                   identityPhoto: null,
                   paymentReceipt: null,
-                  submittedAt: null,
-                  reviewedAt: null,
-                  reviewedBy: null,
-                  rejectionReason: null
+                  submittedAt: null
                 },
                 delivery: {
                   status: 'verification_required',
@@ -7719,21 +7523,16 @@ export async function POST(request) {
             );
           }
           
-          // Return early - no stock assignment or risk check needed
           return NextResponse.json({
             success: true,
             message: 'Ödeme başarılı - Doğrulama gerekli'
           });
         }
 
-        // ============================================
         // NORMAL FLOW - Orders < 3000 TL
-        // ============================================
-        
         // Calculate risk score
         const riskResult = await calculateOrderRisk(db, order, orderUser, request);
         
-        // Update order with risk information
         await db.collection('orders').updateOne(
           { id: order.id },
           {
@@ -7745,23 +7544,29 @@ export async function POST(request) {
           }
         );
 
-        // Get risk settings for behavior control
+        // Get risk settings
         let riskSettings = await db.collection('risk_settings').findOne({ id: 'main' });
         if (!riskSettings) {
           riskSettings = DEFAULT_RISK_SETTINGS;
         }
 
-        // Determine delivery behavior based on risk status
         const actualStatus = riskResult.actualStatus || riskResult.status;
         const shouldHoldDelivery = 
           actualStatus === 'FLAGGED' || 
           actualStatus === 'BLOCKED' ||
           (actualStatus === 'SUSPICIOUS' && !riskSettings.suspiciousAutoApprove);
 
-        // If FLAGGED/BLOCKED/SUSPICIOUS - HOLD delivery, don't assign stock
-        // Note: High-value orders (>= 3000 TL) are already handled above and won't reach here
+        // Send payment success SMS immediately
+        if (orderUser && orderUser.phone && product) {
+          const itemTitle = product.title || order.productTitle || 'Sipariş';
+          console.log('📱 Sending immediate payment SMS to:', orderUser.phone);
+          sendPaymentSuccessSms(db, order, orderUser, itemTitle).catch(err =>
+            console.error('Payment success SMS failed:', err)
+          );
+        }
+
         if (shouldHoldDelivery && !riskSettings.isTestMode) {
-          // Normal risky order - hold for review
+          // Hold delivery for risky orders
           await db.collection('orders').updateOne(
             { id: order.id },
             {
@@ -7779,390 +7584,219 @@ export async function POST(request) {
             }
           );
           
-          // Log the risk flag
           await logAuditAction(db, AUDIT_ACTIONS.ORDER_RISK_FLAG, 'system', 'order', order.id, request, {
             riskScore: riskResult.score,
             riskStatus: actualStatus,
             reasons: riskResult.reasons
           });
           
-          console.log(`Order ${order.id} ${actualStatus} with risk score ${riskResult.score}. Delivery on HOLD.`);
+          console.log(`Order ${order.id} ${actualStatus} - Delivery on HOLD`);
           
-          // Send payment success email (but note delivery is pending review)
-          if (orderUser && (product || account)) {
-            const itemTitle = product?.title || account?.title || 'Sipariş';
-            
-            if (product) {
-              sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
-                console.error('Payment success email failed:', err)
-              );
-            }
-            // SMS gönder - Ödeme başarılı
-            console.log('📱 Sending payment SMS to:', orderUser.phone, 'for:', itemTitle);
-            sendPaymentSuccessSms(db, order, orderUser, itemTitle).catch(err =>
-              console.error('Payment success SMS failed:', err)
+          if (orderUser && product) {
+            sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
+              console.error('Payment success email failed:', err)
             );
-          } else {
-            console.log('⚠️ Cannot send SMS - orderUser:', !!orderUser, 'product:', !!product, 'account:', !!account);
           }
         } else {
-          // CLEAR risk (or test mode) - proceed with stock assignment
-          // Send payment success email
-          if (orderUser && (product || account)) {
-            const itemTitle = product?.title || account?.title || 'Sipariş';
-            
-            if (product) {
-              sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
-                console.error('Payment success email failed:', err)
-              );
-            }
-            // SMS gönder - Ödeme başarılı
-            console.log('📱 Sending payment SMS to:', orderUser.phone, 'for:', itemTitle);
-            sendPaymentSuccessSms(db, order, orderUser, itemTitle).catch(err =>
-              console.error('Payment success SMS failed:', err)
+          // CLEAR risk - proceed with stock assignment
+          if (orderUser && product) {
+            sendPaymentSuccessEmail(db, order, orderUser, product).catch(err => 
+              console.error('Payment success email failed:', err)
             );
-          } else {
-            console.log('⚠️ Cannot send SMS - orderUser:', !!orderUser, 'product:', !!product, 'account:', !!account);
           }
 
-          // Check if stock already assigned (idempotency)
           const currentOrder = await db.collection('orders').findOne({ id: order.id });
           
           if (!currentOrder.delivery || !currentOrder.delivery.items || currentOrder.delivery.items.length === 0) {
-            // NORMAL FLOW: Auto-assign stock for orders < 3000 TL
-            // (Orders >= 3000 TL are already handled at the beginning)
             console.log('Stock assignment starting for order:', order.id);
             
             try {
-              // ============================================
-              // CHECK IF THIS IS AN ACCOUNT ORDER
-              // ============================================
               if (order.type === 'account' && order.accountId) {
                 // ACCOUNT ORDER - Use account_stock collection
-                console.log('Account order detected, using account_stock collection');
-                
                 const assignedAccountStock = await db.collection('account_stock').findOneAndUpdate(
-                  { 
-                    accountId: order.accountId, 
-                    status: 'available' 
-                  },
-                  { 
-                    $set: { 
-                      status: 'assigned', 
-                      orderId: order.id,
-                      assignedAt: new Date()
-                    } 
-                  },
-                  { 
-                    returnDocument: 'after',
-                    sort: { createdAt: 1 } // FIFO
-                  }
+                  { accountId: order.accountId, status: 'available' },
+                  { $set: { status: 'sold', soldAt: new Date(), orderId: order.id } },
+                  { returnDocument: 'after' }
                 );
 
-                console.log('Account stock assignment result:', JSON.stringify(assignedAccountStock));
-
-                // findOneAndUpdate bazen value içinde döndürüyor
-                let stockItem = null;
                 if (assignedAccountStock) {
-                  if (assignedAccountStock.value) {
-                    stockItem = assignedAccountStock.value;
-                  } else if (assignedAccountStock._id || assignedAccountStock.id) {
-                    stockItem = assignedAccountStock;
-                  }
-                }
-
-                if (stockItem && stockItem.credentials) {
-                  const credentials = stockItem.credentials;
-                  
                   await db.collection('orders').updateOne(
                     { id: order.id },
                     {
                       $set: {
                         delivery: {
                           status: 'delivered',
-                          message: 'Hesap bilgileri hazır',
-                          credentials: credentials,
-                          stockId: stockItem.id || stockItem._id,
-                          assignedAt: new Date()
-                        },
-                        status: 'delivered',
-                        deliveredAt: new Date()
-                      }
-                    }
-                  );
-                  console.log(`Account stock assigned: Order ${order.id} received credentials`);
-                  
-                  // Müşteriye e-posta gönder
-                  const orderUser = await db.collection('users').findOne({ id: order.userId });
-                  const account = await db.collection('accounts').findOne({ id: order.accountId });
-                  if (orderUser && account && orderUser.email) {
-                    try {
-                      await sendDeliveredEmail(db, order, orderUser, account, [credentials]);
-                      console.log('Account delivery email sent to:', orderUser.email);
-                    } catch (emailErr) {
-                      console.error('Account delivery email failed:', emailErr);
-                    }
-                  }
-                  
-                  // Update account stock count
-                  const accountForUpdate = await db.collection('accounts').findOne({ id: order.accountId });
-                  if (accountForUpdate) {
-                    const remainingStock = await db.collection('account_stock').countDocuments({
-                      accountId: order.accountId,
-                      status: 'available'
-                    });
-                    
-                    const updateData = { stockCount: remainingStock };
-                    
-                    // If not unlimited and no more stock, mark as sold
-                    if (!accountForUpdate.unlimited && remainingStock === 0) {
-                      updateData.status = 'sold';
-                      updateData.soldAt = new Date();
-                    }
-                    
-                    // Increment sales count
-                    await db.collection('accounts').updateOne(
-                      { id: order.accountId },
-                      { 
-                        $set: updateData,
-                        $inc: { salesCount: 1 }
-                      }
-                    );
-                  }
-                } else {
-                  // No stock available - check for default credentials
-                  const account = await db.collection('accounts').findOne({ id: order.accountId });
-                  if (account && account.credentials) {
-                    await db.collection('orders').updateOne(
-                      { id: order.id },
-                      {
-                        $set: {
-                          delivery: {
-                            status: 'delivered',
-                            message: 'Hesap bilgileri hazır',
-                            credentials: account.credentials,
-                            assignedAt: new Date()
-                          },
-                          status: 'delivered',
-                          deliveredAt: new Date()
-                        }
-                      }
-                    );
-                    console.log(`Default credentials assigned to order ${order.id}`);
-                    
-                    // Müşteriye e-posta gönder
-                    const orderUser = await db.collection('users').findOne({ id: order.userId });
-                    if (orderUser && orderUser.email) {
-                      try {
-                        await sendDeliveredEmail(db, order, orderUser, account, [account.credentials]);
-                        console.log('Default credentials delivery email sent to:', orderUser.email);
-                      } catch (emailErr) {
-                        console.error('Default credentials delivery email failed:', emailErr);
-                      }
-                    }
-                  } else {
-                    await db.collection('orders').updateOne(
-                      { id: order.id },
-                      {
-                        $set: {
-                          delivery: {
-                            status: 'pending',
-                            message: 'Stok bekleniyor - Admin tarafından atanacak',
-                            items: []
-                          }
-                        }
-                      }
-                    );
-                    console.log(`No stock available for account order ${order.id}`);
-                  }
-                }
-                
-                // Return success for account orders
-                return NextResponse.json({
-                  success: true,
-                  message: 'Ödeme başarılı'
-                });
-              }
-
-              // ============================================
-              // UC ORDER - Use stock collection with QUANTITY support
-              // ============================================
-              const orderQty = order.quantity || 1;
-              const assignedItems = [];
-              
-              for (let i = 0; i < orderQty; i++) {
-                const assignedStock = await db.collection('stock').findOneAndUpdate(
-                  { productId: order.productId, status: 'available' },
-                  { $set: { status: 'assigned', orderId: order.id, assignedAt: new Date() } },
-                  { returnDocument: 'after', sort: { createdAt: 1 } }
-                );
-                if (assignedStock && assignedStock.value) {
-                  assignedItems.push(assignedStock.value);
-                } else { break; }
-              }
-
-              console.log(`Stock assignment: Order ${order.id}, qty=${orderQty}, assigned=${assignedItems.length}`);
-
-              if (assignedItems.length > 0) {
-                await db.collection('orders').updateOne(
-                  { id: order.id },
-                  { $set: { delivery: { status: assignedItems.length >= orderQty ? 'delivered' : 'partial', items: assignedItems, assignedAt: new Date() } } }
-                );
-                console.log(`Stock assigned: Order ${order.id} received ${assignedItems.length} codes`);
-                
-                if (orderUser && product) {
-                  sendDeliveredEmail(db, order, orderUser, product, assignedItems).catch(err => 
-                    console.error('Delivered email failed:', err)
-                  );
-                  sendDeliverySms(db, order, orderUser, product.title).catch(err =>
-                    console.error('Delivery SMS failed:', err)
-                  );
-                }
-              } else {
-                // No stock available - try DijiPin auto-delivery if enabled
-                const dijipinSettings = await db.collection('settings').findOne({ type: 'dijipin' });
-                const isDijipinGlobalEnabled = dijipinSettings?.isEnabled && DIJIPIN_API_TOKEN;
-                
-                // Check if product has DijiPin enabled (product-level setting)
-                const isProductDijipinEnabled = product && product.dijipinEnabled === true;
-                
-                // DijiPin works if: global setting is ON AND product-level setting is ON
-                const canUseDijipin = isDijipinGlobalEnabled && isProductDijipinEnabled && order.playerId;
-                
-                if (canUseDijipin) {
-                  console.log(`Attempting DijiPin delivery for order ${order.id}, Product: ${product.title}, PUBG ID: ${order.playerId}`);
-                  
-                  const dijipinResult = await createDijipinOrder(product.title, 1, order.playerId);
-                  
-                  if (dijipinResult.success) {
-                    // DijiPin order successful
-                    await db.collection('orders').updateOne(
-                      { id: order.id },
-                      {
-                        $set: {
-                          delivery: {
-                            status: 'delivered',
-                            method: 'dijipin_auto',
-                            dijipinOrderId: dijipinResult.orderId,
-                            message: 'UC DijiPin üzerinden gönderildi',
-                            items: [`DijiPin Order: ${dijipinResult.orderId}`],
+                          deliveredAt: new Date(),
+                          items: [{
+                            id: assignedAccountStock.id,
+                            username: assignedAccountStock.username,
+                            password: assignedAccountStock.password,
                             deliveredAt: new Date()
-                          }
+                          }]
                         }
                       }
-                    );
-                    console.log(`DijiPin delivery success: Order ${order.id}, DijiPin Order: ${dijipinResult.orderId}`);
-                    
-                    // Send delivered email
-                    if (orderUser && product) {
-                      sendDeliveredEmail(db, order, orderUser, product, [`UC başarıyla hesabınıza yüklendi (PUBG ID: ${order.playerId})`]).catch(err => 
-                        console.error('Delivered email failed:', err)
-                      );
-                      // DijiPin teslimat SMS'i gönder
-                      sendDeliverySms(db, order, orderUser, product.title).catch(err =>
-                        console.error('DijiPin delivery SMS failed:', err)
-                      );
                     }
-                  } else {
-                    // DijiPin failed - mark as pending for manual review
-                    await db.collection('orders').updateOne(
-                      { id: order.id },
-                      {
-                        $set: {
-                          delivery: {
-                            status: 'pending',
-                            message: `DijiPin hatası: ${dijipinResult.error}`,
-                            dijipinError: dijipinResult.error,
-                            items: []
-                          }
-                        }
-                      }
-                    );
-                    console.error(`DijiPin delivery failed for order ${order.id}:`, dijipinResult.error);
-                    
-                    // Send pending stock email
-                    if (orderUser && product) {
-                      sendPendingStockEmail(db, order, orderUser, product, 'Sipariş işleniyor, kısa sürede tamamlanacak').catch(err => 
-                        console.error('Pending stock email failed:', err)
-                      );
-                    }
-                  }
+                  );
+
+                  console.log(`Account stock assigned to order ${order.id}:`, assignedAccountStock.id);
                 } else {
-                  // No stock available and DijiPin not enabled - mark as pending
                   await db.collection('orders').updateOne(
                     { id: order.id },
                     {
                       $set: {
                         delivery: {
-                          status: 'pending',
-                          message: 'Stok bekleniyor',
+                          status: 'out_of_stock',
+                          message: 'Stok tükendi - En kısa sürede eklenecek',
                           items: []
                         }
                       }
                     }
                   );
-                  console.warn(`No stock available for order ${order.id} (product ${order.productId})`);
+                  console.log(`No account stock available for order ${order.id}`);
+                }
+              } else {
+                // PRODUCT ORDER - Use stock collection
+                const stockItems = await db.collection('stock')
+                  .find({ productId: order.productId, status: 'available' })
+                  .limit(order.quantity)
+                  .toArray();
+
+                if (stockItems.length >= order.quantity) {
+                  const stockIds = stockItems.map(s => s.id);
                   
-                  // Send pending stock email
+                  await db.collection('stock').updateMany(
+                    { id: { $in: stockIds } },
+                    { $set: { status: 'sold', soldAt: new Date(), orderId: order.id } }
+                  );
+
+                  const deliveryItems = stockItems.map(s => ({
+                    id: s.id,
+                    code: s.code,
+                    deliveredAt: new Date()
+                  }));
+
+                  await db.collection('orders').updateOne(
+                    { id: order.id },
+                    {
+                      $set: {
+                        delivery: {
+                          status: 'delivered',
+                          deliveredAt: new Date(),
+                          items: deliveryItems
+                        }
+                      }
+                    }
+                  );
+
+                  console.log(`Stock assigned to order ${order.id}:`, deliveryItems.length, 'items');
+
+                  // Send delivery email
                   if (orderUser && product) {
-                    sendPendingStockEmail(db, order, orderUser, product, 'Stok bekleniyor').catch(err => 
-                      console.error('Pending stock email failed:', err)
+                    sendDeliveryEmail(db, order, orderUser, product, deliveryItems).catch(err => 
+                      console.error('Delivery email failed:', err)
                     );
                   }
+
+                  // Send delivery SMS
+                  if (orderUser && orderUser.phone) {
+                    const itemTitle = product?.title || order.productTitle || 'Sipariş';
+                    console.log('📱 Sending delivery SMS to:', orderUser.phone);
+                    sendDeliverySms(db, order, orderUser, itemTitle).catch(err =>
+                      console.error('Delivery SMS failed:', err)
+                    );
+                  }
+
+                  // Close Shopier order after delivery (with delay)
+                  shopierV2Service.closeOrderAfterDelivery(db, order.id).catch(err =>
+                    console.error('Close Shopier order failed:', err)
+                  );
+                } else {
+                  await db.collection('orders').updateOne(
+                    { id: order.id },
+                    {
+                      $set: {
+                        delivery: {
+                          status: 'out_of_stock',
+                          message: 'Stok tükendi - En kısa sürede eklenecek',
+                          items: []
+                        }
+                      }
+                    }
+                  );
+                  console.log(`Insufficient stock for order ${order.id}. Required: ${order.quantity}, Available: ${stockItems.length}`);
                 }
               }
             } catch (stockError) {
-              console.error(`Stock assignment error for order ${order.id}:`, stockError);
-              // Don't fail the whole callback - mark as pending
+              console.error('Stock assignment error:', stockError);
               await db.collection('orders').updateOne(
                 { id: order.id },
                 {
                   $set: {
                     delivery: {
-                      status: 'pending',
-                      message: 'Stok atama hatası',
-                      items: []
+                      status: 'error',
+                      message: 'Stok ataması sırasında hata oluştu',
+                      items: [],
+                      error: stockError.message
                     }
                   }
                 }
               );
             }
           } else {
-            console.log(`Stock already assigned for order ${order.id} - skipping (idempotent)`);
+            console.log(`Order ${order.id} already has stock assigned`);
           }
-        }
-      }
-
-      // 12. Log successful callback for audit
-      console.log(`Callback success: Order ${order.id} status updated to ${newStatus}`);
-
-      // 13. SON KONTROL - SMS gönderilmemişse burada gönder
-      if (newStatus === 'paid') {
-        const finalOrderUser = await db.collection('users').findOne({ id: order.userId });
-        const finalProduct = order.productId ? await db.collection('products').findOne({ id: order.productId }) : null;
-        const finalAccount = order.accountId ? await db.collection('accounts').findOne({ id: order.accountId }) : null;
-        
-        // SMS gönderilip gönderilmediğini kontrol et
-        const recentSmsLog = await db.collection('sms_logs').findOne({
-          orderId: order.id,
-          type: 'payment_success',
-          createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) } // Son 5 dakika
-        });
-        
-        if (!recentSmsLog && finalOrderUser && finalOrderUser.phone) {
-          const itemTitle = finalProduct?.title || finalAccount?.title || 'Sipariş';
-          console.log('📱 FALLBACK: Sending payment SMS to:', finalOrderUser.phone);
-          sendPaymentSuccessSms(db, order, finalOrderUser, itemTitle).catch(err =>
-            console.error('Fallback payment SMS failed:', err)
-          );
         }
       }
 
       return NextResponse.json({
         success: true,
-        message: 'Ödeme işlendi'
+        message: 'Webhook işlendi'
       });
     }
+
+    // Shopier V2 Status Polling Endpoint
+    if (pathname === '/api/payment/shopierv2/status' && method === 'GET') {
+      const orderId = searchParams.get('orderId');
+      
+      if (!orderId) {
+        return NextResponse.json(
+          { success: false, error: 'orderId gerekli' },
+          { status: 400 }
+        );
+      }
+
+      // Get session status
+      const statusResult = await shopierV2Service.getSessionStatus(db, orderId);
+
+      if (!statusResult.success) {
+        return NextResponse.json(
+          { success: false, error: statusResult.error },
+          { status: 404 }
+        );
+      }
+
+      // Get order status
+      const order = await db.collection('orders').findOne({ id: orderId });
+      
+      if (!order) {
+        return NextResponse.json(
+          { success: false, error: 'Sipariş bulunamadı' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          orderId: order.id,
+          orderStatus: order.status,
+          sessionStatus: statusResult.status,
+          delivery: order.delivery || null,
+          expiresAt: statusResult.expiresAt
+        }
+      });
+    }
+
 
     // Shopinext callback (Webhook)
     if (pathname === '/api/payments/shopinext/callback') {

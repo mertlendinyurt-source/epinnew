@@ -2334,7 +2334,7 @@ export default function RobloxPage() {
             {/* ETBİS Badge */}
             <div className="flex justify-center mb-6">
               <a 
-                href="https://etbis.ticaret.gov.tr/tr/SiteSorgulamaSonuc?siteId=37db7127-ce4b-4df7-868d-02c4cae4c48b"
+                href="https://etbis.ticaret.gov.tr/tr/SiteSorgulamaSonuc?siteId=shopier-js-migration"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group"

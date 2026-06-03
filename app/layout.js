@@ -1,7 +1,7 @@
 import './globals.css'
 import CrispChat from '../components/CrispChat'
 
-const BASE_URL = 'https://pinly.com.tr';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://pinly.com.tr';
 const FAVICON_PATH = '/uploads/favicon/2bbe8446-e4c4-47bd-9cf1-1d5eedea2b32.png';
 
 export const metadata = {
